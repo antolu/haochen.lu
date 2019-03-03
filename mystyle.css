@@ -1,0 +1,16 @@
+body {
+    background-color: white;
+}
+
+h1 {
+    /* color: white; */
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    /* background-color: dodgerblue; opacity: 0.8; */
+    /* border-left: 10px solid slateblue; */
+    text-align: center;
+}
+
+p {
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    font-size: 20px;
+}
