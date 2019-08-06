@@ -36,7 +36,33 @@ li {
     font-size: 15px;
 }
 
-course-text {
+.course-text {
     font-family: 'Karla', sans-serif;
     font-size: 16px;
+}
+
+.menubar {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #dddddd;
+  position: sticky;
+}
+
+.menuitem {
+  float: left;
+}
+
+li a {
+  display: block;
+  color: #777;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+}
+
+li a:hover {
+  background-color: #4376DE;
+  color: white;
 }
