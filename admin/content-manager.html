@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Manager - Anton Lu Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .json-editor {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            tab-size: 2;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Content Manager</h1>
+            <p class="text-gray-600">Manage your photography portfolio and projects content</p>
+        </header>
+
+        <div class="grid lg:grid-cols-2 gap-8">
+            <!-- Photography Section -->
+            <section class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-2">Photography Portfolio</h2>
+                    <p class="text-gray-600 text-sm">Add, edit, or remove photos from your portfolio</p>
+                </div>
+                
+                <div class="p-6">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Quick Add Photo</label>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <input type="text" id="photo-title" placeholder="Photo Title" 
+                                   class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <select id="photo-category" 
+                                    class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="landscape">Landscape</option>
+                                <option value="portrait">Portrait</option>
+                                <option value="street">Street</option>
+                                <option value="travel">Travel</option>
+                            </select>
+                            <input type="text" id="photo-location" placeholder="Location" 
+                                   class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <input type="url" id="photo-url" placeholder="Image URL" 
+                                   class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <textarea id="photo-comment" placeholder="Your comment about this photo..." 
+                                  class="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                  rows="3"></textarea>
+                        <button onclick="addPhoto()" 
+                                class="mt-3 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
+                            Add Photo
+                        </button>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Photography JSON Editor</label>
+                        <textarea id="photography-json" class="json-editor w-full h-64 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" 
+                                  placeholder="Photography JSON will load here..."></textarea>
+                    </div>
+                    
+                    <div class="flex gap-3">
+                        <button onclick="loadPhotographyData()" 
+                                class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors">
+                            Load Current Data
+                        </button>
+                        <button onclick="savePhotographyData()" 
+                                class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors">
+                            Save Changes
+                        </button>
+                        <button onclick="validatePhotographyJSON()" 
+                                class="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 transition-colors">
+                            Validate JSON
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Projects Section -->
+            <section class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-2">Coding Projects</h2>
+                    <p class="text-gray-600 text-sm">Manage your project portfolio</p>
+                </div>
+                
+                <div class="p-6">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Quick Add Project</label>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <input type="text" id="project-title" placeholder="Project Title" 
+                                   class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <select id="project-category" 
+                                    class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="web-development">Web Development</option>
+                                <option value="machine-learning">Machine Learning</option>
+                                <option value="mobile-development">Mobile Development</option>
+                                <option value="research">Research</option>
+                                <option value="iot">IoT</option>
+                                <option value="education">Education</option>
+                            </select>
+                            <input type="url" id="project-github" placeholder="GitHub URL" 
+                                   class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <input type="url" id="project-demo" placeholder="Demo URL (optional)" 
+                                   class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <textarea id="project-description" placeholder="Project description..." 
+                                  class="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                  rows="3"></textarea>
+                        <input type="text" id="project-technologies" placeholder="Technologies (comma-separated)" 
+                               class="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <button onclick="addProject()" 
+                                class="mt-3 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
+                            Add Project
+                        </button>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Projects JSON Editor</label>
+                        <textarea id="projects-json" class="json-editor w-full h-64 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" 
+                                  placeholder="Projects JSON will load here..."></textarea>
+                    </div>
+                    
+                    <div class="flex gap-3">
+                        <button onclick="loadProjectsData()" 
+                                class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors">
+                            Load Current Data
+                        </button>
+                        <button onclick="saveProjectsData()" 
+                                class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors">
+                            Save Changes
+                        </button>
+                        <button onclick="validateProjectsJSON()" 
+                                class="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 transition-colors">
+                            Validate JSON
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Instructions Section -->
+        <section class="mt-8 bg-blue-50 rounded-lg border border-blue-200">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold text-blue-900 mb-3">📝 Instructions</h3>
+                <div class="grid md:grid-cols-2 gap-6 text-sm text-blue-800">
+                    <div>
+                        <h4 class="font-medium mb-2">Adding Photos:</h4>
+                        <ul class="space-y-1 list-disc list-inside">
+                            <li>Use the quick add form or edit JSON directly</li>
+                            <li>Photo URLs can be external (Unsplash, etc.) or local</li>
+                            <li>Include camera settings for rich metadata display</li>
+                            <li>Add location data for map integration</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-medium mb-2">Managing Projects:</h4>
+                        <ul class="space-y-1 list-disc list-inside">
+                            <li>Include GitHub and demo links when available</li>
+                            <li>List technologies as comma-separated values</li>
+                            <li>Use clear, descriptive project descriptions</li>
+                            <li>Categorize projects for better organization</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="mt-4 p-3 bg-blue-100 rounded-md">
+                    <p class="text-sm text-blue-700">
+                        <strong>Note:</strong> This is a client-side editor. Changes are saved to browser storage. 
+                        To persist changes, copy the JSON and update the files in your data/ directory.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Status Messages -->
+        <div id="status-message" class="fixed bottom-4 right-4 max-w-sm hidden">
+            <div class="bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg">
+                <p id="status-text"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize the content manager
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPhotographyData();
+            loadProjectsData();
+        });
+
+        // Photography functions
+        async function loadPhotographyData() {
+            try {
+                // Try to load from server first
+                const response = await fetch('/data/photography.json');
+                let data;
+                
+                if (response.ok) {
+                    data = await response.text();
+                } else {
+                    // Fallback to localStorage or default
+                    data = localStorage.getItem('photography-data') || JSON.stringify({photos: []}, null, 2);
+                }
+                
+                document.getElementById('photography-json').value = data;
+                showStatus('Photography data loaded', 'success');
+            } catch (error) {
+                console.error('Error loading photography data:', error);
+                showStatus('Error loading photography data', 'error');
+            }
+        }
+
+        function savePhotographyData() {
+            try {
+                const jsonData = document.getElementById('photography-json').value;
+                const parsed = JSON.parse(jsonData); // Validate JSON
+                
+                localStorage.setItem('photography-data', jsonData);
+                showStatus('Photography data saved to browser storage', 'success');
+                
+                // Provide instructions for file update
+                console.log('Copy this JSON to /data/photography.json:');
+                console.log(jsonData);
+            } catch (error) {
+                showStatus('Invalid JSON format', 'error');
+            }
+        }
+
+        function validatePhotographyJSON() {
+            try {
+                const jsonData = document.getElementById('photography-json').value;
+                const parsed = JSON.parse(jsonData);
+                
+                if (!parsed.photos || !Array.isArray(parsed.photos)) {
+                    throw new Error('JSON must have a "photos" array');
+                }
+                
+                showStatus('JSON is valid', 'success');
+            } catch (error) {
+                showStatus(`JSON validation error: ${error.message}`, 'error');
+            }
+        }
+
+        function addPhoto() {
+            const title = document.getElementById('photo-title').value;
+            const category = document.getElementById('photo-category').value;
+            const location = document.getElementById('photo-location').value;
+            const url = document.getElementById('photo-url').value;
+            const comment = document.getElementById('photo-comment').value;
+            
+            if (!title || !url) {
+                showStatus('Title and Image URL are required', 'error');
+                return;
+            }
+            
+            try {
+                const currentData = JSON.parse(document.getElementById('photography-json').value);
+                
+                const newPhoto = {
+                    id: generateId(title),
+                    filename: url,
+                    title: title,
+                    category: category,
+                    location: {
+                        name: location || 'Unknown',
+                        country: 'Sweden'
+                    },
+                    camera: {
+                        make: 'Camera Make',
+                        model: 'Camera Model',
+                        lens: 'Lens Model',
+                        settings: {
+                            aperture: 'f/5.6',
+                            shutter: '1/125s',
+                            iso: 400,
+                            focal_length: '50mm'
+                        }
+                    },
+                    metadata: {
+                        date: new Date().toISOString(),
+                        filesize: '5.0MB',
+                        dimensions: '1920x1080'
+                    },
+                    comment: comment,
+                    tags: [category, 'photography']
+                };
+                
+                currentData.photos.push(newPhoto);
+                document.getElementById('photography-json').value = JSON.stringify(currentData, null, 2);
+                
+                // Clear form
+                ['photo-title', 'photo-location', 'photo-url', 'photo-comment'].forEach(id => {
+                    document.getElementById(id).value = '';
+                });
+                
+                showStatus('Photo added successfully', 'success');
+            } catch (error) {
+                showStatus('Error adding photo', 'error');
+            }
+        }
+
+        // Projects functions
+        async function loadProjectsData() {
+            try {
+                const response = await fetch('/data/projects.json');
+                let data;
+                
+                if (response.ok) {
+                    data = await response.text();
+                } else {
+                    data = localStorage.getItem('projects-data') || JSON.stringify({projects: []}, null, 2);
+                }
+                
+                document.getElementById('projects-json').value = data;
+                showStatus('Projects data loaded', 'success');
+            } catch (error) {
+                console.error('Error loading projects data:', error);
+                showStatus('Error loading projects data', 'error');
+            }
+        }
+
+        function saveProjectsData() {
+            try {
+                const jsonData = document.getElementById('projects-json').value;
+                const parsed = JSON.parse(jsonData);
+                
+                localStorage.setItem('projects-data', jsonData);
+                showStatus('Projects data saved to browser storage', 'success');
+                
+                console.log('Copy this JSON to /data/projects.json:');
+                console.log(jsonData);
+            } catch (error) {
+                showStatus('Invalid JSON format', 'error');
+            }
+        }
+
+        function validateProjectsJSON() {
+            try {
+                const jsonData = document.getElementById('projects-json').value;
+                const parsed = JSON.parse(jsonData);
+                
+                if (!parsed.projects || !Array.isArray(parsed.projects)) {
+                    throw new Error('JSON must have a "projects" array');
+                }
+                
+                showStatus('JSON is valid', 'success');
+            } catch (error) {
+                showStatus(`JSON validation error: ${error.message}`, 'error');
+            }
+        }
+
+        function addProject() {
+            const title = document.getElementById('project-title').value;
+            const category = document.getElementById('project-category').value;
+            const github = document.getElementById('project-github').value;
+            const demo = document.getElementById('project-demo').value;
+            const description = document.getElementById('project-description').value;
+            const technologies = document.getElementById('project-technologies').value;
+            
+            if (!title || !description) {
+                showStatus('Title and description are required', 'error');
+                return;
+            }
+            
+            try {
+                const currentData = JSON.parse(document.getElementById('projects-json').value);
+                
+                const newProject = {
+                    id: generateId(title),
+                    title: title,
+                    description: description,
+                    technologies: technologies ? technologies.split(',').map(t => t.trim()) : [],
+                    github: github || null,
+                    demo: demo || null,
+                    image: null,
+                    status: 'completed',
+                    year: new Date().getFullYear().toString(),
+                    category: category
+                };
+                
+                currentData.projects.push(newProject);
+                document.getElementById('projects-json').value = JSON.stringify(currentData, null, 2);
+                
+                // Clear form
+                ['project-title', 'project-github', 'project-demo', 'project-description', 'project-technologies'].forEach(id => {
+                    document.getElementById(id).value = '';
+                });
+                
+                showStatus('Project added successfully', 'success');
+            } catch (error) {
+                showStatus('Error adding project', 'error');
+            }
+        }
+
+        // Utility functions
+        function generateId(title) {
+            return title.toLowerCase()
+                       .replace(/[^a-z0-9\s]/g, '')
+                       .replace(/\s+/g, '-')
+                       .substring(0, 30);
+        }
+
+        function showStatus(message, type = 'success') {
+            const statusDiv = document.getElementById('status-message');
+            const statusText = document.getElementById('status-text');
+            const statusContainer = statusDiv.querySelector('div');
+            
+            statusText.textContent = message;
+            
+            // Update colors based on type
+            statusContainer.className = type === 'error' 
+                ? 'bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg'
+                : 'bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg';
+            
+            statusDiv.classList.remove('hidden');
+            
+            setTimeout(() => {
+                statusDiv.classList.add('hidden');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
