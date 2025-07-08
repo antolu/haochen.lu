@@ -1,212 +1,222 @@
 # Anton Lu - Photography & Portfolio Website
 
-A modern, responsive personal website showcasing photography portfolio with rich metadata display and coding projects.
+A modern, responsive personal website showcasing photography portfolio with rich metadata display and coding projects. Now features a **complete backend system** for uploading photos with automatic EXIF extraction and dynamic content management.
 
-## ✨ Features
+## ✨ New Features
 
-### 📸 Photography Portfolio
+### 🚀 Backend Content Management
+- **Photo Upload System**: Drag & drop interface with automatic EXIF extraction
+- **Real-time Content Management**: Add/edit/delete photos and projects through web interface
+- **Automatic Image Processing**: EXIF data extraction including GPS coordinates
+- **RESTful API**: Full CRUD operations for photos and projects
+- **Image Optimization**: Automatic image resizing and compression with Sharp
+
+### 📸 Enhanced Photography Portfolio
 - **Rich Metadata Display**: Camera settings, location, equipment details
 - **Interactive Gallery**: PhotoSwipe-powered lightbox with touch support
 - **Category Filtering**: Landscape, portrait, street, travel categories
-- **Mobile-Responsive**: Optimized for all device sizes
-- **EXIF Integration**: Automatic metadata extraction support
-- **Lazy Loading**: Performance-optimized image loading
+- **GPS Integration**: Automatic coordinate extraction from EXIF data
+- **Admin Dashboard**: Upload and manage photos directly through web interface
 
-### 💻 Project Showcase
-- **Dynamic Project Grid**: Responsive layout for coding projects
-- **Technology Tags**: Visual representation of tech stack
+### 💻 Dynamic Project Management
+- **Web-based Project Creation**: Add projects through admin interface
+- **Technology Stack Tracking**: Automatic technology tagging
 - **GitHub Integration**: Direct links to source code
-- **Live Demos**: Links to deployed applications
+- **Status Management**: Track project completion status
 
-### 🎨 Modern Design
-- **Mobile-First**: Responsive design starting from 320px
-- **Tailwind CSS**: Utility-first styling approach
-- **Smooth Animations**: Subtle transitions and hover effects
-- **Accessibility**: WCAG 2.1 compliant, keyboard navigation
-- **Performance**: Optimized for fast loading
+## 🛠 Technical Stack
 
-### 🛠 Content Management
-- **JSON-Based**: Easy content updates via JSON files
-- **Admin Interface**: Simple web-based content manager
-- **Image Support**: Local and external image hosting
-- **SEO Optimized**: Meta tags and structured data
+### Backend
+- **Node.js/Express** - Server framework
+- **Multer** - File upload handling
+- **ExifR** - EXIF data extraction
+- **Sharp** - Image processing and optimization
+- **UUID** - Unique identifier generation
 
-## 🚀 Quick Start
+### Frontend
+- **Vanilla JavaScript** - No framework dependencies
+- **Tailwind CSS** - Utility-first styling
+- **PhotoSwipe** - Lightbox functionality
+- **Responsive Design** - Mobile-first approach
+
+## 🚀 Getting Started
 
 ### Prerequisites
-- Web server (nginx, Apache, or local development server)
-- Modern web browser with JavaScript enabled
+- Node.js 16+ and npm
+- Modern web browser
 
 ### Installation
 
-1. **Clone or download** this repository to your web server directory
-2. **Configure your web server** to serve the files (see nginx.conf.example)
-3. **Update content** by editing JSON files or using the admin interface
-4. **Add your images** to the `assets/images/portfolio/` directory
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd haochen.lu
+   ```
 
-### Local Development
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-```bash
-# Start a local development server
-python3 -m http.server 8000
+3. **Environment setup**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
 
-# Or use Node.js
-npx serve .
+4. **Start the development server**
+   ```bash
+   npm run dev
+   ```
 
-# Or use PHP
-php -S localhost:8000
-```
+5. **Access the application**
+   - Frontend: `http://localhost:3000`
+   - Admin Panel: `http://localhost:3000/admin/content-manager.html`
 
-Visit `http://localhost:8000` to view the site.
+### Production Deployment
+
+1. **Set environment variables**
+   ```bash
+   NODE_ENV=production
+   PORT=3000
+   ```
+
+2. **Start the server**
+   ```bash
+   npm start
+   ```
+
+3. **Configure nginx** (optional)
+   ```bash
+   cp nginx.conf.example /etc/nginx/sites-available/haochen.lu
+   # Edit paths and SSL certificates
+   sudo ln -s /etc/nginx/sites-available/haochen.lu /etc/nginx/sites-enabled/
+   sudo nginx -t && sudo systemctl reload nginx
+   ```
 
 ## 📁 Project Structure
 
 ```
 /
-├── index.html                 # Main landing page
-├── assets/
-│   ├── css/
-│   │   └── custom.css        # Custom styles and responsive design
-│   ├── js/
-│   │   └── main.js           # Main application logic
-│   └── images/
-│       ├── portfolio/        # Photography portfolio images
-│       └── projects/         # Project screenshot images
-├── data/
-│   ├── photography.json      # Photography portfolio data
-│   └── projects.json         # Coding projects data
+├── server/                     # Backend Node.js application
+│   ├── app.js                 # Main server file
+│   └── routes/                # API route handlers
+│       ├── upload.js          # Photo upload with EXIF extraction
+│       ├── photos.js          # Photo CRUD operations
+│       └── projects.js        # Project CRUD operations
 ├── admin/
-│   └── content-manager.html  # Content management interface
-├── nginx.conf.example        # Nginx configuration template
-└── README.md                 # This file
+│   └── content-manager.html   # Web-based admin interface
+├── assets/
+│   ├── css/custom.css        # Custom styles
+│   ├── js/main.js            # Frontend application logic
+│   └── images/               # Uploaded images
+│       ├── portfolio/        # Photography portfolio images
+│       └── projects/         # Project screenshots
+├── data/                     # JSON data files (auto-managed)
+│   ├── photography.json      # Photo metadata
+│   └── projects.json         # Project data
+├── index.html               # Main website
+├── package.json             # Node.js dependencies
+└── nginx.conf.example       # Production nginx configuration
 ```
+
+## 🎯 API Endpoints
+
+### Photos
+- `GET /api/photos` - List all photos (with filtering/pagination)
+- `GET /api/photos/:id` - Get single photo
+- `POST /api/upload/photo` - Upload photo with EXIF extraction
+- `PUT /api/photos/:id` - Update photo metadata
+- `DELETE /api/photos/:id` - Delete photo
+- `GET /api/photos/stats/overview` - Photo statistics
+
+### Projects
+- `GET /api/projects` - List all projects
+- `GET /api/projects/:id` - Get single project
+- `POST /api/projects` - Create new project
+- `PUT /api/projects/:id` - Update project
+- `DELETE /api/projects/:id` - Delete project
+- `GET /api/projects/stats/overview` - Project statistics
 
 ## 📊 Content Management
 
-### Adding Photography
+### Photo Upload Process
+1. **Drag & Drop**: Select image files in admin interface
+2. **Preview**: Immediate preview with basic file information
+3. **Metadata Entry**: Add title, category, comments, and tags
+4. **Upload**: Automatic EXIF extraction and image processing
+5. **Storage**: Optimized images saved to `/assets/images/portfolio/`
 
-1. **Via Admin Interface**: Visit `/admin/content-manager.html`
-2. **Manual JSON Edit**: Edit `/data/photography.json`
+### Automatic EXIF Extraction
+- **Camera Settings**: Aperture, shutter speed, ISO, focal length
+- **Equipment**: Camera make/model, lens information
+- **GPS Coordinates**: Latitude/longitude if available
+- **Metadata**: File size, dimensions, capture date
+- **Image Processing**: Auto-rotation, compression, optimization
 
-#### Photo Object Structure:
-```json
-{
-  "id": "unique-photo-id",
-  "filename": "photo.jpg",
-  "title": "Photo Title",
-  "category": "landscape|portrait|street|travel",
-  "location": {
-    "name": "Location Name",
-    "country": "Country"
-  },
-  "camera": {
-    "make": "Camera Make",
-    "model": "Camera Model",
-    "lens": "Lens Model",
-    "settings": {
-      "aperture": "f/5.6",
-      "shutter": "1/125s",
-      "iso": 400,
-      "focal_length": "50mm"
-    }
-  },
-  "metadata": {
-    "date": "2024-01-01T12:00:00Z",
-    "filesize": "5.0MB",
-    "dimensions": "1920x1080"
-  },
-  "comment": "Your comment about this photo",
-  "tags": ["tag1", "tag2"]
-}
-```
+### Project Management
+- Add projects through web interface
+- Technology stack tracking
+- GitHub and demo URL integration
+- Status management (completed, in-progress, planned)
 
-### Adding Projects
+## 🔒 Security Features
 
-1. **Via Admin Interface**: Use the projects section in content manager
-2. **Manual JSON Edit**: Edit `/data/projects.json`
+- **Rate Limiting**: Upload and API request throttling
+- **File Validation**: Image type and size restrictions
+- **Input Sanitization**: XSS protection
+- **CORS Configuration**: Controlled cross-origin access
+- **Helmet Security Headers**: Standard security headers
 
-#### Project Object Structure:
-```json
-{
-  "id": "unique-project-id",
-  "title": "Project Title",
-  "description": "Project description",
-  "technologies": ["React", "Node.js", "MongoDB"],
-  "github": "https://github.com/username/repo",
-  "demo": "https://demo-url.com",
-  "status": "completed|in-progress",
-  "year": "2024",
-  "category": "web-development|machine-learning|mobile-development"
-}
-```
-
-## 🔧 Customization
+## 🎨 Customization
 
 ### Styling
-- **Colors**: Update Tailwind config in `index.html` (lines 30-46)
-- **Fonts**: Modify Google Fonts imports in the head section
-- **Custom CSS**: Add styles to `assets/css/custom.css`
+- Colors: Update Tailwind config in `index.html`
+- Fonts: Modify Google Fonts imports
+- Custom CSS: Add styles to `assets/css/custom.css`
 
-### Content
-- **About Section**: Edit the about section in `index.html` (lines 117-174)
-- **Contact Info**: Update contact details (lines 252-258)
-- **Social Links**: Add your social media URLs (lines 262-278)
-
-### Hero Section
-- **Background Image**: Replace hero background in `custom.css` (line 4)
-- **Text**: Update hero text in `index.html` (lines 92-107)
-
-## 🌐 Deployment
-
-### Nginx Configuration
-1. Copy `nginx.conf.example` to your nginx sites directory
-2. Update paths and SSL certificate locations
-3. Restart nginx: `sudo systemctl restart nginx`
-
-### Performance Optimization
-- **Image Compression**: Optimize images before upload
-- **CDN**: Consider using a CDN for images
-- **Caching**: Nginx config includes optimal cache headers
-- **Gzip**: Compression enabled for all text assets
+### Content Categories
+- Photography: landscape, portrait, street, travel
+- Projects: web-development, machine-learning, mobile-development, etc.
 
 ## 📱 Mobile Responsiveness
 
-The site is built mobile-first with breakpoints:
-- **Mobile**: 320px - 768px
-- **Tablet**: 768px - 1024px  
-- **Desktop**: 1024px+
+- **Mobile-First Design**: Optimized for all device sizes
+- **Touch-Friendly Interface**: Drag & drop works on mobile
+- **Responsive Gallery**: Adaptive photo grid
+- **Mobile Upload**: Full upload functionality on mobile devices
 
-## 🔍 SEO Features
+## 🔧 Development
 
-- **Meta Tags**: Comprehensive meta tags for social sharing
-- **Structured Data**: JSON-LD markup for search engines
-- **Sitemap**: XML sitemap for search engine indexing
-- **Performance**: Fast loading for better search rankings
+### Available Scripts
+- `npm start` - Start production server
+- `npm run dev` - Start development server with auto-reload
+- `npm test` - Run tests (placeholder)
 
-## 📈 Analytics & Monitoring
+### Environment Variables
+- `NODE_ENV` - Environment (development/production)
+- `PORT` - Server port (default: 3000)
+- `MAX_FILE_SIZE` - Maximum upload size (default: 50MB)
+- `CORS_ORIGINS` - Allowed CORS origins
 
-To add analytics:
-1. **Google Analytics**: Add tracking code to `index.html`
-2. **Google Search Console**: Verify site ownership
-3. **Performance Monitoring**: Consider adding Core Web Vitals tracking
+## 🚀 Deployment Options
 
-## 🔒 Security
+### Static + API Hosting
+- Frontend: Netlify, Vercel, GitHub Pages
+- Backend: Heroku, DigitalOcean, AWS
 
-- **Content Security Policy**: Configured in nginx
-- **HTTPS Only**: Redirect HTTP to HTTPS
-- **Admin Protection**: Basic auth for admin interface (optional)
+### Full Stack Hosting
+- Single server deployment with nginx reverse proxy
+- Docker containerization ready
+- PM2 process management recommended
 
-## 🛠 Tech Stack
+## 📈 Performance Features
 
-- **Frontend**: HTML5, CSS3, JavaScript (ES6+)
-- **Styling**: Tailwind CSS
-- **Gallery**: PhotoSwipe
-- **EXIF**: ExifReader.js
-- **Server**: Nginx (recommended)
-
-## 📄 License
-
-This project is open source. Feel free to use it as a template for your own portfolio.
+- **Image Optimization**: Automatic compression with Sharp
+- **Caching Headers**: Optimized cache strategies
+- **Lazy Loading**: Progressive image loading
+- **CDN Ready**: External image URL support
+- **Gzip Compression**: Nginx configuration included
 
 ## 🤝 Contributing
 
@@ -215,23 +225,10 @@ This project is open source. Feel free to use it as a template for your own port
 3. Make your changes
 4. Submit a pull request
 
-## 📞 Support
+## 📄 License
 
-For questions or issues:
-- Email: anton@haochen.lu
-- GitHub: Create an issue in the repository
-
-## 🚀 Roadmap
-
-Future enhancements:
-- [ ] Blog integration
-- [ ] Multi-language support
-- [ ] Advanced image editing
-- [ ] Social media integration
-- [ ] Comment system
-- [ ] Search functionality
-- [ ] Progressive Web App features
+This project is open source. Feel free to use it as a template for your own portfolio.
 
 ---
 
-Built with ❤️ by Anton Lu
+Built with ❤️ by Anton Lu. Now featuring a complete backend system for seamless content management.

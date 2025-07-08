@@ -104,12 +104,21 @@ function updateNavbarBackground() {
 // Data loading functions
 async function loadPhotographyData() {
     try {
-        const response = await fetch('/data/photography.json');
+        // Try API first, then fallback to static file
+        let response = await fetch('/api/photos');
+        if (response.ok) {
+            const data = await response.json();
+            photographyData = data.photos || [];
+            return;
+        }
+        
+        // Fallback to static JSON file
+        response = await fetch('/data/photography.json');
         if (response.ok) {
             const data = await response.json();
             photographyData = data.photos || [];
         } else {
-            // Fallback to sample data if file doesn't exist
+            // Final fallback to sample data
             photographyData = getSamplePhotographyData();
         }
     } catch (error) {
@@ -120,12 +129,21 @@ async function loadPhotographyData() {
 
 async function loadProjectsData() {
     try {
-        const response = await fetch('/data/projects.json');
+        // Try API first, then fallback to static file
+        let response = await fetch('/api/projects');
+        if (response.ok) {
+            const data = await response.json();
+            projectsData = data.projects || [];
+            return;
+        }
+        
+        // Fallback to static JSON file
+        response = await fetch('/data/projects.json');
         if (response.ok) {
             const data = await response.json();
             projectsData = data.projects || [];
         } else {
-            // Fallback to sample data if file doesn't exist
+            // Final fallback to sample data
             projectsData = getSampleProjectsData();
         }
     } catch (error) {

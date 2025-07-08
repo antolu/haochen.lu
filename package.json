@@ -1,0 +1,34 @@
+{
+  "name": "photography-portfolio",
+  "version": "1.0.0",
+  "description": "Photography portfolio website with backend content management",
+  "main": "server/app.js",
+  "scripts": {
+    "start": "node server/app.js",
+    "dev": "nodemon server/app.js",
+    "build": "echo 'No build process needed for static frontend'",
+    "test": "echo 'No tests specified'"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
+    "exifr": "^7.1.3",
+    "sharp": "^0.32.6",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.1.5",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "keywords": [
+    "photography",
+    "portfolio",
+    "express",
+    "exif",
+    "image-upload"
+  ],
+  "author": "Anton Lu",
+  "license": "MIT"
+}

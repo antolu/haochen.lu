@@ -10,13 +10,29 @@
             font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
             tab-size: 2;
         }
+        .upload-area {
+            border: 2px dashed #d1d5db;
+            transition: all 0.3s ease;
+        }
+        .upload-area.dragover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+        .photo-preview {
+            max-width: 200px;
+            max-height: 200px;
+            object-fit: cover;
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
     <div class="container mx-auto px-4 py-8">
         <header class="mb-8">
             <h1 class="text-3xl font-bold text-gray-900 mb-2">Content Manager</h1>
-            <p class="text-gray-600">Manage your photography portfolio and projects content</p>
+            <p class="text-gray-600">Upload photos and manage your portfolio content with automatic EXIF extraction</p>
         </header>
 
         <div class="grid lg:grid-cols-2 gap-8">
@@ -24,55 +40,101 @@
             <section class="bg-white rounded-lg shadow-sm border border-gray-200">
                 <div class="p-6 border-b border-gray-200">
                     <h2 class="text-xl font-semibold text-gray-900 mb-2">Photography Portfolio</h2>
-                    <p class="text-gray-600 text-sm">Add, edit, or remove photos from your portfolio</p>
+                    <p class="text-gray-600 text-sm">Upload photos with automatic EXIF extraction</p>
                 </div>
                 
                 <div class="p-6">
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Quick Add Photo</label>
+                    <!-- Photo Upload Section -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Upload Photo</label>
+                        
+                        <!-- Drag & Drop Area -->
+                        <div id="upload-area" class="upload-area p-8 text-center rounded-lg cursor-pointer">
+                            <div id="upload-prompt">
+                                <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <p class="text-lg text-gray-600 mb-2">Drag & drop a photo here</p>
+                                <p class="text-sm text-gray-500 mb-4">or click to select a file</p>
+                                <p class="text-xs text-gray-400">Supports JPEG, PNG, WebP, TIFF (max 50MB)</p>
+                            </div>
+                            
+                            <!-- Upload Progress -->
+                            <div id="upload-progress" class="hidden">
+                                <div class="w-full bg-gray-200 rounded-full h-2 mb-4">
+                                    <div id="progress-bar" class="progress-bar bg-blue-600 h-2 rounded-full" style="width: 0%"></div>
+                                </div>
+                                <p id="upload-status" class="text-sm text-gray-600">Uploading...</p>
+                            </div>
+                            
+                            <!-- Photo Preview -->
+                            <div id="photo-preview" class="hidden mt-4">
+                                <img id="preview-image" class="photo-preview mx-auto rounded-lg shadow-sm">
+                                <div id="exif-preview" class="mt-4 text-left bg-gray-50 p-4 rounded-lg">
+                                    <h4 class="font-medium text-gray-900 mb-2">Extracted Information:</h4>
+                                    <div id="exif-data" class="text-sm text-gray-600 space-y-1"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <input type="file" id="photo-file" accept="image/*" class="hidden">
+                        
+                        <!-- Photo Form -->
+                        <div id="photo-form" class="mt-4 hidden">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <input type="text" id="photo-title" placeholder="Photo Title *" required
+                                       class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <select id="photo-category" 
+                                        class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="landscape">Landscape</option>
+                                    <option value="portrait">Portrait</option>
+                                    <option value="street">Street</option>
+                                    <option value="travel">Travel</option>
+                                </select>
+                            </div>
+                            <textarea id="photo-comment" placeholder="Your comment about this photo..." 
+                                      class="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                      rows="3"></textarea>
+                            <input type="text" id="photo-tags" placeholder="Tags (comma-separated)" 
+                                   class="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            
+                            <div class="flex gap-3 mt-4">
+                                <button onclick="uploadPhoto()" 
+                                        class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors">
+                                    Upload Photo
+                                </button>
+                                <button onclick="cancelUpload()" 
+                                        class="bg-gray-400 text-white px-6 py-2 rounded-md hover:bg-gray-500 transition-colors">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Add External Photo -->
+                    <div class="mb-4 border-t pt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Add External Photo (URL)</label>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <input type="text" id="photo-title" placeholder="Photo Title" 
+                            <input type="text" id="external-photo-title" placeholder="Photo Title" 
                                    class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <select id="photo-category" 
-                                    class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="landscape">Landscape</option>
-                                <option value="portrait">Portrait</option>
-                                <option value="street">Street</option>
-                                <option value="travel">Travel</option>
-                            </select>
-                            <input type="text" id="photo-location" placeholder="Location" 
-                                   class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <input type="url" id="photo-url" placeholder="Image URL" 
+                            <input type="url" id="external-photo-url" placeholder="Image URL" 
                                    class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
-                        <textarea id="photo-comment" placeholder="Your comment about this photo..." 
-                                  class="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                                  rows="3"></textarea>
-                        <button onclick="addPhoto()" 
-                                class="mt-3 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
-                            Add Photo
+                        <button onclick="addExternalPhoto()" 
+                                class="mt-3 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors">
+                            Add External Photo
                         </button>
                     </div>
                     
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Photography JSON Editor</label>
-                        <textarea id="photography-json" class="json-editor w-full h-64 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" 
-                                  placeholder="Photography JSON will load here..."></textarea>
-                    </div>
-                    
-                    <div class="flex gap-3">
-                        <button onclick="loadPhotographyData()" 
-                                class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors">
-                            Load Current Data
-                        </button>
-                        <button onclick="savePhotographyData()" 
-                                class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors">
-                            Save Changes
-                        </button>
-                        <button onclick="validatePhotographyJSON()" 
-                                class="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 transition-colors">
-                            Validate JSON
-                        </button>
+                    <!-- Photo Management -->
+                    <div class="mb-4 border-t pt-4">
+                        <div class="flex justify-between items-center mb-3">
+                            <label class="block text-sm font-medium text-gray-700">Recent Photos</label>
+                            <button onclick="loadPhotos()" class="text-sm text-blue-600 hover:text-blue-800">Refresh</button>
+                        </div>
+                        <div id="recent-photos" class="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-60 overflow-y-auto">
+                            <!-- Recent photos will be loaded here -->
+                        </div>
                     </div>
                 </div>
             </section>
@@ -85,26 +147,35 @@
                 </div>
                 
                 <div class="p-6">
+                    <!-- Project Form -->
                     <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Quick Add Project</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Add New Project</label>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <input type="text" id="project-title" placeholder="Project Title" 
+                            <input type="text" id="project-title" placeholder="Project Title *" required
                                    class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                             <select id="project-category" 
                                     class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 <option value="web-development">Web Development</option>
                                 <option value="machine-learning">Machine Learning</option>
                                 <option value="mobile-development">Mobile Development</option>
+                                <option value="data-science">Data Science</option>
                                 <option value="research">Research</option>
-                                <option value="iot">IoT</option>
-                                <option value="education">Education</option>
+                                <option value="other">Other</option>
                             </select>
                             <input type="url" id="project-github" placeholder="GitHub URL" 
                                    class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                             <input type="url" id="project-demo" placeholder="Demo URL (optional)" 
                                    class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <select id="project-status" 
+                                    class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="completed">Completed</option>
+                                <option value="in-progress">In Progress</option>
+                                <option value="planned">Planned</option>
+                            </select>
+                            <input type="number" id="project-year" placeholder="Year" min="2020" max="2030"
+                                   class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
-                        <textarea id="project-description" placeholder="Project description..." 
+                        <textarea id="project-description" placeholder="Project description..." required
                                   class="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
                                   rows="3"></textarea>
                         <input type="text" id="project-technologies" placeholder="Technologies (comma-separated)" 
@@ -115,65 +186,32 @@
                         </button>
                     </div>
                     
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Projects JSON Editor</label>
-                        <textarea id="projects-json" class="json-editor w-full h-64 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" 
-                                  placeholder="Projects JSON will load here..."></textarea>
-                    </div>
-                    
-                    <div class="flex gap-3">
-                        <button onclick="loadProjectsData()" 
-                                class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors">
-                            Load Current Data
-                        </button>
-                        <button onclick="saveProjectsData()" 
-                                class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors">
-                            Save Changes
-                        </button>
-                        <button onclick="validateProjectsJSON()" 
-                                class="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 transition-colors">
-                            Validate JSON
-                        </button>
+                    <!-- Project Management -->
+                    <div class="mb-4 border-t pt-4">
+                        <div class="flex justify-between items-center mb-3">
+                            <label class="block text-sm font-medium text-gray-700">Recent Projects</label>
+                            <button onclick="loadProjects()" class="text-sm text-blue-600 hover:text-blue-800">Refresh</button>
+                        </div>
+                        <div id="recent-projects" class="space-y-3 max-h-60 overflow-y-auto">
+                            <!-- Recent projects will be loaded here -->
+                        </div>
                     </div>
                 </div>
             </section>
         </div>
 
-        <!-- Instructions Section -->
-        <section class="mt-8 bg-blue-50 rounded-lg border border-blue-200">
+        <!-- Statistics Section -->
+        <section class="mt-8 bg-white rounded-lg shadow-sm border border-gray-200">
             <div class="p-6">
-                <h3 class="text-lg font-semibold text-blue-900 mb-3">📝 Instructions</h3>
-                <div class="grid md:grid-cols-2 gap-6 text-sm text-blue-800">
-                    <div>
-                        <h4 class="font-medium mb-2">Adding Photos:</h4>
-                        <ul class="space-y-1 list-disc list-inside">
-                            <li>Use the quick add form or edit JSON directly</li>
-                            <li>Photo URLs can be external (Unsplash, etc.) or local</li>
-                            <li>Include camera settings for rich metadata display</li>
-                            <li>Add location data for map integration</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h4 class="font-medium mb-2">Managing Projects:</h4>
-                        <ul class="space-y-1 list-disc list-inside">
-                            <li>Include GitHub and demo links when available</li>
-                            <li>List technologies as comma-separated values</li>
-                            <li>Use clear, descriptive project descriptions</li>
-                            <li>Categorize projects for better organization</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="mt-4 p-3 bg-blue-100 rounded-md">
-                    <p class="text-sm text-blue-700">
-                        <strong>Note:</strong> This is a client-side editor. Changes are saved to browser storage. 
-                        To persist changes, copy the JSON and update the files in your data/ directory.
-                    </p>
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Portfolio Statistics</h3>
+                <div id="portfolio-stats" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <!-- Stats will be loaded here -->
                 </div>
             </div>
         </section>
 
         <!-- Status Messages -->
-        <div id="status-message" class="fixed bottom-4 right-4 max-w-sm hidden">
+        <div id="status-message" class="fixed bottom-4 right-4 max-w-sm hidden z-50">
             <div class="bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg">
                 <p id="status-text"></p>
             </div>
@@ -181,222 +219,441 @@
     </div>
 
     <script>
+        let selectedFile = null;
+        let currentPhotoData = null;
+
         // Initialize the content manager
         document.addEventListener('DOMContentLoaded', function() {
-            loadPhotographyData();
-            loadProjectsData();
+            setupDragAndDrop();
+            loadPhotos();
+            loadProjects();
+            loadStats();
+            
+            // Set current year as default
+            document.getElementById('project-year').value = new Date().getFullYear();
         });
 
-        // Photography functions
-        async function loadPhotographyData() {
-            try {
-                // Try to load from server first
-                const response = await fetch('/data/photography.json');
-                let data;
-                
-                if (response.ok) {
-                    data = await response.text();
-                } else {
-                    // Fallback to localStorage or default
-                    data = localStorage.getItem('photography-data') || JSON.stringify({photos: []}, null, 2);
-                }
-                
-                document.getElementById('photography-json').value = data;
-                showStatus('Photography data loaded', 'success');
-            } catch (error) {
-                console.error('Error loading photography data:', error);
-                showStatus('Error loading photography data', 'error');
+        // Drag and drop functionality
+        function setupDragAndDrop() {
+            const uploadArea = document.getElementById('upload-area');
+            const fileInput = document.getElementById('photo-file');
+
+            uploadArea.addEventListener('click', () => fileInput.click());
+            uploadArea.addEventListener('dragover', handleDragOver);
+            uploadArea.addEventListener('dragleave', handleDragLeave);
+            uploadArea.addEventListener('drop', handleDrop);
+            fileInput.addEventListener('change', handleFileSelect);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
             }
         }
 
-        function savePhotographyData() {
-            try {
-                const jsonData = document.getElementById('photography-json').value;
-                const parsed = JSON.parse(jsonData); // Validate JSON
-                
-                localStorage.setItem('photography-data', jsonData);
-                showStatus('Photography data saved to browser storage', 'success');
-                
-                // Provide instructions for file update
-                console.log('Copy this JSON to /data/photography.json:');
-                console.log(jsonData);
-            } catch (error) {
-                showStatus('Invalid JSON format', 'error');
+        function handleFileSelect(e) {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
             }
         }
 
-        function validatePhotographyJSON() {
-            try {
-                const jsonData = document.getElementById('photography-json').value;
-                const parsed = JSON.parse(jsonData);
-                
-                if (!parsed.photos || !Array.isArray(parsed.photos)) {
-                    throw new Error('JSON must have a "photos" array');
-                }
-                
-                showStatus('JSON is valid', 'success');
-            } catch (error) {
-                showStatus(`JSON validation error: ${error.message}`, 'error');
-            }
-        }
-
-        function addPhoto() {
-            const title = document.getElementById('photo-title').value;
-            const category = document.getElementById('photo-category').value;
-            const location = document.getElementById('photo-location').value;
-            const url = document.getElementById('photo-url').value;
-            const comment = document.getElementById('photo-comment').value;
-            
-            if (!title || !url) {
-                showStatus('Title and Image URL are required', 'error');
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showStatus('Please select an image file', 'error');
                 return;
             }
-            
+
+            if (file.size > 50 * 1024 * 1024) {
+                showStatus('File size must be less than 50MB', 'error');
+                return;
+            }
+
+            selectedFile = file;
+            showPhotoPreview(file);
+        }
+
+        function showPhotoPreview(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const previewImage = document.getElementById('preview-image');
+                previewImage.src = e.target.result;
+                
+                document.getElementById('upload-prompt').classList.add('hidden');
+                document.getElementById('photo-preview').classList.remove('hidden');
+                document.getElementById('photo-form').classList.remove('hidden');
+                
+                // Try to extract EXIF data
+                extractExifData(file);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function extractExifData(file) {
+            // This is a simplified version - the real EXIF extraction happens on the server
+            const exifData = document.getElementById('exif-data');
+            exifData.innerHTML = `
+                <div>📁 File: ${file.name}</div>
+                <div>📏 Size: ${(file.size / (1024 * 1024)).toFixed(1)}MB</div>
+                <div>🕒 Modified: ${new Date(file.lastModified).toLocaleDateString()}</div>
+                <div class="text-blue-600 mt-2">⚡ Full EXIF data will be extracted on upload</div>
+            `;
+        }
+
+        async function uploadPhoto() {
+            const title = document.getElementById('photo-title').value.trim();
+            const category = document.getElementById('photo-category').value;
+            const comment = document.getElementById('photo-comment').value.trim();
+            const tags = document.getElementById('photo-tags').value.trim();
+
+            if (!title) {
+                showStatus('Photo title is required', 'error');
+                return;
+            }
+
+            if (!selectedFile) {
+                showStatus('Please select a photo to upload', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('photo', selectedFile);
+            formData.append('title', title);
+            formData.append('category', category);
+            formData.append('comment', comment);
+            formData.append('tags', tags);
+
             try {
-                const currentData = JSON.parse(document.getElementById('photography-json').value);
+                showUploadProgress();
                 
-                const newPhoto = {
-                    id: generateId(title),
-                    filename: url,
-                    title: title,
-                    category: category,
-                    location: {
-                        name: location || 'Unknown',
-                        country: 'Sweden'
-                    },
-                    camera: {
-                        make: 'Camera Make',
-                        model: 'Camera Model',
-                        lens: 'Lens Model',
-                        settings: {
-                            aperture: 'f/5.6',
-                            shutter: '1/125s',
-                            iso: 400,
-                            focal_length: '50mm'
-                        }
-                    },
-                    metadata: {
-                        date: new Date().toISOString(),
-                        filesize: '5.0MB',
-                        dimensions: '1920x1080'
-                    },
-                    comment: comment,
-                    tags: [category, 'photography']
-                };
-                
-                currentData.photos.push(newPhoto);
-                document.getElementById('photography-json').value = JSON.stringify(currentData, null, 2);
-                
-                // Clear form
-                ['photo-title', 'photo-location', 'photo-url', 'photo-comment'].forEach(id => {
-                    document.getElementById(id).value = '';
+                const response = await fetch('/api/upload/photo', {
+                    method: 'POST',
+                    body: formData
                 });
-                
-                showStatus('Photo added successfully', 'success');
-            } catch (error) {
-                showStatus('Error adding photo', 'error');
-            }
-        }
 
-        // Projects functions
-        async function loadProjectsData() {
-            try {
-                const response = await fetch('/data/projects.json');
-                let data;
-                
+                const result = await response.json();
+
                 if (response.ok) {
-                    data = await response.text();
+                    showStatus('Photo uploaded successfully!', 'success');
+                    resetPhotoForm();
+                    loadPhotos();
+                    loadStats();
                 } else {
-                    data = localStorage.getItem('projects-data') || JSON.stringify({projects: []}, null, 2);
+                    throw new Error(result.message || 'Upload failed');
                 }
-                
-                document.getElementById('projects-json').value = data;
-                showStatus('Projects data loaded', 'success');
             } catch (error) {
-                console.error('Error loading projects data:', error);
-                showStatus('Error loading projects data', 'error');
+                console.error('Upload error:', error);
+                showStatus(`Upload failed: ${error.message}`, 'error');
+            } finally {
+                hideUploadProgress();
             }
         }
 
-        function saveProjectsData() {
-            try {
-                const jsonData = document.getElementById('projects-json').value;
-                const parsed = JSON.parse(jsonData);
-                
-                localStorage.setItem('projects-data', jsonData);
-                showStatus('Projects data saved to browser storage', 'success');
-                
-                console.log('Copy this JSON to /data/projects.json:');
-                console.log(jsonData);
-            } catch (error) {
-                showStatus('Invalid JSON format', 'error');
-            }
-        }
-
-        function validateProjectsJSON() {
-            try {
-                const jsonData = document.getElementById('projects-json').value;
-                const parsed = JSON.parse(jsonData);
-                
-                if (!parsed.projects || !Array.isArray(parsed.projects)) {
-                    throw new Error('JSON must have a "projects" array');
-                }
-                
-                showStatus('JSON is valid', 'success');
-            } catch (error) {
-                showStatus(`JSON validation error: ${error.message}`, 'error');
-            }
-        }
-
-        function addProject() {
-            const title = document.getElementById('project-title').value;
-            const category = document.getElementById('project-category').value;
-            const github = document.getElementById('project-github').value;
-            const demo = document.getElementById('project-demo').value;
-            const description = document.getElementById('project-description').value;
-            const technologies = document.getElementById('project-technologies').value;
+        function showUploadProgress() {
+            document.getElementById('photo-form').style.opacity = '0.5';
+            document.getElementById('upload-progress').classList.remove('hidden');
             
+            // Simulate progress
+            let progress = 0;
+            const progressBar = document.getElementById('progress-bar');
+            const statusText = document.getElementById('upload-status');
+            
+            const interval = setInterval(() => {
+                progress += Math.random() * 30;
+                if (progress > 90) progress = 90;
+                
+                progressBar.style.width = `${progress}%`;
+                
+                if (progress < 30) {
+                    statusText.textContent = 'Uploading image...';
+                } else if (progress < 60) {
+                    statusText.textContent = 'Extracting EXIF data...';
+                } else if (progress < 90) {
+                    statusText.textContent = 'Processing image...';
+                }
+            }, 200);
+            
+            // Clear interval after upload completes
+            setTimeout(() => clearInterval(interval), 5000);
+        }
+
+        function hideUploadProgress() {
+            document.getElementById('upload-progress').classList.add('hidden');
+            document.getElementById('photo-form').style.opacity = '1';
+            document.getElementById('progress-bar').style.width = '100%';
+            document.getElementById('upload-status').textContent = 'Upload complete!';
+        }
+
+        function cancelUpload() {
+            resetPhotoForm();
+        }
+
+        function resetPhotoForm() {
+            selectedFile = null;
+            document.getElementById('upload-prompt').classList.remove('hidden');
+            document.getElementById('photo-preview').classList.add('hidden');
+            document.getElementById('photo-form').classList.add('hidden');
+            document.getElementById('upload-progress').classList.add('hidden');
+            
+            // Clear form fields
+            ['photo-title', 'photo-comment', 'photo-tags'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            
+            // Reset file input
+            document.getElementById('photo-file').value = '';
+        }
+
+        async function addExternalPhoto() {
+            const title = document.getElementById('external-photo-title').value.trim();
+            const url = document.getElementById('external-photo-url').value.trim();
+
+            if (!title || !url) {
+                showStatus('Title and URL are required', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/photos', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: title,
+                        filename: url,
+                        category: 'landscape',
+                        location: { name: 'Unknown', country: 'Unknown' },
+                        camera: { make: 'Unknown', model: 'Unknown', settings: {} },
+                        metadata: { date: new Date().toISOString() },
+                        comment: '',
+                        tags: ['external']
+                    })
+                });
+
+                if (response.ok) {
+                    showStatus('External photo added successfully!', 'success');
+                    document.getElementById('external-photo-title').value = '';
+                    document.getElementById('external-photo-url').value = '';
+                    loadPhotos();
+                    loadStats();
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to add photo');
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function addProject() {
+            const title = document.getElementById('project-title').value.trim();
+            const description = document.getElementById('project-description').value.trim();
+            const category = document.getElementById('project-category').value;
+            const github = document.getElementById('project-github').value.trim();
+            const demo = document.getElementById('project-demo').value.trim();
+            const status = document.getElementById('project-status').value;
+            const year = document.getElementById('project-year').value;
+            const technologies = document.getElementById('project-technologies').value.trim();
+
             if (!title || !description) {
                 showStatus('Title and description are required', 'error');
                 return;
             }
-            
+
             try {
-                const currentData = JSON.parse(document.getElementById('projects-json').value);
-                
-                const newProject = {
-                    id: generateId(title),
-                    title: title,
-                    description: description,
-                    technologies: technologies ? technologies.split(',').map(t => t.trim()) : [],
-                    github: github || null,
-                    demo: demo || null,
-                    image: null,
-                    status: 'completed',
-                    year: new Date().getFullYear().toString(),
-                    category: category
-                };
-                
-                currentData.projects.push(newProject);
-                document.getElementById('projects-json').value = JSON.stringify(currentData, null, 2);
-                
-                // Clear form
-                ['project-title', 'project-github', 'project-demo', 'project-description', 'project-technologies'].forEach(id => {
-                    document.getElementById(id).value = '';
+                const response = await fetch('/api/projects', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title,
+                        description,
+                        category,
+                        github: github || null,
+                        demo: demo || null,
+                        status,
+                        year: year || new Date().getFullYear().toString(),
+                        technologies: technologies ? technologies.split(',').map(t => t.trim()) : []
+                    })
                 });
-                
-                showStatus('Project added successfully', 'success');
+
+                if (response.ok) {
+                    showStatus('Project added successfully!', 'success');
+                    
+                    // Clear form
+                    ['project-title', 'project-description', 'project-github', 'project-demo', 'project-technologies'].forEach(id => {
+                        document.getElementById(id).value = '';
+                    });
+                    document.getElementById('project-year').value = new Date().getFullYear();
+                    
+                    loadProjects();
+                    loadStats();
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to add project');
+                }
             } catch (error) {
-                showStatus('Error adding project', 'error');
+                showStatus(`Error: ${error.message}`, 'error');
             }
         }
 
-        // Utility functions
-        function generateId(title) {
-            return title.toLowerCase()
-                       .replace(/[^a-z0-9\s]/g, '')
-                       .replace(/\s+/g, '-')
-                       .substring(0, 30);
+        async function loadPhotos() {
+            try {
+                const response = await fetch('/api/photos?limit=6');
+                const data = await response.json();
+                
+                const container = document.getElementById('recent-photos');
+                container.innerHTML = '';
+                
+                data.photos.forEach(photo => {
+                    const photoDiv = document.createElement('div');
+                    photoDiv.className = 'relative group cursor-pointer';
+                    
+                    const imageSrc = photo.filename.startsWith('http') ? 
+                        photo.filename : `/assets/images/portfolio/${photo.filename}`;
+                    
+                    photoDiv.innerHTML = `
+                        <img src="${imageSrc}" alt="${photo.title}" 
+                             class="w-full h-20 object-cover rounded border">
+                        <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center">
+                            <button onclick="deletePhoto('${photo.id}')" class="text-white text-sm bg-red-500 px-2 py-1 rounded">Delete</button>
+                        </div>
+                        <p class="text-xs text-gray-600 mt-1 truncate">${photo.title}</p>
+                    `;
+                    
+                    container.appendChild(photoDiv);
+                });
+                
+                if (data.photos.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500 text-sm col-span-full text-center">No photos yet</p>';
+                }
+            } catch (error) {
+                console.error('Error loading photos:', error);
+            }
+        }
+
+        async function loadProjects() {
+            try {
+                const response = await fetch('/api/projects?limit=5');
+                const data = await response.json();
+                
+                const container = document.getElementById('recent-projects');
+                container.innerHTML = '';
+                
+                data.projects.forEach(project => {
+                    const projectDiv = document.createElement('div');
+                    projectDiv.className = 'p-3 border rounded-lg hover:bg-gray-50 relative group';
+                    
+                    projectDiv.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h4 class="font-medium text-gray-900 text-sm">${project.title}</h4>
+                                <p class="text-xs text-gray-600 mt-1">${project.description.substring(0, 80)}...</p>
+                                <div class="flex gap-2 mt-2">
+                                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">${project.category}</span>
+                                    <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">${project.status}</span>
+                                </div>
+                            </div>
+                            <button onclick="deleteProject('${project.id}')" 
+                                    class="opacity-0 group-hover:opacity-100 text-red-500 text-sm ml-2">×</button>
+                        </div>
+                    `;
+                    
+                    container.appendChild(projectDiv);
+                });
+                
+                if (data.projects.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500 text-sm text-center">No projects yet</p>';
+                }
+            } catch (error) {
+                console.error('Error loading projects:', error);
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const [photoStats, projectStats] = await Promise.all([
+                    fetch('/api/photos/stats/overview').then(r => r.json()),
+                    fetch('/api/projects/stats/overview').then(r => r.json())
+                ]);
+                
+                const container = document.getElementById('portfolio-stats');
+                container.innerHTML = `
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-blue-600">${photoStats.total}</div>
+                        <div class="text-sm text-gray-600">Photos</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-green-600">${projectStats.total}</div>
+                        <div class="text-sm text-gray-600">Projects</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-purple-600">${photoStats.totalSize || '0MB'}</div>
+                        <div class="text-sm text-gray-600">Storage</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-orange-600">${Object.keys(photoStats.cameras || {}).length}</div>
+                        <div class="text-sm text-gray-600">Cameras</div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        async function deletePhoto(photoId) {
+            if (!confirm('Are you sure you want to delete this photo?')) return;
+            
+            try {
+                const response = await fetch(`/api/photos/${photoId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showStatus('Photo deleted successfully', 'success');
+                    loadPhotos();
+                    loadStats();
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to delete photo');
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function deleteProject(projectId) {
+            if (!confirm('Are you sure you want to delete this project?')) return;
+            
+            try {
+                const response = await fetch(`/api/projects/${projectId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showStatus('Project deleted successfully', 'success');
+                    loadProjects();
+                    loadStats();
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to delete project');
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
         }
 
         function showStatus(message, type = 'success') {
@@ -406,7 +663,6 @@
             
             statusText.textContent = message;
             
-            // Update colors based on type
             statusContainer.className = type === 'error' 
                 ? 'bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg'
                 : 'bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg';
@@ -415,7 +671,7 @@
             
             setTimeout(() => {
                 statusDiv.classList.add('hidden');
-            }, 3000);
+            }, 4000);
         }
     </script>
 </body>

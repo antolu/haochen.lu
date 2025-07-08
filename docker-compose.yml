@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: photography-nginx
+    ports:
+      - "9080:80"
+      - "9443:443"
+    volumes:
+      # nginx configuration
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      # Static frontend files
+      - ./index.html:/usr/share/nginx/html/index.html:ro
+      - ./thisisme.html:/usr/share/nginx/html/thisisme.html:ro
+      - ./assets:/usr/share/nginx/html/assets:ro
+      - ./admin:/usr/share/nginx/html/admin:ro
+      # Data directory for JSON files (read-only for nginx)
+      - ./data:/usr/share/nginx/html/data:ro
+    depends_on:
+      - backend
+    networks:
+      - photography-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: photography-backend
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - MAX_FILE_SIZE=52428800
+      - CORS_ORIGINS=http://localhost:9080,https://localhost:9443
+    volumes:
+      # Data persistence
+      - ./data:/app/data
+      # Image storage
+      - ./assets/images:/app/assets/images
+      # Upload temp directory
+      - backend-uploads:/app/uploads
+    networks:
+      - photography-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    # Don't expose ports externally - only internal network access
+    expose:
+      - "3000"
+
+networks:
+  photography-network:
+    driver: bridge
+
+volumes:
+  backend-uploads:
+    driver: local

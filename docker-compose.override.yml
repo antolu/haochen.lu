@@ -1,0 +1,30 @@
+# Development override for docker-compose
+# This file provides development-specific settings
+# Use: docker-compose -f docker-compose.yml -f docker-compose.override.yml up
+
+version: '3.8'
+
+services:
+  nginx:
+    # Development nginx config (if needed)
+    # ports:
+    #   - "8080:80"  # Alternative port for development
+    
+  backend:
+    # Development environment overrides
+    environment:
+      - NODE_ENV=development
+      - LOG_LEVEL=debug
+    
+    # Enable live reload for development (optional)
+    volumes:
+      # Mount source code for development (uncomment for live editing)
+      # - ./server:/app/server:ro
+      - ./data:/app/data
+      - ./assets/images:/app/assets/images
+    
+    # Development build context (rebuild for changes)
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      target: development  # If you add multi-stage builds later
