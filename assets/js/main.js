@@ -198,15 +198,33 @@ function createPhotoElement(photo) {
     photoDiv.className = 'photo-item aspect-square md:aspect-[4/3] lg:aspect-square';
     photoDiv.setAttribute('data-category', photo.category);
     
-    const photoPath = photo.filename.startsWith('http') 
-        ? photo.filename 
-        : `/assets/images/portfolio/${photo.filename}`;
+    // Generate image paths for WebP and JPEG
+    const getImagePath = (filename) => {
+        return filename.startsWith('http') 
+            ? filename 
+            : `/assets/images/portfolio/${filename}`;
+    };
+    
+    // Use new image structure if available, fallback to old structure
+    let webpPath, jpegPath;
+    if (photo.images && photo.images.medium) {
+        webpPath = getImagePath(photo.images.medium.webp.filename);
+        jpegPath = getImagePath(photo.images.medium.jpeg.filename);
+    } else {
+        // Fallback for old structure
+        const baseFilename = photo.filename.replace(/\.[^/.]+$/, '');
+        webpPath = getImagePath(`${baseFilename}.webp`);
+        jpegPath = getImagePath(photo.filename);
+    }
     
     photoDiv.innerHTML = `
-        <img src="${photoPath}" 
-             alt="${photo.title}" 
-             class="w-full h-full object-cover"
-             loading="lazy">
+        <picture>
+            <source srcset="${webpPath}" type="image/webp">
+            <img src="${jpegPath}" 
+                 alt="${photo.title}" 
+                 class="w-full h-full object-cover"
+                 loading="lazy">
+        </picture>
         <div class="photo-overlay">
             <div class="photo-info">
                 <div class="photo-title">${photo.title}</div>
@@ -232,16 +250,34 @@ function showPhotoMetadata(photo) {
     
     if (!modal || !metadataContent) return;
     
-    const photoPath = photo.filename.startsWith('http') 
-        ? photo.filename 
-        : `/assets/images/portfolio/${photo.filename}`;
+    // Generate image paths for WebP and JPEG
+    const getImagePath = (filename) => {
+        return filename.startsWith('http') 
+            ? filename 
+            : `/assets/images/portfolio/${filename}`;
+    };
+    
+    // Use new image structure if available, fallback to old structure
+    let webpPath, jpegPath;
+    if (photo.images && photo.images.large) {
+        webpPath = getImagePath(photo.images.large.webp.filename);
+        jpegPath = getImagePath(photo.images.large.jpeg.filename);
+    } else {
+        // Fallback for old structure
+        const baseFilename = photo.filename.replace(/\.[^/.]+$/, '');
+        webpPath = getImagePath(`${baseFilename}.webp`);
+        jpegPath = getImagePath(photo.filename);
+    }
     
     metadataContent.innerHTML = `
         <div class="grid md:grid-cols-2 gap-6">
             <div>
-                <img src="${photoPath}" 
-                     alt="${photo.title}" 
-                     class="w-full h-64 md:h-80 object-cover rounded-lg">
+                <picture>
+                    <source srcset="${webpPath}" type="image/webp">
+                    <img src="${jpegPath}" 
+                         alt="${photo.title}" 
+                         class="w-full h-64 md:h-80 object-cover rounded-lg">
+                </picture>
             </div>
             <div>
                 <h3 class="text-2xl font-bold mb-4">${photo.title}</h3>

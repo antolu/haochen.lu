@@ -134,17 +134,77 @@ router.post('/photo', upload.single('photo'), async (req, res) => {
     // Format camera settings
     const cameraSettings = formatCameraSettings(exifData);
 
-    // Process and optimize image
-    console.log('Processing image...');
-    const imageInfo = await sharp(req.file.buffer)
-      .rotate() // Auto-rotate based on EXIF orientation
-      .jpeg({ quality: 85, mozjpeg: true })
-      .toFile(outputPath);
+    // Process and optimize image with Sharp (WebP + JPEG)
+    console.log('Processing image with Sharp...');
+    
+    // Get image dimensions using Sharp for metadata
+    const metadata = await sharp(req.file.buffer).metadata();
+    
+    // Define image sizes
+    const sizes = {
+      thumbnail: { width: 300, height: 200 },
+      medium: { width: 1200, height: 800 },
+      large: { width: 1920, height: 1280 }
+    };
+    
+    const processedImages = {};
+    
+    // Process each size
+    for (const [sizeName, dimensions] of Object.entries(sizes)) {
+      console.log(`Processing ${sizeName} size...`);
+      
+      // Create base Sharp instance with resizing
+      const sharpInstance = sharp(req.file.buffer)
+        .rotate() // Auto-rotate based on EXIF orientation
+        .resize(dimensions.width, dimensions.height, { 
+          fit: 'inside',
+          withoutEnlargement: true
+        });
+      
+      // Generate WebP version
+      const webpPath = path.join(path.dirname(outputPath), `${photoId}_${sizeName}.webp`);
+      const webpInfo = await sharpInstance.clone()
+        .webp({ 
+          quality: sizeName === 'thumbnail' ? 75 : 80,
+          effort: 6
+        })
+        .toFile(webpPath);
+      
+      // Generate JPEG version
+      const jpegPath = path.join(path.dirname(outputPath), `${photoId}_${sizeName}.jpg`);
+      const jpegInfo = await sharpInstance.clone()
+        .jpeg({ 
+          quality: sizeName === 'thumbnail' ? 80 : 85,
+          mozjpeg: true,
+          progressive: true
+        })
+        .toFile(jpegPath);
+      
+      // Store results
+      processedImages[sizeName] = {
+        webp: {
+          filename: `${photoId}_${sizeName}.webp`,
+          size: webpInfo.size
+        },
+        jpeg: {
+          filename: `${photoId}_${sizeName}.jpg`,
+          size: jpegInfo.size
+        }
+      };
+    }
+    
+    // Create imageInfo for compatibility
+    const imageInfo = {
+      width: metadata.width,
+      height: metadata.height,
+      size: processedImages.large.jpeg.size
+    };
 
     // Create photo object
     const photoData = {
       id: photoId,
-      filename: filename,
+      filename: filename, // Keep for compatibility
+      images: processedImages,
       title: title.trim(),
       category: category,
       location: location,
@@ -158,7 +218,12 @@ router.post('/photo', upload.single('photo'), async (req, res) => {
         date: exifData.DateTimeOriginal || exifData.DateTime || new Date().toISOString(),
         filesize: `${(imageInfo.size / (1024 * 1024)).toFixed(1)}MB`,
         dimensions: `${imageInfo.width}x${imageInfo.height}`,
-        originalName: req.file.originalname
+        originalName: req.file.originalname,
+        sizes: {
+          thumbnail: `${(processedImages.thumbnail.webp.size / 1024).toFixed(1)}KB WebP / ${(processedImages.thumbnail.jpeg.size / 1024).toFixed(1)}KB JPEG`,
+          medium: `${(processedImages.medium.webp.size / (1024 * 1024)).toFixed(1)}MB WebP / ${(processedImages.medium.jpeg.size / (1024 * 1024)).toFixed(1)}MB JPEG`,
+          large: `${(processedImages.large.webp.size / (1024 * 1024)).toFixed(1)}MB WebP / ${(processedImages.large.jpeg.size / (1024 * 1024)).toFixed(1)}MB JPEG`
+        }
       },
       comment: comment.trim(),
       tags: tags ? tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [],
