@@ -120,14 +120,14 @@ const HomePage: React.FC = () => {
 
 
       {/* About Section */}
-      <section id="about-section" className="py-32 bg-gray-50">
+      <section id="about-section" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="text-center mb-24"
+            className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-serif font-bold mb-4">About Me</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
@@ -196,14 +196,14 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Featured Photography */}
-      <section className="py-32 bg-white">
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="text-center mb-24"
+            className="text-center mb-12"
           >
             <h2 className="text-4xl font-serif font-bold text-gray-900 mb-4">
               Featured Photography
@@ -214,7 +214,7 @@ const HomePage: React.FC = () => {
           </motion.div>
 
           {featuredPhotos && featuredPhotos.length > 0 && (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-16">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-10">
               {featuredPhotos.slice(0, 6).map((photo, index) => (
                 <motion.div
                   key={photo.id}
@@ -251,14 +251,14 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Featured Projects */}
-      <section className="py-32 bg-gray-50">
+      <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="text-center mb-24"
+            className="text-center mb-12"
           >
             <h2 className="text-4xl font-serif font-bold text-gray-900 mb-4">
               Featured Projects
@@ -269,7 +269,7 @@ const HomePage: React.FC = () => {
           </motion.div>
 
           {featuredProjects && featuredProjects.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-16">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
               {featuredProjects.slice(0, 4).map((project, index) => (
                 <motion.div
                   key={project.id}
