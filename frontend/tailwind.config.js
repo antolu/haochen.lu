@@ -4,6 +4,29 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  safelist: [
+    // Common background colors
+    'bg-gray-50', 'bg-gray-100', 'bg-gray-200', 'bg-gray-300', 'bg-gray-400',
+    'bg-gray-500', 'bg-gray-600', 'bg-gray-700', 'bg-gray-800', 'bg-gray-900',
+    'bg-white', 'bg-black',
+    // Primary colors
+    'bg-primary-50', 'bg-primary-100', 'bg-primary-200', 'bg-primary-300',
+    'bg-primary-400', 'bg-primary-500', 'bg-primary-600', 'bg-primary-700',
+    'bg-primary-800', 'bg-primary-900',
+    // Text colors
+    'text-gray-50', 'text-gray-100', 'text-gray-200', 'text-gray-300', 'text-gray-400',
+    'text-gray-500', 'text-gray-600', 'text-gray-700', 'text-gray-800', 'text-gray-900',
+    'text-white', 'text-black',
+    'text-primary-50', 'text-primary-100', 'text-primary-200', 'text-primary-300',
+    'text-primary-400', 'text-primary-500', 'text-primary-600', 'text-primary-700',
+    'text-primary-800', 'text-primary-900',
+    // Gradients
+    'from-gray-900', 'to-gray-700', 'from-primary-600', 'to-primary-800',
+    // Borders
+    'border-gray-200', 'border-gray-300', 'border-white', 'border-primary-600',
+    // Common utility classes
+    'hover:bg-primary-700', 'hover:bg-gray-100', 'hover:text-gray-900',
+  ],
   theme: {
     extend: {
       fontFamily: {
