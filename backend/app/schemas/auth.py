@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from uuid import UUID
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, model_validator
 
 
 class LoginRequest(BaseModel):
@@ -20,12 +20,15 @@ class UserResponse(BaseModel):
     email: str | None
     is_admin: bool
     
-    @field_validator('id')
+    @model_validator(mode='before')
     @classmethod
-    def convert_uuid_to_str(cls, v):
-        if isinstance(v, UUID):
-            return str(v)
-        return v
+    def convert_uuid_to_str(cls, data):
+        if hasattr(data, 'id') and isinstance(data.id, UUID):
+            data = dict(data.__dict__) if hasattr(data, '__dict__') else data
+            data['id'] = str(data['id'])
+        elif isinstance(data, dict) and 'id' in data and isinstance(data['id'], UUID):
+            data['id'] = str(data['id'])
+        return data
     
     class Config:
         from_attributes = True
