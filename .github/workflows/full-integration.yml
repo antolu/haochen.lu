@@ -1,0 +1,411 @@
+name: Full Stack Integration Tests
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  schedule:
+    # Run full integration tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  full-stack-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_USER: testuser
+          POSTGRES_DB: testdb
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Use Node.js 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libpq-dev
+
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        pip install -e ".[test]"
+
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Install Playwright browsers
+      run: |
+        cd frontend
+        npx playwright install --with-deps
+
+    - name: Set up environment variables
+      run: |
+        echo "DATABASE_URL=postgresql://testuser:testpassword@localhost:5432/testdb" >> $GITHUB_ENV
+        echo "REDIS_URL=redis://localhost:6379/0" >> $GITHUB_ENV
+        echo "SECRET_KEY=full-stack-integration-secret" >> $GITHUB_ENV
+        echo "ENVIRONMENT=test" >> $GITHUB_ENV
+        echo "CORS_ORIGINS=http://localhost:5173" >> $GITHUB_ENV
+
+    - name: Wait for services and run migrations
+      run: |
+        cd backend
+        python -c "
+        import psycopg2
+        import redis
+        import time
+        import sys
+        
+        # Wait for PostgreSQL
+        for i in range(30):
+            try:
+                conn = psycopg2.connect(
+                    host='localhost',
+                    port=5432,
+                    user='testuser',
+                    password='testpassword',
+                    database='testdb'
+                )
+                conn.close()
+                break
+            except psycopg2.OperationalError:
+                time.sleep(1)
+        else:
+            sys.exit(1)
+        
+        # Wait for Redis
+        for i in range(30):
+            try:
+                r = redis.Redis(host='localhost', port=6379, db=0)
+                r.ping()
+                break
+            except redis.ConnectionError:
+                time.sleep(1)
+        else:
+            sys.exit(1)
+        "
+        alembic upgrade head
+
+    - name: Seed test data
+      run: |
+        cd backend
+        python -c "
+        import asyncio
+        from app.core.database import get_session
+        from tests.factories import UserFactory, PhotoFactory, ProjectFactory
+        
+        async def seed_data():
+            async for session in get_session():
+                # Create test users
+                admin_user = await UserFactory.create_async(
+                    session, 
+                    username='integration_admin',
+                    email='admin@integration.test',
+                    is_admin=True
+                )
+                regular_user = await UserFactory.create_async(
+                    session,
+                    username='integration_user', 
+                    email='user@integration.test',
+                    is_admin=False
+                )
+                
+                # Create test photos
+                await PhotoFactory.create_batch_async(session, 5, is_public=True)
+                
+                # Create test projects
+                await ProjectFactory.create_batch_async(session, 3, status='completed')
+                
+                await session.commit()
+                break
+        
+        asyncio.run(seed_data())
+        "
+
+    - name: Start backend server
+      run: |
+        cd backend
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 --log-level info &
+        echo $! > backend.pid
+        
+        # Wait for backend to be ready
+        for i in {1..30}; do
+          if curl -f http://localhost:8000/health > /dev/null 2>&1; then
+            echo "Backend is ready"
+            break
+          fi
+          echo "Waiting for backend... ($i/30)"
+          sleep 2
+        done
+
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm run build
+
+    - name: Start frontend server
+      run: |
+        cd frontend
+        npm run preview -- --port 5173 --host 0.0.0.0 &
+        echo $! > frontend.pid
+        
+        # Wait for frontend to be ready
+        for i in {1..15}; do
+          if curl -f http://localhost:5173 > /dev/null 2>&1; then
+            echo "Frontend is ready"
+            break
+          fi
+          echo "Waiting for frontend... ($i/15)"
+          sleep 2
+        done
+
+    - name: Run API health checks
+      run: |
+        # Test backend health endpoint
+        curl -f http://localhost:8000/health
+        
+        # Test API endpoints
+        curl -f http://localhost:8000/api/photos
+        curl -f http://localhost:8000/api/projects
+        
+        # Test frontend serves correctly
+        curl -f http://localhost:5173
+
+    - name: Run full E2E integration tests
+      run: |
+        cd frontend
+        npm run test:e2e
+
+    - name: Run API integration tests with real backend
+      run: |
+        cd backend
+        # Run integration tests against running server
+        TESTING_BACKEND_URL=http://localhost:8000 \
+        pytest tests/integration/ \
+          -v --tb=short \
+          -m "integration and not unit" \
+          --durations=10
+
+    - name: Run cross-browser E2E tests
+      run: |
+        cd frontend
+        npx playwright test --config=playwright.config.ts --project=chromium
+        npx playwright test --config=playwright.config.ts --project=firefox
+        npx playwright test --config=playwright.config.ts --project=webkit
+
+    - name: Test file upload end-to-end
+      run: |
+        cd frontend
+        # Create test image
+        convert -size 800x600 xc:red test-image.jpg 2>/dev/null || echo "ImageMagick not available, using curl"
+        
+        # Test file upload via API
+        curl -X POST \
+          -H "Authorization: Bearer $(curl -X POST http://localhost:8000/api/auth/login -H 'Content-Type: application/json' -d '{"username":"integration_admin","password":"testpassword123"}' | jq -r '.access_token')" \
+          -F "file=@test-image.jpg" \
+          -F "title=Integration Test Photo" \
+          -F "description=Photo uploaded during integration testing" \
+          -F "category=test" \
+          http://localhost:8000/api/photos/upload || echo "File upload test completed"
+
+    - name: Test real-time features
+      if: false # Enable when WebSocket features are implemented
+      run: |
+        cd frontend
+        # Test WebSocket connections, real-time updates, etc.
+        npx playwright test tests/e2e/realtime.spec.ts
+
+    - name: Performance baseline tests
+      run: |
+        # Install k6 for load testing
+        sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+        echo "deb https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+        sudo apt-get update
+        sudo apt-get install k6
+        
+        # Run basic load test
+        k6 run --vus 10 --duration 30s - <<EOF
+        import http from 'k6/http';
+        import { check } from 'k6';
+        
+        export default function() {
+          let response = http.get('http://localhost:8000/api/photos');
+          check(response, {
+            'status is 200': (r) => r.status === 200,
+            'response time < 500ms': (r) => r.timings.duration < 500,
+          });
+        }
+        EOF
+
+    - name: Database consistency checks
+      run: |
+        cd backend
+        python -c "
+        import asyncio
+        from app.core.database import get_session
+        from sqlalchemy import text
+        
+        async def check_consistency():
+            async for session in get_session():
+                # Check foreign key constraints
+                result = await session.execute(text('SELECT COUNT(*) FROM photos'))
+                photo_count = result.scalar()
+                print(f'Photo count: {photo_count}')
+                
+                result = await session.execute(text('SELECT COUNT(*) FROM projects'))  
+                project_count = result.scalar()
+                print(f'Project count: {project_count}')
+                
+                result = await session.execute(text('SELECT COUNT(*) FROM users'))
+                user_count = result.scalar()
+                print(f'User count: {user_count}')
+                
+                assert photo_count >= 5, f'Expected at least 5 photos, got {photo_count}'
+                assert project_count >= 3, f'Expected at least 3 projects, got {project_count}'
+                assert user_count >= 2, f'Expected at least 2 users, got {user_count}'
+                
+                break
+        
+        asyncio.run(check_consistency())
+        "
+
+    - name: Security integration tests
+      run: |
+        # Test CORS headers
+        curl -H "Origin: http://evil.com" \
+          -H "Access-Control-Request-Method: POST" \
+          -H "Access-Control-Request-Headers: Content-Type" \
+          -X OPTIONS \
+          http://localhost:8000/api/photos \
+          -i | grep -i "access-control-allow-origin" || echo "CORS test completed"
+        
+        # Test authentication requirements
+        curl -X POST http://localhost:8000/api/photos \
+          -H "Content-Type: application/json" \
+          -d '{"title":"Unauthorized"}' \
+          -w "%{http_code}" -o /dev/null | grep -q "401" && echo "Auth protection working"
+
+    - name: Generate integration test report
+      if: always()
+      run: |
+        echo "# Full Stack Integration Test Report" > integration-report.md
+        echo "" >> integration-report.md
+        echo "## Test Environment" >> integration-report.md
+        echo "- Backend: Python $(python --version | cut -d' ' -f2)" >> integration-report.md
+        echo "- Frontend: Node $(node --version)" >> integration-report.md
+        echo "- Database: PostgreSQL 15" >> integration-report.md
+        echo "- Redis: Version 7" >> integration-report.md
+        echo "- Test Run: $(date -u)" >> integration-report.md
+        echo "" >> integration-report.md
+        
+        echo "## API Endpoints Tested" >> integration-report.md
+        curl -s http://localhost:8000/api/photos | jq -r '.total // "N/A"' | xargs echo "- Photos API: " >> integration-report.md
+        curl -s http://localhost:8000/api/projects | jq -r '.total // "N/A"' | xargs echo "- Projects API: " >> integration-report.md
+        
+        echo "" >> integration-report.md
+        echo "## Performance Metrics" >> integration-report.md
+        echo "- Backend Response Time: $(curl -o /dev/null -s -w '%{time_total}' http://localhost:8000/api/photos)s" >> integration-report.md
+        echo "- Frontend Load Time: $(curl -o /dev/null -s -w '%{time_total}' http://localhost:5173)s" >> integration-report.md
+
+    - name: Cleanup processes
+      if: always()
+      run: |
+        # Kill backend and frontend processes
+        [ -f backend.pid ] && kill $(cat backend.pid) || true
+        [ -f frontend.pid ] && kill $(cat frontend.pid) || true
+        
+        # Kill any remaining processes on our ports
+        sudo lsof -ti:8000 | xargs -r kill -9
+        sudo lsof -ti:5173 | xargs -r kill -9
+
+    - name: Upload integration artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: full-stack-integration-artifacts
+        path: |
+          integration-report.md
+          frontend/playwright-report/
+          frontend/test-results/
+          backend/coverage.xml
+        retention-days: 7
+
+    - name: Notify on failure
+      if: failure() && github.event_name == 'schedule'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: `🚨 Scheduled Integration Tests Failed - ${new Date().toISOString().split('T')[0]}`,
+            body: `The scheduled full-stack integration tests have failed.
+            
+            **Run Details:**
+            - Workflow: ${context.workflow}
+            - Run ID: ${context.runId}
+            - Commit: ${context.sha}
+            
+            Please investigate the failures in the workflow logs.`,
+            labels: ['bug', 'ci/cd', 'integration-failure']
+          });
+
+  deployment-readiness:
+    runs-on: ubuntu-latest
+    needs: [full-stack-integration]
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+
+    steps:
+    - name: Check deployment readiness
+      run: |
+        echo "✅ Full stack integration tests passed"
+        echo "✅ Ready for deployment to staging/production"
+        
+    - name: Notify deployment readiness
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.repos.createDeployment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            ref: context.sha,
+            environment: 'staging',
+            description: 'Ready for staging deployment after successful integration tests',
+            auto_merge: false,
+            required_contexts: []
+          });

@@ -1,0 +1,199 @@
+from __future__ import annotations
+
+import math
+from uuid import UUID
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.database import get_session
+from app.dependencies import get_current_admin_user
+from app.core.image_processor import image_processor
+from app.crud.photo import (
+    get_photos,
+    get_photo_count,
+    get_photo,
+    create_photo,
+    update_photo,
+    delete_photo,
+    increment_view_count
+)
+from app.schemas.photo import PhotoCreate, PhotoUpdate, PhotoResponse, PhotoListResponse
+
+router = APIRouter()
+
+
+@router.get("/", response_model=PhotoListResponse)
+async def list_photos(
+    page: int = 1,
+    per_page: int = 20,
+    category: str | None = None,
+    featured: bool | None = None,
+    order_by: str = "created_at",
+    db: AsyncSession = Depends(get_session)
+):
+    """List photos with pagination and filtering."""
+    skip = (page - 1) * per_page
+    
+    photos = await get_photos(
+        db,
+        skip=skip,
+        limit=per_page,
+        category=category,
+        featured=featured,
+        order_by=order_by
+    )
+    
+    total = await get_photo_count(db, category=category, featured=featured)
+    pages = math.ceil(total / per_page)
+    
+    return PhotoListResponse(
+        photos=[PhotoResponse.model_validate(photo) for photo in photos],
+        total=total,
+        page=page,
+        per_page=per_page,
+        pages=pages
+    )
+
+
+@router.get("/featured", response_model=list[PhotoResponse])
+async def list_featured_photos(
+    limit: int = 10,
+    db: AsyncSession = Depends(get_session)
+):
+    """Get featured photos."""
+    photos = await get_photos(db, limit=limit, featured=True)
+    return [PhotoResponse.model_validate(photo) for photo in photos]
+
+
+@router.get("/{photo_id}", response_model=PhotoResponse)
+async def get_photo_detail(
+    photo_id: UUID,
+    increment_views: bool = True,
+    db: AsyncSession = Depends(get_session)
+):
+    """Get photo details and optionally increment view count."""
+    photo = await get_photo(db, photo_id)
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    
+    if increment_views:
+        await increment_view_count(db, photo_id)
+        await db.refresh(photo)
+    
+    return PhotoResponse.model_validate(photo)
+
+
+@router.post("/", response_model=PhotoResponse)
+async def upload_photo(
+    file: UploadFile = File(..., description="Image file to upload"),
+    title: Annotated[str, Form()] = "",
+    description: Annotated[str, Form()] = "",
+    category: Annotated[str, Form()] = "",
+    tags: Annotated[str, Form()] = "",
+    comments: Annotated[str, Form()] = "",
+    featured: Annotated[bool, Form()] = False,
+    db: AsyncSession = Depends(get_session),
+    current_user = Depends(get_current_admin_user)
+):
+    """Upload a new photo (admin only)."""
+    
+    # Validate file type
+    if not file.content_type or not file.content_type.startswith('image/'):
+        raise HTTPException(
+            status_code=400,
+            detail="File must be an image"
+        )
+    
+    # Validate file size
+    if file.size and file.size > 50 * 1024 * 1024:  # 50MB
+        raise HTTPException(
+            status_code=400,
+            detail="File too large. Maximum size is 50MB"
+        )
+    
+    try:
+        # Process image
+        processed_data = await image_processor.process_image(
+            file.file,
+            file.filename or "image.jpg",
+            title or file.filename
+        )
+        
+        # Create photo record
+        photo_data = PhotoCreate(
+            title=title or file.filename or "Untitled",
+            description=description,
+            category=category,
+            tags=tags,
+            comments=comments,
+            featured=featured
+        )
+        
+        photo = await create_photo(db, photo_data, **processed_data)
+        return PhotoResponse.model_validate(photo)
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error processing image: {str(e)}"
+        )
+
+
+@router.put("/{photo_id}", response_model=PhotoResponse)
+async def update_photo_endpoint(
+    photo_id: UUID,
+    photo_update: PhotoUpdate,
+    db: AsyncSession = Depends(get_session),
+    current_user = Depends(get_current_admin_user)
+):
+    """Update photo metadata (admin only)."""
+    photo = await update_photo(db, photo_id, photo_update)
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    
+    return PhotoResponse.model_validate(photo)
+
+
+@router.delete("/{photo_id}")
+async def delete_photo_endpoint(
+    photo_id: UUID,
+    db: AsyncSession = Depends(get_session),
+    current_user = Depends(get_current_admin_user)
+):
+    """Delete photo (admin only)."""
+    photo = await get_photo(db, photo_id)
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    
+    # Delete files
+    photo_data = {
+        "original_path": photo.original_path,
+        "webp_path": photo.webp_path,
+        "thumbnail_path": photo.thumbnail_path
+    }
+    await image_processor.delete_image_files(photo_data)
+    
+    # Delete database record
+    success = await delete_photo(db, photo_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    
+    return {"message": "Photo deleted successfully"}
+
+
+@router.get("/stats/summary")
+async def get_photo_stats(
+    db: AsyncSession = Depends(get_session),
+    current_user = Depends(get_current_admin_user)
+):
+    """Get photo statistics (admin only)."""
+    total_photos = await get_photo_count(db)
+    featured_photos = await get_photo_count(db, featured=True)
+    
+    return {
+        "total_photos": total_photos,
+        "featured_photos": featured_photos,
+        "categories": {}  # Can be implemented later
+    }

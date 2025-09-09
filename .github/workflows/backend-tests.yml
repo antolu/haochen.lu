@@ -1,0 +1,324 @@
+name: Backend Tests
+
+on:
+  push:
+    branches: [ master, develop ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-tests.yml'
+  pull_request:
+    branches: [ master, develop ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-tests.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_USER: testuser
+          POSTGRES_DB: testdb
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('backend/pyproject.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -e ".[test]"
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libpq-dev
+
+    - name: Set up environment variables
+      run: |
+        echo "DATABASE_URL=postgresql://testuser:testpassword@localhost:5432/testdb" >> $GITHUB_ENV
+        echo "REDIS_URL=redis://localhost:6379/0" >> $GITHUB_ENV
+        echo "SECRET_KEY=test-secret-key-for-ci" >> $GITHUB_ENV
+        echo "ENVIRONMENT=test" >> $GITHUB_ENV
+
+    - name: Wait for services
+      run: |
+        cd backend
+        python -c "
+        import psycopg2
+        import redis
+        import time
+        import sys
+        
+        # Wait for PostgreSQL
+        for i in range(30):
+            try:
+                conn = psycopg2.connect(
+                    host='localhost',
+                    port=5432,
+                    user='testuser',
+                    password='testpassword',
+                    database='testdb'
+                )
+                conn.close()
+                print('PostgreSQL is ready')
+                break
+            except psycopg2.OperationalError:
+                time.sleep(1)
+        else:
+            print('PostgreSQL failed to start')
+            sys.exit(1)
+        
+        # Wait for Redis
+        for i in range(30):
+            try:
+                r = redis.Redis(host='localhost', port=6379, db=0)
+                r.ping()
+                print('Redis is ready')
+                break
+            except redis.ConnectionError:
+                time.sleep(1)
+        else:
+            print('Redis failed to start')
+            sys.exit(1)
+        "
+
+    - name: Run database migrations
+      run: |
+        cd backend
+        alembic upgrade head
+
+    - name: Run P0 Critical Security Tests
+      run: |
+        cd backend
+        pytest tests/unit/auth/ tests/integration/auth/ \
+               tests/unit/upload/ tests/integration/database/ \
+               -v --tb=short --strict-markers \
+               --cov=app --cov-report=xml --cov-report=term \
+               --cov-fail-under=90 \
+               -m "not slow"
+
+    - name: Run P1 Core Functionality Tests
+      run: |
+        cd backend
+        pytest tests/unit/image/ tests/integration/image/ \
+               tests/integration/api/ \
+               -v --tb=short --strict-markers \
+               --cov=app --cov-report=xml --cov-report=term \
+               --cov-append \
+               -m "not slow"
+
+    - name: Run P1 Performance Tests (Quick)
+      run: |
+        cd backend
+        pytest tests/performance/ \
+               -v --tb=short --strict-markers \
+               --cov=app --cov-report=xml --cov-report=term \
+               --cov-append \
+               -m "not slow and not benchmark"
+
+    - name: Run P2 Business Logic Tests
+      run: |
+        cd backend
+        pytest tests/unit/services/ \
+               -v --tb=short --strict-markers \
+               --cov=app --cov-report=xml --cov-report=term \
+               --cov-append \
+               -m "not slow"
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./backend/coverage.xml
+        flags: backend
+        name: backend-coverage
+        fail_ci_if_error: true
+
+    - name: Generate test report
+      if: always()
+      run: |
+        cd backend
+        pytest --collect-only --quiet | grep "test session starts" || echo "No tests collected"
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Install security tools
+      run: |
+        pip install bandit safety pip-audit
+
+    - name: Run Bandit security scan
+      run: |
+        cd backend
+        bandit -r app/ -f json -o bandit-report.json || true
+
+    - name: Run Safety check
+      run: |
+        cd backend
+        pip install -e ".[test]"
+        safety check --json --output safety-report.json || true
+
+    - name: Run pip-audit
+      run: |
+        cd backend
+        pip-audit --format=json --output=audit-report.json || true
+
+    - name: Upload security reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: security-reports
+        path: |
+          backend/bandit-report.json
+          backend/safety-report.json
+          backend/audit-report.json
+
+  lint-and-format:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Install dependencies
+      run: |
+        cd backend
+        pip install -e ".[test]"
+
+    - name: Run ruff linting
+      run: |
+        cd backend
+        ruff check --format=github .
+
+    - name: Run ruff formatting check
+      run: |
+        cd backend
+        ruff format --check .
+
+    - name: Run mypy type checking
+      run: |
+        cd backend
+        mypy app/ --strict --ignore-missing-imports
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    needs: [test, security-scan, lint-and-format]
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_USER: testuser  
+          POSTGRES_DB: testdb
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Install dependencies
+      run: |
+        cd backend
+        pip install -e ".[test]"
+
+    - name: Set up environment variables
+      run: |
+        echo "DATABASE_URL=postgresql://testuser:testpassword@localhost:5432/testdb" >> $GITHUB_ENV
+        echo "REDIS_URL=redis://localhost:6379/0" >> $GITHUB_ENV
+        echo "SECRET_KEY=test-secret-key-for-integration" >> $GITHUB_ENV
+        echo "ENVIRONMENT=test" >> $GITHUB_ENV
+
+    - name: Run full integration tests
+      run: |
+        cd backend
+        alembic upgrade head
+        pytest tests/integration/ \
+               -v --tb=short --strict-markers \
+               --cov=app --cov-report=xml \
+               --durations=10
+
+    - name: Run performance benchmarks
+      if: github.event_name == 'pull_request'
+      run: |
+        cd backend
+        pytest tests/performance/ \
+               -v --tb=short --strict-markers \
+               -m "benchmark" \
+               --benchmark-only \
+               --benchmark-json=benchmark-results.json
+
+    - name: Upload benchmark results
+      if: github.event_name == 'pull_request'
+      uses: actions/upload-artifact@v3
+      with:
+        name: benchmark-results
+        path: backend/benchmark-results.json

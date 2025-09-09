@@ -1,234 +1,365 @@
-# Anton Lu - Photography & Portfolio Website
+# Modern Photography Portfolio & Blog
 
-A modern, responsive personal website showcasing photography portfolio with rich metadata display and coding projects. Now features a **complete backend system** for uploading photos with automatic EXIF extraction and dynamic content management.
+A comprehensive full-stack web application built with FastAPI (Python) backend and React (TypeScript) frontend, featuring photography portfolio, blog system, project showcase, and authenticated sub-applications access.
 
-## ✨ New Features
+## 🌟 Features
 
-### 🚀 Backend Content Management
-- **Photo Upload System**: Drag & drop interface with automatic EXIF extraction
-- **Real-time Content Management**: Add/edit/delete photos and projects through web interface
-- **Automatic Image Processing**: EXIF data extraction including GPS coordinates
-- **RESTful API**: Full CRUD operations for photos and projects
-- **Image Optimization**: Automatic image resizing and compression with Sharp
+### Core Functionality
+- **Advanced Photo Management**: Upload with automatic EXIF extraction, GPS data, and image optimization
+- **Blog System**: Full markdown blog with draft/publish workflow
+- **Project Portfolio**: Showcase with live demos and GitHub integration
+- **Sub-Applications**: Authenticated access to internal tools and external services
+- **Admin Dashboard**: Comprehensive content management system
 
-### 📸 Enhanced Photography Portfolio
-- **Rich Metadata Display**: Camera settings, location, equipment details
-- **Interactive Gallery**: PhotoSwipe-powered lightbox with touch support
-- **Category Filtering**: Landscape, portrait, street, travel categories
-- **GPS Integration**: Automatic coordinate extraction from EXIF data
-- **Admin Dashboard**: Upload and manage photos directly through web interface
+### Technical Features
+- **Modern Stack**: FastAPI + React + TypeScript + PostgreSQL + Redis
+- **Image Processing**: WebP conversion, compression, thumbnails, auto-rotation
+- **Authentication**: JWT-based with role-based access control
+- **Real-time Updates**: React Query for optimistic UI updates
+- **Responsive Design**: Mobile-first with Tailwind CSS
+- **Docker Ready**: Complete containerization with health checks
 
-### 💻 Dynamic Project Management
-- **Web-based Project Creation**: Add projects through admin interface
-- **Technology Stack Tracking**: Automatic technology tagging
-- **GitHub Integration**: Direct links to source code
-- **Status Management**: Track project completion status
-
-## 🛠 Technical Stack
-
-### Backend
-- **Node.js/Express** - Server framework
-- **Multer** - File upload handling
-- **ExifR** - EXIF data extraction
-- **Sharp** - Image processing and optimization
-- **UUID** - Unique identifier generation
-
-### Frontend
-- **Vanilla JavaScript** - No framework dependencies
-- **Tailwind CSS** - Utility-first styling
-- **PhotoSwipe** - Lightbox functionality
-- **Responsive Design** - Mobile-first approach
-
-## 🚀 Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 16+ and npm
-- Modern web browser
+- Docker and Docker Compose
+- Node.js 18+ (for local development)
+- Python 3.11+ (for local development)
+- Git
 
-### Installation
+### Docker Deployment (Recommended)
 
-1. **Clone the repository**
+1. **Clone and setup**
    ```bash
-   git clone <repository-url>
-   cd haochen.lu
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Environment setup**
-   ```bash
+   git clone <your-repo-url>
+   cd photography-portfolio
    cp .env.example .env
-   # Edit .env with your configuration
+   # Edit .env with your secure passwords
    ```
 
-4. **Start the development server**
+2. **Deploy with Docker**
    ```bash
-   npm run dev
+   docker-compose up -d
    ```
 
-5. **Access the application**
-   - Frontend: `http://localhost:3000`
-   - Admin Panel: `http://localhost:3000/admin/content-manager.html`
-
-### Production Deployment
-
-1. **Set environment variables**
+3. **Run migrations**
    ```bash
-   NODE_ENV=production
-   PORT=3000
+   docker-compose run --rm migrate
    ```
 
-2. **Start the server**
-   ```bash
-   npm start
-   ```
+4. **Access the application**
+   - Website: http://localhost
+   - Admin: http://localhost/admin (login with admin/your-password)
+   - API Docs: http://localhost/api/docs
 
-3. **Configure nginx** (optional)
-   ```bash
-   cp nginx.conf.example /etc/nginx/sites-available/haochen.lu
-   # Edit paths and SSL certificates
-   sudo ln -s /etc/nginx/sites-available/haochen.lu /etc/nginx/sites-enabled/
-   sudo nginx -t && sudo systemctl reload nginx
-   ```
+### Local Development
+
+#### Backend Setup
+```bash
+cd backend
+pip install -r requirements.txt
+# Set up PostgreSQL and Redis locally
+alembic upgrade head
+uvicorn app.main:app --reload
+```
+
+#### Frontend Setup
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+## 🛠 Tech Stack
+
+### Backend (FastAPI)
+- **FastAPI** - Modern async web framework
+- **SQLAlchemy 2.0** - ORM with async support
+- **Alembic** - Database migrations
+- **PostgreSQL** - Primary database
+- **Redis** - Caching and sessions
+- **Pillow** - Image processing
+- **ExifRead** - EXIF data extraction
+- **Celery** - Background tasks (optional)
+
+### Frontend (React)
+- **React 18** with TypeScript
+- **Vite** - Build tool and dev server
+- **React Router v6** - Client-side routing
+- **TanStack Query** - Server state management
+- **Zustand** - Client state management
+- **Tailwind CSS** - Utility-first styling
+- **Framer Motion** - Animations
+- **React Hook Form** - Form handling
+- **Headless UI** - Accessible components
+
+### Infrastructure
+- **Docker & Docker Compose** - Containerization
+- **Nginx** - Reverse proxy (in frontend container)
+- **PostgreSQL 15** - Relational database
+- **Redis 7** - Cache and session store
 
 ## 📁 Project Structure
 
 ```
-/
-├── server/                     # Backend Node.js application
-│   ├── app.js                 # Main server file
-│   └── routes/                # API route handlers
-│       ├── upload.js          # Photo upload with EXIF extraction
-│       ├── photos.js          # Photo CRUD operations
-│       └── projects.js        # Project CRUD operations
-├── admin/
-│   └── content-manager.html   # Web-based admin interface
-├── assets/
-│   ├── css/custom.css        # Custom styles
-│   ├── js/main.js            # Frontend application logic
-│   └── images/               # Uploaded images
-│       ├── portfolio/        # Photography portfolio images
-│       └── projects/         # Project screenshots
-├── data/                     # JSON data files (auto-managed)
-│   ├── photography.json      # Photo metadata
-│   └── projects.json         # Project data
-├── index.html               # Main website
-├── package.json             # Node.js dependencies
-└── nginx.conf.example       # Production nginx configuration
+├── backend/                # FastAPI backend
+│   ├── app/
+│   │   ├── api/           # API route handlers
+│   │   ├── core/          # Security, image processing
+│   │   ├── crud/          # Database operations
+│   │   ├── models/        # SQLAlchemy models
+│   │   └── schemas/       # Pydantic schemas
+│   ├── alembic/           # Database migrations
+│   └── requirements.txt
+├── frontend/               # React frontend
+│   ├── src/
+│   │   ├── api/           # API client
+│   │   ├── components/    # Reusable UI components
+│   │   ├── layouts/       # Page layouts
+│   │   ├── pages/         # Route components
+│   │   ├── stores/        # Zustand stores
+│   │   └── types/         # TypeScript definitions
+│   ├── public/
+│   └── package.json
+├── uploads/                # Original image uploads
+├── compressed/             # Processed images
+├── docker-compose.yml      # Container orchestration
+└── .env.example           # Environment template
 ```
 
-## 🎯 API Endpoints
+## 🔧 API Architecture
 
-### Photos
-- `GET /api/photos` - List all photos (with filtering/pagination)
-- `GET /api/photos/:id` - Get single photo
-- `POST /api/upload/photo` - Upload photo with EXIF extraction
-- `PUT /api/photos/:id` - Update photo metadata
-- `DELETE /api/photos/:id` - Delete photo
-- `GET /api/photos/stats/overview` - Photo statistics
+### Authentication Endpoints
+- `POST /api/auth/login` - Admin authentication
+- `GET /api/auth/me` - Current user info
+- `POST /api/auth/logout` - Logout
 
-### Projects
-- `GET /api/projects` - List all projects
-- `GET /api/projects/:id` - Get single project
-- `POST /api/projects` - Create new project
-- `PUT /api/projects/:id` - Update project
-- `DELETE /api/projects/:id` - Delete project
-- `GET /api/projects/stats/overview` - Project statistics
-
-## 📊 Content Management
-
-### Photo Upload Process
-1. **Drag & Drop**: Select image files in admin interface
-2. **Preview**: Immediate preview with basic file information
-3. **Metadata Entry**: Add title, category, comments, and tags
-4. **Upload**: Automatic EXIF extraction and image processing
-5. **Storage**: Optimized images saved to `/assets/images/portfolio/`
-
-### Automatic EXIF Extraction
-- **Camera Settings**: Aperture, shutter speed, ISO, focal length
-- **Equipment**: Camera make/model, lens information
-- **GPS Coordinates**: Latitude/longitude if available
-- **Metadata**: File size, dimensions, capture date
-- **Image Processing**: Auto-rotation, compression, optimization
+### Photo Management
+- `GET /api/photos` - List photos with pagination/filtering
+- `GET /api/photos/featured` - Featured photos
+- `POST /api/photos` - Upload with EXIF extraction (admin)
+- `PUT /api/photos/{id}` - Update metadata (admin)
+- `DELETE /api/photos/{id}` - Delete photo and files (admin)
 
 ### Project Management
-- Add projects through web interface
-- Technology stack tracking
-- GitHub and demo URL integration
-- Status management (completed, in-progress, planned)
+- `GET /api/projects` - List projects
+- `GET /api/projects/featured` - Featured projects
+- `POST /api/projects` - Create project (admin)
+- `PUT /api/projects/{id}` - Update project (admin)
+- `DELETE /api/projects/{id}` - Delete project (admin)
+
+### Blog System
+- `GET /api/blog` - Published posts with pagination
+- `GET /api/blog/admin` - All posts including drafts (admin)
+- `POST /api/blog` - Create post (admin)
+- `PUT /api/blog/{id}` - Update post (admin)
+- `DELETE /api/blog/{id}` - Delete post (admin)
+
+### Sub-Applications
+- `GET /api/subapps` - Public sub-apps
+- `GET /api/subapps/authenticated` - Auth-required sub-apps
+- `POST /api/subapps` - Create sub-app (admin)
+- `PUT /api/subapps/{id}` - Update sub-app (admin)
+
+## 📸 Image Processing Pipeline
+
+1. **Upload**: Multi-part form upload with metadata
+2. **EXIF Extraction**: Camera settings, GPS coordinates, timestamps
+3. **Processing**: 
+   - Auto-rotation based on EXIF orientation
+   - WebP conversion with configurable quality
+   - Thumbnail generation (400px)
+   - Progressive loading support
+4. **Storage**: Original and processed versions saved
+5. **Database**: Metadata stored in PostgreSQL
+
+## 🎨 Frontend Features
+
+### Modern UI/UX
+- **Responsive Design**: Mobile-first approach
+- **Dark Mode Ready**: CSS custom properties
+- **Smooth Animations**: Framer Motion integration
+- **Loading States**: Skeleton screens and spinners
+- **Error Handling**: User-friendly error messages
+- **Optimistic Updates**: Immediate UI feedback
+
+### Photo Gallery
+- **Masonry Layout**: Pinterest-style grid
+- **Lightbox**: Full-screen photo viewing
+- **Lazy Loading**: Performance optimization
+- **EXIF Display**: Camera settings overlay
+- **Search & Filter**: By category, tags, featured status
+
+### Admin Interface
+- **Dashboard**: Statistics and quick actions
+- **File Upload**: Drag & drop with progress
+- **CRUD Operations**: Full content management
+- **Real-time Preview**: Markdown editor with preview
+- **Bulk Operations**: Multi-select actions
 
 ## 🔒 Security Features
 
-- **Rate Limiting**: Upload and API request throttling
-- **File Validation**: Image type and size restrictions
-- **Input Sanitization**: XSS protection
-- **CORS Configuration**: Controlled cross-origin access
-- **Helmet Security Headers**: Standard security headers
+- **JWT Authentication**: Secure token-based auth
+- **Role-based Access**: Admin vs regular user permissions
+- **Rate Limiting**: API endpoint protection
+- **Input Validation**: Pydantic schema validation
+- **SQL Injection Prevention**: SQLAlchemy ORM
+- **XSS Protection**: Content Security Policy
+- **File Upload Security**: Type and size validation
 
-## 🎨 Customization
+## 🚢 Deployment Options
 
-### Styling
-- Colors: Update Tailwind config in `index.html`
-- Fonts: Modify Google Fonts imports
-- Custom CSS: Add styles to `assets/css/custom.css`
+### Docker Production
+```bash
+# Use environment variables for production
+cp .env.example .env
+# Set secure passwords and keys
+docker-compose up -d
+```
 
-### Content Categories
-- Photography: landscape, portrait, street, travel
-- Projects: web-development, machine-learning, mobile-development, etc.
+### TrueNAS Scale
+1. Create datasets for persistent data
+2. Configure environment variables
+3. Deploy with docker-compose
+4. Set up reverse proxy if needed
 
-## 📱 Mobile Responsiveness
+### Cloud Deployment
+- **AWS**: ECS/Fargate + RDS + ElastiCache
+- **GCP**: Cloud Run + Cloud SQL + Memorystore
+- **Azure**: Container Instances + Database + Redis Cache
+- **DigitalOcean**: App Platform + Managed Database
 
-- **Mobile-First Design**: Optimized for all device sizes
-- **Touch-Friendly Interface**: Drag & drop works on mobile
-- **Responsive Gallery**: Adaptive photo grid
-- **Mobile Upload**: Full upload functionality on mobile devices
+## ⚡ Performance Optimizations
 
-## 🔧 Development
+### Backend
+- **Async Operations**: FastAPI async/await
+- **Database Indexing**: Optimized queries
+- **Redis Caching**: Frequent data caching
+- **Image Processing**: Background tasks with Celery
+- **Connection Pooling**: Efficient database connections
 
-### Available Scripts
-- `npm start` - Start production server
-- `npm run dev` - Start development server with auto-reload
-- `npm test` - Run tests (placeholder)
+### Frontend
+- **Code Splitting**: Route-based lazy loading
+- **Image Optimization**: WebP format with fallbacks
+- **Bundle Optimization**: Tree shaking and compression
+- **CDN Ready**: Static assets optimized for CDN
+- **Service Worker**: Offline support (optional)
 
-### Environment Variables
-- `NODE_ENV` - Environment (development/production)
-- `PORT` - Server port (default: 3000)
-- `MAX_FILE_SIZE` - Maximum upload size (default: 50MB)
-- `CORS_ORIGINS` - Allowed CORS origins
+## 🔧 Configuration
 
-## 🚀 Deployment Options
+### Environment Variables (.env)
+```env
+# Database
+POSTGRES_PASSWORD=your_secure_password
+SECRET_KEY=your_64_character_secret_key
+ADMIN_PASSWORD=your_admin_password
 
-### Static + API Hosting
-- Frontend: Netlify, Vercel, GitHub Pages
-- Backend: Heroku, DigitalOcean, AWS
+# Optional customization
+WEBP_QUALITY=85
+THUMBNAIL_SIZE=400
+MAX_FILE_SIZE=52428800
+```
 
-### Full Stack Hosting
-- Single server deployment with nginx reverse proxy
-- Docker containerization ready
-- PM2 process management recommended
+### Database Migrations
+```bash
+# Create new migration
+docker-compose exec backend alembic revision --autogenerate -m "description"
 
-## 📈 Performance Features
+# Apply migrations
+docker-compose exec backend alembic upgrade head
 
-- **Image Optimization**: Automatic compression with Sharp
-- **Caching Headers**: Optimized cache strategies
-- **Lazy Loading**: Progressive image loading
-- **CDN Ready**: External image URL support
-- **Gzip Compression**: Nginx configuration included
+# Rollback
+docker-compose exec backend alembic downgrade -1
+```
+
+## 📊 Monitoring & Maintenance
+
+### Health Checks
+All containers include health checks:
+- Frontend: HTTP response check
+- Backend: FastAPI health endpoint
+- Database: PostgreSQL ready check
+- Redis: Ping response
+
+### Logging
+```bash
+# View logs
+docker-compose logs -f backend
+docker-compose logs -f frontend
+
+# Database logs
+docker-compose logs -f db
+```
+
+### Backup & Restore
+```bash
+# Database backup
+docker-compose exec db pg_dump -U postgres photography > backup.sql
+
+# Restore
+docker-compose exec -T db psql -U postgres photography < backup.sql
+
+# File backup
+tar -czf backup.tar.gz uploads/ compressed/
+```
+
+## 🛡 Troubleshooting
+
+### Common Issues
+
+**Database connection failed**
+- Check PostgreSQL container status
+- Verify environment variables
+- Ensure migrations are applied
+
+**Image upload fails**
+- Check file size limits
+- Verify upload directory permissions
+- Check backend logs for processing errors
+
+**Frontend build fails**
+- Clear node_modules and reinstall
+- Check Node.js version compatibility
+- Verify environment variables
+
+**Authentication issues**
+- Check JWT secret key
+- Verify admin password configuration
+- Clear browser localStorage
+
+### Development Commands
+```bash
+# Reset database
+docker-compose down -v
+docker-compose up -d db
+docker-compose run --rm migrate
+
+# Rebuild containers
+docker-compose build --no-cache
+
+# Check API documentation
+open http://localhost:8000/docs
+```
+
+## 📄 License
+
+MIT License - see LICENSE file for details.
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+3. Follow code style guidelines
+4. Add tests for new features
+5. Submit a pull request
 
-## 📄 License
+## 🆘 Support
 
-This project is open source. Feel free to use it as a template for your own portfolio.
+- **Documentation**: Check API docs at `/docs` endpoint
+- **Issues**: Open GitHub issues for bugs
+- **Discussions**: GitHub discussions for questions
+- **Security**: Report vulnerabilities privately
 
 ---
 
-Built with ❤️ by Anton Lu. Now featuring a complete backend system for seamless content management.
+Built with modern tools and best practices for photographers and developers who demand excellence in both form and function.

@@ -1,22 +1,12 @@
-version: '3.8'
+# Removed version as it's obsolete in modern Docker Compose
 
 services:
-  nginx:
-    image: nginx:alpine
-    container_name: photography-nginx
+  frontend:
+    build: ./frontend
+    container_name: photography-frontend
     ports:
-      - "9080:80"
-      - "9443:443"
-    volumes:
-      # nginx configuration
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      # Static frontend files
-      - ./index.html:/usr/share/nginx/html/index.html:ro
-      - ./thisisme.html:/usr/share/nginx/html/thisisme.html:ro
-      - ./assets:/usr/share/nginx/html/assets:ro
-      - ./admin:/usr/share/nginx/html/admin:ro
-      # Data directory for JSON files (read-only for nginx)
-      - ./data:/usr/share/nginx/html/data:ro
+      - "80:80"
+      - "443:443"
     depends_on:
       - backend
     networks:
@@ -29,38 +19,89 @@ services:
       retries: 3
 
   backend:
-    build:
-      context: .
-      dockerfile: backend/Dockerfile
+    build: ./backend
     container_name: photography-backend
     environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - MAX_FILE_SIZE=52428800
-      - CORS_ORIGINS=http://localhost:9080,https://localhost:9443
+      - DATABASE_URL=postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-photography}
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-this-in-production}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
+      - CORS_ORIGINS=http://localhost,https://localhost,http://localhost:80,https://localhost:443
     volumes:
-      # Data persistence
-      - ./data:/app/data
-      # Image storage
-      - ./assets/images:/app/assets/images
-      # Upload temp directory
-      - backend-uploads:/app/uploads
+      - ./uploads:/app/uploads
+      - ./compressed:/app/compressed
+    depends_on:
+      - db
+      - redis
     networks:
       - photography-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-    # Don't expose ports externally - only internal network access
     expose:
-      - "3000"
+      - "8000"
+
+  db:
+    image: postgres:15-alpine
+    container_name: photography-db
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-photography}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - photography-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    # Expose port for development access
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    container_name: photography-redis
+    volumes:
+      - redis_data:/data
+    networks:
+      - photography-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    # Expose port for development access
+    ports:
+      - "6379:6379"
+
+  # Database migration service
+  migrate:
+    build: ./backend
+    container_name: photography-migrate
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-photography}
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      - db
+    networks:
+      - photography-network
+    restart: "no"
 
 networks:
   photography-network:
     driver: bridge
+    name: photography-network
 
 volumes:
-  backend-uploads:
+  postgres_data:
+    driver: local
+  redis_data:
     driver: local

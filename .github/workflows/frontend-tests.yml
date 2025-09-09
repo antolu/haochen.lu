@@ -1,0 +1,433 @@
+name: Frontend Tests
+
+on:
+  push:
+    branches: [ master, develop ]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-tests.yml'
+  pull_request:
+    branches: [ master, develop ]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-tests.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18, 20]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Run lint check
+      run: |
+        cd frontend
+        npm run lint
+
+    - name: Run TypeScript type check
+      run: |
+        cd frontend
+        npm run build
+
+    - name: Run P0 UI Security Tests
+      run: |
+        cd frontend
+        npm run test:security -- --run --reporter=verbose
+
+    - name: Run P1 Component Tests
+      run: |
+        cd frontend
+        npm run test:components -- --run --reporter=verbose
+
+    - name: Run all unit tests with coverage
+      run: |
+        cd frontend
+        npm run test:coverage -- --run
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./frontend/coverage/lcov.info
+        flags: frontend
+        name: frontend-coverage
+        fail_ci_if_error: true
+
+    - name: Build application
+      run: |
+        cd frontend
+        npm run build
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: frontend-build-${{ matrix.node-version }}
+        path: frontend/dist
+
+  accessibility-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Build application
+      run: |
+        cd frontend
+        npm run build
+
+    - name: Serve application
+      run: |
+        cd frontend
+        npx serve -s dist -l 3000 &
+        sleep 5
+
+    - name: Install accessibility tools
+      run: |
+        npm install -g @axe-core/cli lighthouse
+
+    - name: Run axe accessibility tests
+      run: |
+        axe http://localhost:3000 --include-tags wcag2a,wcag2aa --reporter junit --output-file axe-results.xml
+
+    - name: Run Lighthouse accessibility audit
+      run: |
+        lighthouse http://localhost:3000 --only-categories=accessibility --output json --output-path lighthouse-accessibility.json
+
+    - name: Upload accessibility reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: accessibility-reports
+        path: |
+          axe-results.xml
+          lighthouse-accessibility.json
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Run npm audit
+      run: |
+        cd frontend
+        npm audit --audit-level=high --json > npm-audit.json || true
+
+    - name: Run bundle analyzer (security)
+      run: |
+        cd frontend
+        npm install -D webpack-bundle-analyzer
+        npx webpack-bundle-analyzer dist/assets/*.js --report --format json --out bundle-analysis.json || true
+
+    - name: Check for secrets in build
+      run: |
+        cd frontend
+        npm run build
+        # Check for potential secrets in build files
+        grep -r -i -E "(api_key|secret|password|token)" dist/ > secrets-check.txt || echo "No secrets found"
+
+    - name: Upload security reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: frontend-security-reports
+        path: |
+          frontend/npm-audit.json
+          frontend/bundle-analysis.json
+          frontend/secrets-check.txt
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    needs: [test]
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_USER: testuser
+          POSTGRES_DB: testdb
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Set up Python for backend
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        pip install -e ".[test]"
+
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Install Playwright browsers
+      run: |
+        cd frontend
+        npx playwright install --with-deps
+
+    - name: Set up environment variables
+      run: |
+        echo "DATABASE_URL=postgresql://testuser:testpassword@localhost:5432/testdb" >> $GITHUB_ENV
+        echo "REDIS_URL=redis://localhost:6379/0" >> $GITHUB_ENV
+        echo "SECRET_KEY=test-secret-key-for-e2e" >> $GITHUB_ENV
+        echo "ENVIRONMENT=test" >> $GITHUB_ENV
+
+    - name: Start backend server
+      run: |
+        cd backend
+        alembic upgrade head
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+        sleep 10
+
+    - name: Build and start frontend
+      run: |
+        cd frontend
+        npm run build
+        npm run preview -- --port 5173 --host &
+        sleep 5
+
+    - name: Run E2E tests
+      run: |
+        cd frontend
+        npm run test:e2e
+
+    - name: Upload Playwright report
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: playwright-report
+        path: frontend/playwright-report/
+        retention-days: 30
+
+  visual-regression:
+    runs-on: ubuntu-latest
+    needs: [test]
+    if: github.event_name == 'pull_request'
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Install Playwright browsers
+      run: |
+        cd frontend
+        npx playwright install --with-deps
+
+    - name: Build application
+      run: |
+        cd frontend
+        npm run build
+
+    - name: Start application
+      run: |
+        cd frontend
+        npm run preview -- --port 5173 &
+        sleep 5
+
+    - name: Run visual regression tests
+      run: |
+        cd frontend
+        npx playwright test --config=playwright-visual.config.ts
+
+    - name: Upload visual diff artifacts
+      uses: actions/upload-artifact@v3
+      if: failure()
+      with:
+        name: visual-regression-diff
+        path: |
+          frontend/test-results/
+          frontend/playwright-report/
+
+  performance-audit:
+    runs-on: ubuntu-latest
+    needs: [test]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Build application
+      run: |
+        cd frontend
+        npm run build
+
+    - name: Analyze bundle size
+      run: |
+        cd frontend
+        npm install -D webpack-bundle-analyzer
+        npx webpack-bundle-analyzer dist/assets/*.js --report --format json --out bundle-size-report.json
+
+    - name: Start application
+      run: |
+        cd frontend
+        npx serve -s dist -l 3000 &
+        sleep 5
+
+    - name: Install Lighthouse
+      run: npm install -g lighthouse
+
+    - name: Run Lighthouse performance audit
+      run: |
+        lighthouse http://localhost:3000 \
+          --only-categories=performance \
+          --output json \
+          --output html \
+          --output-path lighthouse-performance
+
+    - name: Check bundle size limits
+      run: |
+        cd frontend
+        node -e "
+        const fs = require('fs');
+        const report = JSON.parse(fs.readFileSync('bundle-size-report.json', 'utf8'));
+        const totalSize = report.reduce((acc, asset) => acc + asset.statSize, 0);
+        const maxSize = 1024 * 1024; // 1MB limit
+        
+        console.log(\`Total bundle size: \${(totalSize / 1024).toFixed(2)} KB\`);
+        
+        if (totalSize > maxSize) {
+          console.error(\`Bundle size \${(totalSize / 1024).toFixed(2)} KB exceeds limit of \${maxSize / 1024} KB\`);
+          process.exit(1);
+        }
+        "
+
+    - name: Upload performance reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: performance-reports
+        path: |
+          frontend/bundle-size-report.json
+          lighthouse-performance.json
+          lighthouse-performance.html
+
+  build-and-deploy-preview:
+    runs-on: ubuntu-latest
+    needs: [test, accessibility-tests, security-scan]
+    if: github.event_name == 'pull_request'
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Build application
+      run: |
+        cd frontend
+        npm run build
+
+    - name: Deploy to preview environment
+      run: |
+        echo "Would deploy to preview environment here"
+        # Example: Deploy to Netlify, Vercel, or other preview service
+        # netlify deploy --dir=frontend/dist --auth=$NETLIFY_AUTH_TOKEN --site=$NETLIFY_SITE_ID
+
+    - name: Comment PR with preview link
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '🚀 Preview deployment ready!\n\n📱 Frontend: https://preview-' + context.issue.number + '.your-app.com'
+          });
