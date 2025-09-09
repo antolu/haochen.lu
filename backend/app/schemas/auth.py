@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from uuid import UUID
-from pydantic import BaseModel, model_validator
+from datetime import datetime
+from typing import Optional
+from pydantic import BaseModel, ConfigDict, field_serializer
 
 
 class LoginRequest(BaseModel):
@@ -11,24 +13,16 @@ class LoginRequest(BaseModel):
 
 class TokenResponse(BaseModel):
     access_token: str
-    token_type: str
+    token_type: str = "bearer"
 
 
 class UserResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: str
     username: str
-    email: str | None
-    is_admin: bool
-    
-    @model_validator(mode='before')
-    @classmethod
-    def convert_uuid_to_str(cls, data):
-        if hasattr(data, 'id') and isinstance(data.id, UUID):
-            data = dict(data.__dict__) if hasattr(data, '__dict__') else data
-            data['id'] = str(data['id'])
-        elif isinstance(data, dict) and 'id' in data and isinstance(data['id'], UUID):
-            data['id'] = str(data['id'])
-        return data
-    
-    class Config:
-        from_attributes = True
+    email: Optional[str] = None
+    is_active: bool = True
+    is_admin: bool = False
+    created_at: datetime
+    updated_at: Optional[datetime] = None

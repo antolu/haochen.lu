@@ -53,7 +53,15 @@ async def login(
 
 @router.get("/me", response_model=UserResponse)
 async def read_users_me(current_user = Depends(get_current_user)):
-    return current_user
+    return UserResponse(
+        id=str(current_user.id),
+        username=current_user.username,
+        email=current_user.email,
+        is_active=current_user.is_active,
+        is_admin=current_user.is_admin,
+        created_at=current_user.created_at,
+        updated_at=current_user.updated_at
+    )
 
 
 @router.post("/logout")

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class SubAppBase(BaseModel):
@@ -29,13 +29,12 @@ class SubAppUpdate(SubAppBase):
 
 
 class SubAppResponse(SubAppBase):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: str
     slug: str
     created_at: datetime
     updated_at: datetime
-    
-    class Config:
-        from_attributes = True
 
 
 class SubAppListResponse(BaseModel):

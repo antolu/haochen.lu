@@ -21,7 +21,28 @@ from app.schemas.subapp import SubAppCreate, SubAppUpdate, SubAppResponse, SubAp
 router = APIRouter()
 
 
-@router.get("/", response_model=SubAppListResponse)
+def convert_to_response(db_subapp) -> dict:
+    """Convert a database SubApp model to response dict."""
+    return {
+        "id": str(db_subapp.id),
+        "slug": db_subapp.slug,
+        "name": db_subapp.name,
+        "description": db_subapp.description,
+        "icon": db_subapp.icon,
+        "color": db_subapp.color,
+        "url": db_subapp.url,
+        "is_external": db_subapp.is_external,
+        "requires_auth": db_subapp.requires_auth,
+        "admin_only": db_subapp.admin_only,
+        "show_in_menu": db_subapp.show_in_menu,
+        "enabled": db_subapp.enabled,
+        "order": db_subapp.order,
+        "created_at": db_subapp.created_at.isoformat() if db_subapp.created_at else None,
+        "updated_at": db_subapp.updated_at.isoformat() if db_subapp.updated_at else None
+    }
+
+
+@router.get("/", )
 async def list_subapps(
     menu_only: bool = True,
     db: AsyncSession = Depends(get_session)
@@ -40,13 +61,13 @@ async def list_subapps(
     
     total = len(public_subapps)
     
-    return SubAppListResponse(
-        subapps=[SubAppResponse.model_validate(app) for app in public_subapps],
-        total=total
-    )
+    return {
+        "subapps": [convert_to_response(app) for app in public_subapps],
+        "total": total
+    }
 
 
-@router.get("/authenticated", response_model=SubAppListResponse)
+@router.get("/authenticated", )
 async def list_authenticated_subapps(
     menu_only: bool = True,
     db: AsyncSession = Depends(get_session),
@@ -64,13 +85,13 @@ async def list_authenticated_subapps(
     
     total = len(subapps)
     
-    return SubAppListResponse(
-        subapps=[SubAppResponse.model_validate(app) for app in subapps],
-        total=total
-    )
+    return {
+        "subapps": [convert_to_response(app) for app in subapps],
+        "total": total
+    }
 
 
-@router.get("/admin", response_model=SubAppListResponse)
+@router.get("/admin", )
 async def list_all_subapps(
     db: AsyncSession = Depends(get_session),
     current_user = Depends(get_current_admin_user)
@@ -84,13 +105,13 @@ async def list_all_subapps(
     
     total = await get_subapp_count(db)
     
-    return SubAppListResponse(
-        subapps=[SubAppResponse.model_validate(app) for app in subapps],
-        total=total
-    )
+    return {
+        "subapps": [convert_to_response(app) for app in subapps],
+        "total": total
+    }
 
 
-@router.get("/{subapp_identifier}", response_model=SubAppResponse)
+@router.get("/{subapp_identifier}", )
 async def get_subapp_detail(
     subapp_identifier: str,
     db: AsyncSession = Depends(get_session)
@@ -109,10 +130,10 @@ async def get_subapp_detail(
     if not subapp or not subapp.enabled:
         raise HTTPException(status_code=404, detail="Sub-application not found")
     
-    return SubAppResponse.model_validate(subapp)
+    return convert_to_response(subapp)
 
 
-@router.post("/", response_model=SubAppResponse)
+@router.post("/")
 async def create_subapp_endpoint(
     subapp: SubAppCreate,
     db: AsyncSession = Depends(get_session),
@@ -121,7 +142,7 @@ async def create_subapp_endpoint(
     """Create a new sub-application (admin only)."""
     try:
         db_subapp = await create_subapp(db, subapp)
-        return SubAppResponse.model_validate(db_subapp)
+        return convert_to_response(db_subapp)
     except Exception as e:
         raise HTTPException(
             status_code=400,
@@ -129,7 +150,7 @@ async def create_subapp_endpoint(
         )
 
 
-@router.put("/{subapp_id}", response_model=SubAppResponse)
+@router.put("/{subapp_id}", )
 async def update_subapp_endpoint(
     subapp_id: UUID,
     subapp_update: SubAppUpdate,
@@ -141,7 +162,7 @@ async def update_subapp_endpoint(
     if not subapp:
         raise HTTPException(status_code=404, detail="Sub-application not found")
     
-    return SubAppResponse.model_validate(subapp)
+    return convert_to_response(subapp)
 
 
 @router.delete("/{subapp_id}")
