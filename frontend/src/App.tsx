@@ -9,7 +9,7 @@ import AdminLayout from './layouts/AdminLayout';
 
 // Public pages
 import HomePage from './pages/HomePage';
-import PhotographyPage from './pages/PhotographyPage';
+import AlbumPage from './pages/AlbumPage';
 import ProjectsPage from './pages/ProjectsPage';
 import BlogPage from './pages/BlogPage';
 import BlogPostPage from './pages/BlogPostPage';
@@ -41,16 +41,18 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen">
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<MainLayout />}>
               <Route index element={<HomePage />} />
-              <Route path="photography" element={<PhotographyPage />} />
               <Route path="projects" element={<ProjectsPage />} />
               <Route path="blog" element={<BlogPage />} />
               <Route path="blog/:slug" element={<BlogPostPage />} />
             </Route>
+
+            {/* Full-screen album route (no layout) */}
+            <Route path="/photography" element={<AlbumPage />} />
 
             {/* Auth routes */}
             <Route path="/login" element={<LoginPage />} />

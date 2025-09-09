@@ -167,4 +167,223 @@
   .max-w-5xl { max-width: 64rem; }
   .max-w-6xl { max-width: 72rem; }
   .max-w-7xl { max-width: 80rem; }
+
+  /* Hero Section Image Styling */
+  .hero-image {
+    object-fit: cover;
+    object-position: center;
+    width: 100%;
+    height: 100%;
+  }
+  
+  /* Subtle parallax effect for hero image */
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-parallax {
+      transform: translateZ(0);
+      will-change: transform;
+    }
+  }
+
+  /* Animation keyframes */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes fadeInDelay {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes fadeInDelay2 {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes bounce {
+    0%, 20%, 53%, 80%, 100% { transform: translateY(0) translateX(-50%); }
+    40%, 43% { transform: translateY(-10px) translateX(-50%); }
+    70% { transform: translateY(-5px) translateX(-50%); }
+    90% { transform: translateY(-3px) translateX(-50%); }
+  }
+
+  /* Animation classes */
+  .animate-fade-in {
+    animation: fadeIn 0.8s ease-out forwards;
+  }
+  
+  .animate-fade-in-delay {
+    animation: fadeInDelay 1s ease-out 0.3s forwards;
+    opacity: 0;
+  }
+  
+  .animate-fade-in-delay-2 {
+    animation: fadeInDelay2 1.2s ease-out 0.6s forwards;
+    opacity: 0;
+  }
+
+  .animate-bounce-custom {
+    animation: bounce 2s infinite;
+  }
+
+  /* Backdrop blur utilities */
+  .backdrop-blur-sm { backdrop-filter: blur(4px); }
+  .backdrop-blur-md { backdrop-filter: blur(8px); }
+  .backdrop-blur-lg { backdrop-filter: blur(12px); }
+  
+  /* Navigation enhancements */
+  .nav-link.active {
+    color: #2563eb;
+    font-weight: 500;
+  }
+
+  /* Photo gallery enhancements */
+  .photo-item {
+    position: relative;
+    overflow: hidden;
+    border-radius: 0.5rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+  }
+
+  .photo-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+
+  .photo-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+
+  .photo-item:hover img {
+    transform: scale(1.05);
+  }
+
+  .photo-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    display: flex;
+    align-items: flex-end;
+    padding: 1rem;
+  }
+
+  .photo-item:hover .photo-overlay {
+    opacity: 1;
+  }
+
+  .photo-info {
+    color: white;
+    text-align: left;
+  }
+
+  .photo-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+
+  .photo-meta {
+    font-size: 0.875rem;
+    opacity: 0.9;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .photo-meta-badge {
+    background-color: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+  }
+
+  /* Mobile menu button styling */
+  .mobile-menu-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    color: #9ca3af;
+    transition: all 0.2s ease-in-out;
+  }
+  
+  .mobile-menu-button:hover {
+    color: #6b7280;
+    background-color: #f3f4f6;
+  }
+  
+  .mobile-menu-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.5);
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Album Page - Seamless Photo Grid */
+  .album-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 0;
+    line-height: 0; /* Remove any line height spacing */
+  }
+
+  @media (min-width: 640px) {
+    .album-grid {
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    }
+  }
+
+  @media (min-width: 768px) {
+    .album-grid {
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .album-grid {
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .album-grid {
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    }
+  }
+
+  .album-photo {
+    aspect-ratio: 1;
+    overflow: hidden;
+  }
+
+  .album-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block; /* Remove any inline spacing */
+  }
+
+  /* Lightbox enhancements */
+  .lightbox-overlay {
+    backdrop-filter: blur(5px);
+  }
+
+  /* Prevent scrolling when modal is open */
+  .modal-open {
+    overflow: hidden;
+  }
 }

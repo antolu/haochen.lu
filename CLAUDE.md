@@ -4,200 +4,261 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a modern, responsive photography portfolio website for Anton Lu with a **complete backend system**. The site features photo uploads with automatic EXIF extraction, dynamic content management, and a RESTful API. Built with Node.js/Express backend and vanilla JavaScript frontend.
+This is a modern, full-stack photography portfolio website built with **FastAPI (Python) backend** and **React (TypeScript) frontend**. Features photo uploads with automatic EXIF extraction, blog system, project showcase, and authenticated sub-applications access. The site uses a landing page approach with a separate album page for seamless photo browsing.
 
 ## Development Commands
 
 ### Docker Deployment (Recommended)
 ```bash
-# Start with Docker Compose
-docker-compose up -d
+# Start all services
+docker compose up -d
 
-# View logs
-docker-compose logs -f backend
+# View logs  
+docker compose logs -f backend
+docker compose logs -f frontend
 
-# Development mode with live reload
-docker-compose -f docker-compose.yml -f docker-compose.override.yml up
+# Complete rebuild (if CSS/Docker cache issues)
+docker system prune -f
+docker compose build --no-cache
+docker compose up -d
+
+# Run database migrations
+docker compose run --rm migrate
 ```
 
-Visit `http://localhost:9080` for frontend and `http://localhost:9080/admin/content-manager.html` for admin.
+**Access URLs:**
+- Website: http://localhost
+- API Documentation: http://localhost/api/docs  
+- Admin Login: admin/admin
 
-### Local Development (Without Docker)
+### Local Development
+
+#### Backend (FastAPI)
 ```bash
-# Install dependencies
+cd backend
+pip install -e .
+alembic upgrade head
+uvicorn app.main:app --reload --port 8000
+```
+
+#### Frontend (React + Vite)
+```bash
+cd frontend
 npm install
-
-# Start development server with auto-reload
-npm run dev
-
-# Start production server
-npm start
+npm run dev  # Development server with hot reload
+npm run build  # Production build
+npm run preview  # Preview production build
 ```
 
-### Frontend Only (Static)
+### Testing Commands
 ```bash
-# Python 3 (for static files only)
-python3 -m http.server 8000
+# Frontend tests
+cd frontend
+npm run test              # Unit tests (Vitest)
+npm run test:ui           # Test UI
+npm run test:e2e          # End-to-end tests (Playwright)
+npm run test:coverage     # Coverage report
+npm run lint              # ESLint
 
-# Node.js (if backend not needed)
-npx serve .
+# Backend tests  
+cd backend
+pytest                    # All tests
+pytest tests/unit/        # Unit tests only
+pytest tests/integration/ # Integration tests only
+pytest --cov=app         # With coverage
+ruff check --fix --unsafe-fixes --preview  # Linting
 ```
-
-### Deployment Options
-- **Docker (Recommended)**: Full functionality with proper containerization
-- **Local Backend**: Development and testing with `npm run dev`
-- **Static Only**: Basic portfolio viewing with sample data
 
 ## Architecture & Structure
 
-### Backend Files
-- `server/app.js` - Main Express server with middleware and routing
-- `server/routes/upload.js` - Photo upload with EXIF extraction (165 lines)
-- `server/routes/photos.js` - Photo CRUD API endpoints (150 lines)
-- `server/routes/projects.js` - Project CRUD API endpoints (200 lines)
-- `package.json` - Node.js dependencies and scripts
+### Tech Stack
+- **Backend**: FastAPI, SQLAlchemy 2.0, PostgreSQL, Redis, Alembic
+- **Frontend**: React 18, TypeScript, Vite, TanStack Query, Zustand, Tailwind CSS v4
+- **Infrastructure**: Docker Compose, Nginx (in frontend container)
 
-### Frontend Files
-- `index.html` - Main HTML page with complete site structure
-- `assets/js/main.js` - Frontend JavaScript with API integration (613 lines)
-- `assets/css/custom.css` - Custom styles and responsive design
-- `admin/content-manager.html` - Photo upload and content management interface
+### Project Structure
+```
+├── backend/                # FastAPI backend
+│   ├── app/
+│   │   ├── api/           # API route handlers  
+│   │   ├── core/          # Security, image processing, config
+│   │   ├── crud/          # Database operations
+│   │   ├── models/        # SQLAlchemy models
+│   │   └── schemas/       # Pydantic schemas
+│   ├── alembic/           # Database migrations
+│   ├── tests/             # Backend tests
+│   └── pyproject.toml     # Python dependencies & config
+├── frontend/               # React frontend
+│   ├── src/
+│   │   ├── api/           # API client (axios)
+│   │   ├── components/    # Reusable UI components
+│   │   ├── layouts/       # MainLayout, AdminLayout
+│   │   ├── pages/         # Route components
+│   │   │   ├── HomePage.tsx      # Landing page with hero image
+│   │   │   ├── AlbumPage.tsx     # Full album with lightbox
+│   │   │   └── admin/            # Admin pages
+│   │   ├── stores/        # Zustand state stores
+│   │   ├── types/         # TypeScript definitions
+│   │   └── tailwind-safelist.css # Force Tailwind class generation
+│   ├── public/images/     # Static hero images (responsive)
+│   ├── package.json       # Node.js dependencies
+│   └── tailwind.config.js # Tailwind configuration
+├── uploads/               # Original uploaded images
+├── compressed/            # Processed images (WebP, thumbnails)
+└── docker-compose.yml     # Container orchestration
+```
 
-### Data Management
-- **Dynamic Data**: API endpoints serve content from JSON files
-- **File Storage**: Images stored in `assets/images/portfolio/` and `assets/images/projects/`
-- **Auto-managed JSON**: Backend automatically updates `data/photography.json` and `data/projects.json`
-
-### Backend Architecture
-Node.js/Express server with key features:
-- **File Upload**: Multer middleware with 50MB limit
-- **EXIF Extraction**: ExifR library for camera metadata and GPS coordinates
-- **Image Processing**: Sharp for optimization, auto-rotation, compression
-- **Security**: Helmet, CORS, rate limiting, input validation
-- **Error Handling**: Comprehensive error responses
+### Page Architecture
+- **HomePage**: Landing page with hero image and featured content previews
+- **AlbumPage**: Dedicated full-screen album with seamless photo grid (no gaps) and lightbox
+- **MainLayout**: Standard header/footer layout for most pages
+- **AlbumPage**: No layout wrapper for full-screen experience
 
 ### API Architecture
-RESTful API with full CRUD operations:
-- **GET /api/photos** - List photos with filtering/pagination
-- **POST /api/upload/photo** - Upload with automatic EXIF extraction
-- **PUT /api/photos/:id** - Update photo metadata
-- **DELETE /api/photos/:id** - Delete photo and file
-- **GET /api/projects** - List projects
-- **POST /api/projects** - Create project
-- **Statistics endpoints** for dashboard
 
-### Frontend Integration
-- **Dual Loading**: Try API first, fallback to static JSON
-- **Upload Interface**: Drag & drop with progress tracking
-- **Real-time Updates**: Content refreshes after API operations
-- **Error Handling**: User-friendly error messages
+**Authentication:**
+- `POST /api/auth/login` - Admin login (username: admin)
+- `GET /api/auth/me` - Current user info  
 
-### Content Management
-- **Web Upload Interface**: `admin/content-manager.html` with drag & drop
-- **Automatic Processing**: EXIF extraction, GPS conversion, image optimization
-- **Live Preview**: Image preview before upload
-- **Statistics Dashboard**: Photo/project counts, storage usage, camera stats
+**Photos:**
+- `GET /api/photos` - List with pagination/filtering
+- `GET /api/photos/featured?limit=6` - Featured photos for homepage
+- `POST /api/photos` - Upload with EXIF extraction (admin)
+- `PUT /api/photos/{id}` - Update metadata (admin)
+- `DELETE /api/photos/{id}` - Delete photo and files (admin)
 
-### Styling Approach
-- **Tailwind CSS**: Via CDN for utility-first styling
-- **Custom CSS**: Upload interface styling, animations, responsive design
-- **Mobile Upload**: Touch-friendly drag & drop interface
+**Projects:**
+- `GET /api/projects` - List projects
+- `GET /api/projects/featured` - Featured for homepage  
+- `POST /api/projects` - Create (admin)
 
-### Dependencies
-**Backend:**
-- express, multer, exifr, sharp, cors, helmet, uuid
+**Blog:**
+- `GET /api/blog` - Published posts
+- `GET /api/blog/admin` - All posts including drafts (admin)
 
-**Frontend:**
-- Tailwind CSS, PhotoSwipe, ExifReader (CDN)
-- Google Fonts (Inter & Playfair Display)
+### Image Processing Pipeline
+1. **Upload**: Multipart form with metadata
+2. **EXIF Extraction**: Camera settings, GPS coordinates using ExifRead
+3. **Processing**: Auto-rotation, WebP conversion, thumbnail generation (400px)
+4. **Storage**: Original in `/uploads`, processed in `/compressed`
+5. **Database**: Metadata stored in PostgreSQL
 
-## Adding Content
+### Frontend State Management
+- **TanStack Query**: Server state, caching, optimistic updates
+- **Zustand**: Client state (auth, UI state)
+- **React Router v6**: Client-side routing with nested layouts
 
-### Photography Upload Process
-**Via Web Interface (Recommended):**
-1. Visit `/admin/content-manager.html`
-2. Drag & drop image files or click to select
-3. Add title, category, comments, tags
-4. Upload triggers automatic EXIF extraction and image processing
+### Styling System
+- **Tailwind CSS v4**: Utility-first styling
+- **Responsive Images**: Hero image in multiple resolutions (WebP + JPEG fallbacks)
+- **Custom CSS**: `/src/tailwind-safelist.css` ensures required classes are generated
+- **Typography**: Merriweather serif for headings, Inter for body text
 
-**API Upload:**
-```bash
-curl -X POST -F "photo=@image.jpg" -F "title=My Photo" http://localhost:3000/api/upload/photo
+### Docker Architecture
+- **frontend**: Nginx serving React build + reverse proxy to backend
+- **backend**: FastAPI app with health checks
+- **db**: PostgreSQL 15 with persistent volumes  
+- **redis**: Redis 7 for caching
+- **migrate**: One-time migration runner
+
+## Common Development Issues
+
+### Tailwind CSS Classes Not Applied
+If spacing/styling changes don't appear:
+1. Clear Docker cache: `docker system prune -f`
+2. Rebuild without cache: `docker compose build --no-cache`
+3. Add missing classes to `/frontend/src/tailwind-safelist.css`
+4. Check `/frontend/tailwind.config.js` safelist
+
+**CRITICAL: Tailwind CSS v4 Configuration Issue**
+If padding/margin utilities (like `py-32`, `mb-24`, `gap-8`) are not working:
+
+**Problem**: Tailwind CSS v4 changed CSS specificity due to extensive use of CSS `@layer`. Reset styles outside of `@layer base` prevent padding/margin utilities from working.
+
+**Solution**: Ensure all reset styles are inside `@layer base` in `/frontend/src/index.css`:
+
+```css
+/* INCORRECT (v3 style) */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+/* CORRECT (v4 style) */
+@import "tailwindcss";
+
+@layer base {
+  *, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  /* All other reset styles must also be in @layer base */
+}
 ```
 
-**Manual JSON (Not recommended with backend):**
-Edit `/data/photography.json` - but backend will overwrite on next API operation
+**Signs this is working**: CSS bundle size increases significantly (18KB → 43KB) indicating all utilities are included.
 
-### Projects Management
-**Via Web Interface:**
-1. Use admin interface project form
-2. Fill title, description, technologies, GitHub/demo URLs
-3. Auto-saves to `/data/projects.json`
-
-**API Creation:**
+### Database Migrations
 ```bash
-curl -X POST -H "Content-Type: application/json" \
-  -d '{"title":"My Project","description":"...","technologies":["React","Node.js"]}' \
-  http://localhost:3000/api/projects
+# Create new migration
+docker compose exec backend alembic revision --autogenerate -m "description"
+
+# Apply migrations
+docker compose exec backend alembic upgrade head
+
+# View migration history
+docker compose exec backend alembic history
 ```
 
-## Deployment
+### Image Upload Issues
+- Check file size limits (50MB default)
+- Verify upload directory permissions
+- Check backend logs: `docker compose logs -f backend`
+- EXIF processing requires valid image files
 
-### Docker Deployment (Recommended)
+### Authentication
+- Default admin credentials: `admin` / `admin`  
+- JWT tokens stored in browser localStorage
+- Clear localStorage if auth issues persist
+
+## Testing Strategy
+
+### Backend Tests
+- **Unit Tests**: Individual functions, business logic  
+- **Integration Tests**: API endpoints, database operations
+- **Security Tests**: Authentication, input validation
+- **Performance Tests**: Large file uploads, concurrent requests
+
+### Frontend Tests  
+- **Unit Tests**: Components, utilities (Vitest + Testing Library)
+- **E2E Tests**: User flows, admin operations (Playwright)
+- **Visual Tests**: Hero image, album grid layout
+
+## Deployment Notes
+
+### Environment Variables (.env)
 ```bash
-# TrueNAS or any Docker environment
-docker-compose up -d
-
-# Access on ports 9080 (HTTP) and 9443 (HTTPS)
+POSTGRES_PASSWORD=secure_password_change_this
+SECRET_KEY=your-64-character-secret-key
+ADMIN_PASSWORD=secure_admin_password
+WEBP_QUALITY=85
+THUMBNAIL_SIZE=400
 ```
 
-### Local Development
-```bash
-npm run dev  # Starts server on port 3000 with auto-reload
-```
+### Production Checklist
+- Set secure passwords in `.env`
+- Configure proper CORS origins
+- Set up SSL certificates for HTTPS
+- Configure backup for PostgreSQL and upload directories
+- Monitor disk space for image storage
 
-### Production (Non-Docker)
-```bash
-npm start  # Production server
-# Or with PM2: pm2 start server/app.js --name portfolio
-```
-
-### Container Architecture
-- **nginx container**: Serves static files, proxies API to backend
-- **backend container**: Node.js app with photo upload and EXIF processing
-- **Shared volumes**: Data persistence and image storage
-- **Internal networking**: nginx → backend:3000
-
-### Deployment Options
-- **Docker Compose** (Recommended): See `DOCKER.md` for complete guide
-- **TrueNAS**: Uses docker-compose with volume mounts for `/etc/nginx/conf.d` and data
-- **Traditional VPS**: Nginx + Node.js + PM2
-- **Cloud Platforms**: Containerized deployment on any Docker-supporting platform
-
-## Key Development Notes
-
-### Backend Development
-- **API First**: All content operations go through API
-- **File Processing**: Automatic EXIF extraction and image optimization
-- **Error Handling**: Comprehensive API error responses
-- **Security**: Rate limiting, file validation, CORS protection
-
-### Frontend Integration
-- **Graceful Fallback**: Works with or without backend
-- **Real-time Updates**: Admin interface refreshes content immediately
-- **Mobile Support**: Full upload functionality on mobile devices
-
-### File Management
-- **Automatic Storage**: Uploaded images saved to `assets/images/portfolio/`
-- **JSON Updates**: Backend automatically manages data files
-- **Image Optimization**: Sharp handles compression and optimization
-
-### Testing
-- **Frontend Only**: Use `python3 -m http.server 8000` for static testing
-- **Full Stack**: Use `npm run dev` for complete functionality
-- **API Testing**: Use curl or Postman for API endpoints
-
-### Performance
-- **Image Processing**: Server-side optimization with Sharp
-- **Caching**: Nginx handles static file caching
-- **API Efficiency**: Pagination and filtering support
+### Performance Optimizations
+- **Backend**: Async operations, database indexing, Redis caching
+- **Frontend**: Code splitting, image optimization, CDN for static assets
+- **Images**: WebP format with JPEG fallbacks, responsive sizes

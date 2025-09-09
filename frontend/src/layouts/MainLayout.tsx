@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+// Removed Heroicons import - using inline SVGs instead
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 
@@ -9,8 +9,18 @@ import { useAuthStore } from '../stores/authStore';
 
 const MainLayout: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const { data: subAppsData } = useQuery({
     queryKey: ['subapps', isAuthenticated ? 'authenticated' : 'public'],
@@ -32,7 +42,11 @@ const MainLayout: React.FC = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${
+        scrolled 
+          ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-200' 
+          : 'bg-white/80 backdrop-blur-sm'
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
@@ -50,9 +64,9 @@ const MainLayout: React.FC = () => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`px-3 py-2 text-sm font-medium transition-colors duration-200 ${
+                  className={`nav-link px-3 py-2 text-sm font-medium transition-colors duration-200 ${
                     isActive(item.href)
-                      ? 'text-primary-600 border-b-2 border-primary-600'
+                      ? 'text-primary-600 active'
                       : 'text-gray-700 hover:text-primary-600'
                   }`}
                 >
@@ -99,14 +113,18 @@ const MainLayout: React.FC = () => {
             <div className="md:hidden">
               <button
                 type="button"
-                className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
+                className="mobile-menu-button"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               >
                 <span className="sr-only">Open main menu</span>
                 {mobileMenuOpen ? (
-                  <XMarkIcon className="block h-6 w-6" aria-hidden="true" />
+                  <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                 ) : (
-                  <Bars3Icon className="block h-6 w-6" aria-hidden="true" />
+                  <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                  </svg>
                 )}
               </button>
             </div>
@@ -171,7 +189,7 @@ const MainLayout: React.FC = () => {
       </header>
 
       {/* Main content */}
-      <main>
+      <main className="pt-16">
         <Outlet />
       </main>
 

@@ -26,6 +26,9 @@ export default {
     'border-gray-200', 'border-gray-300', 'border-white', 'border-primary-600',
     // Common utility classes
     'hover:bg-primary-700', 'hover:bg-gray-100', 'hover:text-gray-900',
+    // Spacing and layout classes
+    'py-32', 'mb-24', 'gap-6', 'gap-8', 'gap-10', 'gap-12', 'mb-16',
+    'px-8', 'py-4', 'min-w-[200px]', 'text-center',
   ],
   theme: {
     extend: {
