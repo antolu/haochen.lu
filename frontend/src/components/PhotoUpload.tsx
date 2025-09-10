@@ -27,11 +27,7 @@ interface PhotoMetadata {
   featured: boolean;
 }
 
-const PhotoUpload: React.FC<PhotoUploadProps> = ({
-  onComplete,
-  onCancel,
-  maxFiles = 10,
-}) => {
+const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFiles = 10 }) => {
   const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([]);
   const [currentUpload, setCurrentUpload] = useState<string | null>(null);
   const uploadMutation = useUploadPhoto();
@@ -47,20 +43,25 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
   });
 
   // Handle file drops
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    const newFiles: UploadFile[] = acceptedFiles.slice(0, maxFiles - uploadFiles.length).map((file) => {
-      const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      return {
-        id,
-        file,
-        preview: URL.createObjectURL(file),
-        progress: 0,
-        status: 'pending' as const,
-      };
-    });
+  const onDrop = useCallback(
+    (acceptedFiles: File[]) => {
+      const newFiles: UploadFile[] = acceptedFiles
+        .slice(0, maxFiles - uploadFiles.length)
+        .map(file => {
+          const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+          return {
+            id,
+            file,
+            preview: URL.createObjectURL(file),
+            progress: 0,
+            status: 'pending' as const,
+          };
+        });
 
-    setUploadFiles((prev) => [...prev, ...newFiles]);
-  }, [uploadFiles.length, maxFiles]);
+      setUploadFiles(prev => [...prev, ...newFiles]);
+    },
+    [uploadFiles.length, maxFiles]
+  );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -78,10 +79,10 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
 
   // Remove file from upload queue
   const removeFile = (fileId: string) => {
-    setUploadFiles((prev) => {
-      const updated = prev.filter((f) => f.id !== fileId);
+    setUploadFiles(prev => {
+      const updated = prev.filter(f => f.id !== fileId);
       // Cleanup preview URL
-      const fileToRemove = prev.find((f) => f.id === fileId);
+      const fileToRemove = prev.find(f => f.id === fileId);
       if (fileToRemove) {
         URL.revokeObjectURL(fileToRemove.preview);
       }
@@ -92,15 +93,17 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
   // Upload single file
   const uploadSingleFile = async (uploadFile: UploadFile, metadata: PhotoMetadata) => {
     setCurrentUpload(uploadFile.id);
-    
+
     // Update file status
-    setUploadFiles((prev) =>
-      prev.map((f) => (f.id === uploadFile.id ? { ...f, status: 'uploading' as const, progress: 0 } : f))
+    setUploadFiles(prev =>
+      prev.map(f =>
+        f.id === uploadFile.id ? { ...f, status: 'uploading' as const, progress: 0 } : f
+      )
     );
 
     try {
       const title = metadata.title || uploadFile.file.name.replace(/\.[^/.]+$/, ''); // Remove extension
-      
+
       await uploadMutation.mutateAsync({
         file: uploadFile.file,
         metadata: {
@@ -113,13 +116,15 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
       });
 
       // Update file status to completed
-      setUploadFiles((prev) =>
-        prev.map((f) => (f.id === uploadFile.id ? { ...f, status: 'completed' as const, progress: 100 } : f))
+      setUploadFiles(prev =>
+        prev.map(f =>
+          f.id === uploadFile.id ? { ...f, status: 'completed' as const, progress: 100 } : f
+        )
       );
     } catch (error) {
       // Update file status to error
-      setUploadFiles((prev) =>
-        prev.map((f) =>
+      setUploadFiles(prev =>
+        prev.map(f =>
           f.id === uploadFile.id
             ? {
                 ...f,
@@ -137,14 +142,14 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
 
   // Upload all files
   const uploadAllFiles = async (metadata: PhotoMetadata) => {
-    const pendingFiles = uploadFiles.filter((f) => f.status === 'pending' || f.status === 'error');
-    
+    const pendingFiles = uploadFiles.filter(f => f.status === 'pending' || f.status === 'error');
+
     for (const uploadFile of pendingFiles) {
       await uploadSingleFile(uploadFile, metadata);
     }
 
     // Check if all uploads completed successfully
-    const allCompleted = uploadFiles.every((f) => f.status === 'completed');
+    const allCompleted = uploadFiles.every(f => f.status === 'completed');
     if (allCompleted && onComplete) {
       setTimeout(onComplete, 500); // Small delay to show completion
     }
@@ -157,15 +162,15 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
   // Cleanup preview URLs on unmount
   React.useEffect(() => {
     return () => {
-      uploadFiles.forEach((file) => {
+      uploadFiles.forEach(file => {
         URL.revokeObjectURL(file.preview);
       });
     };
   }, []);
 
-  const pendingCount = uploadFiles.filter((f) => f.status === 'pending').length;
-  const completedCount = uploadFiles.filter((f) => f.status === 'completed').length;
-  const errorCount = uploadFiles.filter((f) => f.status === 'error').length;
+  const pendingCount = uploadFiles.filter(f => f.status === 'pending').length;
+  const completedCount = uploadFiles.filter(f => f.status === 'completed').length;
+  const errorCount = uploadFiles.filter(f => f.status === 'error').length;
   const isUploading = currentUpload !== null;
 
   return (
@@ -236,8 +241,19 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
               {isUploading && (
                 <div className="flex items-center text-sm text-gray-600">
                   <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" />
-                    <path fill="currentColor" className="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      className="opacity-25"
+                    />
+                    <path
+                      fill="currentColor"
+                      className="opacity-75"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
                   </svg>
                   Uploading...
                 </div>
@@ -246,7 +262,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
 
             {/* File List */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {uploadFiles.map((file) => (
+              {uploadFiles.map(file => (
                 <motion.div
                   key={file.id}
                   initial={{ opacity: 0, scale: 0.95 }}
@@ -256,11 +272,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
                 >
                   {/* File Preview */}
                   <div className="relative aspect-video bg-gray-100 rounded overflow-hidden">
-                    <img
-                      src={file.preview}
-                      alt="Preview"
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={file.preview} alt="Preview" className="w-full h-full object-cover" />
                     {file.status === 'uploading' && (
                       <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                         <div className="text-white text-sm">Uploading...</div>
@@ -268,15 +280,35 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
                     )}
                     {file.status === 'completed' && (
                       <div className="absolute top-2 right-2">
-                        <svg className="h-6 w-6 text-green-500 bg-white rounded-full p-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        <svg
+                          className="h-6 w-6 text-green-500 bg-white rounded-full p-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
                         </svg>
                       </div>
                     )}
                     {file.status === 'error' && (
                       <div className="absolute top-2 right-2">
-                        <svg className="h-6 w-6 text-red-500 bg-white rounded-full p-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        <svg
+                          className="h-6 w-6 text-red-500 bg-white rounded-full p-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
                         </svg>
                       </div>
                     )}
@@ -288,9 +320,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
                     <p className="text-xs text-gray-500">
                       {(file.file.size / 1024 / 1024).toFixed(1)} MB
                     </p>
-                    {file.error && (
-                      <p className="text-xs text-red-600">{file.error}</p>
-                    )}
+                    {file.error && <p className="text-xs text-red-600">{file.error}</p>}
                   </div>
 
                   {/* Remove Button */}
@@ -309,7 +339,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
             {/* Metadata Form */}
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-4 bg-gray-50 rounded-lg">
               <h3 className="text-lg font-medium text-gray-900">Photo Details (Applied to All)</h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -324,9 +354,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Category
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
                   <input
                     {...register('category')}
                     type="text"
@@ -337,9 +365,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <textarea
                   {...register('description')}
                   rows={3}
@@ -349,9 +375,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tags
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
                 <input
                   {...register('tags')}
                   type="text"
@@ -392,8 +416,19 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
                   {isUploading ? (
                     <>
                       <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" />
-                        <path fill="currentColor" className="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        <circle
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          className="opacity-25"
+                        />
+                        <path
+                          fill="currentColor"
+                          className="opacity-75"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
                       </svg>
                       Uploading {pendingCount} photos...
                     </>

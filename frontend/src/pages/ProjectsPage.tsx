@@ -5,9 +5,7 @@ const ProjectsPage: React.FC = () => {
     <div className="min-h-screen py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center">
-          <h1 className="text-4xl font-serif font-bold text-gray-900 mb-8">
-            Projects
-          </h1>
+          <h1 className="text-4xl font-serif font-bold text-gray-900 mb-8">Projects</h1>
           <p className="text-lg text-gray-600 mb-12">
             Innovative solutions and creative endeavors that showcase my technical expertise.
           </p>

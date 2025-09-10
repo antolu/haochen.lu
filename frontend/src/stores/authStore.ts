@@ -7,7 +7,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  
+
   // Actions
   login: (credentials: LoginRequest) => Promise<void>;
   logout: () => void;
@@ -15,7 +15,7 @@ interface AuthState {
   clearError: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>(set => ({
   user: null,
   isAuthenticated: false,
   isLoading: false,
@@ -23,11 +23,11 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   login: async (credentials: LoginRequest) => {
     set({ isLoading: true, error: null });
-    
+
     try {
       const tokenResponse = await auth.login(credentials);
       localStorage.setItem('token', tokenResponse.access_token);
-      
+
       // Get user info
       const user = await auth.getMe();
       set({
@@ -64,7 +64,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
 
     set({ isLoading: true });
-    
+
     try {
       const user = await auth.getMe();
       set({

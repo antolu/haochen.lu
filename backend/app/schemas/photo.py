@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+
 from pydantic import BaseModel
 
 
@@ -28,7 +29,7 @@ class PhotoResponse(PhotoBase):
     original_path: str
     webp_path: str
     thumbnail_path: str | None
-    
+
     # EXIF data
     location_lat: float | None
     location_lon: float | None
@@ -41,7 +42,7 @@ class PhotoResponse(PhotoBase):
     shutter_speed: str | None
     focal_length: int | None
     date_taken: datetime | None
-    
+
     # Metadata
     file_size: int
     width: int
@@ -50,7 +51,7 @@ class PhotoResponse(PhotoBase):
     order: int
     created_at: datetime
     updated_at: datetime
-    
+
     class Config:
         from_attributes = True
 

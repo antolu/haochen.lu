@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from app.api import auth, photos, projects, blog, subapps
+from app.api import auth, blog, photos, projects, subapps
 from app.config import settings
 
 
@@ -56,7 +56,9 @@ app.include_router(subapps.router, prefix="/api/subapps", tags=["subapps"])
 
 # Static files
 app.mount("/uploads", StaticFiles(directory=settings.upload_dir), name="uploads")
-app.mount("/compressed", StaticFiles(directory=settings.compressed_dir), name="compressed")
+app.mount(
+    "/compressed", StaticFiles(directory=settings.compressed_dir), name="compressed"
+)
 
 
 @app.get("/")
@@ -67,6 +69,7 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "timestamp": "2025-09-09T07:30:00Z"}
+
 
 @app.get("/api/health")
 async def api_health_check():

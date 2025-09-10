@@ -1,12 +1,17 @@
 /**
  * P1 - Frontend Component Tests: FileUpload
- * 
+ *
  * Tests for the file upload component including drag & drop, validation,
  * progress tracking, and error handling.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, waitFor, fireEvent } from '@testing-library/react';
-import { renderWithProviders, createMockFile, createMockImageFile, createMockDragEvent } from '../utils';
+import {
+  renderWithProviders,
+  createMockFile,
+  createMockImageFile,
+  createMockDragEvent,
+} from '../utils';
 
 // Mock file upload component
 const MockFileUpload = ({
@@ -38,15 +43,17 @@ const MockFileUpload = ({
     if (file.size > maxSize) {
       return `File size exceeds ${maxSize / 1024 / 1024}MB limit`;
     }
-    
+
     const acceptedTypes = accept.split(',').map(type => type.trim());
-    if (!acceptedTypes.some(type => {
-      if (type === 'image/*') return file.type.startsWith('image/');
-      return file.type === type;
-    })) {
+    if (
+      !acceptedTypes.some(type => {
+        if (type === 'image/*') return file.type.startsWith('image/');
+        return file.type === type;
+      })
+    ) {
       return `File type ${file.type} not accepted`;
     }
-    
+
     return null;
   };
 
@@ -114,9 +121,9 @@ const MockFileUpload = ({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragActive(false);
-    
+
     if (disabled) return;
-    
+
     const files = Array.from(e.dataTransfer.files);
     handleFileSelect(files);
   };
@@ -168,7 +175,7 @@ const MockFileUpload = ({
           data-testid="file-input"
           disabled={disabled}
         />
-        
+
         {uploading ? (
           <div data-testid="upload-progress">
             <div>Uploading... {uploadProgress}%</div>
@@ -190,7 +197,7 @@ const MockFileUpload = ({
           </div>
         )}
       </div>
-      
+
       {selectedFiles.length > 0 && (
         <div data-testid="selected-files" className="mt-4">
           <h4>Selected files:</h4>
@@ -214,7 +221,7 @@ const MockFilePreview = ({ files }: { files: File[] }) => {
     files.forEach(file => {
       if (file.type.startsWith('image/')) {
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = e => {
           setPreviews(prev => ({
             ...prev,
             [file.name]: e.target?.result as string,
@@ -283,16 +290,16 @@ describe('FileUpload Component Tests', () => {
   describe('File Input Interactions', () => {
     it('should open file dialog when clicked', async () => {
       const user = await import('@testing-library/user-event').then(m => m.userEvent.setup());
-      
+
       renderWithProviders(<MockFileUpload />);
 
       const dropZone = screen.getByTestId('drop-zone');
       const fileInput = screen.getByTestId('file-input') as HTMLInputElement;
-      
+
       const clickSpy = vi.spyOn(fileInput, 'click');
-      
+
       await user.click(dropZone);
-      
+
       expect(clickSpy).toHaveBeenCalled();
     });
 
@@ -300,14 +307,12 @@ describe('FileUpload Component Tests', () => {
       const onFilesSelected = vi.fn();
       const testFile = createMockImageFile('test.jpg');
 
-      renderWithProviders(
-        <MockFileUpload onFilesSelected={onFilesSelected} />
-      );
+      renderWithProviders(<MockFileUpload onFilesSelected={onFilesSelected} />);
 
       const fileInput = screen.getByTestId('file-input') as HTMLInputElement;
-      
+
       await fireEvent.change(fileInput, {
-        target: { files: [testFile] }
+        target: { files: [testFile] },
       });
 
       await waitFor(() => {
@@ -317,19 +322,14 @@ describe('FileUpload Component Tests', () => {
 
     it('should handle multiple file selection', async () => {
       const onFilesSelected = vi.fn();
-      const testFiles = [
-        createMockImageFile('test1.jpg'),
-        createMockImageFile('test2.jpg'),
-      ];
+      const testFiles = [createMockImageFile('test1.jpg'), createMockImageFile('test2.jpg')];
 
-      renderWithProviders(
-        <MockFileUpload multiple={true} onFilesSelected={onFilesSelected} />
-      );
+      renderWithProviders(<MockFileUpload multiple={true} onFilesSelected={onFilesSelected} />);
 
       const fileInput = screen.getByTestId('file-input') as HTMLInputElement;
-      
+
       await fireEvent.change(fileInput, {
-        target: { files: testFiles }
+        target: { files: testFiles },
       });
 
       await waitFor(() => {
@@ -343,9 +343,9 @@ describe('FileUpload Component Tests', () => {
       renderWithProviders(<MockFileUpload />);
 
       const dropZone = screen.getByTestId('drop-zone');
-      
+
       fireEvent.dragOver(dropZone);
-      
+
       expect(dropZone).toHaveClass('border-blue-500', 'bg-blue-50');
     });
 
@@ -353,10 +353,10 @@ describe('FileUpload Component Tests', () => {
       renderWithProviders(<MockFileUpload />);
 
       const dropZone = screen.getByTestId('drop-zone');
-      
+
       fireEvent.dragOver(dropZone);
       expect(dropZone).toHaveClass('border-blue-500');
-      
+
       fireEvent.dragLeave(dropZone);
       expect(dropZone).not.toHaveClass('border-blue-500');
     });
@@ -365,13 +365,11 @@ describe('FileUpload Component Tests', () => {
       const onFilesSelected = vi.fn();
       const testFile = createMockImageFile('dropped.jpg');
 
-      renderWithProviders(
-        <MockFileUpload onFilesSelected={onFilesSelected} />
-      );
+      renderWithProviders(<MockFileUpload onFilesSelected={onFilesSelected} />);
 
       const dropZone = screen.getByTestId('drop-zone');
       const dropEvent = createMockDragEvent('drop', [testFile]);
-      
+
       fireEvent(dropZone, dropEvent);
 
       await waitFor(() => {
@@ -381,18 +379,13 @@ describe('FileUpload Component Tests', () => {
 
     it('should handle multiple files dropped', async () => {
       const onFilesSelected = vi.fn();
-      const testFiles = [
-        createMockImageFile('dropped1.jpg'),
-        createMockImageFile('dropped2.jpg'),
-      ];
+      const testFiles = [createMockImageFile('dropped1.jpg'), createMockImageFile('dropped2.jpg')];
 
-      renderWithProviders(
-        <MockFileUpload multiple={true} onFilesSelected={onFilesSelected} />
-      );
+      renderWithProviders(<MockFileUpload multiple={true} onFilesSelected={onFilesSelected} />);
 
       const dropZone = screen.getByTestId('drop-zone');
       const dropEvent = createMockDragEvent('drop', testFiles);
-      
+
       fireEvent(dropZone, dropEvent);
 
       await waitFor(() => {
@@ -407,20 +400,16 @@ describe('FileUpload Component Tests', () => {
       const maxSize = 1024; // 1KB limit
       const largeFile = createMockFile('large.jpg', 'image/jpeg', 2048); // 2KB file
 
-      renderWithProviders(
-        <MockFileUpload maxSize={maxSize} onUploadError={onUploadError} />
-      );
+      renderWithProviders(<MockFileUpload maxSize={maxSize} onUploadError={onUploadError} />);
 
       const fileInput = screen.getByTestId('file-input') as HTMLInputElement;
-      
+
       await fireEvent.change(fileInput, {
-        target: { files: [largeFile] }
+        target: { files: [largeFile] },
       });
 
       await waitFor(() => {
-        expect(onUploadError).toHaveBeenCalledWith(
-          expect.stringContaining('File size exceeds')
-        );
+        expect(onUploadError).toHaveBeenCalledWith(expect.stringContaining('File size exceeds'));
       });
     });
 
@@ -428,14 +417,12 @@ describe('FileUpload Component Tests', () => {
       const onUploadError = vi.fn();
       const invalidFile = createMockFile('document.pdf', 'application/pdf');
 
-      renderWithProviders(
-        <MockFileUpload accept="image/*" onUploadError={onUploadError} />
-      );
+      renderWithProviders(<MockFileUpload accept="image/*" onUploadError={onUploadError} />);
 
       const fileInput = screen.getByTestId('file-input') as HTMLInputElement;
-      
+
       await fireEvent.change(fileInput, {
-        target: { files: [invalidFile] }
+        target: { files: [invalidFile] },
       });
 
       await waitFor(() => {
@@ -447,19 +434,14 @@ describe('FileUpload Component Tests', () => {
 
     it('should reject multiple files when multiple=false', async () => {
       const onUploadError = vi.fn();
-      const testFiles = [
-        createMockImageFile('test1.jpg'),
-        createMockImageFile('test2.jpg'),
-      ];
+      const testFiles = [createMockImageFile('test1.jpg'), createMockImageFile('test2.jpg')];
 
-      renderWithProviders(
-        <MockFileUpload multiple={false} onUploadError={onUploadError} />
-      );
+      renderWithProviders(<MockFileUpload multiple={false} onUploadError={onUploadError} />);
 
       const fileInput = screen.getByTestId('file-input') as HTMLInputElement;
-      
+
       await fireEvent.change(fileInput, {
-        target: { files: testFiles }
+        target: { files: testFiles },
       });
 
       await waitFor(() => {
@@ -471,14 +453,12 @@ describe('FileUpload Component Tests', () => {
       const onFilesSelected = vi.fn();
       const validFile = createMockImageFile('valid.jpg');
 
-      renderWithProviders(
-        <MockFileUpload accept="image/*" onFilesSelected={onFilesSelected} />
-      );
+      renderWithProviders(<MockFileUpload accept="image/*" onFilesSelected={onFilesSelected} />);
 
       const fileInput = screen.getByTestId('file-input') as HTMLInputElement;
-      
+
       await fireEvent.change(fileInput, {
-        target: { files: [validFile] }
+        target: { files: [validFile] },
       });
 
       await waitFor(() => {
@@ -494,9 +474,9 @@ describe('FileUpload Component Tests', () => {
       renderWithProviders(<MockFileUpload />);
 
       const fileInput = screen.getByTestId('file-input') as HTMLInputElement;
-      
+
       await fireEvent.change(fileInput, {
-        target: { files: [testFile] }
+        target: { files: [testFile] },
       });
 
       // Should show upload progress
@@ -512,19 +492,20 @@ describe('FileUpload Component Tests', () => {
       const onUploadProgress = vi.fn();
       const testFile = createMockImageFile('test.jpg');
 
-      renderWithProviders(
-        <MockFileUpload onUploadProgress={onUploadProgress} />
-      );
+      renderWithProviders(<MockFileUpload onUploadProgress={onUploadProgress} />);
 
       const fileInput = screen.getByTestId('file-input') as HTMLInputElement;
-      
+
       await fireEvent.change(fileInput, {
-        target: { files: [testFile] }
+        target: { files: [testFile] },
       });
 
-      await waitFor(() => {
-        expect(onUploadProgress).toHaveBeenCalled();
-      }, { timeout: 2000 });
+      await waitFor(
+        () => {
+          expect(onUploadProgress).toHaveBeenCalled();
+        },
+        { timeout: 2000 }
+      );
 
       // Should be called multiple times with different progress values
       expect(onUploadProgress).toHaveBeenCalledWith(expect.any(Number));
@@ -534,25 +515,26 @@ describe('FileUpload Component Tests', () => {
       const onUploadComplete = vi.fn();
       const testFile = createMockImageFile('test.jpg');
 
-      renderWithProviders(
-        <MockFileUpload onUploadComplete={onUploadComplete} />
-      );
+      renderWithProviders(<MockFileUpload onUploadComplete={onUploadComplete} />);
 
       const fileInput = screen.getByTestId('file-input') as HTMLInputElement;
-      
+
       await fireEvent.change(fileInput, {
-        target: { files: [testFile] }
+        target: { files: [testFile] },
       });
 
-      await waitFor(() => {
-        expect(onUploadComplete).toHaveBeenCalledWith([
-          expect.objectContaining({
-            filename: 'test.jpg',
-            size: expect.any(Number),
-            url: expect.stringContaining('uploads/test.jpg'),
-          })
-        ]);
-      }, { timeout: 2000 });
+      await waitFor(
+        () => {
+          expect(onUploadComplete).toHaveBeenCalledWith([
+            expect.objectContaining({
+              filename: 'test.jpg',
+              size: expect.any(Number),
+              url: expect.stringContaining('uploads/test.jpg'),
+            }),
+          ]);
+        },
+        { timeout: 2000 }
+      );
     });
   });
 
@@ -571,41 +553,38 @@ describe('FileUpload Component Tests', () => {
       renderWithProviders(<MockFileUpload disabled={true} />);
 
       const dropZone = screen.getByTestId('drop-zone');
-      
+
       fireEvent.dragOver(dropZone);
-      
+
       expect(dropZone).not.toHaveClass('border-blue-500');
     });
 
     it('should not respond to clicks when disabled', async () => {
       const user = await import('@testing-library/user-event').then(m => m.userEvent.setup());
-      
+
       renderWithProviders(<MockFileUpload disabled={true} />);
 
       const dropZone = screen.getByTestId('drop-zone');
       const fileInput = screen.getByTestId('file-input') as HTMLInputElement;
-      
+
       const clickSpy = vi.spyOn(fileInput, 'click');
-      
+
       await user.click(dropZone);
-      
+
       expect(clickSpy).not.toHaveBeenCalled();
     });
   });
 
   describe('File Preview', () => {
     it('should render file preview for selected files', async () => {
-      const testFiles = [
-        createMockImageFile('preview1.jpg'),
-        createMockImageFile('preview2.png'),
-      ];
+      const testFiles = [createMockImageFile('preview1.jpg'), createMockImageFile('preview2.png')];
 
       renderWithProviders(<MockFilePreview files={testFiles} />);
 
       expect(screen.getByTestId('file-preview')).toBeInTheDocument();
       expect(screen.getByTestId('preview-0')).toBeInTheDocument();
       expect(screen.getByTestId('preview-1')).toBeInTheDocument();
-      
+
       expect(screen.getByText('preview1.jpg')).toBeInTheDocument();
       expect(screen.getByText('preview2.png')).toBeInTheDocument();
     });
@@ -637,7 +616,7 @@ describe('FileUpload Component Tests', () => {
         onerror: vi.fn(),
         onload: vi.fn(),
       };
-      
+
       global.FileReader = vi.fn(() => mockFileReader) as any;
 
       expect(() => {
@@ -653,9 +632,9 @@ describe('FileUpload Component Tests', () => {
       renderWithProviders(<MockFileUpload />);
 
       const fileInput = screen.getByTestId('file-input') as HTMLInputElement;
-      
+
       await fireEvent.change(fileInput, {
-        target: { files: [testFile] }
+        target: { files: [testFile] },
       });
 
       await waitFor(() => {
@@ -672,20 +651,20 @@ describe('FileUpload Component Tests', () => {
 
       const fileInput = screen.getByTestId('file-input');
       expect(fileInput).toHaveAttribute('type', 'file');
-      
+
       // In a real implementation, would have aria-label, aria-describedby, etc.
     });
 
     it('should support keyboard navigation', async () => {
       const user = await import('@testing-library/user-event').then(m => m.userEvent.setup());
-      
+
       renderWithProviders(<MockFileUpload />);
 
       const dropZone = screen.getByTestId('drop-zone');
-      
+
       // Should be focusable
       expect(dropZone).toHaveClass('cursor-pointer');
-      
+
       // Should respond to Enter/Space keys in real implementation
       await user.tab();
       // In a real implementation, dropZone would be focusable with tabindex

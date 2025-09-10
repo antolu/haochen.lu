@@ -50,16 +50,16 @@ export const useCreateSubApp = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: Omit<SubApp, 'id' | 'slug' | 'created_at' | 'updated_at'>) => 
+    mutationFn: (data: Omit<SubApp, 'id' | 'slug' | 'created_at' | 'updated_at'>) =>
       subapps.create(data),
-    onSuccess: (newSubApp) => {
+    onSuccess: newSubApp => {
       // Invalidate and refetch sub-apps list
       queryClient.invalidateQueries({ queryKey: subappKeys.lists() });
       queryClient.invalidateQueries({ queryKey: subappKeys.stats() });
-      
+
       // Add the new sub-app to the cache
       queryClient.setQueryData(subappKeys.detail(newSubApp.id), newSubApp);
-      
+
       toast.success(`Sub-app "${newSubApp.name}" created successfully!`);
     },
     onError: (error: any) => {
@@ -74,30 +74,26 @@ export const useUpdateSubApp = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<SubApp> }) => 
-      subapps.update(id, data),
-    onSuccess: (updatedSubApp) => {
+    mutationFn: ({ id, data }: { id: string; data: Partial<SubApp> }) => subapps.update(id, data),
+    onSuccess: updatedSubApp => {
       // Update the sub-app in the list cache
-      queryClient.setQueryData(
-        subappKeys.list('admin'),
-        (old: SubAppListResponse | undefined) => {
-          if (!old) return old;
-          return {
-            ...old,
-            subapps: old.subapps.map(subapp => 
-              subapp.id === updatedSubApp.id ? updatedSubApp : subapp
-            ),
-          };
-        }
-      );
-      
+      queryClient.setQueryData(subappKeys.list('admin'), (old: SubAppListResponse | undefined) => {
+        if (!old) return old;
+        return {
+          ...old,
+          subapps: old.subapps.map(subapp =>
+            subapp.id === updatedSubApp.id ? updatedSubApp : subapp
+          ),
+        };
+      });
+
       // Update the individual sub-app cache
       queryClient.setQueryData(subappKeys.detail(updatedSubApp.id), updatedSubApp);
       queryClient.setQueryData(subappKeys.detail(updatedSubApp.slug), updatedSubApp);
-      
+
       // Invalidate stats
       queryClient.invalidateQueries({ queryKey: subappKeys.stats() });
-      
+
       toast.success(`Sub-app "${updatedSubApp.name}" updated successfully!`);
     },
     onError: (error: any) => {
@@ -115,24 +111,21 @@ export const useDeleteSubApp = () => {
     mutationFn: (id: string) => subapps.delete(id),
     onSuccess: (_, deletedId) => {
       // Remove the sub-app from the list cache
-      queryClient.setQueryData(
-        subappKeys.list('admin'),
-        (old: SubAppListResponse | undefined) => {
-          if (!old) return old;
-          return {
-            ...old,
-            subapps: old.subapps.filter(subapp => subapp.id !== deletedId),
-            total: old.total - 1,
-          };
-        }
-      );
-      
+      queryClient.setQueryData(subappKeys.list('admin'), (old: SubAppListResponse | undefined) => {
+        if (!old) return old;
+        return {
+          ...old,
+          subapps: old.subapps.filter(subapp => subapp.id !== deletedId),
+          total: old.total - 1,
+        };
+      });
+
       // Remove from detail caches
       queryClient.removeQueries({ queryKey: subappKeys.detail(deletedId) });
-      
+
       // Invalidate stats
       queryClient.invalidateQueries({ queryKey: subappKeys.stats() });
-      
+
       toast.success('Sub-app deleted successfully!');
     },
     onError: (error: any) => {
@@ -147,7 +140,7 @@ export const useToggleSubAppEnabled = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, enabled }: { id: string; enabled: boolean }) => 
+    mutationFn: ({ id, enabled }: { id: string; enabled: boolean }) =>
       subapps.update(id, { enabled }),
     onMutate: async ({ id, enabled }) => {
       // Cancel outgoing refetches
@@ -157,18 +150,13 @@ export const useToggleSubAppEnabled = () => {
       const previousData = queryClient.getQueryData<SubAppListResponse>(subappKeys.list('admin'));
 
       // Optimistically update the cache
-      queryClient.setQueryData(
-        subappKeys.list('admin'),
-        (old: SubAppListResponse | undefined) => {
-          if (!old) return old;
-          return {
-            ...old,
-            subapps: old.subapps.map(subapp => 
-              subapp.id === id ? { ...subapp, enabled } : subapp
-            ),
-          };
-        }
-      );
+      queryClient.setQueryData(subappKeys.list('admin'), (old: SubAppListResponse | undefined) => {
+        if (!old) return old;
+        return {
+          ...old,
+          subapps: old.subapps.map(subapp => (subapp.id === id ? { ...subapp, enabled } : subapp)),
+        };
+      });
 
       // Return a context object with the snapshotted value
       return { previousData };
@@ -178,18 +166,18 @@ export const useToggleSubAppEnabled = () => {
       if (context?.previousData) {
         queryClient.setQueryData(subappKeys.list('admin'), context.previousData);
       }
-      
+
       const message = 'Failed to update sub-app status';
       toast.error(message);
     },
-    onSuccess: (updatedSubApp) => {
+    onSuccess: updatedSubApp => {
       // Update individual sub-app cache
       queryClient.setQueryData(subappKeys.detail(updatedSubApp.id), updatedSubApp);
       queryClient.setQueryData(subappKeys.detail(updatedSubApp.slug), updatedSubApp);
-      
+
       // Invalidate stats
       queryClient.invalidateQueries({ queryKey: subappKeys.stats() });
-      
+
       const action = updatedSubApp.enabled ? 'enabled' : 'disabled';
       toast.success(`Sub-app "${updatedSubApp.name}" ${action}!`);
     },
@@ -206,15 +194,13 @@ export const useBulkUpdateSubApps = () => {
 
   return useMutation({
     mutationFn: async (updates: Array<{ id: string; data: Partial<SubApp> }>) => {
-      const results = await Promise.all(
-        updates.map(({ id, data }) => subapps.update(id, data))
-      );
+      const results = await Promise.all(updates.map(({ id, data }) => subapps.update(id, data)));
       return results;
     },
-    onSuccess: (results) => {
+    onSuccess: results => {
       // Invalidate all sub-app related queries
       queryClient.invalidateQueries({ queryKey: subappKeys.all });
-      
+
       toast.success(`Successfully updated ${results.length} sub-apps!`);
     },
     onError: (error: any) => {

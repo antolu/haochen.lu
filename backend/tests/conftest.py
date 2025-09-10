@@ -1,27 +1,27 @@
 """
 Test configuration and fixtures for the photography portfolio backend.
 """
+
 from __future__ import annotations
 
 import asyncio
 import tempfile
+from collections.abc import AsyncGenerator, Generator
 from pathlib import Path
-from typing import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
 from httpx import AsyncClient
-from sqlalchemy import create_engine, event
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
-from app.config import Settings, settings
+from app.config import Settings
 from app.database import Base, get_session
 from app.main import app
-from app.models import User, Photo, Project, BlogPost, SubApp
-from tests.factories import UserFactory, PhotoFactory, ProjectFactory, BlogPostFactory
+from app.models import BlogPost, Photo, Project, User
+from tests.factories import BlogPostFactory, PhotoFactory, ProjectFactory, UserFactory
 
 
 # Test settings override
@@ -49,12 +49,12 @@ async def test_engine():
         poolclass=StaticPool,
         connect_args={"check_same_thread": False},
     )
-    
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    
+
     yield engine
-    
+
     await engine.dispose()
 
 
@@ -64,7 +64,7 @@ async def test_session(test_engine) -> AsyncSession:
     async_session_maker = async_sessionmaker(
         test_engine, class_=AsyncSession, expire_on_commit=False
     )
-    
+
     async with async_session_maker() as session:
         yield session
 
@@ -72,8 +72,10 @@ async def test_session(test_engine) -> AsyncSession:
 @pytest.fixture
 def override_get_session(test_session):
     """Override the get_session dependency for testing."""
+
     def _override_get_session():
         yield test_session
+
     return _override_get_session
 
 
@@ -88,7 +90,9 @@ def test_client(test_settings, override_get_session) -> TestClient:
 
 
 @pytest_asyncio.fixture
-async def async_client(test_settings, override_get_session) -> AsyncGenerator[AsyncClient, None]:
+async def async_client(
+    test_settings, override_get_session
+) -> AsyncGenerator[AsyncClient, None]:
     """Create an async test client."""
     app.dependency_overrides[get_session] = override_get_session
     async with AsyncClient(app=app, base_url="http://testserver") as client:
@@ -101,10 +105,7 @@ async def async_client(test_settings, override_get_session) -> AsyncGenerator[As
 async def admin_user(test_session: AsyncSession) -> User:
     """Create an admin user for testing."""
     user = await UserFactory.create_async(
-        test_session,
-        username="admin",
-        is_admin=True,
-        is_active=True
+        test_session, username="admin", is_admin=True, is_active=True
     )
     return user
 
@@ -113,10 +114,7 @@ async def admin_user(test_session: AsyncSession) -> User:
 async def regular_user(test_session: AsyncSession) -> User:
     """Create a regular user for testing."""
     user = await UserFactory.create_async(
-        test_session,
-        username="testuser",
-        is_admin=False,
-        is_active=True
+        test_session, username="testuser", is_admin=False, is_active=True
     )
     return user
 
@@ -125,6 +123,7 @@ async def regular_user(test_session: AsyncSession) -> User:
 async def admin_token(admin_user: User) -> str:
     """Generate a JWT token for admin user."""
     from app.core.security import create_access_token
+
     return create_access_token({"sub": admin_user.username})
 
 
@@ -154,6 +153,7 @@ def temp_compressed_dir() -> Generator[Path, None, None]:
 def mock_redis():
     """Mock Redis client."""
     import fakeredis
+
     return fakeredis.FakeRedis()
 
 
@@ -161,21 +161,23 @@ def mock_redis():
 def mock_image_processor():
     """Mock image processor."""
     mock = MagicMock()
-    mock.process_image = AsyncMock(return_value={
-        "filename": "test_image.jpg",
-        "original_path": "uploads/test_image.jpg",
-        "webp_path": "compressed/test_image.webp",
-        "thumbnail_path": "compressed/test_image_thumb.webp",
-        "file_size": 1024000,
-        "width": 1920,
-        "height": 1080,
-        "camera_make": "Canon",
-        "camera_model": "EOS R5",
-        "iso": 100,
-        "aperture": 2.8,
-        "shutter_speed": "1/125",
-        "focal_length": 85,
-    })
+    mock.process_image = AsyncMock(
+        return_value={
+            "filename": "test_image.jpg",
+            "original_path": "uploads/test_image.jpg",
+            "webp_path": "compressed/test_image.webp",
+            "thumbnail_path": "compressed/test_image_thumb.webp",
+            "file_size": 1024000,
+            "width": 1920,
+            "height": 1080,
+            "camera_make": "Canon",
+            "camera_model": "EOS R5",
+            "iso": 100,
+            "aperture": 2.8,
+            "shutter_speed": "1/125",
+            "focal_length": 85,
+        }
+    )
     return mock
 
 
@@ -203,8 +205,8 @@ async def sample_photos(test_session: AsyncSession) -> list[Photo]:
     for i in range(5):
         photo = await PhotoFactory.create_async(
             test_session,
-            title=f"Test Photo {i+1}",
-            featured=(i == 0)  # First photo is featured
+            title=f"Test Photo {i + 1}",
+            featured=(i == 0),  # First photo is featured
         )
         photos.append(photo)
     return photos
@@ -228,13 +230,14 @@ async def sample_blog_post(test_session: AsyncSession) -> BlogPost:
 @pytest.fixture
 def sample_image_data() -> bytes:
     """Generate sample image data for testing."""
-    from PIL import Image
     import io
-    
+
+    from PIL import Image
+
     # Create a small test image
-    img = Image.new('RGB', (100, 100), color='red')
+    img = Image.new("RGB", (100, 100), color="red")
     img_bytes = io.BytesIO()
-    img.save(img_bytes, format='JPEG')
+    img.save(img_bytes, format="JPEG")
     img_bytes.seek(0)
     return img_bytes.getvalue()
 
@@ -242,25 +245,17 @@ def sample_image_data() -> bytes:
 @pytest.fixture
 def sample_image_with_exif() -> bytes:
     """Generate sample image with EXIF data."""
-    from PIL import Image
-    from PIL.ExifTags import TAGS
     import io
-    
+
+    from PIL import Image
+
     # Create image with basic EXIF
-    img = Image.new('RGB', (200, 200), color='blue')
-    
+    img = Image.new("RGB", (200, 200), color="blue")
+
     # Add some EXIF data
-    exif_dict = {
-        "0th": {
-            256: 200,  # ImageWidth
-            257: 200,  # ImageLength
-            272: "TestCamera",  # Make
-            306: "2023:12:01 12:00:00",  # DateTime
-        }
-    }
-    
+
     img_bytes = io.BytesIO()
-    img.save(img_bytes, format='JPEG')
+    img.save(img_bytes, format="JPEG")
     img_bytes.seek(0)
     return img_bytes.getvalue()
 
@@ -269,10 +264,10 @@ def sample_image_with_exif() -> bytes:
 @pytest.fixture
 def malicious_svg_content() -> str:
     """SVG content with potential XSS."""
-    return '''<?xml version="1.0" encoding="UTF-8"?>
+    return """<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" onload="alert('XSS')">
     <circle cx="50" cy="50" r="40" fill="red"/>
-</svg>'''
+</svg>"""
 
 
 @pytest.fixture
@@ -291,16 +286,18 @@ def sql_injection_payloads() -> list[str]:
 @pytest.fixture
 def large_dataset_photos(test_session: AsyncSession):
     """Create a large dataset for performance testing."""
+
     async def _create_photos(count: int = 1000):
         photos = []
         for i in range(count):
             photo = await PhotoFactory.create_async(
                 test_session,
                 title=f"Performance Test Photo {i}",
-                featured=(i % 50 == 0)  # Every 50th photo is featured
+                featured=(i % 50 == 0),  # Every 50th photo is featured
             )
             photos.append(photo)
         return photos
+
     return _create_photos
 
 
@@ -334,34 +331,39 @@ def pytest_configure(config):
 # Custom assertions
 class CustomAssertions:
     """Custom assertion helpers for tests."""
-    
+
     @staticmethod
     def assert_valid_jwt_token(token: str) -> None:
         """Assert that a JWT token is valid."""
         from app.core.security import decode_token
+
         payload = decode_token(token)
         assert payload is not None
         assert "sub" in payload
         assert "exp" in payload
-    
+
     @staticmethod
     def assert_image_processed_correctly(metadata: dict) -> None:
         """Assert that image processing metadata is correct."""
         required_fields = [
-            "filename", "original_path", "webp_path", 
-            "file_size", "width", "height"
+            "filename",
+            "original_path",
+            "webp_path",
+            "file_size",
+            "width",
+            "height",
         ]
         for field in required_fields:
             assert field in metadata
             assert metadata[field] is not None
-    
+
     @staticmethod
     def assert_no_xss_vulnerability(content: str) -> None:
         """Assert that content doesn't contain XSS vulnerabilities."""
         dangerous_tags = ["<script", "<iframe", "<object", "<embed"]
         for tag in dangerous_tags:
             assert tag.lower() not in content.lower()
-    
+
     @staticmethod
     def assert_sql_injection_safe(query_log: list) -> None:
         """Assert that no dangerous SQL was executed."""

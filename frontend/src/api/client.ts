@@ -23,7 +23,7 @@ const apiClient = axios.create({
 });
 
 // Request interceptor to add auth token
-apiClient.interceptors.request.use((config) => {
+apiClient.interceptors.request.use(config => {
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -33,8 +33,8 @@ apiClient.interceptors.request.use((config) => {
 
 // Response interceptor for error handling
 apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
+  response => response,
+  error => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       window.location.href = '/login';
@@ -63,13 +63,15 @@ export const auth = {
 
 // Photos API
 export const photos = {
-  list: async (params: {
-    page?: number;
-    per_page?: number;
-    category?: string;
-    featured?: boolean;
-    order_by?: string;
-  } = {}): Promise<PhotoListResponse> => {
+  list: async (
+    params: {
+      page?: number;
+      per_page?: number;
+      category?: string;
+      featured?: boolean;
+      order_by?: string;
+    } = {}
+  ): Promise<PhotoListResponse> => {
     const response = await apiClient.get<PhotoListResponse>('/photos', { params });
     return response.data;
   },
@@ -92,17 +94,20 @@ export const photos = {
     return response.data;
   },
 
-  upload: async (file: File, metadata: {
-    title?: string;
-    description?: string;
-    category?: string;
-    tags?: string;
-    comments?: string;
-    featured?: boolean;
-  }): Promise<Photo> => {
+  upload: async (
+    file: File,
+    metadata: {
+      title?: string;
+      description?: string;
+      category?: string;
+      tags?: string;
+      comments?: string;
+      featured?: boolean;
+    }
+  ): Promise<Photo> => {
     const formData = new FormData();
     formData.append('file', file);
-    
+
     Object.entries(metadata).forEach(([key, value]) => {
       if (value !== undefined) {
         formData.append(key, value.toString());
@@ -134,10 +139,12 @@ export const photos = {
 
 // Projects API
 export const projects = {
-  list: async (params: {
-    featured_only?: boolean;
-    status?: string;
-  } = {}): Promise<ProjectListResponse> => {
+  list: async (
+    params: {
+      featured_only?: boolean;
+      status?: string;
+    } = {}
+  ): Promise<ProjectListResponse> => {
     const response = await apiClient.get<ProjectListResponse>('/projects', { params });
     return response.data;
   },
@@ -160,7 +167,9 @@ export const projects = {
     return response.data;
   },
 
-  create: async (project: Omit<Project, 'id' | 'slug' | 'created_at' | 'updated_at'>): Promise<Project> => {
+  create: async (
+    project: Omit<Project, 'id' | 'slug' | 'created_at' | 'updated_at'>
+  ): Promise<Project> => {
     const response = await apiClient.post<Project>('/projects', project);
     return response.data;
   },
@@ -182,29 +191,37 @@ export const projects = {
 
 // Blog API
 export const blog = {
-  list: async (params: {
-    page?: number;
-    per_page?: number;
-    published_only?: boolean;
-  } = {}): Promise<BlogPostListResponse> => {
+  list: async (
+    params: {
+      page?: number;
+      per_page?: number;
+      published_only?: boolean;
+    } = {}
+  ): Promise<BlogPostListResponse> => {
     const response = await apiClient.get<BlogPostListResponse>('/blog', { params });
     return response.data;
   },
 
-  listAll: async (params: {
-    page?: number;
-    per_page?: number;
-  } = {}): Promise<BlogPostListResponse> => {
+  listAll: async (
+    params: {
+      page?: number;
+      per_page?: number;
+    } = {}
+  ): Promise<BlogPostListResponse> => {
     const response = await apiClient.get<BlogPostListResponse>('/blog/admin', { params });
     return response.data;
   },
 
   getByIdOrSlug: async (identifier: string, incrementViews = true): Promise<BlogPost> => {
-    const response = await apiClient.get<BlogPost>(`/blog/${identifier}?increment_views=${incrementViews}`);
+    const response = await apiClient.get<BlogPost>(
+      `/blog/${identifier}?increment_views=${incrementViews}`
+    );
     return response.data;
   },
 
-  create: async (post: Omit<BlogPost, 'id' | 'slug' | 'view_count' | 'read_time' | 'created_at' | 'updated_at'>): Promise<BlogPost> => {
+  create: async (
+    post: Omit<BlogPost, 'id' | 'slug' | 'view_count' | 'read_time' | 'created_at' | 'updated_at'>
+  ): Promise<BlogPost> => {
     const response = await apiClient.post<BlogPost>('/blog', post);
     return response.data;
   },
@@ -266,7 +283,9 @@ export const subapps = {
     return response.data;
   },
 
-  create: async (subapp: Omit<SubApp, 'id' | 'slug' | 'created_at' | 'updated_at'>): Promise<SubApp> => {
+  create: async (
+    subapp: Omit<SubApp, 'id' | 'slug' | 'created_at' | 'updated_at'>
+  ): Promise<SubApp> => {
     const response = await apiClient.post<SubApp>('/subapps', subapp);
     return response.data;
   },

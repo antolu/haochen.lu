@@ -28,7 +28,7 @@ const PhotoLightboxItem: React.FC<PhotoLightboxItemProps> = ({
 }) => {
   // Use the highest quality image available
   const fullImageUrl = photo.webp_path || photo.original_path;
-  
+
   // Fallback dimensions if not provided
   const imageWidth = width || photo.width || 1200;
   const imageHeight = height || photo.height || 800;
@@ -36,13 +36,17 @@ const PhotoLightboxItem: React.FC<PhotoLightboxItemProps> = ({
   // Generate caption with EXIF data
   const generateCaption = () => {
     const parts = [];
-    
+
     if (photo.title) {
-      parts.push(`<h3 style="font-size: 16px; font-weight: 600; margin: 0 0 8px 0; color: white;">${photo.title}</h3>`);
+      parts.push(
+        `<h3 style="font-size: 16px; font-weight: 600; margin: 0 0 8px 0; color: white;">${photo.title}</h3>`
+      );
     }
-    
+
     if (photo.description) {
-      parts.push(`<p style="font-size: 14px; margin: 0 0 12px 0; color: #e5e7eb;">${photo.description}</p>`);
+      parts.push(
+        `<p style="font-size: 14px; margin: 0 0 12px 0; color: #e5e7eb;">${photo.description}</p>`
+      );
     }
 
     // Camera info
@@ -52,13 +56,15 @@ const PhotoLightboxItem: React.FC<PhotoLightboxItemProps> = ({
     } else if (photo.camera_model) {
       cameraInfo.push(photo.camera_model);
     }
-    
+
     if (photo.lens) {
       cameraInfo.push(photo.lens);
     }
 
     if (cameraInfo.length > 0) {
-      parts.push(`<p style="font-size: 13px; margin: 0 0 8px 0; color: #d1d5db;">${cameraInfo.join(' • ')}</p>`);
+      parts.push(
+        `<p style="font-size: 13px; margin: 0 0 8px 0; color: #d1d5db;">${cameraInfo.join(' • ')}</p>`
+      );
     }
 
     // Technical info
@@ -77,7 +83,9 @@ const PhotoLightboxItem: React.FC<PhotoLightboxItemProps> = ({
     }
 
     if (techInfo.length > 0) {
-      parts.push(`<p style="font-size: 12px; margin: 0 0 8px 0; color: #9ca3af;">${techInfo.join(' • ')}</p>`);
+      parts.push(
+        `<p style="font-size: 12px; margin: 0 0 8px 0; color: #9ca3af;">${techInfo.join(' • ')}</p>`
+      );
     }
 
     // Date and location
@@ -91,7 +99,9 @@ const PhotoLightboxItem: React.FC<PhotoLightboxItemProps> = ({
     }
 
     if (photo.location_name) {
-      parts.push(`<p style="font-size: 12px; margin: 4px 0 0 0; color: #9ca3af;">📍 ${photo.location_name}</p>`);
+      parts.push(
+        `<p style="font-size: 12px; margin: 4px 0 0 0; color: #9ca3af;">📍 ${photo.location_name}</p>`
+      );
     }
 
     return parts.join('');
@@ -115,11 +125,7 @@ const PhotoLightboxItem: React.FC<PhotoLightboxItemProps> = ({
   );
 };
 
-const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
-  photos,
-  children,
-  options = {},
-}) => {
+const PhotoLightbox: React.FC<PhotoLightboxProps> = ({ photos, children, options = {} }) => {
   const defaultOptions = {
     bgOpacity: 0.9,
     showHideOpacity: true,
@@ -143,13 +149,17 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
           alt: photo.title || `Photo ${index + 1}`,
           caption: (() => {
             const parts = [];
-            
+
             if (photo.title) {
-              parts.push(`<h3 style="font-size: 16px; font-weight: 600; margin: 0 0 8px 0; color: white;">${photo.title}</h3>`);
+              parts.push(
+                `<h3 style="font-size: 16px; font-weight: 600; margin: 0 0 8px 0; color: white;">${photo.title}</h3>`
+              );
             }
-            
+
             if (photo.description) {
-              parts.push(`<p style="font-size: 14px; margin: 0 0 12px 0; color: #e5e7eb; line-height: 1.4;">${photo.description}</p>`);
+              parts.push(
+                `<p style="font-size: 14px; margin: 0 0 12px 0; color: #e5e7eb; line-height: 1.4;">${photo.description}</p>`
+              );
             }
 
             // Camera and technical info
@@ -157,19 +167,21 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
             if (photo.camera_make && photo.camera_model) {
               techParts.push(`${photo.camera_make} ${photo.camera_model}`);
             }
-            
+
             const settings = [];
             if (photo.aperture) settings.push(`f/${photo.aperture}`);
             if (photo.shutter_speed) settings.push(`${photo.shutter_speed}s`);
             if (photo.iso) settings.push(`ISO ${photo.iso}`);
             if (photo.focal_length) settings.push(`${photo.focal_length}mm`);
-            
+
             if (settings.length > 0) {
               techParts.push(settings.join(' • '));
             }
 
             if (techParts.length > 0) {
-              parts.push(`<p style="font-size: 12px; margin: 0; color: #9ca3af;">${techParts.join('<br>')}</p>`);
+              parts.push(
+                `<p style="font-size: 12px; margin: 0; color: #9ca3af;">${techParts.join('<br>')}</p>`
+              );
             }
 
             return parts.join('');
@@ -187,7 +199,7 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
         thumbSelector: '.pswp__thumb',
       }}
       // Custom styles
-      onOpen={(pswp) => {
+      onOpen={pswp => {
         // Add custom styles when lightbox opens
         const style = document.createElement('style');
         style.innerHTML = `

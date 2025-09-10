@@ -22,39 +22,14 @@ const HomePage: React.FC = () => {
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
         {/* Hero Background Image */}
         <picture className="absolute inset-0 w-full h-full">
-          <source
-            media="(min-width: 1920px)"
-            srcSet="/images/hero-xl.webp"
-            type="image/webp"
-          />
-          <source
-            media="(min-width: 1200px)"
-            srcSet="/images/hero-lg.webp"
-            type="image/webp"
-          />
-          <source
-            media="(min-width: 768px)"
-            srcSet="/images/hero-md.webp"
-            type="image/webp"
-          />
-          <source
-            media="(max-width: 767px)"
-            srcSet="/images/hero-sm.webp"
-            type="image/webp"
-          />
+          <source media="(min-width: 1920px)" srcSet="/images/hero-xl.webp" type="image/webp" />
+          <source media="(min-width: 1200px)" srcSet="/images/hero-lg.webp" type="image/webp" />
+          <source media="(min-width: 768px)" srcSet="/images/hero-md.webp" type="image/webp" />
+          <source media="(max-width: 767px)" srcSet="/images/hero-sm.webp" type="image/webp" />
           {/* JPEG fallback for browsers that don't support WebP */}
-          <source
-            media="(min-width: 1920px)"
-            srcSet="/images/hero-xl.jpg"
-          />
-          <source
-            media="(min-width: 1200px)"
-            srcSet="/images/hero-lg.jpg"
-          />
-          <source
-            media="(min-width: 768px)"
-            srcSet="/images/hero-md.jpg"
-          />
+          <source media="(min-width: 1920px)" srcSet="/images/hero-xl.jpg" />
+          <source media="(min-width: 1200px)" srcSet="/images/hero-lg.jpg" />
+          <source media="(min-width: 768px)" srcSet="/images/hero-md.jpg" />
           <img
             src="/images/hero-lg.jpg"
             alt="Mountain landscape with person standing on ridge"
@@ -62,12 +37,12 @@ const HomePage: React.FC = () => {
             loading="eager"
           />
         </picture>
-        
+
         {/* Dark overlay for better text readability */}
         <div className="absolute inset-0 bg-gradient-to-br from-black/50 to-black/30"></div>
-        
+
         <div className="relative z-10 text-center text-white px-4">
-          <motion.h1 
+          <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
@@ -84,7 +59,7 @@ const HomePage: React.FC = () => {
             <span className="block mb-2">Student. Traveler. Photographer.</span>
             <span className="text-lg opacity-90">Machine Learning at KTH Stockholm</span>
           </motion.div>
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.2, delay: 0.6 }}
@@ -104,20 +79,24 @@ const HomePage: React.FC = () => {
             </Link>
           </motion.div>
         </div>
-        
+
         {/* Scroll indicator arrow - positioned at bottom right to avoid text overlap */}
-        <div 
+        <div
           className="absolute bottom-8 right-8 text-white/70 hover:text-white animate-bounce-custom cursor-pointer transition-colors"
           onClick={() => {
             document.querySelector('#about-section')?.scrollIntoView({ behavior: 'smooth' });
           }}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M19 14l-7 7m0 0l-7-7m7 7V3"
+            ></path>
           </svg>
         </div>
       </section>
-
 
       {/* About Section */}
       <section id="about-section" className="py-20 bg-gray-50">
@@ -131,11 +110,11 @@ const HomePage: React.FC = () => {
           >
             <h2 className="text-4xl md:text-5xl font-serif font-bold mb-4">About Me</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Passionate about learning new things, whether it's machine learning algorithms, 
+              Passionate about learning new things, whether it's machine learning algorithms,
               photography techniques, or exploring new cultures through travel.
             </p>
           </motion.div>
-          
+
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -146,16 +125,18 @@ const HomePage: React.FC = () => {
             >
               <div className="prose prose-lg">
                 <p className="text-gray-700 leading-relaxed">
-                  My name is Anton (Hào-chen) Lu, and I'm a M.Sc. student at KTH Royal Institute of Technology in Stockholm, Sweden. 
-                  I'm currently enrolled in a five-year degree programme in Engineering Physics, pursuing a M.Sc. in Machine Learning 
-                  with specialization in deep learning and computational linguistics.
+                  My name is Anton (Hào-chen) Lu, and I'm a M.Sc. student at KTH Royal Institute of
+                  Technology in Stockholm, Sweden. I'm currently enrolled in a five-year degree
+                  programme in Engineering Physics, pursuing a M.Sc. in Machine Learning with
+                  specialization in deep learning and computational linguistics.
                 </p>
                 <p className="text-gray-700 leading-relaxed">
-                  My biggest passion is learning new things, whether it be a new problem solving method, 
-                  a new programming language, a new spoken language, or how to capture the perfect moment through photography.
+                  My biggest passion is learning new things, whether it be a new problem solving
+                  method, a new programming language, a new spoken language, or how to capture the
+                  perfect moment through photography.
                 </p>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-6">
                 <div className="bg-white p-6 rounded-lg shadow-sm">
                   <h3 className="font-semibold text-gray-900 mb-3">Interests</h3>
@@ -177,7 +158,7 @@ const HomePage: React.FC = () => {
                 </div>
               </div>
             </motion.div>
-            
+
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -243,7 +224,12 @@ const HomePage: React.FC = () => {
             >
               View Full Album
               <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M17 8l4 4m0 0l-4 4m4-4H3"
+                />
               </svg>
             </Link>
           </div>
@@ -260,11 +246,10 @@ const HomePage: React.FC = () => {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-4xl font-serif font-bold text-gray-900 mb-4">
-              Featured Projects
-            </h2>
+            <h2 className="text-4xl font-serif font-bold text-gray-900 mb-4">Featured Projects</h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Innovative solutions and creative endeavors that showcase my technical expertise and passion for development.
+              Innovative solutions and creative endeavors that showcase my technical expertise and
+              passion for development.
             </p>
           </motion.div>
 
@@ -289,22 +274,22 @@ const HomePage: React.FC = () => {
                     </div>
                   )}
                   <div className="p-6">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                      {project.title}
-                    </h3>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">{project.title}</h3>
                     <p className="text-gray-600 mb-4 line-clamp-3">
                       {project.short_description || project.description}
                     </p>
                     {project.technologies && (
                       <div className="flex flex-wrap gap-2 mb-4">
-                        {JSON.parse(project.technologies).slice(0, 3).map((tech: string) => (
-                          <span
-                            key={tech}
-                            className="px-2 py-1 bg-primary-100 text-primary-700 text-xs rounded-full"
-                          >
-                            {tech}
-                          </span>
-                        ))}
+                        {JSON.parse(project.technologies)
+                          .slice(0, 3)
+                          .map((tech: string) => (
+                            <span
+                              key={tech}
+                              className="px-2 py-1 bg-primary-100 text-primary-700 text-xs rounded-full"
+                            >
+                              {tech}
+                            </span>
+                          ))}
                       </div>
                     )}
                     <div className="flex space-x-4">
@@ -358,15 +343,19 @@ const HomePage: React.FC = () => {
           >
             <h2 className="text-4xl md:text-5xl font-serif font-bold mb-4">Get In Touch</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              I'm always open to discussing new opportunities, collaborations, or just having a chat about photography and technology.
+              I'm always open to discussing new opportunities, collaborations, or just having a chat
+              about photography and technology.
             </p>
           </motion.div>
-          
+
           <div className="max-w-2xl mx-auto">
             <div className="bg-white rounded-2xl shadow-lg p-8 md:p-12">
               <div className="text-center space-y-6">
                 <div className="flex justify-center space-x-8">
-                  <a href="mailto:anton@haochen.lu" className="flex items-center space-x-2 text-gray-700 hover:text-primary-600 transition-colors">
+                  <a
+                    href="mailto:anton@haochen.lu"
+                    className="flex items-center space-x-2 text-gray-700 hover:text-primary-600 transition-colors"
+                  >
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
                       <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
@@ -374,16 +363,16 @@ const HomePage: React.FC = () => {
                     <span>anton@haochen.lu</span>
                   </a>
                 </div>
-                
+
                 <div className="flex justify-center space-x-6">
                   <a href="#" className="text-gray-400 hover:text-primary-600 transition-colors">
                     <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/>
+                      <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z" />
                     </svg>
                   </a>
                   <a href="#" className="text-gray-400 hover:text-primary-600 transition-colors">
                     <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
                     </svg>
                   </a>
                 </div>

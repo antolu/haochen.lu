@@ -1,11 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { 
-  PhotoIcon,
-  FolderIcon,
-  PencilSquareIcon,
-  EyeIcon,
-} from '@heroicons/react/24/outline';
+import { PhotoIcon, FolderIcon, PencilSquareIcon, EyeIcon } from '@heroicons/react/24/outline';
 
 import { photos, projects, blog } from '../../api/client';
 
@@ -61,7 +56,7 @@ const AdminDashboard: React.FC = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((item) => {
+        {stats.map(item => {
           const Icon = item.icon;
           return (
             <div key={item.name} className="bg-white rounded-lg shadow p-6">
@@ -71,12 +66,8 @@ const AdminDashboard: React.FC = () => {
                 </div>
                 <div className="ml-5 w-0 flex-1">
                   <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
-                      {item.name}
-                    </dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      {item.stat}
-                    </dd>
+                    <dt className="text-sm font-medium text-gray-500 truncate">{item.name}</dt>
+                    <dd className="text-lg font-medium text-gray-900">{item.stat}</dd>
                   </dl>
                 </div>
               </div>

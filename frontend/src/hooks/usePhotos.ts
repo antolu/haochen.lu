@@ -25,18 +25,23 @@ export const usePhotos = () => {
       photos: data.photos.sort((a, b) => {
         // Sort by order first, then by date taken (newest first)
         if (a.order !== b.order) return a.order - b.order;
-        return new Date(b.date_taken || b.created_at).getTime() - new Date(a.date_taken || a.created_at).getTime();
+        return (
+          new Date(b.date_taken || b.created_at).getTime() -
+          new Date(a.date_taken || a.created_at).getTime()
+        );
       }),
     }),
   });
 };
 
 // Hook to get photos with infinite scrolling for large galleries
-export const useInfinitePhotos = (params: {
-  category?: string;
-  featured?: boolean;
-  order_by?: string;
-} = {}) => {
+export const useInfinitePhotos = (
+  params: {
+    category?: string;
+    featured?: boolean;
+    order_by?: string;
+  } = {}
+) => {
   return useInfiniteQuery({
     queryKey: photoKeys.list(`infinite-${JSON.stringify(params)}`),
     queryFn: ({ pageParam = 1 }) =>
@@ -87,8 +92,11 @@ export const useUploadPhoto = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ file, metadata }: { 
-      file: File; 
+    mutationFn: ({
+      file,
+      metadata,
+    }: {
+      file: File;
       metadata: {
         title?: string;
         description?: string;
@@ -96,9 +104,9 @@ export const useUploadPhoto = () => {
         tags?: string;
         comments?: string;
         featured?: boolean;
-      }
+      };
     }) => photos.upload(file, metadata),
-    
+
     onMutate: async ({ file, metadata }) => {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: photoKeys.lists() });
@@ -144,12 +152,12 @@ export const useUploadPhoto = () => {
       toast.error('Failed to upload photo. Please try again.');
     },
 
-    onSuccess: (newPhoto) => {
+    onSuccess: newPhoto => {
       // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
       queryClient.invalidateQueries({ queryKey: photoKeys.stats() });
       queryClient.invalidateQueries({ queryKey: photoKeys.featured() });
-      
+
       toast.success(`"${newPhoto.title}" uploaded successfully!`);
     },
 
@@ -165,8 +173,7 @@ export const useUpdatePhoto = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Photo> }) =>
-      photos.update(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<Photo> }) => photos.update(id, data),
 
     onMutate: async ({ id, data }) => {
       // Cancel any outgoing refetches
@@ -208,16 +215,16 @@ export const useUpdatePhoto = () => {
       toast.error('Failed to update photo. Please try again.');
     },
 
-    onSuccess: (updatedPhoto) => {
+    onSuccess: updatedPhoto => {
       // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
       queryClient.invalidateQueries({ queryKey: photoKeys.detail(updatedPhoto.id) });
       queryClient.invalidateQueries({ queryKey: photoKeys.stats() });
-      
+
       if (updatedPhoto.featured) {
         queryClient.invalidateQueries({ queryKey: photoKeys.featured() });
       }
-      
+
       toast.success(`"${updatedPhoto.title}" updated successfully!`);
     },
   });
@@ -230,7 +237,7 @@ export const useDeletePhoto = () => {
   return useMutation({
     mutationFn: (id: string) => photos.delete(id),
 
-    onMutate: async (id) => {
+    onMutate: async id => {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: photoKeys.lists() });
 
@@ -263,7 +270,7 @@ export const useDeletePhoto = () => {
       queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
       queryClient.invalidateQueries({ queryKey: photoKeys.stats() });
       queryClient.invalidateQueries({ queryKey: photoKeys.featured() });
-      
+
       toast.success('Photo deleted successfully!');
     },
   });
@@ -290,9 +297,7 @@ export const useTogglePhotoFeatured = () => {
         return {
           ...old,
           photos: old.photos.map((photo: Photo) =>
-            photo.id === id 
-              ? { ...photo, featured, updated_at: new Date().toISOString() } 
-              : photo
+            photo.id === id ? { ...photo, featured, updated_at: new Date().toISOString() } : photo
           ),
         };
       });
@@ -313,7 +318,7 @@ export const useTogglePhotoFeatured = () => {
       queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
       queryClient.invalidateQueries({ queryKey: photoKeys.featured() });
       queryClient.invalidateQueries({ queryKey: photoKeys.stats() });
-      
+
       toast.success(featured ? 'Photo added to featured!' : 'Photo removed from featured!');
     },
   });

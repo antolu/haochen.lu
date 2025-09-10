@@ -9,7 +9,7 @@ export interface Photo {
   original_path: string;
   webp_path: string;
   thumbnail_path?: string;
-  
+
   // EXIF data
   location_lat?: number;
   location_lon?: number;
@@ -22,7 +22,7 @@ export interface Photo {
   shutter_speed?: string;
   focal_length?: number;
   date_taken?: string;
-  
+
   // Metadata
   file_size: number;
   width: number;

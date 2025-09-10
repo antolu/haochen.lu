@@ -120,10 +120,7 @@ const LoginPage: React.FC = () => {
           </div>
 
           <div className="text-center">
-            <a
-              href="/"
-              className="text-primary-600 hover:text-primary-500 text-sm font-medium"
-            >
+            <a href="/" className="text-primary-600 hover:text-primary-500 text-sm font-medium">
               ← Back to home
             </a>
           </div>

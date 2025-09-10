@@ -1,25 +1,59 @@
-/* 
+/*
  * Tailwind Safelist File - Forces generation of specific utility classes
  * This file ensures these classes are included in the final CSS build
  * Classes referenced here will NOT be purged during build
  */
 
-.py-32 { /* Force include py-32 */ }
-.mb-24 { /* Force include mb-24 */ }
-.mb-16 { /* Force include mb-16 */ }
-.gap-6 { /* Force include gap-6 */ }
-.gap-8 { /* Force include gap-8 */ }
-.gap-10 { /* Force include gap-10 */ }
-.gap-12 { /* Force include gap-12 */ }
-.px-8 { /* Force include px-8 */ }
-.py-4 { /* Force include py-4 */ }
-.min-w-\[200px\] { /* Force include min-w-[200px] */ }
-.text-center { /* Force include text-center */ }
+.py-32 {
+  /* Force include py-32 */
+}
+.mb-24 {
+  /* Force include mb-24 */
+}
+.mb-16 {
+  /* Force include mb-16 */
+}
+.gap-6 {
+  /* Force include gap-6 */
+}
+.gap-8 {
+  /* Force include gap-8 */
+}
+.gap-10 {
+  /* Force include gap-10 */
+}
+.gap-12 {
+  /* Force include gap-12 */
+}
+.px-8 {
+  /* Force include px-8 */
+}
+.py-4 {
+  /* Force include py-4 */
+}
+.min-w-\[200px\] {
+  /* Force include min-w-[200px] */
+}
+.text-center {
+  /* Force include text-center */
+}
 
 /* Additional spacing classes that might be missing */
-.py-20 { /* Force include py-20 */ }
-.py-24 { /* Force include py-24 */ }
-.py-28 { /* Force include py-28 */ }
-.mb-12 { /* Force include mb-12 */ }
-.mb-20 { /* Force include mb-20 */ }
-.gap-4 { /* Force include gap-4 */ }
+.py-20 {
+  /* Force include py-20 */
+}
+.py-24 {
+  /* Force include py-24 */
+}
+.py-28 {
+  /* Force include py-28 */
+}
+.mb-12 {
+  /* Force include mb-12 */
+}
+.mb-20 {
+  /* Force include mb-20 */
+}
+.gap-4 {
+  /* Force include gap-4 */
+}

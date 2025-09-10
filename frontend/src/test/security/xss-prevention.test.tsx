@@ -1,6 +1,6 @@
 /**
  * P0 - Critical UI Security Tests: XSS Prevention
- * 
+ *
  * Tests to ensure the frontend properly sanitizes user input and prevents
  * cross-site scripting attacks in all user-facing components.
  */
@@ -66,11 +66,11 @@ describe('XSS Prevention Tests', () => {
       renderWithProviders(<MockPhotoCard photo={maliciousPhoto} />);
 
       const photoCard = screen.getByTestId('photo-card');
-      
+
       // Should not execute script
       expect(photoCard.textContent).toContain('<script>');
       expect(photoCard.querySelector('script')).toBeNull();
-      
+
       // Verify no script execution occurred
       expect(window.alert).not.toHaveBeenCalled();
     });
@@ -93,18 +93,18 @@ describe('XSS Prevention Tests', () => {
         };
 
         const { unmount } = renderWithProviders(<MockPhotoCard photo={photo} />);
-        
+
         const photoCard = screen.getByTestId('photo-card');
-        
+
         // Should not contain executable elements
         expect(photoCard.querySelector('script')).toBeNull();
         expect(photoCard.querySelector('iframe')).toBeNull();
         expect(photoCard.querySelector('img[onerror]')).toBeNull();
         expect(photoCard.querySelector('svg[onload]')).toBeNull();
-        
+
         // Should display safe content only
         expect(photoCard.textContent).not.toContain('javascript:');
-        
+
         unmount();
       });
     });
@@ -124,7 +124,7 @@ describe('XSS Prevention Tests', () => {
       renderWithProviders(<MockPhotoCard photo={photo} />);
 
       const photoCard = screen.getByTestId('photo-card');
-      
+
       // Tags should be displayed as text, not executed
       expect(photoCard.querySelector('script')).toBeNull();
       expect(photoCard.querySelector('img[onerror]')).toBeNull();
@@ -157,10 +157,10 @@ describe('XSS Prevention Tests', () => {
       renderWithProviders(<SafeProjectCard project={maliciousProject} />);
 
       const projectCard = screen.getByTestId('project-card');
-      
+
       // Should display safe content
       expect(projectCard.textContent).toContain('Safe content');
-      
+
       // Should not contain script elements
       expect(projectCard.querySelector('script')).toBeNull();
       expect(projectCard.innerHTML).not.toContain('<script>');
@@ -182,11 +182,11 @@ describe('XSS Prevention Tests', () => {
       renderWithProviders(<MockProjectCard project={project} />);
 
       const projectCard = screen.getByTestId('project-card');
-      
+
       // Technologies should be displayed as text
       expect(projectCard.textContent).toContain('React');
       expect(projectCard.textContent).toContain('TypeScript');
-      
+
       // Should not execute malicious elements
       expect(projectCard.querySelector('script')).toBeNull();
       expect(projectCard.querySelector('img[onerror]')).toBeNull();
@@ -226,11 +226,11 @@ describe('XSS Prevention Tests', () => {
       renderWithProviders(<SafeBlogPost post={maliciousBlogPost} />);
 
       const blogPost = screen.getByTestId('blog-post');
-      
+
       // Should display safe content
       expect(blogPost.textContent).toContain('Safe Heading');
       expect(blogPost.textContent).toContain('This is safe content.');
-      
+
       // Should not contain malicious elements
       expect(blogPost.querySelector('script')).toBeNull();
       expect(blogPost.querySelector('iframe')).toBeNull();
@@ -265,8 +265,8 @@ alert('This should not execute');
       };
 
       const MarkdownBlogPost = ({ content }: { content: string }) => (
-        <div 
-          data-testid="markdown-content" 
+        <div
+          data-testid="markdown-content"
           dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }}
         />
       );
@@ -274,15 +274,15 @@ alert('This should not execute');
       renderWithProviders(<MarkdownBlogPost content={markdownWithXSS} />);
 
       const markdownContent = screen.getByTestId('markdown-content');
-      
+
       // Should display safe content
       expect(markdownContent.textContent).toContain('Blog Title');
       expect(markdownContent.textContent).toContain('Normal paragraph content');
-      
+
       // Should block malicious content
       expect(markdownContent.textContent).toContain('[SCRIPT BLOCKED]');
       expect(markdownContent.textContent).toContain('[BLOCKED LINK]');
-      
+
       // Should not execute scripts
       expect(markdownContent.querySelector('script')).toBeNull();
     });
@@ -300,35 +300,38 @@ alert('This should not execute');
 
       // Try to submit malicious content
       const maliciousComment = '<script>alert("XSS")</script><p>Normal content</p>';
-      
+
       await user.type(textarea, maliciousComment);
       await user.click(submitButton);
 
       expect(mockSubmit).toHaveBeenCalledWith(maliciousComment);
-      
+
       // The component should handle sanitization before processing
       // In real implementation, sanitize before using the data
     });
 
     it('should prevent XSS through URL parameters', () => {
       const maliciousURL = '/photo/123?comment=<script>alert("XSS")</script>';
-      
+
       // Mock URL parsing
       const parseURLParams = (url: string) => {
         const urlObj = new URL(url, 'http://localhost');
         const params = new URLSearchParams(urlObj.search);
-        
+
         // Sanitize each parameter
         const sanitized: Record<string, string> = {};
         for (const [key, value] of params.entries()) {
-          sanitized[key] = value.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '[BLOCKED]');
+          sanitized[key] = value.replace(
+            /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+            '[BLOCKED]'
+          );
         }
-        
+
         return sanitized;
       };
 
       const params = parseURLParams(maliciousURL);
-      
+
       expect(params.comment).toBe('[BLOCKED]');
       expect(params.comment).not.toContain('<script>');
     });
@@ -349,11 +352,14 @@ alert('This should not execute');
         const [content, setContent] = React.useState<any>(null);
 
         React.useEffect(() => {
-          fetchContent().then((data) => {
+          fetchContent().then(data => {
             // Sanitize before setting state
             const sanitized = {
               ...data,
-              content: data.content.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ''),
+              content: data.content.replace(
+                /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+                ''
+              ),
             };
             setContent(sanitized);
           });
@@ -376,11 +382,11 @@ alert('This should not execute');
       });
 
       const dynamicContent = screen.getByTestId('dynamic-content');
-      
+
       // Should display safe content
       expect(dynamicContent.textContent).toContain('Dynamic Title');
       expect(dynamicContent.textContent).toContain('Safe content');
-      
+
       // Should not contain script elements
       expect(dynamicContent.querySelector('script')).toBeNull();
     });
@@ -413,17 +419,17 @@ alert('This should not execute');
       renderWithProviders(<SearchResults results={maliciousSearchResults} />);
 
       const searchResults = screen.getByTestId('search-results');
-      
+
       // Should display all results as text
       expect(searchResults.textContent).toContain('Safe Result');
       expect(searchResults.textContent).toContain('Normal description');
-      
+
       // Malicious content should be displayed as text, not executed
       expect(searchResults.textContent).toContain('<script>');
       expect(searchResults.textContent).toContain('Malicious Result');
       expect(searchResults.textContent).toContain('<img');
       expect(searchResults.textContent).toContain('Bad description');
-      
+
       // Should not contain actual script or img elements
       expect(searchResults.querySelector('script')).toBeNull();
       expect(searchResults.querySelector('img[onerror]')).toBeNull();
@@ -446,14 +452,10 @@ alert('This should not execute');
 
         return (
           <div>
-            <button 
-              data-testid="safe-button"
-              data-safe="normal-data"
-              onClick={handleClick}
-            >
+            <button data-testid="safe-button" data-safe="normal-data" onClick={handleClick}>
               Safe Button
             </button>
-            <button 
+            <button
               data-testid="potentially-unsafe-button"
               data-safe="<script>alert('XSS')</script>"
               onClick={handleClick}
@@ -472,8 +474,8 @@ alert('This should not execute');
 
       // Click potentially unsafe button - data should be treated as string
       await user.click(screen.getByTestId('potentially-unsafe-button'));
-      expect(mockHandler).toHaveBeenCalledWith('<script>alert(\'XSS\')</script>');
-      
+      expect(mockHandler).toHaveBeenCalledWith("<script>alert('XSS')</script>");
+
       // Verify no script execution
       expect(window.alert).not.toHaveBeenCalled();
     });

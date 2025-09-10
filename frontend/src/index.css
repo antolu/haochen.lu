@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@300;400;700&display=swap');
 
 /* Tailwind CSS v4 import */
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* Import safelist file to ensure all required classes are generated */
 @import './tailwind-safelist.css';
@@ -15,7 +15,9 @@
   }
 
   /* CSS Reset for clean full-width layout - MUST be in @layer base for v4 */
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
@@ -121,6 +123,10 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }

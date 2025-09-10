@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from uuid import UUID
 from datetime import datetime
-from typing import Optional
-from pydantic import BaseModel, ConfigDict, field_serializer
+
+from pydantic import BaseModel, ConfigDict
 
 
 class LoginRequest(BaseModel):
@@ -18,11 +17,11 @@ class TokenResponse(BaseModel):
 
 class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: str
     username: str
-    email: Optional[str] = None
+    email: str | None = None
     is_active: bool = True
     is_admin: bool = False
     created_at: datetime
-    updated_at: Optional[datetime] = None
+    updated_at: datetime | None = None

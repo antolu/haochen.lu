@@ -11,7 +11,7 @@ const MainLayout: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -24,7 +24,7 @@ const MainLayout: React.FC = () => {
 
   const { data: subAppsData } = useQuery({
     queryKey: ['subapps', isAuthenticated ? 'authenticated' : 'public'],
-    queryFn: () => isAuthenticated ? subapps.listAuthenticated() : subapps.list(),
+    queryFn: () => (isAuthenticated ? subapps.listAuthenticated() : subapps.list()),
   });
 
   const navigation = [
@@ -42,25 +42,25 @@ const MainLayout: React.FC = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        scrolled 
-          ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-200' 
-          : 'bg-white/80 backdrop-blur-sm'
-      }`}>
+      <header
+        className={`fixed top-0 w-full z-50 transition-all duration-300 ${
+          scrolled
+            ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-200'
+            : 'bg-white/80 backdrop-blur-sm'
+        }`}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex-shrink-0">
               <Link to="/" className="flex items-center">
-                <h1 className="text-2xl font-serif font-bold text-gray-900">
-                  Anton Lu
-                </h1>
+                <h1 className="text-2xl font-serif font-bold text-gray-900">Anton Lu</h1>
               </Link>
             </div>
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex space-x-8">
-              {navigation.map((item) => (
+              {navigation.map(item => (
                 <Link
                   key={item.name}
                   to={item.href}
@@ -73,7 +73,7 @@ const MainLayout: React.FC = () => {
                   {item.name}
                 </Link>
               ))}
-              
+
               {/* Sub-apps dropdown or direct links */}
               {subAppsData?.subapps && subAppsData.subapps.length > 0 && (
                 <div className="relative group">
@@ -82,7 +82,7 @@ const MainLayout: React.FC = () => {
                   </button>
                   <div className="absolute left-0 mt-2 w-56 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                     <div className="py-1">
-                      {subAppsData.subapps.map((app) => (
+                      {subAppsData.subapps.map(app => (
                         <a
                           key={app.id}
                           href={app.is_external ? app.url : `${app.url}`}
@@ -91,7 +91,10 @@ const MainLayout: React.FC = () => {
                           className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-600 transition-colors duration-200"
                         >
                           {app.icon && (
-                            <span className="mr-3 text-lg" style={{ color: app.color || undefined }}>
+                            <span
+                              className="mr-3 text-lg"
+                              style={{ color: app.color || undefined }}
+                            >
                               {app.icon}
                             </span>
                           )}
@@ -118,12 +121,30 @@ const MainLayout: React.FC = () => {
               >
                 <span className="sr-only">Open main menu</span>
                 {mobileMenuOpen ? (
-                  <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" aria-hidden="true">
+                  <svg
+                    className="block h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="1.5"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 ) : (
-                  <svg className="block h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                  <svg
+                    className="block h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="1.5"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+                    />
                   </svg>
                 )}
               </button>
@@ -142,7 +163,7 @@ const MainLayout: React.FC = () => {
               className="md:hidden border-t border-gray-200 bg-white"
             >
               <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                {navigation.map((item) => (
+                {navigation.map(item => (
                   <Link
                     key={item.name}
                     to={item.href}
@@ -156,14 +177,14 @@ const MainLayout: React.FC = () => {
                     {item.name}
                   </Link>
                 ))}
-                
+
                 {/* Mobile sub-apps */}
                 {subAppsData?.subapps && subAppsData.subapps.length > 0 && (
                   <div className="border-t border-gray-200 pt-3 mt-3">
                     <div className="px-3 py-2 text-sm font-medium text-gray-500 uppercase tracking-wider">
                       Applications
                     </div>
-                    {subAppsData.subapps.map((app) => (
+                    {subAppsData.subapps.map(app => (
                       <a
                         key={app.id}
                         href={app.is_external ? app.url : `${app.url}`}
@@ -203,15 +224,13 @@ const MainLayout: React.FC = () => {
                 Capturing moments through the lens, sharing stories through code and words.
                 Passionate about photography, technology, and creative expression.
               </p>
-              <div className="flex space-x-4">
-                {/* Add social links here */}
-              </div>
+              <div className="flex space-x-4">{/* Add social links here */}</div>
             </div>
-            
+
             <div>
               <h4 className="text-lg font-semibold mb-4">Navigation</h4>
               <ul className="space-y-2">
-                {navigation.map((item) => (
+                {navigation.map(item => (
                   <li key={item.name}>
                     <Link
                       to={item.href}
@@ -223,7 +242,7 @@ const MainLayout: React.FC = () => {
                 ))}
               </ul>
             </div>
-            
+
             <div>
               <h4 className="text-lg font-semibold mb-4">Contact</h4>
               <ul className="space-y-2 text-gray-300">
@@ -232,7 +251,7 @@ const MainLayout: React.FC = () => {
               </ul>
             </div>
           </div>
-          
+
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
             <p>&copy; {new Date().getFullYear()} Anton Lu. All rights reserved.</p>
           </div>

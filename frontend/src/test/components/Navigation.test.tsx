@@ -1,6 +1,6 @@
 /**
  * P1 - Frontend Component Tests: Navigation
- * 
+ *
  * Tests for navigation components including responsive behavior,
  * authentication states, and accessibility.
  */
@@ -9,12 +9,12 @@ import { screen, waitFor } from '@testing-library/react';
 import { renderWithProviders, mockUser, mockAdminUser } from '../utils';
 
 // Mock navigation components
-const MockNavigation = ({ 
-  user = null, 
-  onLogin, 
+const MockNavigation = ({
+  user = null,
+  onLogin,
   onLogout,
   currentPath = '/',
-  isMobile = false
+  isMobile = false,
 }: {
   user?: any;
   onLogin?: () => void;
@@ -68,7 +68,7 @@ const MockNavigation = ({
                   {link.label}
                 </a>
               ))}
-              
+
               {/* Auth buttons */}
               <div className="flex items-center space-x-4" data-testid="auth-section">
                 {user ? (
@@ -77,7 +77,10 @@ const MockNavigation = ({
                       Hello, {user.full_name || user.username}
                     </span>
                     {user.is_admin && (
-                      <span data-testid="admin-badge" className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded">
+                      <span
+                        data-testid="admin-badge"
+                        className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded"
+                      >
                         Admin
                       </span>
                     )}
@@ -114,9 +117,19 @@ const MockNavigation = ({
               >
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   {mobileMenuOpen ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
                   )}
                 </svg>
               </button>
@@ -143,7 +156,7 @@ const MockNavigation = ({
                   {link.label}
                 </a>
               ))}
-              
+
               {/* Mobile auth section */}
               <div className="border-t pt-4 mt-4" data-testid="mobile-auth-section">
                 {user ? (
@@ -188,11 +201,7 @@ const MockNavigation = ({
   );
 };
 
-const MockBreadcrumbs = ({ 
-  items 
-}: { 
-  items: Array<{ label: string; path?: string }> 
-}) => {
+const MockBreadcrumbs = ({ items }: { items: Array<{ label: string; path?: string }> }) => {
   return (
     <nav data-testid="breadcrumbs" aria-label="Breadcrumb">
       <ol className="flex items-center space-x-2 text-sm text-gray-500">
@@ -200,7 +209,12 @@ const MockBreadcrumbs = ({
           <li key={index} className="flex items-center">
             {index > 0 && (
               <svg className="h-4 w-4 mx-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             )}
             {item.path ? (
@@ -302,9 +316,7 @@ describe('Navigation Component Tests', () => {
       const handleLogout = vi.fn();
       const user = await import('@testing-library/user-event').then(m => m.userEvent.setup());
 
-      renderWithProviders(
-        <MockNavigation user={mockUser} onLogout={handleLogout} />
-      );
+      renderWithProviders(<MockNavigation user={mockUser} onLogout={handleLogout} />);
 
       const logoutButton = screen.getByTestId('logout-button');
       await user.click(logoutButton);
@@ -353,14 +365,14 @@ describe('Navigation Component Tests', () => {
       renderWithProviders(<MockNavigation isMobile={true} />);
 
       const menuButton = screen.getByTestId('mobile-menu-button');
-      
+
       // Mobile menu should not be visible initially
       expect(screen.queryByTestId('mobile-nav')).not.toBeInTheDocument();
-      
+
       // Click to open menu
       await user.click(menuButton);
       expect(screen.getByTestId('mobile-nav')).toBeInTheDocument();
-      
+
       // Click to close menu
       await user.click(menuButton);
       expect(screen.queryByTestId('mobile-nav')).not.toBeInTheDocument();
@@ -503,10 +515,7 @@ describe('Navigation Component Tests', () => {
     });
 
     it('should make breadcrumb items clickable when they have paths', () => {
-      const breadcrumbItems = [
-        { label: 'Home', path: '/' },
-        { label: 'Current Page' },
-      ];
+      const breadcrumbItems = [{ label: 'Home', path: '/' }, { label: 'Current Page' }];
 
       renderWithProviders(<MockBreadcrumbs items={breadcrumbItems} />);
 
@@ -521,10 +530,7 @@ describe('Navigation Component Tests', () => {
     });
 
     it('should have proper accessibility attributes', () => {
-      const breadcrumbItems = [
-        { label: 'Home', path: '/' },
-        { label: 'Gallery' },
-      ];
+      const breadcrumbItems = [{ label: 'Home', path: '/' }, { label: 'Gallery' }];
 
       renderWithProviders(<MockBreadcrumbs items={breadcrumbItems} />);
 
@@ -556,7 +562,7 @@ describe('Navigation Component Tests', () => {
 
     it('should prevent navigation when user lacks permissions', () => {
       const regularUser = { ...mockUser, is_admin: false };
-      
+
       renderWithProviders(<MockNavigation user={regularUser} />);
 
       // Admin link should not be visible

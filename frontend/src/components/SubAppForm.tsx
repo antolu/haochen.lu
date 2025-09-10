@@ -31,7 +31,7 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
   isLoading = false,
 }) => {
   const isEditing = !!subapp;
-  
+
   const {
     register,
     handleSubmit,
@@ -99,9 +99,7 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
                 minLength: { value: 2, message: 'Name must be at least 2 characters' },
               })}
             />
-            {errors.name && (
-              <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
-            )}
+            {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>}
           </div>
 
           {/* URL Field */}
@@ -121,12 +119,18 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
                 validate: validateUrl,
               })}
             />
-            {errors.url && (
-              <p className="mt-1 text-sm text-red-600">{errors.url.message}</p>
-            )}
+            {errors.url && <p className="mt-1 text-sm text-red-600">{errors.url.message}</p>}
             {watchUrl && !errors.url && (
               <p className="mt-1 text-sm text-gray-500">
-                Preview: <a href={watchUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{watchUrl}</a>
+                Preview:{' '}
+                <a
+                  href={watchUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
+                  {watchUrl}
+                </a>
               </p>
             )}
           </div>
@@ -171,7 +175,7 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
                 className="h-10 w-20 border border-gray-300 rounded-lg cursor-pointer"
                 {...register('color')}
               />
-              <div 
+              <div
                 className="h-10 w-10 rounded-lg border border-gray-300"
                 style={{ backgroundColor: watchColor }}
               />
@@ -194,9 +198,7 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
                 min: { value: 0, message: 'Order must be 0 or greater' },
               })}
             />
-            {errors.order && (
-              <p className="mt-1 text-sm text-red-600">{errors.order.message}</p>
-            )}
+            {errors.order && <p className="mt-1 text-sm text-red-600">{errors.order.message}</p>}
           </div>
         </div>
 
@@ -290,8 +292,10 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
                 <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
                 {isEditing ? 'Updating...' : 'Creating...'}
               </div>
+            ) : isEditing ? (
+              'Update Sub-App'
             ) : (
-              isEditing ? 'Update Sub-App' : 'Create Sub-App'
+              'Create Sub-App'
             )}
           </button>
         </div>

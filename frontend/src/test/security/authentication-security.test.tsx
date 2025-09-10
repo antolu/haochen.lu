@@ -1,6 +1,6 @@
 /**
  * P0 - Critical UI Security Tests: Authentication Security
- * 
+ *
  * Tests to ensure proper authentication handling, token management,
  * and protection against authentication-related attacks.
  */
@@ -31,7 +31,7 @@ const MockLoginForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
       await mockApiService.login(credentials);
     } catch (error) {
@@ -47,14 +47,14 @@ const MockLoginForm = () => {
         type="text"
         placeholder="Username"
         value={credentials.username}
-        onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
+        onChange={e => setCredentials({ ...credentials, username: e.target.value })}
         data-testid="username-input"
       />
       <input
         type="password"
         placeholder="Password"
         value={credentials.password}
-        onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
+        onChange={e => setCredentials({ ...credentials, password: e.target.value })}
         data-testid="password-input"
       />
       <button type="submit" disabled={isLoading} data-testid="login-button">
@@ -66,25 +66,25 @@ const MockLoginForm = () => {
 
 const MockProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const auth = mockUseAuth();
-  
+
   if (!auth.isAuthenticated) {
     return <div data-testid="login-required">Please log in to access this content</div>;
   }
-  
+
   return <div data-testid="protected-content">{children}</div>;
 };
 
 const MockAdminRoute = ({ children }: { children: React.ReactNode }) => {
   const auth = mockUseAuth();
-  
+
   if (!auth.isAuthenticated) {
     return <div data-testid="login-required">Please log in</div>;
   }
-  
+
   if (!auth.user?.is_admin) {
     return <div data-testid="admin-required">Admin access required</div>;
   }
-  
+
   return <div data-testid="admin-content">{children}</div>;
 };
 
@@ -104,7 +104,7 @@ describe('Authentication Security Tests', () => {
   describe('Login Security', () => {
     it('should not expose credentials in memory longer than necessary', async () => {
       const user = await import('@testing-library/user-event').then(m => m.userEvent.setup());
-      
+
       mockApiService.login.mockResolvedValueOnce({
         token: 'valid-token',
         user: mockUser,
@@ -134,7 +134,7 @@ describe('Authentication Security Tests', () => {
 
     it('should prevent brute force attacks with rate limiting', async () => {
       const user = await import('@testing-library/user-event').then(m => m.userEvent.setup());
-      
+
       // Mock failed login attempts
       mockApiService.login.mockRejectedValue(new Error('Invalid credentials'));
 
@@ -151,7 +151,7 @@ describe('Authentication Security Tests', () => {
         await user.type(usernameInput, `user${i}`);
         await user.type(passwordInput, `wrong${i}`);
         await user.click(loginButton);
-        
+
         await waitFor(() => {
           expect(loginButton).not.toBeDisabled();
         });
@@ -163,7 +163,7 @@ describe('Authentication Security Tests', () => {
 
     it('should validate input to prevent injection attacks', async () => {
       const user = await import('@testing-library/user-event').then(m => m.userEvent.setup());
-      
+
       renderWithProviders(<MockLoginForm />);
 
       const usernameInput = screen.getByTestId('username-input');
@@ -201,7 +201,7 @@ describe('Authentication Security Tests', () => {
   describe('Token Management Security', () => {
     it('should securely store authentication tokens', () => {
       const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test';
-      
+
       // Mock secure token storage
       const secureTokenStorage = {
         setToken: (token: string) => {
@@ -260,15 +260,15 @@ describe('Authentication Security Tests', () => {
 
     it('should prevent token exposure in URLs', () => {
       const token = 'sensitive-token';
-      
+
       // Mock navigation that should NOT include token in URL
       const navigateWithToken = (path: string, includeToken = false) => {
         const url = new URL(path, 'http://localhost');
-        
+
         if (includeToken) {
           url.searchParams.set('token', token);
         }
-        
+
         return url.toString();
       };
 
@@ -279,7 +279,7 @@ describe('Authentication Security Tests', () => {
       // Bad practice - token in URL (should be avoided)
       const insecureUrl = navigateWithToken('/dashboard', true);
       expect(insecureUrl).toContain(token);
-      
+
       // In real implementation, never include tokens in URLs
     });
   });
@@ -362,7 +362,7 @@ describe('Authentication Security Tests', () => {
     it('should handle role escalation attempts', () => {
       // Mock a scenario where a user tries to access admin content
       const regularUser = { ...mockUser, is_admin: false };
-      
+
       mockUseAuth.mockReturnValue({
         isAuthenticated: true,
         user: regularUser,
@@ -372,7 +372,7 @@ describe('Authentication Security Tests', () => {
 
       // Simulate client-side role escalation attempt
       const maliciousUser = { ...regularUser, is_admin: true };
-      
+
       // The component should rely on server-side validation, not client-side flags
       renderWithProviders(
         <MockAdminRoute>
@@ -404,7 +404,7 @@ describe('Authentication Security Tests', () => {
 
     it('should implement session timeout', () => {
       const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
-      
+
       const sessionManager = {
         startSession: () => {
           const now = Date.now();
@@ -413,7 +413,7 @@ describe('Authentication Security Tests', () => {
         isSessionValid: () => {
           const sessionStart = localStorage.getItem('session_start');
           if (!sessionStart) return false;
-          
+
           const elapsed = Date.now() - parseInt(sessionStart, 10);
           return elapsed < SESSION_TIMEOUT;
         },
@@ -430,25 +430,25 @@ describe('Authentication Security Tests', () => {
       // Mock time passage
       vi.setSystemTime(new Date(Date.now() + SESSION_TIMEOUT + 1000));
       expect(sessionManager.isSessionValid()).toBe(false);
-      
+
       vi.useRealTimers();
     });
 
     it('should prevent session fixation attacks', () => {
       const sessionId = 'initial-session-id';
       const newSessionId = 'new-session-id-after-login';
-      
+
       // Initial session
       localStorage.setItem('session_id', sessionId);
-      
+
       // Simulate successful login - should create new session ID
       const handleSuccessfulLogin = () => {
         localStorage.removeItem('session_id');
         localStorage.setItem('session_id', newSessionId);
       };
-      
+
       handleSuccessfulLogin();
-      
+
       expect(localStorage.removeItem).toHaveBeenCalledWith('session_id');
       expect(localStorage.setItem).toHaveBeenCalledWith('session_id', newSessionId);
       expect(localStorage.getItem('session_id')).toBe(newSessionId);
@@ -458,16 +458,16 @@ describe('Authentication Security Tests', () => {
   describe('CSRF Protection', () => {
     it('should include CSRF tokens in sensitive requests', async () => {
       const csrfToken = 'csrf-token-123';
-      
+
       // Mock CSRF token generation
       const generateCSRFToken = () => {
         return btoa(Math.random().toString()).substring(0, 16);
       };
-      
+
       // Mock API call with CSRF protection
       const protectedApiCall = async (data: any) => {
         const token = generateCSRFToken();
-        
+
         return fetch('/api/protected-endpoint', {
           method: 'POST',
           headers: {
@@ -514,7 +514,7 @@ describe('Authentication Security Tests', () => {
       mockApiService.login.mockRejectedValue({
         response: {
           status: 401,
-          data: { 
+          data: {
             detail: 'Invalid credentials',
             // Should NOT expose: 'User john_doe not found in database'
           },
@@ -523,7 +523,7 @@ describe('Authentication Security Tests', () => {
 
       const LoginWithErrorHandling = () => {
         const [error, setError] = React.useState<string | null>(null);
-        
+
         const handleLogin = async () => {
           try {
             await mockApiService.login({ username: 'user', password: 'pass' });
@@ -536,21 +536,23 @@ describe('Authentication Security Tests', () => {
 
         return (
           <div>
-            <button onClick={handleLogin} data-testid="login-btn">Login</button>
+            <button onClick={handleLogin} data-testid="login-btn">
+              Login
+            </button>
             {error && <div data-testid="error-message">{error}</div>}
           </div>
         );
       };
 
       renderWithProviders(<LoginWithErrorHandling />);
-      
+
       const user = await import('@testing-library/user-event').then(m => m.userEvent.setup());
       await user.click(screen.getByTestId('login-btn'));
 
       await waitFor(() => {
         const errorMessage = screen.getByTestId('error-message');
         expect(errorMessage).toHaveTextContent('Invalid credentials');
-        
+
         // Should not expose database details or user existence
         expect(errorMessage.textContent).not.toContain('database');
         expect(errorMessage.textContent).not.toContain('not found');
@@ -560,14 +562,14 @@ describe('Authentication Security Tests', () => {
 
     it('should not expose authentication tokens in console or DOM', () => {
       const sensitiveToken = 'eyJhbGciOiJIUzI1NiJ9.sensitive-payload';
-      
+
       // Mock component that handles tokens
       const TokenHandler = () => {
         const [token] = React.useState(sensitiveToken);
-        
+
         // Good practice - don't log tokens
         // console.log('Token:', token); // ❌ DON'T DO THIS
-        
+
         // Don't expose in DOM attributes
         return (
           <div data-testid="token-handler">
@@ -578,9 +580,9 @@ describe('Authentication Security Tests', () => {
       };
 
       renderWithProviders(<TokenHandler />);
-      
+
       const tokenHandler = screen.getByTestId('token-handler');
-      
+
       // Ensure token is not exposed in DOM
       expect(tokenHandler.innerHTML).not.toContain(sensitiveToken);
       expect(tokenHandler.getAttribute('data-token')).toBeNull();

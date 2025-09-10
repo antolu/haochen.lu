@@ -89,7 +89,7 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
             onError={handleImageError}
             loading="lazy"
           />
-          
+
           {/* Featured Badge */}
           {photo.featured && (
             <div className="absolute top-2 right-2">
@@ -207,10 +207,7 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({
       <div className={`space-y-4 ${className}`}>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
           {Array.from({ length: 20 }).map((_, i) => (
-            <div
-              key={i}
-              className="aspect-[4/3] bg-gray-200 rounded-lg animate-pulse"
-            />
+            <div key={i} className="aspect-[4/3] bg-gray-200 rounded-lg animate-pulse" />
           ))}
         </div>
       </div>
@@ -235,9 +232,7 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({
           />
         </svg>
         <p className="text-gray-600 text-lg font-medium">No photos found</p>
-        <p className="text-gray-500 text-sm mt-1">
-          Upload some photos to see them here
-        </p>
+        <p className="text-gray-500 text-sm mt-1">Upload some photos to see them here</p>
       </div>
     );
   }
@@ -255,7 +250,7 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({
           position: 'relative',
         }}
       >
-        {virtualizer.getVirtualItems().map((virtualRow) => {
+        {virtualizer.getVirtualItems().map(virtualRow => {
           const startIndex = virtualRow.index * numColumns;
           const endIndex = Math.min(startIndex + numColumns, photos.length);
           const rowPhotos = photos.slice(startIndex, endIndex);

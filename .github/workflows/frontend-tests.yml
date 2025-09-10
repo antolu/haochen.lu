@@ -191,7 +191,7 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-      
+
       redis:
         image: redis:7
         options: >-
@@ -371,9 +371,9 @@ jobs:
         const report = JSON.parse(fs.readFileSync('bundle-size-report.json', 'utf8'));
         const totalSize = report.reduce((acc, asset) => acc + asset.statSize, 0);
         const maxSize = 1024 * 1024; // 1MB limit
-        
+
         console.log(\`Total bundle size: \${(totalSize / 1024).toFixed(2)} KB\`);
-        
+
         if (totalSize > maxSize) {
           console.error(\`Bundle size \${(totalSize / 1024).toFixed(2)} KB exceeds limit of \${maxSize / 1024} KB\`);
           process.exit(1);

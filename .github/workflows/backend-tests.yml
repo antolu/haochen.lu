@@ -15,7 +15,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     services:
       postgres:
         image: postgres:15
@@ -30,7 +30,7 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-      
+
       redis:
         image: redis:7
         options: >-
@@ -87,7 +87,7 @@ jobs:
         import redis
         import time
         import sys
-        
+
         # Wait for PostgreSQL
         for i in range(30):
             try:
@@ -106,7 +106,7 @@ jobs:
         else:
             print('PostgreSQL failed to start')
             sys.exit(1)
-        
+
         # Wait for Redis
         for i in range(30):
             try:
@@ -251,13 +251,13 @@ jobs:
   integration-tests:
     runs-on: ubuntu-latest
     needs: [test, security-scan, lint-and-format]
-    
+
     services:
       postgres:
         image: postgres:15
         env:
           POSTGRES_PASSWORD: testpassword
-          POSTGRES_USER: testuser  
+          POSTGRES_USER: testuser
           POSTGRES_DB: testdb
         options: >-
           --health-cmd pg_isready
@@ -266,7 +266,7 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-      
+
       redis:
         image: redis:7
         options: >-

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Outlet, Link, useLocation, Navigate } from 'react-router-dom';
-import { 
+import {
   HomeIcon,
   PhotoIcon,
   FolderIcon,
@@ -51,15 +51,13 @@ const AdminLayout: React.FC = () => {
             {/* Header */}
             <div className="flex items-center h-16 px-6 border-b border-gray-200">
               <Link to="/" className="flex items-center">
-                <h1 className="text-xl font-serif font-bold text-gray-900">
-                  Admin Panel
-                </h1>
+                <h1 className="text-xl font-serif font-bold text-gray-900">Admin Panel</h1>
               </Link>
             </div>
 
             {/* Navigation */}
             <nav className="flex-1 px-4 py-6 space-y-2">
-              {navigation.map((item) => {
+              {navigation.map(item => {
                 const Icon = item.icon;
                 return (
                   <Link

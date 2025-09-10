@@ -32,7 +32,7 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  const checkAuth = useAuthStore((state) => state.checkAuth);
+  const checkAuth = useAuthStore(state => state.checkAuth);
 
   useEffect(() => {
     checkAuth();
@@ -66,7 +66,7 @@ function App() {
               <Route path="subapps" element={<AdminSubApps />} />
             </Route>
           </Routes>
-          
+
           <Toaster
             position="top-right"
             toastOptions={{

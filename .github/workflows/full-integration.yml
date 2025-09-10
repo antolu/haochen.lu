@@ -28,7 +28,7 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-      
+
       redis:
         image: redis:7
         options: >-
@@ -90,7 +90,7 @@ jobs:
         import redis
         import time
         import sys
-        
+
         # Wait for PostgreSQL
         for i in range(30):
             try:
@@ -107,7 +107,7 @@ jobs:
                 time.sleep(1)
         else:
             sys.exit(1)
-        
+
         # Wait for Redis
         for i in range(30):
             try:
@@ -128,32 +128,32 @@ jobs:
         import asyncio
         from app.core.database import get_session
         from tests.factories import UserFactory, PhotoFactory, ProjectFactory
-        
+
         async def seed_data():
             async for session in get_session():
                 # Create test users
                 admin_user = await UserFactory.create_async(
-                    session, 
+                    session,
                     username='integration_admin',
                     email='admin@integration.test',
                     is_admin=True
                 )
                 regular_user = await UserFactory.create_async(
                     session,
-                    username='integration_user', 
+                    username='integration_user',
                     email='user@integration.test',
                     is_admin=False
                 )
-                
+
                 # Create test photos
                 await PhotoFactory.create_batch_async(session, 5, is_public=True)
-                
+
                 # Create test projects
                 await ProjectFactory.create_batch_async(session, 3, status='completed')
-                
+
                 await session.commit()
                 break
-        
+
         asyncio.run(seed_data())
         "
 
@@ -162,7 +162,7 @@ jobs:
         cd backend
         uvicorn app.main:app --host 0.0.0.0 --port 8000 --log-level info &
         echo $! > backend.pid
-        
+
         # Wait for backend to be ready
         for i in {1..30}; do
           if curl -f http://localhost:8000/health > /dev/null 2>&1; then
@@ -183,7 +183,7 @@ jobs:
         cd frontend
         npm run preview -- --port 5173 --host 0.0.0.0 &
         echo $! > frontend.pid
-        
+
         # Wait for frontend to be ready
         for i in {1..15}; do
           if curl -f http://localhost:5173 > /dev/null 2>&1; then
@@ -198,11 +198,11 @@ jobs:
       run: |
         # Test backend health endpoint
         curl -f http://localhost:8000/health
-        
+
         # Test API endpoints
         curl -f http://localhost:8000/api/photos
         curl -f http://localhost:8000/api/projects
-        
+
         # Test frontend serves correctly
         curl -f http://localhost:5173
 
@@ -233,7 +233,7 @@ jobs:
         cd frontend
         # Create test image
         convert -size 800x600 xc:red test-image.jpg 2>/dev/null || echo "ImageMagick not available, using curl"
-        
+
         # Test file upload via API
         curl -X POST \
           -H "Authorization: Bearer $(curl -X POST http://localhost:8000/api/auth/login -H 'Content-Type: application/json' -d '{"username":"integration_admin","password":"testpassword123"}' | jq -r '.access_token')" \
@@ -257,12 +257,12 @@ jobs:
         echo "deb https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
         sudo apt-get update
         sudo apt-get install k6
-        
+
         # Run basic load test
         k6 run --vus 10 --duration 30s - <<EOF
         import http from 'k6/http';
         import { check } from 'k6';
-        
+
         export default function() {
           let response = http.get('http://localhost:8000/api/photos');
           check(response, {
@@ -279,28 +279,28 @@ jobs:
         import asyncio
         from app.core.database import get_session
         from sqlalchemy import text
-        
+
         async def check_consistency():
             async for session in get_session():
                 # Check foreign key constraints
                 result = await session.execute(text('SELECT COUNT(*) FROM photos'))
                 photo_count = result.scalar()
                 print(f'Photo count: {photo_count}')
-                
-                result = await session.execute(text('SELECT COUNT(*) FROM projects'))  
+
+                result = await session.execute(text('SELECT COUNT(*) FROM projects'))
                 project_count = result.scalar()
                 print(f'Project count: {project_count}')
-                
+
                 result = await session.execute(text('SELECT COUNT(*) FROM users'))
                 user_count = result.scalar()
                 print(f'User count: {user_count}')
-                
+
                 assert photo_count >= 5, f'Expected at least 5 photos, got {photo_count}'
                 assert project_count >= 3, f'Expected at least 3 projects, got {project_count}'
                 assert user_count >= 2, f'Expected at least 2 users, got {user_count}'
-                
+
                 break
-        
+
         asyncio.run(check_consistency())
         "
 
@@ -313,7 +313,7 @@ jobs:
           -X OPTIONS \
           http://localhost:8000/api/photos \
           -i | grep -i "access-control-allow-origin" || echo "CORS test completed"
-        
+
         # Test authentication requirements
         curl -X POST http://localhost:8000/api/photos \
           -H "Content-Type: application/json" \
@@ -332,11 +332,11 @@ jobs:
         echo "- Redis: Version 7" >> integration-report.md
         echo "- Test Run: $(date -u)" >> integration-report.md
         echo "" >> integration-report.md
-        
+
         echo "## API Endpoints Tested" >> integration-report.md
         curl -s http://localhost:8000/api/photos | jq -r '.total // "N/A"' | xargs echo "- Photos API: " >> integration-report.md
         curl -s http://localhost:8000/api/projects | jq -r '.total // "N/A"' | xargs echo "- Projects API: " >> integration-report.md
-        
+
         echo "" >> integration-report.md
         echo "## Performance Metrics" >> integration-report.md
         echo "- Backend Response Time: $(curl -o /dev/null -s -w '%{time_total}' http://localhost:8000/api/photos)s" >> integration-report.md
@@ -348,7 +348,7 @@ jobs:
         # Kill backend and frontend processes
         [ -f backend.pid ] && kill $(cat backend.pid) || true
         [ -f frontend.pid ] && kill $(cat frontend.pid) || true
-        
+
         # Kill any remaining processes on our ports
         sudo lsof -ti:8000 | xargs -r kill -9
         sudo lsof -ti:5173 | xargs -r kill -9
@@ -375,12 +375,12 @@ jobs:
             repo: context.repo.repo,
             title: `🚨 Scheduled Integration Tests Failed - ${new Date().toISOString().split('T')[0]}`,
             body: `The scheduled full-stack integration tests have failed.
-            
+
             **Run Details:**
             - Workflow: ${context.workflow}
             - Run ID: ${context.runId}
             - Commit: ${context.sha}
-            
+
             Please investigate the failures in the workflow logs.`,
             labels: ['bug', 'ci/cd', 'integration-failure']
           });
@@ -395,7 +395,7 @@ jobs:
       run: |
         echo "✅ Full stack integration tests passed"
         echo "✅ Ready for deployment to staging/production"
-        
+
     - name: Notify deployment readiness
       uses: actions/github-script@v6
       with:

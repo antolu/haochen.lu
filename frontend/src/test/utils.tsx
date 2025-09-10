@@ -165,22 +165,22 @@ export const createMockImageFile = (
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
-  
+
   const ctx = canvas.getContext('2d');
   if (ctx) {
     ctx.fillStyle = '#ff0000';
     ctx.fillRect(0, 0, width, height);
   }
-  
+
   const dataURL = canvas.toDataURL('image/jpeg');
   const byteString = atob(dataURL.split(',')[1]);
   const arrayBuffer = new ArrayBuffer(byteString.length);
   const uint8Array = new Uint8Array(arrayBuffer);
-  
+
   for (let i = 0; i < byteString.length; i++) {
     uint8Array[i] = byteString.charCodeAt(i);
   }
-  
+
   return new File([arrayBuffer], name, { type: 'image/jpeg' });
 };
 
@@ -190,7 +190,7 @@ export const createMockDragEvent = (type: string, files: File[] = []): DragEvent
     bubbles: true,
     cancelable: true,
   });
-  
+
   Object.defineProperty(event, 'dataTransfer', {
     value: {
       files,
@@ -202,7 +202,7 @@ export const createMockDragEvent = (type: string, files: File[] = []): DragEvent
       types: files.map(file => file.type),
     },
   });
-  
+
   return event;
 };
 
@@ -226,7 +226,7 @@ export const mockAuthenticatedUser = {
 // Local storage test utilities
 export const mockLocalStorage = () => {
   const store: Record<string, string> = {};
-  
+
   return {
     getItem: vi.fn((key: string) => store[key] || null),
     setItem: vi.fn((key: string, value: string) => {
@@ -249,7 +249,7 @@ export const fillForm = async (
 ) => {
   const { userEvent } = await import('@testing-library/user-event');
   const user = userEvent.setup();
-  
+
   for (const [label, value] of Object.entries(formData)) {
     const field = getByLabelText(new RegExp(label, 'i'));
     await user.clear(field);
@@ -276,7 +276,7 @@ export const mockIntersectionObserver = (isIntersecting = true) => {
   const mockObserve = vi.fn();
   const mockUnobserve = vi.fn();
   const mockDisconnect = vi.fn();
-  
+
   const mockIntersectionObserver = vi.fn().mockImplementation((callback) => {
     // Call callback immediately with mock entry
     setTimeout(() => {
@@ -292,14 +292,14 @@ export const mockIntersectionObserver = (isIntersecting = true) => {
         },
       ]);
     }, 0);
-    
+
     return {
       observe: mockObserve,
       unobserve: mockUnobserve,
       disconnect: mockDisconnect,
     };
   });
-  
+
   return {
     mockIntersectionObserver,
     mockObserve,
@@ -320,7 +320,7 @@ export const ThrowError = ({ shouldThrow = false }: { shouldThrow?: boolean }) =
 export const waitFor = (callback: () => void | Promise<void>, timeout = 1000) => {
   return new Promise<void>((resolve, reject) => {
     const startTime = Date.now();
-    
+
     const check = async () => {
       try {
         await callback();
@@ -333,7 +333,7 @@ export const waitFor = (callback: () => void | Promise<void>, timeout = 1000) =>
         }
       }
     };
-    
+
     check();
   });
 };

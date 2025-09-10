@@ -1,6 +1,6 @@
 /**
  * P1 - Frontend Component Tests: PhotoGallery
- * 
+ *
  * Tests for the photo gallery component including rendering, interactions,
  * lazy loading, and responsive behavior.
  */
@@ -9,11 +9,11 @@ import { screen, waitFor } from '@testing-library/react';
 import { renderWithProviders, mockPhoto, mockIntersectionObserver } from '../utils';
 
 // Mock the PhotoGallery component
-const MockPhotoGallery = ({ 
-  photos, 
-  onPhotoClick, 
+const MockPhotoGallery = ({
+  photos,
+  onPhotoClick,
   loading = false,
-  error = null 
+  error = null,
 }: {
   photos: any[];
   onPhotoClick?: (photo: any) => void;
@@ -31,7 +31,9 @@ const MockPhotoGallery = ({
   if (error) {
     return (
       <div data-testid="photo-gallery">
-        <div data-testid="error-message" role="alert">{error}</div>
+        <div data-testid="error-message" role="alert">
+          {error}
+        </div>
       </div>
     );
   }
@@ -47,7 +49,7 @@ const MockPhotoGallery = ({
   return (
     <div data-testid="photo-gallery" className="photo-gallery">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {photos.map((photo) => (
+        {photos.map(photo => (
           <div
             key={photo.id}
             data-testid={`photo-item-${photo.id}`}
@@ -62,9 +64,7 @@ const MockPhotoGallery = ({
             />
             <div className="photo-meta p-2">
               <h3 className="font-semibold">{photo.title}</h3>
-              {photo.category && (
-                <span className="text-sm text-gray-500">{photo.category}</span>
-              )}
+              {photo.category && <span className="text-sm text-gray-500">{photo.category}</span>}
               {photo.tags && photo.tags.length > 0 && (
                 <div className="tags mt-1">
                   {photo.tags.map((tag: string) => (
@@ -91,8 +91,8 @@ const MockLazyPhotoGallery = ({ photos }: { photos: any[] }) => {
 
   React.useEffect(() => {
     // Simulate intersection observer for lazy loading
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
         if (entry.isIntersecting) {
           const photoId = entry.target.getAttribute('data-photo-id');
           if (photoId && !loadedImages.has(photoId)) {
@@ -111,7 +111,7 @@ const MockLazyPhotoGallery = ({ photos }: { photos: any[] }) => {
 
   return (
     <div data-testid="lazy-photo-gallery">
-      {visiblePhotos.map((photo) => (
+      {visiblePhotos.map(photo => (
         <div
           key={photo.id}
           data-testid={`lazy-photo-${photo.id}`}
@@ -125,7 +125,7 @@ const MockLazyPhotoGallery = ({ photos }: { photos: any[] }) => {
               data-testid={`loaded-image-${photo.id}`}
             />
           ) : (
-            <div 
+            <div
               data-testid={`placeholder-${photo.id}`}
               className="bg-gray-200 w-full h-64 flex items-center justify-center"
             >
@@ -142,7 +142,13 @@ describe('PhotoGallery Component Tests', () => {
   const mockPhotos = [
     { ...mockPhoto, id: 'photo-1', title: 'Sunset Landscape' },
     { ...mockPhoto, id: 'photo-2', title: 'Mountain View', category: 'landscape' },
-    { ...mockPhoto, id: 'photo-3', title: 'City Street', category: 'street', tags: ['urban', 'city'] },
+    {
+      ...mockPhoto,
+      id: 'photo-3',
+      title: 'City Street',
+      category: 'street',
+      tags: ['urban', 'city'],
+    },
   ];
 
   beforeEach(() => {
@@ -151,13 +157,11 @@ describe('PhotoGallery Component Tests', () => {
 
   describe('Basic Rendering', () => {
     it('should render photo gallery with photos', () => {
-      renderWithProviders(
-        <MockPhotoGallery photos={mockPhotos} />
-      );
+      renderWithProviders(<MockPhotoGallery photos={mockPhotos} />);
 
       expect(screen.getByTestId('photo-gallery')).toBeInTheDocument();
       expect(screen.getAllByTestId(/^photo-item-/)).toHaveLength(3);
-      
+
       // Check individual photos
       expect(screen.getByTestId('photo-item-photo-1')).toBeInTheDocument();
       expect(screen.getByTestId('photo-item-photo-2')).toBeInTheDocument();
@@ -165,9 +169,7 @@ describe('PhotoGallery Component Tests', () => {
     });
 
     it('should display photo metadata correctly', () => {
-      renderWithProviders(
-        <MockPhotoGallery photos={mockPhotos} />
-      );
+      renderWithProviders(<MockPhotoGallery photos={mockPhotos} />);
 
       // Check titles
       expect(screen.getByText('Sunset Landscape')).toBeInTheDocument();
@@ -184,9 +186,7 @@ describe('PhotoGallery Component Tests', () => {
     });
 
     it('should render images with correct attributes', () => {
-      renderWithProviders(
-        <MockPhotoGallery photos={mockPhotos} />
-      );
+      renderWithProviders(<MockPhotoGallery photos={mockPhotos} />);
 
       const images = screen.getAllByRole('img');
       expect(images).toHaveLength(3);
@@ -201,9 +201,7 @@ describe('PhotoGallery Component Tests', () => {
 
   describe('Loading States', () => {
     it('should display loading spinner when loading', () => {
-      renderWithProviders(
-        <MockPhotoGallery photos={[]} loading={true} />
-      );
+      renderWithProviders(<MockPhotoGallery photos={[]} loading={true} />);
 
       expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
       expect(screen.getByText('Loading photos...')).toBeInTheDocument();
@@ -212,10 +210,8 @@ describe('PhotoGallery Component Tests', () => {
 
     it('should display error message when error occurs', () => {
       const errorMessage = 'Failed to load photos';
-      
-      renderWithProviders(
-        <MockPhotoGallery photos={[]} error={errorMessage} />
-      );
+
+      renderWithProviders(<MockPhotoGallery photos={[]} error={errorMessage} />);
 
       const errorElement = screen.getByTestId('error-message');
       expect(errorElement).toBeInTheDocument();
@@ -224,9 +220,7 @@ describe('PhotoGallery Component Tests', () => {
     });
 
     it('should display empty state when no photos', () => {
-      renderWithProviders(
-        <MockPhotoGallery photos={[]} />
-      );
+      renderWithProviders(<MockPhotoGallery photos={[]} />);
 
       expect(screen.getByTestId('empty-state')).toBeInTheDocument();
       expect(screen.getByText('No photos to display')).toBeInTheDocument();
@@ -238,9 +232,7 @@ describe('PhotoGallery Component Tests', () => {
       const handlePhotoClick = vi.fn();
       const user = await import('@testing-library/user-event').then(m => m.userEvent.setup());
 
-      renderWithProviders(
-        <MockPhotoGallery photos={mockPhotos} onPhotoClick={handlePhotoClick} />
-      );
+      renderWithProviders(<MockPhotoGallery photos={mockPhotos} onPhotoClick={handlePhotoClick} />);
 
       const firstPhoto = screen.getByTestId('photo-item-photo-1');
       await user.click(firstPhoto);
@@ -253,9 +245,7 @@ describe('PhotoGallery Component Tests', () => {
       const handlePhotoClick = vi.fn();
       const user = await import('@testing-library/user-event').then(m => m.userEvent.setup());
 
-      renderWithProviders(
-        <MockPhotoGallery photos={mockPhotos} onPhotoClick={handlePhotoClick} />
-      );
+      renderWithProviders(<MockPhotoGallery photos={mockPhotos} onPhotoClick={handlePhotoClick} />);
 
       // Click different photos
       await user.click(screen.getByTestId('photo-item-photo-1'));
@@ -270,12 +260,10 @@ describe('PhotoGallery Component Tests', () => {
       const handlePhotoClick = vi.fn();
       const user = await import('@testing-library/user-event').then(m => m.userEvent.setup());
 
-      renderWithProviders(
-        <MockPhotoGallery photos={mockPhotos} onPhotoClick={handlePhotoClick} />
-      );
+      renderWithProviders(<MockPhotoGallery photos={mockPhotos} onPhotoClick={handlePhotoClick} />);
 
       const firstPhoto = screen.getByTestId('photo-item-photo-1');
-      
+
       // Focus and press Enter
       firstPhoto.focus();
       await user.keyboard('{Enter}');
@@ -291,9 +279,7 @@ describe('PhotoGallery Component Tests', () => {
       const { mockIntersectionObserver: mockIO } = mockIntersectionObserver(false);
       global.IntersectionObserver = mockIO;
 
-      renderWithProviders(
-        <MockLazyPhotoGallery photos={mockPhotos} />
-      );
+      renderWithProviders(<MockLazyPhotoGallery photos={mockPhotos} />);
 
       // Initially should show placeholders
       expect(screen.getByTestId('placeholder-photo-1')).toBeInTheDocument();
@@ -308,9 +294,7 @@ describe('PhotoGallery Component Tests', () => {
       const { mockIntersectionObserver: mockIO } = mockIntersectionObserver(true);
       global.IntersectionObserver = mockIO;
 
-      renderWithProviders(
-        <MockLazyPhotoGallery photos={mockPhotos} />
-      );
+      renderWithProviders(<MockLazyPhotoGallery photos={mockPhotos} />);
 
       // Wait for intersection observer to trigger
       await waitFor(() => {
@@ -319,14 +303,12 @@ describe('PhotoGallery Component Tests', () => {
     });
 
     it('should optimize image loading performance', () => {
-      renderWithProviders(
-        <MockPhotoGallery photos={mockPhotos} />
-      );
+      renderWithProviders(<MockPhotoGallery photos={mockPhotos} />);
 
       const images = screen.getAllByRole('img');
-      
+
       // All images should have lazy loading attribute
-      images.forEach((img) => {
+      images.forEach(img => {
         expect(img).toHaveAttribute('loading', 'lazy');
       });
     });
@@ -334,13 +316,11 @@ describe('PhotoGallery Component Tests', () => {
 
   describe('Responsive Behavior', () => {
     it('should apply responsive grid classes', () => {
-      renderWithProviders(
-        <MockPhotoGallery photos={mockPhotos} />
-      );
+      renderWithProviders(<MockPhotoGallery photos={mockPhotos} />);
 
       const gallery = screen.getByTestId('photo-gallery');
       const gridContainer = gallery.querySelector('.grid');
-      
+
       expect(gridContainer).toHaveClass('grid-cols-1');
       expect(gridContainer).toHaveClass('md:grid-cols-2');
       expect(gridContainer).toHaveClass('lg:grid-cols-3');
@@ -371,9 +351,7 @@ describe('PhotoGallery Component Tests', () => {
           removeListener: vi.fn(),
         }));
 
-        const { container } = renderWithProviders(
-          <MockPhotoGallery photos={mockPhotos} />
-        );
+        const { container } = renderWithProviders(<MockPhotoGallery photos={mockPhotos} />);
 
         // Verify responsive classes are present
         const gridContainer = container.querySelector('.grid');
@@ -384,18 +362,14 @@ describe('PhotoGallery Component Tests', () => {
 
   describe('Accessibility', () => {
     it('should have proper ARIA attributes', () => {
-      renderWithProviders(
-        <MockPhotoGallery photos={[]} error="Test error" />
-      );
+      renderWithProviders(<MockPhotoGallery photos={[]} error="Test error" />);
 
       const errorMessage = screen.getByTestId('error-message');
       expect(errorMessage).toHaveAttribute('role', 'alert');
     });
 
     it('should have proper alt text for images', () => {
-      renderWithProviders(
-        <MockPhotoGallery photos={mockPhotos} />
-      );
+      renderWithProviders(<MockPhotoGallery photos={mockPhotos} />);
 
       const images = screen.getAllByRole('img');
       images.forEach((img, index) => {
@@ -405,14 +379,12 @@ describe('PhotoGallery Component Tests', () => {
     });
 
     it('should be keyboard navigable', () => {
-      renderWithProviders(
-        <MockPhotoGallery photos={mockPhotos} />
-      );
+      renderWithProviders(<MockPhotoGallery photos={mockPhotos} />);
 
       const photoItems = screen.getAllByTestId(/^photo-item-/);
-      
+
       // All clickable items should be focusable
-      photoItems.forEach((item) => {
+      photoItems.forEach(item => {
         expect(item).toHaveClass('cursor-pointer');
         // In a real implementation, these would have tabindex="0" or be button elements
       });
@@ -428,22 +400,18 @@ describe('PhotoGallery Component Tests', () => {
       }));
 
       const renderStart = performance.now();
-      renderWithProviders(
-        <MockPhotoGallery photos={manyPhotos} />
-      );
+      renderWithProviders(<MockPhotoGallery photos={manyPhotos} />);
       const renderEnd = performance.now();
 
       // Should render in reasonable time (less than 100ms)
       expect(renderEnd - renderStart).toBeLessThan(100);
-      
+
       // Should render all photos
       expect(screen.getAllByTestId(/^photo-item-/)).toHaveLength(100);
     });
 
     it('should not cause memory leaks with frequent updates', () => {
-      const { rerender } = renderWithProviders(
-        <MockPhotoGallery photos={mockPhotos} />
-      );
+      const { rerender } = renderWithProviders(<MockPhotoGallery photos={mockPhotos} />);
 
       // Simulate multiple updates
       for (let i = 0; i < 10; i++) {
@@ -471,33 +439,29 @@ describe('PhotoGallery Component Tests', () => {
         },
       ];
 
-      renderWithProviders(
-        <MockPhotoGallery photos={photosWithBrokenImages} />
-      );
+      renderWithProviders(<MockPhotoGallery photos={photosWithBrokenImages} />);
 
       const image = screen.getByRole('img');
       expect(image).toHaveAttribute('src', 'https://broken-url.com/image.jpg');
       expect(image).toHaveAttribute('alt', 'Broken Image');
-      
+
       // In a real implementation, you'd have onError handlers for fallback images
     });
 
     it('should handle malformed photo data', () => {
       const malformedPhotos = [
         { id: 'malformed-1' }, // Missing required fields
-        { 
-          id: 'malformed-2', 
-          title: null, 
+        {
+          id: 'malformed-2',
+          title: null,
           thumbnail_url: undefined,
-          tags: 'not-an-array'
+          tags: 'not-an-array',
         },
       ];
 
       // Should not crash when rendering malformed data
       expect(() => {
-        renderWithProviders(
-          <MockPhotoGallery photos={malformedPhotos} />
-        );
+        renderWithProviders(<MockPhotoGallery photos={malformedPhotos} />);
       }).not.toThrow();
 
       // Should still render the gallery container
