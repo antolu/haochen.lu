@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import toast from 'react-hot-toast';
 
 import SubAppForm from '../../components/SubAppForm';
 import SubAppList from '../../components/SubAppList';

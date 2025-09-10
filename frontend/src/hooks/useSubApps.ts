@@ -173,7 +173,7 @@ export const useToggleSubAppEnabled = () => {
       // Return a context object with the snapshotted value
       return { previousData };
     },
-    onError: (err, variables, context) => {
+    onError: (_err, _variables, context) => {
       // If the mutation fails, use the context returned from onMutate to roll back
       if (context?.previousData) {
         queryClient.setQueryData(subappKeys.list('admin'), context.previousData);
