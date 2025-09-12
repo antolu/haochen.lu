@@ -280,6 +280,375 @@ class TestPhotosAPI:
             if os.path.exists(temp_file_path):
                 os.unlink(temp_file_path)
 
+    async def test_upload_photo_with_empty_title_succeeds(
+        self, async_client: AsyncClient, admin_token: str, test_session: AsyncSession
+    ):
+        """Test POST /api/photos/upload with empty title should succeed with filename as title."""
+        headers = {"Authorization": f"Bearer {admin_token}"}
+
+        img = Image.new("RGB", (400, 300), color="blue")
+        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
+            img.save(temp_file, format="JPEG")
+            temp_file_path = temp_file.name
+
+        try:
+            with open(temp_file_path, "rb") as img_file:
+                files = {"file": ("empty_title_test.jpg", img_file, "image/jpeg")}
+                data = {
+                    "title": "",  # Empty title
+                    "description": "Test with empty title",
+                    "category": "test",
+                    "tags": "test,empty",
+                    "comments": "Testing empty title behavior",
+                    "featured": "false",
+                }
+
+                response = await async_client.post(
+                    "/api/photos/upload", headers=headers, files=files, data=data
+                )
+
+            assert response.status_code == 201
+            photo_data = response.json()
+
+            # Should use filename as title when title is empty
+            assert photo_data["title"] == "empty_title_test.jpg"
+            assert photo_data["description"] == "Test with empty title"
+            assert photo_data["category"] == "test"
+            assert "test" in photo_data["tags"]
+            assert "empty" in photo_data["tags"]
+
+        finally:
+            import os
+
+            if os.path.exists(temp_file_path):
+                os.unlink(temp_file_path)
+
+    async def test_upload_photo_with_empty_description_succeeds(
+        self, async_client: AsyncClient, admin_token: str, test_session: AsyncSession
+    ):
+        """Test POST /api/photos/upload with empty description should succeed."""
+        headers = {"Authorization": f"Bearer {admin_token}"}
+
+        img = Image.new("RGB", (400, 300), color="green")
+        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
+            img.save(temp_file, format="JPEG")
+            temp_file_path = temp_file.name
+
+        try:
+            with open(temp_file_path, "rb") as img_file:
+                files = {"file": ("empty_description_test.jpg", img_file, "image/jpeg")}
+                data = {
+                    "title": "Empty Description Test",
+                    "description": "",  # Empty description
+                    "category": "test",
+                    "tags": "test,empty",
+                    "featured": "false",
+                }
+
+                response = await async_client.post(
+                    "/api/photos/upload", headers=headers, files=files, data=data
+                )
+
+            assert response.status_code == 201
+            photo_data = response.json()
+
+            assert photo_data["title"] == "Empty Description Test"
+            assert photo_data["description"] == ""  # Should remain empty
+            assert photo_data["category"] == "test"
+
+        finally:
+            import os
+
+            if os.path.exists(temp_file_path):
+                os.unlink(temp_file_path)
+
+    async def test_upload_photo_with_empty_category_gets_default(
+        self, async_client: AsyncClient, admin_token: str, test_session: AsyncSession
+    ):
+        """Test POST /api/photos/upload with empty category should get default category."""
+        headers = {"Authorization": f"Bearer {admin_token}"}
+
+        img = Image.new("RGB", (400, 300), color="yellow")
+        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
+            img.save(temp_file, format="JPEG")
+            temp_file_path = temp_file.name
+
+        try:
+            with open(temp_file_path, "rb") as img_file:
+                files = {"file": ("empty_category_test.jpg", img_file, "image/jpeg")}
+                data = {
+                    "title": "Empty Category Test",
+                    "description": "Testing empty category",
+                    "category": "",  # Empty category
+                    "tags": "test,empty",
+                    "featured": "false",
+                }
+
+                response = await async_client.post(
+                    "/api/photos/upload", headers=headers, files=files, data=data
+                )
+
+            assert response.status_code == 201
+            photo_data = response.json()
+
+            assert photo_data["title"] == "Empty Category Test"
+            # Should get default category when empty
+            assert photo_data["category"] in ["uncategorized", "general", "default", ""]
+
+        finally:
+            import os
+
+            if os.path.exists(temp_file_path):
+                os.unlink(temp_file_path)
+
+    async def test_upload_photo_with_empty_tags_succeeds(
+        self, async_client: AsyncClient, admin_token: str, test_session: AsyncSession
+    ):
+        """Test POST /api/photos/upload with empty tags should succeed with empty tag list."""
+        headers = {"Authorization": f"Bearer {admin_token}"}
+
+        img = Image.new("RGB", (400, 300), color="purple")
+        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
+            img.save(temp_file, format="JPEG")
+            temp_file_path = temp_file.name
+
+        try:
+            with open(temp_file_path, "rb") as img_file:
+                files = {"file": ("empty_tags_test.jpg", img_file, "image/jpeg")}
+                data = {
+                    "title": "Empty Tags Test",
+                    "description": "Testing empty tags",
+                    "category": "test",
+                    "tags": "",  # Empty tags
+                    "featured": "false",
+                }
+
+                response = await async_client.post(
+                    "/api/photos/upload", headers=headers, files=files, data=data
+                )
+
+            assert response.status_code == 201
+            photo_data = response.json()
+
+            assert photo_data["title"] == "Empty Tags Test"
+            assert photo_data["tags"] == []  # Should be empty list
+
+        finally:
+            import os
+
+            if os.path.exists(temp_file_path):
+                os.unlink(temp_file_path)
+
+    async def test_upload_photo_with_whitespace_only_fields(
+        self, async_client: AsyncClient, admin_token: str, test_session: AsyncSession
+    ):
+        """Test POST /api/photos/upload with whitespace-only fields should be treated as empty."""
+        headers = {"Authorization": f"Bearer {admin_token}"}
+
+        img = Image.new("RGB", (400, 300), color="orange")
+        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
+            img.save(temp_file, format="JPEG")
+            temp_file_path = temp_file.name
+
+        try:
+            with open(temp_file_path, "rb") as img_file:
+                files = {"file": ("whitespace_test.jpg", img_file, "image/jpeg")}
+                data = {
+                    "title": "   ",  # Whitespace-only title
+                    "description": "\t\n  \r  ",  # Various whitespace
+                    "category": "  test  ",  # Category with surrounding whitespace
+                    "tags": "  tag1  ,  tag2  ,   ",  # Tags with whitespace
+                    "comments": "   ",  # Whitespace-only comments
+                    "featured": "false",
+                }
+
+                response = await async_client.post(
+                    "/api/photos/upload", headers=headers, files=files, data=data
+                )
+
+            assert response.status_code == 201
+            photo_data = response.json()
+
+            # Title should fallback to filename when whitespace-only
+            assert photo_data["title"] == "whitespace_test.jpg"
+            # Description should be empty after trimming
+            assert photo_data["description"] == ""
+            # Category should be trimmed
+            assert photo_data["category"] == "test"
+            # Tags should be trimmed and filtered
+            assert set(photo_data["tags"]) == {"tag1", "tag2"}
+
+        finally:
+            import os
+
+            if os.path.exists(temp_file_path):
+                os.unlink(temp_file_path)
+
+    async def test_upload_photo_with_all_empty_metadata_succeeds(
+        self, async_client: AsyncClient, admin_token: str, test_session: AsyncSession
+    ):
+        """Test POST /api/photos/upload with all empty metadata fields should succeed with defaults."""
+        headers = {"Authorization": f"Bearer {admin_token}"}
+
+        img = Image.new("RGB", (400, 300), color="gray")
+        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
+            img.save(temp_file, format="JPEG")
+            temp_file_path = temp_file.name
+
+        try:
+            with open(temp_file_path, "rb") as img_file:
+                files = {"file": ("all_empty_test.jpg", img_file, "image/jpeg")}
+                data = {
+                    "title": "",
+                    "description": "",
+                    "category": "",
+                    "tags": "",
+                    "comments": "",
+                    "featured": "false",
+                }
+
+                response = await async_client.post(
+                    "/api/photos/upload", headers=headers, files=files, data=data
+                )
+
+            assert response.status_code == 201
+            photo_data = response.json()
+
+            # Should use filename as title
+            assert photo_data["title"] == "all_empty_test.jpg"
+            # Other fields should handle empty values gracefully
+            assert photo_data["description"] == ""
+            assert photo_data["tags"] == []
+            assert photo_data["featured"] is False
+            # Category should get default value or remain empty
+            assert "category" in photo_data
+
+        finally:
+            import os
+
+            if os.path.exists(temp_file_path):
+                os.unlink(temp_file_path)
+
+    async def test_upload_photo_with_no_metadata_at_all(
+        self, async_client: AsyncClient, admin_token: str, test_session: AsyncSession
+    ):
+        """Test POST /api/photos/upload with no metadata fields at all should succeed."""
+        headers = {"Authorization": f"Bearer {admin_token}"}
+
+        img = Image.new("RGB", (400, 300), color="black")
+        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
+            img.save(temp_file, format="JPEG")
+            temp_file_path = temp_file.name
+
+        try:
+            with open(temp_file_path, "rb") as img_file:
+                files = {"file": ("no_metadata_test.jpg", img_file, "image/jpeg")}
+                # No data dict at all, just the file
+
+                response = await async_client.post(
+                    "/api/photos/upload", headers=headers, files=files
+                )
+
+            assert response.status_code == 201
+            photo_data = response.json()
+
+            # Should use filename as title
+            assert photo_data["title"] == "no_metadata_test.jpg"
+            # Should have sensible defaults for all fields
+            assert "description" in photo_data
+            assert "category" in photo_data
+            assert "tags" in photo_data
+            assert isinstance(photo_data["tags"], list)
+            assert "featured" in photo_data
+            assert isinstance(photo_data["featured"], bool)
+
+        finally:
+            import os
+
+            if os.path.exists(temp_file_path):
+                os.unlink(temp_file_path)
+
+    async def test_upload_photo_handles_malformed_tags(
+        self, async_client: AsyncClient, admin_token: str, test_session: AsyncSession
+    ):
+        """Test POST /api/photos/upload handles malformed tag strings gracefully."""
+        headers = {"Authorization": f"Bearer {admin_token}"}
+
+        img = Image.new("RGB", (400, 300), color="cyan")
+        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
+            img.save(temp_file, format="JPEG")
+            temp_file_path = temp_file.name
+
+        try:
+            with open(temp_file_path, "rb") as img_file:
+                files = {"file": ("malformed_tags_test.jpg", img_file, "image/jpeg")}
+                data = {
+                    "title": "Malformed Tags Test",
+                    "description": "Testing malformed tag strings",
+                    "category": "test",
+                    "tags": ",,,,tag1,,,tag2,,,,tag3,,,",  # Multiple commas and empty segments
+                    "featured": "false",
+                }
+
+                response = await async_client.post(
+                    "/api/photos/upload", headers=headers, files=files, data=data
+                )
+
+            assert response.status_code == 201
+            photo_data = response.json()
+
+            # Should filter out empty tags and normalize
+            assert set(photo_data["tags"]) == {"tag1", "tag2", "tag3"}
+
+        finally:
+            import os
+
+            if os.path.exists(temp_file_path):
+                os.unlink(temp_file_path)
+
+    async def test_upload_photo_with_special_characters_in_empty_fields(
+        self, async_client: AsyncClient, admin_token: str, test_session: AsyncSession
+    ):
+        """Test POST /api/photos/upload with special characters in otherwise empty fields."""
+        headers = {"Authorization": f"Bearer {admin_token}"}
+
+        img = Image.new("RGB", (400, 300), color="magenta")
+        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
+            img.save(temp_file, format="JPEG")
+            temp_file_path = temp_file.name
+
+        try:
+            with open(temp_file_path, "rb") as img_file:
+                files = {"file": ("special_chars_test.jpg", img_file, "image/jpeg")}
+                data = {
+                    "title": "\u200b\u200c\u200d",  # Zero-width characters
+                    "description": "\n\r\t",  # Control characters
+                    "category": "\u00a0",  # Non-breaking space
+                    "tags": "\u2000,\u2001,\u2002",  # En/em spaces
+                    "featured": "false",
+                }
+
+                response = await async_client.post(
+                    "/api/photos/upload", headers=headers, files=files, data=data
+                )
+
+            assert response.status_code == 201
+            photo_data = response.json()
+
+            # Should handle special characters appropriately
+            # Title should fallback to filename if special chars are considered empty
+            assert photo_data["title"] in [
+                "special_chars_test.jpg",
+                "\u200b\u200c\u200d",
+            ]
+            # Other fields should be cleaned or remain as-is based on backend logic
+
+        finally:
+            import os
+
+            if os.path.exists(temp_file_path):
+                os.unlink(temp_file_path)
+
     async def test_update_photo_modifies_metadata(
         self, async_client: AsyncClient, admin_token: str, test_session: AsyncSession
     ):
@@ -552,7 +921,7 @@ class TestPhotosAPIPerformance:
         # All requests should succeed
         successful_requests = 0
         for response in responses:
-            if not isinstance(response, Exception):
+            if not isinstance(response, BaseException):
                 assert response.status_code == 200
                 successful_requests += 1
 

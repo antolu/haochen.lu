@@ -114,9 +114,7 @@ export function renderWithProviders(
   function Wrapper({ children }: { children: React.ReactNode }) {
     return (
       <BrowserRouter>
-        <QueryClientProvider client={queryClient}>
-          {children}
-        </QueryClientProvider>
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
       </BrowserRouter>
     );
   }
@@ -130,8 +128,8 @@ export function renderWithProviders(
 }
 
 // Mock API responses
-export const mockApiResponse = <T>(data: T, delay = 0) => {
-  return new Promise<T>((resolve) => {
+export const mockApiResponse = <T,>(data: T, delay = 0) => {
+  return new Promise<T>(resolve => {
     setTimeout(() => resolve(data), delay);
   });
 };
@@ -243,10 +241,7 @@ export const mockLocalStorage = () => {
 };
 
 // Form test utilities
-export const fillForm = async (
-  getByLabelText: any,
-  formData: Record<string, string>
-) => {
+export const fillForm = async (getByLabelText: any, formData: Record<string, string>) => {
   const { userEvent } = await import('@testing-library/user-event');
   const user = userEvent.setup();
 
@@ -277,7 +272,7 @@ export const mockIntersectionObserver = (isIntersecting = true) => {
   const mockUnobserve = vi.fn();
   const mockDisconnect = vi.fn();
 
-  const mockIntersectionObserver = vi.fn().mockImplementation((callback) => {
+  const mockIntersectionObserver = vi.fn().mockImplementation(callback => {
     // Call callback immediately with mock entry
     setTimeout(() => {
       callback([

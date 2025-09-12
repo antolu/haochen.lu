@@ -109,8 +109,19 @@ export const photos = {
     formData.append('file', file);
 
     Object.entries(metadata).forEach(([key, value]) => {
-      if (value !== undefined) {
-        formData.append(key, value.toString());
+      if (value !== undefined && value !== null) {
+        // Handle boolean values properly
+        if (typeof value === 'boolean') {
+          formData.append(key, value.toString());
+        }
+        // Handle string values, ensuring they're not empty strings unless intentional
+        else if (typeof value === 'string') {
+          formData.append(key, value);
+        }
+        // Handle other types
+        else {
+          formData.append(key, String(value));
+        }
       }
     });
 

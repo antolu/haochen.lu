@@ -24,41 +24,114 @@ interface PhotoMetadata {
   description: string;
   category: string;
   tags: string;
+  comments?: string; // Optional since we don't have a UI field for this yet
   featured: boolean;
 }
 
 const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFiles = 10 }) => {
   const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([]);
   const [currentUpload, setCurrentUpload] = useState<string | null>(null);
+  const [globalError, setGlobalError] = useState<string | null>(null);
   const uploadMutation = useUploadPhoto();
 
-  const { register, handleSubmit } = useForm<PhotoMetadata>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<PhotoMetadata>({
     defaultValues: {
       title: '',
       description: '',
       category: '',
       tags: '',
+      comments: '',
       featured: false,
     },
+    mode: 'onBlur', // Validate on blur for better UX
   });
+
+  // Clear global error when user tries again
+  const clearGlobalError = () => {
+    setGlobalError(null);
+  };
 
   // Handle file drops
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
-      const newFiles: UploadFile[] = acceptedFiles
-        .slice(0, maxFiles - uploadFiles.length)
-        .map(file => {
+      try {
+        clearGlobalError(); // Clear any previous errors
+
+        if (!acceptedFiles || acceptedFiles.length === 0) {
+          console.log('No files provided to onDrop');
+          return;
+        }
+
+        // Validate each file before processing
+        const validFiles = acceptedFiles.filter(file => {
+          if (!(file instanceof File)) {
+            console.warn('Invalid file object received:', file);
+            return false;
+          }
+
+          if (!file.name) {
+            console.warn('File missing name property:', file);
+            return false;
+          }
+
+          if (file.size === 0) {
+            console.warn('Empty file received:', file.name);
+            return false;
+          }
+
+          if (file.size > 50 * 1024 * 1024) {
+            // 50MB limit
+            console.warn('File too large:', file.name, file.size);
+            return false;
+          }
+
+          return true;
+        });
+
+        if (validFiles.length === 0) {
+          console.warn('No valid files to process');
+          return;
+        }
+
+        const availableSlots = maxFiles - uploadFiles.length;
+        const filesToProcess = validFiles.slice(0, availableSlots);
+
+        if (filesToProcess.length < validFiles.length) {
+          console.warn(
+            `Only processing ${filesToProcess.length} of ${validFiles.length} files due to upload limit`
+          );
+        }
+
+        const newFiles: UploadFile[] = filesToProcess.map(file => {
           const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+          let preview = '';
+
+          try {
+            preview = URL.createObjectURL(file);
+          } catch (error) {
+            console.warn('Failed to create preview URL for file:', file.name, error);
+            preview = ''; // Fallback to empty preview
+          }
+
           return {
             id,
             file,
-            preview: URL.createObjectURL(file),
+            preview,
             progress: 0,
             status: 'pending' as const,
           };
         });
 
-      setUploadFiles(prev => [...prev, ...newFiles]);
+        console.log(`Added ${newFiles.length} files to upload queue`);
+        setUploadFiles(prev => [...prev, ...newFiles]);
+      } catch (error) {
+        console.error('Error processing dropped files:', error);
+        setGlobalError('Failed to process dropped files. Please try again.');
+      }
     },
     [uploadFiles.length, maxFiles]
   );
@@ -79,19 +152,64 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
 
   // Remove file from upload queue
   const removeFile = (fileId: string) => {
+    if (!fileId) {
+      console.warn('removeFile called with empty fileId');
+      return;
+    }
+
     setUploadFiles(prev => {
-      const updated = prev.filter(f => f.id !== fileId);
-      // Cleanup preview URL
       const fileToRemove = prev.find(f => f.id === fileId);
-      if (fileToRemove) {
-        URL.revokeObjectURL(fileToRemove.preview);
+
+      if (!fileToRemove) {
+        console.warn('File not found for removal:', fileId);
+        return prev; // No change if file not found
       }
+
+      // Safely cleanup preview URL
+      try {
+        if (fileToRemove.preview) {
+          URL.revokeObjectURL(fileToRemove.preview);
+        }
+      } catch (error) {
+        console.warn('Failed to revoke object URL:', error);
+      }
+
+      const updated = prev.filter(f => f.id !== fileId);
+      console.log(`Removed file ${fileId} from upload queue`);
       return updated;
     });
   };
 
   // Upload single file
   const uploadSingleFile = async (uploadFile: UploadFile, metadata: PhotoMetadata) => {
+    // Comprehensive validation of uploadFile
+    if (!uploadFile) {
+      console.error('uploadSingleFile called with undefined uploadFile');
+      throw new Error('Upload file is undefined');
+    }
+
+    if (!uploadFile.id) {
+      console.error('uploadSingleFile called with uploadFile missing id:', uploadFile);
+      throw new Error('Upload file missing required id');
+    }
+
+    if (!uploadFile.file) {
+      console.error('uploadSingleFile called with uploadFile missing file property:', uploadFile);
+      throw new Error('Upload file missing required file property');
+    }
+
+    if (!(uploadFile.file instanceof File)) {
+      console.error('uploadSingleFile called with invalid file object:', uploadFile.file);
+      throw new Error('Upload file.file is not a valid File object');
+    }
+
+    console.log('Starting upload for file:', {
+      id: uploadFile.id,
+      fileName: uploadFile.file.name,
+      fileSize: uploadFile.file.size,
+      fileType: uploadFile.file.type,
+    });
+
     setCurrentUpload(uploadFile.id);
 
     // Update file status
@@ -102,18 +220,39 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
     );
 
     try {
-      const title = metadata.title || uploadFile.file.name.replace(/\.[^/.]+$/, ''); // Remove extension
+      // Ensure metadata has safe defaults
+      const safeMetadata = {
+        title: metadata?.title || '',
+        description: metadata?.description || '',
+        category: metadata?.category || '',
+        tags: metadata?.tags || '',
+        featured: metadata?.featured || false,
+      };
 
-      await uploadMutation.mutateAsync({
+      // Safe file name access with fallback
+      const fileName = uploadFile.file.name || 'untitled-file';
+      const title = safeMetadata.title || fileName.replace(/\.[^/.]+$/, ''); // Remove extension
+
+      const uploadData = {
         file: uploadFile.file,
         metadata: {
           title,
-          description: metadata.description,
-          category: metadata.category,
-          tags: metadata.tags,
-          featured: metadata.featured,
+          description: safeMetadata.description,
+          category: safeMetadata.category,
+          tags: safeMetadata.tags,
+          comments: '',
+          featured: safeMetadata.featured,
         },
+      };
+
+      console.log('Uploading photo with data:', {
+        fileName: uploadFile.file.name,
+        fileSize: uploadFile.file.size,
+        fileType: uploadFile.file.type,
+        metadata: uploadData.metadata,
       });
+
+      await uploadMutation.mutateAsync(uploadData);
 
       // Update file status to completed
       setUploadFiles(prev =>
@@ -122,6 +261,64 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
         )
       );
     } catch (error) {
+      console.error('Upload failed for file:', uploadFile.file.name, error);
+
+      // Categorize and extract detailed error message
+      let errorMessage = 'Upload failed';
+      let errorCategory = 'unknown';
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        errorCategory = 'client-error';
+      }
+
+      // Handle network/HTTP errors
+      if (typeof error === 'object' && error !== null && 'response' in error) {
+        const axiosError = error as any;
+
+        if (axiosError.response) {
+          const status = axiosError.response.status;
+          const detail = axiosError.response.data?.detail;
+
+          // Categorize by HTTP status
+          if (status === 422) {
+            errorCategory = 'validation';
+            errorMessage = detail || 'File validation failed. Please check file type and size.';
+          } else if (status === 413) {
+            errorCategory = 'file-too-large';
+            errorMessage = 'File is too large. Maximum size is 50MB.';
+          } else if (status === 401 || status === 403) {
+            errorCategory = 'authorization';
+            errorMessage = 'Not authorized to upload files. Please log in again.';
+          } else if (status === 500) {
+            errorCategory = 'server-error';
+            errorMessage = 'Server error occurred. Please try again later.';
+          } else {
+            errorCategory = 'http-error';
+            errorMessage =
+              detail || `HTTP ${status}: ${axiosError.response.statusText || 'Unknown error'}`;
+          }
+
+          console.error('Upload HTTP error details:', {
+            status,
+            statusText: axiosError.response.statusText,
+            detail,
+            headers: axiosError.response.headers,
+          });
+        } else if (axiosError.request) {
+          errorCategory = 'network';
+          errorMessage = 'Network error. Please check your connection and try again.';
+          console.error('Upload network error:', axiosError.request);
+        }
+      }
+
+      console.error('Upload error summary:', {
+        fileName: uploadFile.file.name,
+        fileSize: uploadFile.file.size,
+        category: errorCategory,
+        message: errorMessage,
+      });
+
       // Update file status to error
       setUploadFiles(prev =>
         prev.map(f =>
@@ -130,7 +327,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
                 ...f,
                 status: 'error' as const,
                 progress: 0,
-                error: error instanceof Error ? error.message : 'Upload failed',
+                error: errorMessage,
               }
             : f
         )
@@ -142,31 +339,94 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
 
   // Upload all files
   const uploadAllFiles = async (metadata: PhotoMetadata) => {
-    const pendingFiles = uploadFiles.filter(f => f.status === 'pending' || f.status === 'error');
+    const pendingFiles = uploadFiles.filter(f => {
+      // Only include files with valid structure
+      const isValidStatus = f.status === 'pending' || f.status === 'error';
+      const hasValidFile = f && f.file && f.file instanceof File;
+
+      if (isValidStatus && !hasValidFile) {
+        console.warn('Skipping invalid file in upload queue:', f);
+        // Mark as error so it doesn't stay pending forever
+        setUploadFiles(prev =>
+          prev.map(file =>
+            file.id === f.id
+              ? { ...file, status: 'error' as const, error: 'Invalid file object' }
+              : file
+          )
+        );
+      }
+
+      return isValidStatus && hasValidFile;
+    });
+
+    console.log(`Starting batch upload of ${pendingFiles.length} files`);
 
     for (const uploadFile of pendingFiles) {
-      await uploadSingleFile(uploadFile, metadata);
+      try {
+        await uploadSingleFile(uploadFile, metadata);
+      } catch (error) {
+        console.error(`Failed to upload file ${uploadFile.id}:`, error);
+        // Individual file errors are handled in uploadSingleFile
+        // Continue with other files
+      }
     }
 
     // Check if all uploads completed successfully
     const allCompleted = uploadFiles.every(f => f.status === 'completed');
+    const hasErrors = uploadFiles.some(f => f.status === 'error');
+
+    console.log('Batch upload complete:', { allCompleted, hasErrors });
+
     if (allCompleted && onComplete) {
       setTimeout(onComplete, 500); // Small delay to show completion
     }
   };
 
   const onSubmit = (data: PhotoMetadata) => {
-    uploadAllFiles(data);
+    // Comprehensive form data validation and sanitization
+    const safeData: PhotoMetadata = {
+      title: (data?.title || '').trim(),
+      description: (data?.description || '').trim(),
+      category: (data?.category || '').trim(),
+      tags: (data?.tags || '').trim(),
+      comments: (data?.comments || '').trim(),
+      featured: Boolean(data?.featured),
+    };
+
+    // Log form submission for debugging
+    console.log('Form submitted with data:', {
+      original: data,
+      sanitized: safeData,
+      filesCount: uploadFiles.length,
+      pendingFiles: uploadFiles.filter(f => f.status === 'pending').length,
+    });
+
+    // Validate that we have files to upload
+    const pendingFiles = uploadFiles.filter(f => f.status === 'pending' || f.status === 'error');
+    if (pendingFiles.length === 0) {
+      console.warn('No files to upload');
+      return;
+    }
+
+    uploadAllFiles(safeData);
   };
 
   // Cleanup preview URLs on unmount
   React.useEffect(() => {
     return () => {
+      // Safely cleanup all preview URLs
       uploadFiles.forEach(file => {
-        URL.revokeObjectURL(file.preview);
+        try {
+          if (file && file.preview && typeof file.preview === 'string') {
+            URL.revokeObjectURL(file.preview);
+          }
+        } catch (error) {
+          console.warn('Failed to cleanup preview URL:', error);
+        }
       });
+      console.log('Cleaned up preview URLs for PhotoUpload component');
     };
-  }, []);
+  }, [uploadFiles]); // Include uploadFiles in dependencies to ensure cleanup
 
   const pendingCount = uploadFiles.filter(f => f.status === 'pending').length;
   const completedCount = uploadFiles.filter(f => f.status === 'completed').length;
@@ -316,9 +576,13 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
 
                   {/* File Info */}
                   <div className="space-y-1">
-                    <p className="text-sm font-medium text-gray-900 truncate">{file.file.name}</p>
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {file.file?.name || 'Unknown file'}
+                    </p>
                     <p className="text-xs text-gray-500">
-                      {(file.file.size / 1024 / 1024).toFixed(1)} MB
+                      {file.file?.size
+                        ? (file.file.size / 1024 / 1024).toFixed(1) + ' MB'
+                        : 'Unknown size'}
                     </p>
                     {file.error && <p className="text-xs text-red-600">{file.error}</p>}
                   </div>

@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from datetime import datetime
+from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class PhotoBase(BaseModel):
@@ -18,13 +19,17 @@ class PhotoCreate(PhotoBase):
     pass
 
 
-class PhotoUpdate(PhotoBase):
+class PhotoUpdate(BaseModel):
     title: str | None = None
+    description: str | None = None
+    category: str | None = None
+    tags: str | None = None
+    comments: str | None = None
     featured: bool | None = None
 
 
 class PhotoResponse(PhotoBase):
-    id: str
+    id: str | UUID
     filename: str
     original_path: str
     webp_path: str
@@ -51,6 +56,13 @@ class PhotoResponse(PhotoBase):
     order: int
     created_at: datetime
     updated_at: datetime
+
+    @field_validator("id", mode="before")
+    @classmethod
+    def convert_uuid_to_str(cls, v):
+        if isinstance(v, UUID):
+            return str(v)
+        return v
 
     class Config:
         from_attributes = True

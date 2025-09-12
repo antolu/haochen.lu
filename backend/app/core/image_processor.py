@@ -15,8 +15,8 @@ from app.config import settings
 
 class ImageProcessor:
     def __init__(self, upload_dir: str, compressed_dir: str):
-        self.upload_dir = Path(upload_dir)
-        self.compressed_dir = Path(compressed_dir)
+        self.upload_dir = Path(upload_dir).resolve()
+        self.compressed_dir = Path(compressed_dir).resolve()
         self.upload_dir.mkdir(exist_ok=True, parents=True)
         self.compressed_dir.mkdir(exist_ok=True, parents=True)
 
@@ -154,9 +154,9 @@ class ImageProcessor:
 
         return {
             "filename": original_filename,
-            "original_path": str(original_path.relative_to(Path.cwd())),
-            "webp_path": str(webp_path.relative_to(Path.cwd())),
-            "thumbnail_path": str(thumbnail_path.relative_to(Path.cwd())),
+            "original_path": str(original_path),
+            "webp_path": str(webp_path),
+            "thumbnail_path": str(thumbnail_path),
             "file_size": file_size,
             **exif_data,
         }

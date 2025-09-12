@@ -556,3 +556,533 @@ test.describe('Photo Management', () => {
     expect(viewerClasses).toMatch(/(w-full|mobile|responsive)/);
   });
 });
+
+test.describe('Photo Upload with Empty Fields', () => {
+  test.beforeEach(async ({ page }) => {
+    // Mock authentication
+    await page.route('**/api/auth/me', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: 'admin-123',
+          username: 'admin',
+          email: 'admin@example.com',
+          full_name: 'Admin User',
+          is_admin: true,
+          is_active: true,
+        }),
+      });
+    });
+
+    // Set up authenticated state
+    await page.goto('/');
+    await page.evaluate(() => {
+      localStorage.setItem('auth_token', 'mock-jwt-token');
+      localStorage.setItem(
+        'user',
+        JSON.stringify({
+          id: 'admin-123',
+          username: 'admin',
+          full_name: 'Admin User',
+          is_admin: true,
+        })
+      );
+    });
+  });
+
+  test('should upload photo with empty title and use filename', async ({ page }) => {
+    // Mock upload API response with filename as title
+    await page.route('**/api/photos/upload', async route => {
+      await route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: 'photo-empty-title',
+          title: 'empty-title-test.jpg', // Backend uses filename when title is empty
+          description: 'Test description',
+          category: 'test',
+          tags: ['test'],
+          original_url: '/images/empty-title-test.jpg',
+          thumbnail_url: '/images/thumbnails/empty-title-test.jpg',
+          webp_url: '/images/webp/empty-title-test.webp',
+          width: 800,
+          height: 600,
+          file_size: 1024000,
+          is_public: true,
+          is_featured: false,
+          created_at: new Date().toISOString(),
+        }),
+      });
+    });
+
+    await page.goto('/admin/upload');
+
+    // Upload file
+    await page.evaluate(() => {
+      const fileInput = document.querySelector('[data-testid="file-input"]') as HTMLInputElement;
+      const mockFile = new File(['mock image data'], 'empty-title-test.jpg', {
+        type: 'image/jpeg',
+      });
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(mockFile);
+      fileInput.files = dataTransfer.files;
+
+      const event = new Event('change', { bubbles: true });
+      fileInput.dispatchEvent(event);
+    });
+
+    // Leave title field empty and fill other fields
+    await page.getByTestId('photo-title').fill(''); // Explicitly clear title
+    await page.getByTestId('photo-description').fill('Test description');
+    await page.getByTestId('photo-category').selectOption('test');
+
+    await page.getByTestId('upload-button').click();
+
+    // Should show success message indicating title was set to filename
+    await expect(page.getByTestId('upload-success')).toBeVisible();
+    await expect(page.getByText('Photo uploaded successfully')).toBeVisible();
+  });
+
+  test('should upload photo with empty description', async ({ page }) => {
+    await page.route('**/api/photos/upload', async route => {
+      await route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: 'photo-empty-description',
+          title: 'Empty Description Test',
+          description: '', // Empty description should be preserved
+          category: 'test',
+          tags: ['test'],
+          original_url: '/images/empty-description-test.jpg',
+          thumbnail_url: '/images/thumbnails/empty-description-test.jpg',
+          webp_url: '/images/webp/empty-description-test.webp',
+          width: 800,
+          height: 600,
+          file_size: 1024000,
+          is_public: true,
+          is_featured: false,
+          created_at: new Date().toISOString(),
+        }),
+      });
+    });
+
+    await page.goto('/admin/upload');
+
+    await page.evaluate(() => {
+      const fileInput = document.querySelector('[data-testid="file-input"]') as HTMLInputElement;
+      const mockFile = new File(['mock image data'], 'empty-description-test.jpg', {
+        type: 'image/jpeg',
+      });
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(mockFile);
+      fileInput.files = dataTransfer.files;
+
+      const event = new Event('change', { bubbles: true });
+      fileInput.dispatchEvent(event);
+    });
+
+    // Fill only required fields, leave description empty
+    await page.getByTestId('photo-title').fill('Empty Description Test');
+    await page.getByTestId('photo-description').fill(''); // Explicitly clear description
+    await page.getByTestId('photo-category').selectOption('test');
+
+    await page.getByTestId('upload-button').click();
+
+    await expect(page.getByTestId('upload-success')).toBeVisible();
+  });
+
+  test('should upload photo with empty category and get default', async ({ page }) => {
+    await page.route('**/api/photos/upload', async route => {
+      await route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: 'photo-empty-category',
+          title: 'Empty Category Test',
+          description: 'Testing empty category',
+          category: 'uncategorized', // Backend provides default category
+          tags: ['test'],
+          original_url: '/images/empty-category-test.jpg',
+          thumbnail_url: '/images/thumbnails/empty-category-test.jpg',
+          webp_url: '/images/webp/empty-category-test.webp',
+          width: 800,
+          height: 600,
+          file_size: 1024000,
+          is_public: true,
+          is_featured: false,
+          created_at: new Date().toISOString(),
+        }),
+      });
+    });
+
+    await page.goto('/admin/upload');
+
+    await page.evaluate(() => {
+      const fileInput = document.querySelector('[data-testid="file-input"]') as HTMLInputElement;
+      const mockFile = new File(['mock image data'], 'empty-category-test.jpg', {
+        type: 'image/jpeg',
+      });
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(mockFile);
+      fileInput.files = dataTransfer.files;
+
+      const event = new Event('change', { bubbles: true });
+      fileInput.dispatchEvent(event);
+    });
+
+    await page.getByTestId('photo-title').fill('Empty Category Test');
+    await page.getByTestId('photo-description').fill('Testing empty category');
+    // Leave category unselected or select empty option if available
+    if (await page.getByTestId('photo-category').locator('option[value=""]').isVisible()) {
+      await page.getByTestId('photo-category').selectOption('');
+    }
+
+    await page.getByTestId('upload-button').click();
+
+    await expect(page.getByTestId('upload-success')).toBeVisible();
+  });
+
+  test('should upload photo with empty tags field', async ({ page }) => {
+    await page.route('**/api/photos/upload', async route => {
+      await route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: 'photo-empty-tags',
+          title: 'Empty Tags Test',
+          description: 'Testing empty tags',
+          category: 'test',
+          tags: [], // Empty tags array
+          original_url: '/images/empty-tags-test.jpg',
+          thumbnail_url: '/images/thumbnails/empty-tags-test.jpg',
+          webp_url: '/images/webp/empty-tags-test.webp',
+          width: 800,
+          height: 600,
+          file_size: 1024000,
+          is_public: true,
+          is_featured: false,
+          created_at: new Date().toISOString(),
+        }),
+      });
+    });
+
+    await page.goto('/admin/upload');
+
+    await page.evaluate(() => {
+      const fileInput = document.querySelector('[data-testid="file-input"]') as HTMLInputElement;
+      const mockFile = new File(['mock image data'], 'empty-tags-test.jpg', { type: 'image/jpeg' });
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(mockFile);
+      fileInput.files = dataTransfer.files;
+
+      const event = new Event('change', { bubbles: true });
+      fileInput.dispatchEvent(event);
+    });
+
+    await page.getByTestId('photo-title').fill('Empty Tags Test');
+    await page.getByTestId('photo-description').fill('Testing empty tags');
+    await page.getByTestId('photo-category').selectOption('test');
+
+    // Leave tags field empty
+    if (await page.getByTestId('photo-tags').isVisible()) {
+      await page.getByTestId('photo-tags').fill('');
+    }
+
+    await page.getByTestId('upload-button').click();
+
+    await expect(page.getByTestId('upload-success')).toBeVisible();
+  });
+
+  test('should handle whitespace-only fields correctly', async ({ page }) => {
+    await page.route('**/api/photos/upload', async route => {
+      await route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: 'photo-whitespace',
+          title: 'whitespace-test.jpg', // Backend trims whitespace and falls back to filename
+          description: '', // Trimmed whitespace becomes empty
+          category: 'test', // Category trimmed
+          tags: ['tag1', 'tag2'], // Tags trimmed and filtered
+          original_url: '/images/whitespace-test.jpg',
+          thumbnail_url: '/images/thumbnails/whitespace-test.jpg',
+          webp_url: '/images/webp/whitespace-test.webp',
+          width: 800,
+          height: 600,
+          file_size: 1024000,
+          is_public: true,
+          is_featured: false,
+          created_at: new Date().toISOString(),
+        }),
+      });
+    });
+
+    await page.goto('/admin/upload');
+
+    await page.evaluate(() => {
+      const fileInput = document.querySelector('[data-testid="file-input"]') as HTMLInputElement;
+      const mockFile = new File(['mock image data'], 'whitespace-test.jpg', { type: 'image/jpeg' });
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(mockFile);
+      fileInput.files = dataTransfer.files;
+
+      const event = new Event('change', { bubbles: true });
+      fileInput.dispatchEvent(event);
+    });
+
+    // Fill fields with whitespace-only content
+    await page.getByTestId('photo-title').fill('   '); // Only spaces
+    await page.getByTestId('photo-description').fill('\t\n  \r  '); // Various whitespace
+    await page.getByTestId('photo-category').selectOption('test');
+
+    if (await page.getByTestId('photo-tags').isVisible()) {
+      await page.getByTestId('photo-tags').fill('  tag1  ,  tag2  ,   '); // Tags with whitespace
+    }
+
+    await page.getByTestId('upload-button').click();
+
+    await expect(page.getByTestId('upload-success')).toBeVisible();
+  });
+
+  test('should upload photo with all empty metadata fields', async ({ page }) => {
+    await page.route('**/api/photos/upload', async route => {
+      await route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: 'photo-all-empty',
+          title: 'all-empty-test.jpg', // Filename used as title
+          description: '',
+          category: 'uncategorized', // Default category
+          tags: [],
+          original_url: '/images/all-empty-test.jpg',
+          thumbnail_url: '/images/thumbnails/all-empty-test.jpg',
+          webp_url: '/images/webp/all-empty-test.webp',
+          width: 800,
+          height: 600,
+          file_size: 1024000,
+          is_public: true,
+          is_featured: false,
+          created_at: new Date().toISOString(),
+        }),
+      });
+    });
+
+    await page.goto('/admin/upload');
+
+    await page.evaluate(() => {
+      const fileInput = document.querySelector('[data-testid="file-input"]') as HTMLInputElement;
+      const mockFile = new File(['mock image data'], 'all-empty-test.jpg', { type: 'image/jpeg' });
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(mockFile);
+      fileInput.files = dataTransfer.files;
+
+      const event = new Event('change', { bubbles: true });
+      fileInput.dispatchEvent(event);
+    });
+
+    // Leave all metadata fields empty or clear them
+    await page.getByTestId('photo-title').fill('');
+    await page.getByTestId('photo-description').fill('');
+
+    if (await page.getByTestId('photo-category').locator('option[value=""]').isVisible()) {
+      await page.getByTestId('photo-category').selectOption('');
+    }
+
+    if (await page.getByTestId('photo-tags').isVisible()) {
+      await page.getByTestId('photo-tags').fill('');
+    }
+
+    await page.getByTestId('upload-button').click();
+
+    await expect(page.getByTestId('upload-success')).toBeVisible();
+    await expect(page.getByText('Photo uploaded successfully')).toBeVisible();
+  });
+
+  test('should upload photo without any metadata inputs at all', async ({ page }) => {
+    await page.route('**/api/photos/upload', async route => {
+      await route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: 'photo-no-metadata',
+          title: 'no-metadata-test.jpg',
+          description: '',
+          category: 'uncategorized',
+          tags: [],
+          original_url: '/images/no-metadata-test.jpg',
+          thumbnail_url: '/images/thumbnails/no-metadata-test.jpg',
+          webp_url: '/images/webp/no-metadata-test.webp',
+          width: 800,
+          height: 600,
+          file_size: 1024000,
+          is_public: true,
+          is_featured: false,
+          created_at: new Date().toISOString(),
+        }),
+      });
+    });
+
+    await page.goto('/admin/upload');
+
+    await page.evaluate(() => {
+      const fileInput = document.querySelector('[data-testid="file-input"]') as HTMLInputElement;
+      const mockFile = new File(['mock image data'], 'no-metadata-test.jpg', {
+        type: 'image/jpeg',
+      });
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(mockFile);
+      fileInput.files = dataTransfer.files;
+
+      const event = new Event('change', { bubbles: true });
+      fileInput.dispatchEvent(event);
+    });
+
+    // Upload immediately without filling any metadata fields
+    await page.getByTestId('upload-button').click();
+
+    await expect(page.getByTestId('upload-success')).toBeVisible();
+  });
+
+  test('should handle malformed tags input gracefully', async ({ page }) => {
+    await page.route('**/api/photos/upload', async route => {
+      await route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: 'photo-malformed-tags',
+          title: 'Malformed Tags Test',
+          description: 'Testing malformed tag strings',
+          category: 'test',
+          tags: ['tag1', 'tag2', 'tag3'], // Backend filters out empty tags
+          original_url: '/images/malformed-tags-test.jpg',
+          thumbnail_url: '/images/thumbnails/malformed-tags-test.jpg',
+          webp_url: '/images/webp/malformed-tags-test.webp',
+          width: 800,
+          height: 600,
+          file_size: 1024000,
+          is_public: true,
+          is_featured: false,
+          created_at: new Date().toISOString(),
+        }),
+      });
+    });
+
+    await page.goto('/admin/upload');
+
+    await page.evaluate(() => {
+      const fileInput = document.querySelector('[data-testid="file-input"]') as HTMLInputElement;
+      const mockFile = new File(['mock image data'], 'malformed-tags-test.jpg', {
+        type: 'image/jpeg',
+      });
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(mockFile);
+      fileInput.files = dataTransfer.files;
+
+      const event = new Event('change', { bubbles: true });
+      fileInput.dispatchEvent(event);
+    });
+
+    await page.getByTestId('photo-title').fill('Malformed Tags Test');
+    await page.getByTestId('photo-description').fill('Testing malformed tag strings');
+    await page.getByTestId('photo-category').selectOption('test');
+
+    if (await page.getByTestId('photo-tags').isVisible()) {
+      await page.getByTestId('photo-tags').fill(',,,,tag1,,,tag2,,,,tag3,,,'); // Malformed tags
+    }
+
+    await page.getByTestId('upload-button').click();
+
+    await expect(page.getByTestId('upload-success')).toBeVisible();
+  });
+
+  test('should show appropriate error message for 422 validation errors', async ({ page }) => {
+    await page.route('**/api/photos/upload', async route => {
+      await route.fulfill({
+        status: 422,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          detail: [
+            {
+              loc: ['body', 'title'],
+              msg: 'Title cannot be empty after trimming whitespace',
+              type: 'value_error',
+            },
+          ],
+        }),
+      });
+    });
+
+    await page.goto('/admin/upload');
+
+    await page.evaluate(() => {
+      const fileInput = document.querySelector('[data-testid="file-input"]') as HTMLInputElement;
+      const mockFile = new File(['mock image data'], 'validation-error-test.jpg', {
+        type: 'image/jpeg',
+      });
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(mockFile);
+      fileInput.files = dataTransfer.files;
+
+      const event = new Event('change', { bubbles: true });
+      fileInput.dispatchEvent(event);
+    });
+
+    await page.getByTestId('upload-button').click();
+
+    // Should show validation error message
+    await expect(page.getByTestId('upload-error')).toBeVisible();
+    await expect(page.getByText(/validation error/i)).toBeVisible();
+  });
+
+  test('should handle special characters in empty-like fields', async ({ page }) => {
+    await page.route('**/api/photos/upload', async route => {
+      await route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: 'photo-special-chars',
+          title: 'special-chars-test.jpg', // Backend handles special characters
+          description: '',
+          category: 'test',
+          tags: [],
+          original_url: '/images/special-chars-test.jpg',
+          thumbnail_url: '/images/thumbnails/special-chars-test.jpg',
+          webp_url: '/images/webp/special-chars-test.webp',
+          width: 800,
+          height: 600,
+          file_size: 1024000,
+          is_public: true,
+          is_featured: false,
+          created_at: new Date().toISOString(),
+        }),
+      });
+    });
+
+    await page.goto('/admin/upload');
+
+    await page.evaluate(() => {
+      const fileInput = document.querySelector('[data-testid="file-input"]') as HTMLInputElement;
+      const mockFile = new File(['mock image data'], 'special-chars-test.jpg', {
+        type: 'image/jpeg',
+      });
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(mockFile);
+      fileInput.files = dataTransfer.files;
+
+      const event = new Event('change', { bubbles: true });
+      fileInput.dispatchEvent(event);
+    });
+
+    // Fill with special characters that might be considered empty
+    await page.getByTestId('photo-title').fill('\u200b\u200c\u200d'); // Zero-width characters
+    await page.getByTestId('photo-description').fill('\n\r\t'); // Control characters
+    await page.getByTestId('photo-category').selectOption('test');
+
+    await page.getByTestId('upload-button').click();
+
+    await expect(page.getByTestId('upload-success')).toBeVisible();
+  });
+});
