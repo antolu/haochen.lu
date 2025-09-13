@@ -31,14 +31,9 @@ interface PhotoMetadata {
 const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFiles = 10 }) => {
   const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([]);
   const [currentUpload, setCurrentUpload] = useState<string | null>(null);
-  const [globalError, setGlobalError] = useState<string | null>(null);
   const uploadMutation = useUploadPhoto();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<PhotoMetadata>({
+  const { register, handleSubmit } = useForm<PhotoMetadata>({
     defaultValues: {
       title: '',
       description: '',
@@ -50,17 +45,10 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
     mode: 'onBlur', // Validate on blur for better UX
   });
 
-  // Clear global error when user tries again
-  const clearGlobalError = () => {
-    setGlobalError(null);
-  };
-
   // Handle file drops
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       try {
-        clearGlobalError(); // Clear any previous errors
-
         if (!acceptedFiles || acceptedFiles.length === 0) {
           console.log('No files provided to onDrop');
           return;
@@ -130,7 +118,6 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
         setUploadFiles(prev => [...prev, ...newFiles]);
       } catch (error) {
         console.error('Error processing dropped files:', error);
-        setGlobalError('Failed to process dropped files. Please try again.');
       }
     },
     [uploadFiles.length, maxFiles]
@@ -205,9 +192,9 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
 
     console.log('Starting upload for file:', {
       id: uploadFile.id,
-      fileName: uploadFile.file.name,
-      fileSize: uploadFile.file.size,
-      fileType: uploadFile.file.type,
+      fileName: uploadFile.file?.name || 'unknown',
+      fileSize: uploadFile.file?.size || 0,
+      fileType: uploadFile.file?.type || 'unknown',
     });
 
     setCurrentUpload(uploadFile.id);
@@ -229,9 +216,11 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
         featured: metadata?.featured || false,
       };
 
-      // Safe file name access with fallback
-      const fileName = uploadFile.file.name || 'untitled-file';
-      const title = safeMetadata.title || fileName.replace(/\.[^/.]+$/, ''); // Remove extension
+      // Safe file name access with fallback and defensive programming
+      const fileName = uploadFile.file?.name || 'untitled-file';
+      const title =
+        safeMetadata.title ||
+        (fileName && typeof fileName === 'string' ? fileName.replace(/\.[^/.]+$/, '') : 'untitled');
 
       const uploadData = {
         file: uploadFile.file,
@@ -246,9 +235,9 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
       };
 
       console.log('Uploading photo with data:', {
-        fileName: uploadFile.file.name,
-        fileSize: uploadFile.file.size,
-        fileType: uploadFile.file.type,
+        fileName: uploadFile.file?.name || 'unknown',
+        fileSize: uploadFile.file?.size || 0,
+        fileType: uploadFile.file?.type || 'unknown',
         metadata: uploadData.metadata,
       });
 
@@ -261,7 +250,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
         )
       );
     } catch (error) {
-      console.error('Upload failed for file:', uploadFile.file.name, error);
+      console.error('Upload failed for file:', uploadFile.file?.name || 'unknown', error);
 
       // Categorize and extract detailed error message
       let errorMessage = 'Upload failed';
@@ -313,8 +302,8 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
       }
 
       console.error('Upload error summary:', {
-        fileName: uploadFile.file.name,
-        fileSize: uploadFile.file.size,
+        fileName: uploadFile.file?.name || 'unknown',
+        fileSize: uploadFile.file?.size || 0,
         category: errorCategory,
         message: errorMessage,
       });
@@ -401,12 +390,19 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
       pendingFiles: uploadFiles.filter(f => f.status === 'pending').length,
     });
 
-    // Validate that we have files to upload
-    const pendingFiles = uploadFiles.filter(f => f.status === 'pending' || f.status === 'error');
-    if (pendingFiles.length === 0) {
-      console.warn('No files to upload');
+    // Validate that we have retryable files to upload
+    const retryableFiles = uploadFiles.filter(f => f.status === 'pending' || f.status === 'error');
+    if (retryableFiles.length === 0) {
+      console.warn('No files to upload or retry');
       return;
     }
+
+    // Clear error state for files being retried
+    setUploadFiles(prev =>
+      prev.map(file =>
+        file.status === 'error' ? { ...file, status: 'pending' as const, error: undefined } : file
+      )
+    );
 
     uploadAllFiles(safeData);
   };
@@ -431,6 +427,9 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
   const pendingCount = uploadFiles.filter(f => f.status === 'pending').length;
   const completedCount = uploadFiles.filter(f => f.status === 'completed').length;
   const errorCount = uploadFiles.filter(f => f.status === 'error').length;
+  const retryableCount = uploadFiles.filter(
+    f => f.status === 'pending' || f.status === 'error'
+  ).length;
   const isUploading = currentUpload !== null;
 
   return (
@@ -580,11 +579,14 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
                       {file.file?.name || 'Unknown file'}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {file.file?.size
+                      {file.file?.size && typeof file.file.size === 'number'
                         ? (file.file.size / 1024 / 1024).toFixed(1) + ' MB'
                         : 'Unknown size'}
                     </p>
                     {file.error && <p className="text-xs text-red-600">{file.error}</p>}
+                    {file.status === 'error' && (
+                      <p className="text-xs text-blue-600">Click "Retry" to try again</p>
+                    )}
                   </div>
 
                   {/* Remove Button */}
@@ -674,7 +676,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
                 )}
                 <button
                   type="submit"
-                  disabled={pendingCount === 0 || isUploading}
+                  disabled={retryableCount === 0 || isUploading}
                   className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                 >
                   {isUploading ? (
@@ -694,10 +696,13 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                         />
                       </svg>
-                      Uploading {pendingCount} photos...
+                      Uploading {retryableCount} photos...
                     </>
                   ) : (
-                    <>Upload {pendingCount} photos</>
+                    <>
+                      {errorCount > 0 && pendingCount === 0 ? 'Retry' : 'Upload'} {retryableCount}{' '}
+                      photos
+                    </>
                   )}
                 </button>
               </div>
