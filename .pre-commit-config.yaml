@@ -19,9 +19,6 @@ repos:
       - id: check-json
       - id: debug-statements
         exclude: ^LICENSE|\.(html|csv|txt|svg|py)$
-      - id: pretty-format-json
-        args: ["--autofix", "--no-ensure-ascii", "--no-sort-keys"]
-        exclude: ^(package-lock\.json|yarn\.lock)$
       - id: requirements-txt-fixer
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
