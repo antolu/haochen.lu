@@ -11,6 +11,7 @@ import AdminLayout from './layouts/AdminLayout';
 import HomePage from './pages/HomePage';
 import AlbumPage from './pages/AlbumPage';
 import ProjectsPage from './pages/ProjectsPage';
+import ProjectDetailPage from './pages/ProjectDetailPage';
 import BlogPage from './pages/BlogPage';
 import BlogPostPage from './pages/BlogPostPage';
 import LoginPage from './pages/LoginPage';
@@ -47,6 +48,7 @@ function App() {
             <Route path="/" element={<MainLayout />}>
               <Route index element={<HomePage />} />
               <Route path="projects" element={<ProjectsPage />} />
+              <Route path="projects/:slug" element={<ProjectDetailPage />} />
               <Route path="blog" element={<BlogPage />} />
               <Route path="blog/:slug" element={<BlogPostPage />} />
             </Route>

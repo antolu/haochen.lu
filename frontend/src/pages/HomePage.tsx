@@ -11,9 +11,9 @@ const HomePage: React.FC = () => {
     queryFn: () => photos.getFeatured(6),
   });
 
-  const { data: featuredProjects } = useQuery({
-    queryKey: ['projects', 'featured'],
-    queryFn: () => projects.getFeatured(),
+  const { data: latestProjects } = useQuery({
+    queryKey: ['projects', 'latest'],
+    queryFn: () => projects.list({ status: 'active' }),
   });
 
   return (
@@ -246,16 +246,16 @@ const HomePage: React.FC = () => {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-4xl font-serif font-bold text-gray-900 mb-4">Featured Projects</h2>
+            <h2 className="text-4xl font-serif font-bold text-gray-900 mb-4">Latest Projects</h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Innovative solutions and creative endeavors that showcase my technical expertise and
-              passion for development.
+              Recent projects and ongoing work that showcase my technical expertise and passion for
+              development.
             </p>
           </motion.div>
 
-          {featuredProjects && featuredProjects.length > 0 && (
+          {latestProjects?.projects && latestProjects.projects.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-              {featuredProjects.slice(0, 4).map((project, index) => (
+              {latestProjects.projects.slice(0, 4).map((project, index) => (
                 <motion.div
                   key={project.id}
                   initial={{ opacity: 0, y: 20 }}

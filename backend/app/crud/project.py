@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -27,12 +28,12 @@ async def get_projects(
 
     query = query.order_by(Project.created_at.desc())
     result = await db.execute(query)
-    return result.scalars().all()
+    return list(result.scalars().all())
 
 
 async def get_project_count(db: AsyncSession) -> int:
     result = await db.execute(select(func.count(Project.id)))
-    return result.scalar()
+    return result.scalar() or 0
 
 
 async def get_project(db: AsyncSession, project_id: UUID) -> Project | None:
@@ -57,6 +58,20 @@ async def create_project(db: AsyncSession, project: ProjectCreate) -> Project:
 
     project_data = project.model_dump()
     project_data["slug"] = slug
+
+    # Parse repository URL if provided and not already parsed
+    if project.github_url and not project.repository_type:
+        from app.core.repository_service import repository_service
+
+        repo_info = repository_service.parse_repository_url(project.github_url)
+        if repo_info:
+            project_data.update(
+                {
+                    "repository_type": repo_info.type,
+                    "repository_owner": repo_info.owner,
+                    "repository_name": repo_info.name,
+                }
+            )
 
     db_project = Project(**project_data)
     db.add(db_project)
@@ -92,3 +107,22 @@ async def delete_project(db: AsyncSession, project_id: UUID) -> bool:
         return True
 
     return False
+
+
+async def update_project_readme(
+    db: AsyncSession,
+    project_id: UUID,
+    readme_content: str,
+    last_updated: datetime | None,
+) -> Project | None:
+    """Update the cached README content for a project."""
+    result = await db.execute(select(Project).where(Project.id == project_id))
+    db_project = result.scalar_one_or_none()
+
+    if db_project:
+        db_project.readme_content = readme_content
+        db_project.readme_last_updated = last_updated or datetime.utcnow()
+        await db.commit()
+        await db.refresh(db_project)
+
+    return db_project
