@@ -111,11 +111,26 @@ mypy app/ tests/
 ```
 ├── backend/                # FastAPI backend
 │   ├── app/
-│   │   ├── api/           # API route handlers  
+│   │   ├── api/           # API route handlers
+│   │   │   ├── projects.py        # Project CRUD and repository integration
+│   │   │   ├── photos.py          # Photo upload and management
+│   │   │   └── blog.py            # Blog post management
 │   │   ├── core/          # Security, image processing, config
+│   │   │   ├── repository_service.py  # GitHub/GitLab integration
+│   │   │   ├── image_processor.py     # Photo processing pipeline
+│   │   │   └── security.py            # Authentication and authorization
 │   │   ├── crud/          # Database operations
+│   │   │   ├── project.py         # Project database operations
+│   │   │   ├── photo.py           # Photo database operations
+│   │   │   └── blog.py            # Blog database operations
 │   │   ├── models/        # SQLAlchemy models
+│   │   │   ├── project.py         # Project model with repository fields
+│   │   │   ├── photo.py           # Photo model with EXIF data
+│   │   │   └── blog.py            # Blog post model
 │   │   └── schemas/       # Pydantic schemas
+│   │       ├── project.py         # Project validation schemas
+│   │       ├── photo.py           # Photo upload schemas
+│   │       └── blog.py            # Blog post schemas
 │   ├── alembic/           # Database migrations
 │   ├── tests/             # Backend tests
 │   └── pyproject.toml     # Python dependencies & config
@@ -123,11 +138,35 @@ mypy app/ tests/
 │   ├── src/
 │   │   ├── api/           # API client (axios)
 │   │   ├── components/    # Reusable UI components
+│   │   │   ├── ProjectCard.tsx        # Project display component
+│   │   │   ├── ProjectGrid.tsx        # Infinite scroll project grid
+│   │   │   ├── ProjectForm.tsx        # Project creation/editing form
+│   │   │   ├── RepositoryConnector.tsx # Repository URL validation
+│   │   │   ├── MarkdownRenderer.tsx   # Secure markdown display
+│   │   │   ├── PhotoUpload.tsx        # Photo upload with drag-drop
+│   │   │   └── PhotoGrid.tsx          # Photo gallery component
+│   │   ├── hooks/         # Custom React hooks
+│   │   │   ├── useProjects.ts         # Project data management
+│   │   │   ├── usePhotos.ts           # Photo data management
+│   │   │   └── useBlog.ts             # Blog data management
 │   │   ├── layouts/       # MainLayout, AdminLayout
 │   │   ├── pages/         # Route components
-│   │   │   ├── HomePage.tsx      # Landing page with hero image
-│   │   │   ├── AlbumPage.tsx     # Full album with lightbox
-│   │   │   └── admin/            # Admin pages
+│   │   │   ├── HomePage.tsx           # Landing page with hero image
+│   │   │   ├── AlbumPage.tsx          # Full album with lightbox
+│   │   │   ├── ProjectsPage.tsx       # Project listing with filters
+│   │   │   ├── ProjectDetailPage.tsx  # Individual project view
+│   │   │   └── admin/                 # Admin pages
+│   │   │       ├── AdminProjects.tsx  # Project management dashboard
+│   │   │       ├── AdminPhotos.tsx    # Photo management dashboard
+│   │   │       └── AdminBlog.tsx      # Blog management dashboard
+│   │   ├── test/          # Frontend tests
+│   │   │   ├── components/            # Component unit tests
+│   │   │   ├── hooks/                 # Hook unit tests
+│   │   │   ├── pages/                 # Page component tests
+│   │   │   ├── integration/           # API integration tests
+│   │   │   ├── e2e/                   # End-to-end tests
+│   │   │   ├── fixtures/              # Test data and factories
+│   │   │   └── utils/                 # Test utilities and helpers
 │   │   ├── stores/        # Zustand state stores
 │   │   ├── types/         # TypeScript definitions
 │   │   └── tailwind-safelist.css # Force Tailwind class generation
@@ -140,9 +179,9 @@ mypy app/ tests/
 ```
 
 ### Page Architecture
-- **HomePage**: Landing page with hero image and featured content previews
+- **HomePage**: Landing page with hero image and latest projects (shows 4 most recent active projects)
 - **AlbumPage**: Dedicated full-screen album with seamless photo grid (no gaps) and lightbox
-- **MainLayout**: Standard header/footer layout for most pages
+- **MainLayout**: Standard header/footer layout with dynamic shrinking navigation header
 - **AlbumPage**: No layout wrapper for full-screen experience
 
 ### API Architecture
@@ -159,9 +198,15 @@ mypy app/ tests/
 - `DELETE /api/photos/{id}` - Delete photo and files (admin)
 
 **Projects:**
-- `GET /api/projects` - List projects
-- `GET /api/projects/featured` - Featured for homepage  
-- `POST /api/projects` - Create (admin)
+- `GET /api/projects` - List projects with pagination/filtering
+- `GET /api/projects/featured` - Featured projects for homepage
+- `GET /api/projects/{id_or_slug}` - Get specific project by ID or slug
+- `GET /api/projects/{id_or_slug}/readme` - Get project README content
+- `POST /api/projects` - Create project (admin)
+- `PUT /api/projects/{id}` - Update project (admin)
+- `DELETE /api/projects/{id}` - Delete project (admin)
+- `GET /api/projects/stats/summary` - Project statistics (admin)
+- `POST /api/projects/repository/validate` - Validate repository URL (admin)
 
 **Blog:**
 - `GET /api/blog` - Published posts
@@ -232,6 +277,389 @@ const handleUploadError = (error: any, filename: string): string => {
 - **PhotoCRUD**: Database operations with async/await patterns  
 - **PhotoResponse**: Pydantic schema with UUID serialization
 - **File Storage**: Absolute path handling to prevent path resolution errors
+
+### Project Management System Architecture
+
+**Frontend Components:**
+- **ProjectCard.tsx**: Project display with status badges, technology tags, and hover animations
+- **ProjectGrid.tsx**: Infinite scroll grid with intersection observer for performance
+- **ProjectForm.tsx**: Complex form with repository integration and README preview
+- **ProjectDetailPage.tsx**: Individual project view with markdown rendering
+- **RepositoryConnector.tsx**: Repository URL validation and metadata extraction
+- **MarkdownRenderer.tsx**: Secure markdown display with syntax highlighting and XSS prevention
+
+**Key Features:**
+
+**1. Project Data Model**
+```typescript
+interface Project {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  short_description?: string;  // Manual one-liner for homepage
+  github_url?: string;
+  demo_url?: string;
+  image_url?: string;
+  technologies?: string;       // JSON array of tech stack
+  featured: boolean;
+  status: 'active' | 'archived' | 'in_progress';
+
+  // Repository Integration
+  repository_type?: 'github' | 'gitlab';
+  repository_owner?: string;
+  repository_name?: string;
+  use_readme?: boolean;        // Use repo README vs manual description
+  readme_content?: string;     // Cached README content
+  readme_last_updated?: string;
+}
+```
+
+**2. Repository Integration**
+- **URL Parsing**: Supports GitHub and GitLab URLs (including self-hosted)
+- **README Fetching**: Automatic caching with last-updated tracking
+- **Validation**: Real-time repository existence checking
+- **Branch Handling**: Supports both main and master branches
+- **Rate Limiting**: Respects API limits with proper error handling
+
+**3. Advanced UI Patterns**
+```typescript
+// Infinite scroll with intersection observer
+const { data, fetchNextPage, hasNextPage } = useInfiniteProjects(filters);
+
+// Repository validation with real-time feedback
+const validateRepo = useMutation({
+  mutationFn: (url: string) => api.post('/projects/repository/validate', { repository_url: url }),
+  onSuccess: (data) => setRepoInfo(data)
+});
+
+// README preview with caching
+const { data: readme } = useQuery({
+  queryKey: ['project-readme', projectId, refresh],
+  queryFn: () => api.get(`/projects/${projectId}/readme?refresh=${refresh}`)
+});
+```
+
+**Backend Architecture:**
+- **RepositoryService**: GitHub/GitLab API integration with token authentication
+- **ProjectCRUD**: Database operations with slug generation and filtering
+- **README Caching**: Intelligent caching system with refresh capabilities
+- **Project Validation**: URL parsing, repository validation, and data sanitization
+
+### Repository Integration System
+
+The repository integration system provides seamless connection to GitHub and GitLab repositories, enabling automatic README fetching and repository validation.
+
+**RepositoryService Architecture:**
+
+**1. URL Parsing and Validation**
+```python
+class RepositoryInfo(BaseModel):
+    type: str       # 'github' or 'gitlab'
+    owner: str      # Username or organization
+    name: str       # Repository name
+    url: str        # Original URL
+
+def parse_repository_url(url: str) -> RepositoryInfo | None:
+    # Supports patterns:
+    # - https://github.com/owner/repo
+    # - git@github.com:owner/repo.git
+    # - https://gitlab.com/owner/repo
+    # - https://custom-gitlab.com/owner/repo (self-hosted)
+```
+
+**2. README Fetching Strategy**
+```python
+async def fetch_readme(repo_info: RepositoryInfo) -> tuple[str | None, datetime | None]:
+    # Try multiple README filenames: README.md, readme.md, README.rst, README.txt, README
+    # Fetch raw content from main/master branch
+    # Get last commit date for the README file
+    # Return content and last_updated timestamp
+```
+
+**3. Caching and Performance**
+- **Database Caching**: README content stored in projects table
+- **Last Updated Tracking**: Commit timestamps for cache invalidation
+- **Refresh Parameter**: Manual cache busting for updated content
+- **Fallback Strategy**: Use project description if README unavailable
+
+**4. Authentication and Rate Limiting**
+```python
+# Environment variables for API tokens
+GITHUB_TOKEN=your_github_token    # Optional, increases rate limits
+GITLAB_TOKEN=your_gitlab_token    # Optional, for private repos
+
+# Headers automatically added when tokens available
+headers = {"Authorization": f"token {github_token}"}  # GitHub
+headers = {"PRIVATE-TOKEN": gitlab_token}              # GitLab
+```
+
+**5. Error Handling and Resilience**
+```python
+# Graceful degradation strategy
+try:
+    readme_content, last_updated = await repository_service.fetch_readme(repo_info)
+    if readme_content:
+        # Cache in database and return
+        await update_project_readme(db, project.id, readme_content, last_updated)
+        return ReadmeResponse(content=readme_content, source=repo_info.type)
+except Exception:
+    # Fallback to project description
+    return ReadmeResponse(content=project.description, source=None)
+```
+
+**Frontend Integration:**
+
+**1. RepositoryConnector Component**
+```typescript
+// Real-time URL validation with visual feedback
+const RepositoryConnector: React.FC<Props> = ({ onChange, onValidationChange }) => {
+  const validateMutation = useMutation({
+    mutationFn: (url: string) => api.post('/projects/repository/validate', { repository_url: url }),
+    onSuccess: (data) => {
+      setRepoInfo(data);           // Display repo metadata
+      onValidationChange(true);    // Enable form submission
+      onChange({                   // Update parent form
+        url: data.url,
+        type: data.type,
+        owner: data.owner,
+        name: data.name
+      });
+    }
+  });
+};
+```
+
+**2. README Preview Integration**
+```typescript
+// ProjectForm with README preview
+const { data: readmePreview, isLoading } = useQuery({
+  queryKey: ['readme-preview', repoInfo],
+  queryFn: () => repository_service.fetch_readme(repoInfo),
+  enabled: !!repoInfo && useReadme
+});
+```
+
+**Security Considerations:**
+- **URL Validation**: Strict regex patterns prevent injection
+- **Token Security**: API tokens stored as environment variables
+- **Rate Limiting**: Respects GitHub/GitLab API limits
+- **Content Sanitization**: Markdown content properly escaped in frontend
+- **CORS Protection**: Backend validates origin for repository requests
+
+### Frontend Component Patterns
+
+**1. Form Management with Repository Integration**
+```typescript
+// ProjectForm.tsx - Complex form with external API validation
+const ProjectForm: React.FC<Props> = ({ project, onSuccess }) => {
+  const { register, handleSubmit, watch, setValue } = useForm<FormData>();
+  const [repoInfo, setRepoInfo] = useState<RepositoryInfo | null>(null);
+
+  // Watch for repository URL changes
+  const githubUrl = watch('github_url');
+
+  // Handle repository validation success
+  const handleRepositoryValidation = (data: RepositoryInfo) => {
+    setRepoInfo(data);
+    setValue('repository_type', data.type);
+    setValue('repository_owner', data.owner);
+    setValue('repository_name', data.name);
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <RepositoryConnector
+        value={githubUrl}
+        onChange={handleRepositoryValidation}
+      />
+      {/* Other form fields */}
+    </form>
+  );
+};
+```
+
+**2. Infinite Scroll with Intersection Observer**
+```typescript
+// ProjectGrid.tsx - Performance-optimized infinite scroll
+const ProjectGrid: React.FC<Props> = ({ projects, onLoadMore, hasMore }) => {
+  const { ref, inView } = useInView({
+    threshold: 0,
+    rootMargin: '100px',
+  });
+
+  useEffect(() => {
+    if (inView && hasMore && !isLoadingMore) {
+      onLoadMore();
+    }
+  }, [inView, hasMore, isLoadingMore]);
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {projects.map((project) => (
+        <ProjectCard key={project.id} project={project} />
+      ))}
+      {hasMore && <div ref={ref} className="col-span-full h-10" />}
+    </div>
+  );
+};
+```
+
+**3. Real-time Validation with Visual Feedback**
+```typescript
+// RepositoryConnector.tsx - Live URL validation
+const RepositoryConnector: React.FC<Props> = ({ onChange, onValidationChange }) => {
+  const [validationState, setValidationState] = useState<'idle' | 'validating' | 'success' | 'error'>('idle');
+
+  const validateMutation = useMutation({
+    mutationFn: (url: string) => api.post('/projects/repository/validate', { repository_url: url }),
+    onMutate: () => setValidationState('validating'),
+    onSuccess: (data) => {
+      setValidationState('success');
+      onChange(data);
+      onValidationChange?.(true);
+    },
+    onError: () => {
+      setValidationState('error');
+      onValidationChange?.(false);
+    }
+  });
+
+  const getValidationIcon = () => {
+    switch (validationState) {
+      case 'validating': return <Spinner />;
+      case 'success': return <CheckIcon className="text-green-500" />;
+      case 'error': return <XIcon className="text-red-500" />;
+      default: return null;
+    }
+  };
+};
+```
+
+**4. Secure Markdown Rendering**
+```typescript
+// MarkdownRenderer.tsx - XSS prevention with syntax highlighting
+const MarkdownRenderer: React.FC<{ content: string }> = ({ content }) => {
+  const sanitizedContent = useMemo(() => {
+    return DOMPurify.sanitize(content, {
+      ALLOWED_TAGS: ['h1', 'h2', 'h3', 'p', 'a', 'ul', 'ol', 'li', 'code', 'pre'],
+      ALLOWED_ATTR: ['href', 'class', 'id'],
+    });
+  }, [content]);
+
+  return (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      rehypePlugins={[rehypeHighlight]}
+      components={{
+        code: ({ className, children }) => (
+          <code className={`${className} bg-gray-100 rounded px-1`}>
+            {children}
+          </code>
+        ),
+      }}
+    >
+      {sanitizedContent}
+    </ReactMarkdown>
+  );
+};
+```
+
+**5. Optimistic Updates with Error Recovery**
+```typescript
+// useProjects.ts - TanStack Query with optimistic updates
+export const useCreateProject = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (project: ProjectCreate) => api.post('/projects', project),
+    onMutate: async (newProject) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['projects'] });
+
+      // Snapshot previous value
+      const previousProjects = queryClient.getQueryData(['projects']);
+
+      // Optimistically update
+      queryClient.setQueryData(['projects'], (old: any) => ({
+        ...old,
+        projects: [createOptimisticProject(newProject), ...old.projects],
+      }));
+
+      return { previousProjects };
+    },
+    onError: (err, newProject, context) => {
+      // Rollback on error
+      queryClient.setQueryData(['projects'], context?.previousProjects);
+    },
+    onSettled: () => {
+      // Refetch to ensure consistency
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+    },
+  });
+};
+```
+
+### Shrinking Header Implementation
+
+The main navigation header features a dynamic shrinking behavior that provides an optimal user experience by starting with a prominent presence and gracefully adapting as users scroll.
+
+**Header Behavior:**
+
+**1. Dynamic Height Scaling**
+```typescript
+// Responsive height adaptation
+const headerHeight = isScrolled ? 'h-16' : 'h-20 md:h-24';
+
+// Scroll-based states with granular positioning
+const [scrollY, setScrollY] = useState(0);
+const isScrolled = scrollY > 10; // Quick response threshold
+```
+
+**2. Enhanced Typography Scaling**
+```typescript
+// Dramatic logo scaling with font weight and letter spacing
+const logoClasses = isScrolled
+  ? 'text-lg md:text-xl font-semibold tracking-tight'    // Collapsed: compact, efficient
+  : 'text-2xl md:text-4xl font-bold tracking-normal';   // Expanded: prominent, welcoming
+
+// Navigation text with proper hierarchy
+const navClasses = isScrolled
+  ? 'text-xs md:text-sm font-medium tracking-normal'    // Collapsed: readable, space-efficient
+  : 'text-base md:text-lg font-normal tracking-wide';   // Expanded: spacious, elegant
+```
+
+**3. Performance Optimizations**
+```typescript
+// Passive scroll listeners for better performance
+useEffect(() => {
+  const handleScroll = () => {
+    const currentScrollY = window.scrollY;
+    setScrollY(currentScrollY);
+  };
+
+  window.addEventListener('scroll', handleScroll, { passive: true });
+  return () => window.removeEventListener('scroll', handleScroll);
+}, []);
+```
+
+**4. Smooth Animation System**
+```typescript
+// Staggered transition timing for better perception
+transition-all duration-500 ease-out  // Layout changes: smooth, elegant
+transition-all duration-300 ease-out  // Typography: snappy, responsive
+```
+
+**Key Features:**
+- **Immediate Response**: Triggers at 10px scroll for instant feedback
+- **Dramatic Scaling**: 4:1 logo size ratio (text-4xl → text-xl) on desktop
+- **Typography Hierarchy**: Dynamic font weights and letter spacing
+- **Responsive Design**: Different scaling ratios for mobile vs desktop
+- **Performance**: Passive event listeners and hardware-accelerated transitions
+- **Accessibility**: Maintains navigation functionality while optimizing space
+
+**Visual Result:**
+Professional shrinking header that starts with commanding presence and gracefully adapts to maximize content space, matching modern web design standards.
 
 ### Frontend State Management
 - **TanStack Query**: Server state, caching, optimistic updates
@@ -482,17 +910,36 @@ All quality checks run automatically on commit via pre-commit hooks. This ensure
 ## Testing Strategy
 
 ### Backend Tests
-- **Unit Tests**: Individual functions, business logic  
+- **Unit Tests**: Individual functions, business logic
 - **Integration Tests**: API endpoints, database operations
 - **Security Tests**: Authentication, input validation
 - **Performance Tests**: Large file uploads, concurrent requests
 - **Empty Field Tests**: Comprehensive coverage for null/empty input scenarios
+- **Repository Integration Tests**: GitHub/GitLab API mocking, README fetching, URL validation
+- **Project CRUD Tests**: Database operations, slug generation, filtering
 
-### Frontend Tests  
+### Frontend Tests
 - **Unit Tests**: Components, utilities (Vitest + Testing Library)
 - **E2E Tests**: User flows, admin operations (Playwright)
 - **Visual Tests**: Hero image, album grid layout
 - **Upload Tests**: File handling, validation, error scenarios
+- **Project Management Tests**: CRUD operations, infinite scroll, repository integration
+- **Component Testing**:
+  - **ProjectCard**: Status badges, technology tags, external links, image fallbacks
+  - **ProjectGrid**: Infinite scroll with intersection observer, responsive behavior
+  - **ProjectForm**: Complex form validation, repository integration, README preview
+  - **RepositoryConnector**: URL validation, real-time feedback, error handling
+  - **MarkdownRenderer**: Security (XSS prevention), syntax highlighting, copy-to-clipboard
+- **Hook Testing**:
+  - **useProjects**: Query hooks, mutations, cache management, utility functions
+  - **Infinite scroll**: Loading states, hasMore logic, fetchNextPage integration
+  - **Repository validation**: URL parsing, validation responses, error handling
+- **E2E Project Tests**:
+  - **Project Creation Flow**: Form submission, repository integration, validation
+  - **Project Management**: Create, read, update, delete operations with admin auth
+  - **Repository Integration**: URL validation, README fetching, preview functionality
+  - **Search and Filtering**: Project search, status filtering, technology filtering
+  - **Accessibility**: WCAG 2.1 AA compliance, keyboard navigation, screen reader support
 
 ## Deployment Notes
 
