@@ -9,18 +9,24 @@ import { useAuthStore } from '../stores/authStore';
 
 const MainLayout: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
   const location = useLocation();
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
 
+  // Enhanced scroll detection with granular positioning
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
+      const currentScrollY = window.scrollY;
+      setScrollY(currentScrollY);
     };
 
-    window.addEventListener('scroll', handleScroll);
+    // Add passive event listener for better performance
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Scroll-based states for different UI adaptations
+  const isScrolled = scrollY > 10;
 
   const { data: subAppsData } = useQuery({
     queryKey: ['subapps', isAuthenticated ? 'authenticated' : 'public'],
@@ -39,22 +45,43 @@ const MainLayout: React.FC = () => {
     return location.pathname.startsWith(path);
   };
 
+  // Dynamic styles based on scroll position
+  const headerHeight = isScrolled ? 'h-16' : 'h-20 md:h-24';
+
+  // More dramatic logo scaling with font weight and letter spacing
+  const logoClasses = isScrolled
+    ? 'text-lg md:text-xl font-semibold tracking-tight'
+    : 'text-2xl md:text-4xl font-bold tracking-normal';
+
+  // Enhanced navigation styling
+  const navClasses = isScrolled
+    ? 'text-xs md:text-sm font-medium tracking-normal'
+    : 'text-base md:text-lg font-normal tracking-wide';
+
+  const navPadding = isScrolled ? 'py-2' : 'py-3 md:py-4';
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header
-        className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-          scrolled
+        className={`fixed top-0 w-full z-50 transition-all duration-500 ease-out ${
+          isScrolled
             ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-200'
             : 'bg-white/80 backdrop-blur-sm'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div
+            className={`flex justify-between items-center transition-all duration-500 ease-out ${headerHeight}`}
+          >
             {/* Logo */}
             <div className="flex-shrink-0">
               <Link to="/" className="flex items-center">
-                <h1 className="text-2xl font-serif font-bold text-gray-900">Anton Lu</h1>
+                <h1
+                  className={`font-serif text-gray-900 transition-all duration-300 ease-out ${logoClasses}`}
+                >
+                  Anton Lu
+                </h1>
               </Link>
             </div>
 
@@ -64,7 +91,7 @@ const MainLayout: React.FC = () => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`nav-link px-3 py-2 text-sm font-medium transition-colors duration-200 ${
+                  className={`nav-link px-3 transition-all duration-300 ease-out ${navPadding} ${navClasses} ${
                     isActive(item.href)
                       ? 'text-primary-600 active'
                       : 'text-gray-700 hover:text-primary-600'
@@ -77,7 +104,9 @@ const MainLayout: React.FC = () => {
               {/* Sub-apps dropdown or direct links */}
               {subAppsData?.subapps && subAppsData.subapps.length > 0 && (
                 <div className="relative group">
-                  <button className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary-600 transition-colors duration-200">
+                  <button
+                    className={`px-3 text-gray-700 hover:text-primary-600 transition-all duration-300 ease-out ${navPadding} ${navClasses}`}
+                  >
                     Apps
                   </button>
                   <div className="absolute left-0 mt-2 w-56 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
@@ -210,7 +239,7 @@ const MainLayout: React.FC = () => {
       </header>
 
       {/* Main content */}
-      <main className="pt-16">
+      <main className="pt-20 md:pt-24">
         <Outlet />
       </main>
 
