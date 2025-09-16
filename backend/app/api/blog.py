@@ -122,7 +122,7 @@ async def create_blog_post_endpoint(
     except Exception as e:
         raise HTTPException(
             status_code=400, detail=f"Error creating blog post: {str(e)}"
-        )
+        ) from e
 
 
 @router.put("/{post_id}", response_model=BlogPostResponse)

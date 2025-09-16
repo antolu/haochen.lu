@@ -6,6 +6,8 @@ from __future__ import annotations
 
 from typing import Any
 
+import pytest
+
 
 class MockRedis:
     """Mock Redis client that stores data in memory."""
@@ -179,7 +181,6 @@ def create_fakeredis():
 
 
 # Fixtures for pytest
-import pytest
 
 
 @pytest.fixture

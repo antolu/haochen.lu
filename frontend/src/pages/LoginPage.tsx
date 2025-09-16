@@ -7,6 +7,10 @@ import toast from 'react-hot-toast';
 import { useAuthStore } from '../stores/authStore';
 import type { LoginRequest } from '../types';
 
+interface LoginFormData extends LoginRequest {
+  rememberMe: boolean;
+}
+
 const LoginPage: React.FC = () => {
   const location = useLocation();
   const { login, isAuthenticated, error, clearError } = useAuthStore();
@@ -16,7 +20,7 @@ const LoginPage: React.FC = () => {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginRequest>();
+  } = useForm<LoginFormData>();
 
   const from = (location.state as any)?.from?.pathname || '/admin';
 
@@ -24,12 +28,12 @@ const LoginPage: React.FC = () => {
     return <Navigate to={from} replace />;
   }
 
-  const onSubmit = async (data: LoginRequest) => {
+  const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     clearError();
 
     try {
-      await login(data);
+      await login(data, data.rememberMe);
       toast.success('Login successful!');
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Login failed');
@@ -94,6 +98,18 @@ const LoginPage: React.FC = () => {
                 <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
               )}
             </div>
+          </div>
+
+          <div className="flex items-center">
+            <input
+              id="rememberMe"
+              type="checkbox"
+              className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+              {...register('rememberMe')}
+            />
+            <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-700">
+              Keep me logged in for 30 days
+            </label>
           </div>
 
           {error && (

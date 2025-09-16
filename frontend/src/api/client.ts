@@ -15,49 +15,128 @@ import type {
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
+// Flag to track if we're already refreshing to prevent multiple refresh attempts
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value?: unknown) => void;
+  reject: (reason?: any) => void;
+}> = [];
+
+const processQueue = (error?: any, token?: string) => {
+  failedQueue.forEach(({ resolve, reject }) => {
+    if (error) {
+      reject(error);
+    } else {
+      resolve(token);
+    }
+  });
+
+  failedQueue = [];
+};
+
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // This ensures cookies are sent with requests
 });
 
-// Request interceptor to add auth token
+// Request interceptor to add auth token from store
 apiClient.interceptors.request.use(config => {
-  const token = localStorage.getItem('token');
+  // Get token from store dynamically
+  const authStore = (window as any).__authStore?.getState?.();
+  const token = authStore?.accessToken;
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
 
-// Response interceptor for error handling
+// Response interceptor for automatic token refresh
 apiClient.interceptors.response.use(
   response => response,
-  error => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+  async error => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        // If already refreshing, queue this request
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then(() => {
+            return apiClient(originalRequest);
+          })
+          .catch(err => {
+            return Promise.reject(err);
+          });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        // Try to refresh using the auth store
+        const authStore = (window as any).__authStore?.getState?.();
+        if (authStore?.refreshToken) {
+          const success = await authStore.refreshToken();
+          if (success) {
+            processQueue();
+            isRefreshing = false;
+            return apiClient(originalRequest);
+          }
+        }
+
+        // If refresh fails, process queue with error and redirect
+        throw new Error('Token refresh failed');
+      } catch (refreshError) {
+        processQueue(refreshError);
+        isRefreshing = false;
+
+        // Clear auth state and redirect to login
+        const authStore = (window as any).__authStore?.getState?.();
+        if (authStore?.clearAuth) {
+          authStore.clearAuth();
+        }
+
+        // Only redirect if not already on login page
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+
+        return Promise.reject(refreshError);
+      }
     }
+
     return Promise.reject(error);
   }
 );
 
 // Auth API
 export const auth = {
-  login: async (credentials: LoginRequest): Promise<TokenResponse> => {
-    const response = await apiClient.post<TokenResponse>('/auth/login', credentials);
+  login: async (credentials: LoginRequest & { remember_me?: boolean }): Promise<TokenResponse> => {
+    const response = await apiClient.post<TokenResponse>('/api/auth/login', credentials);
+    return response.data;
+  },
+
+  refresh: async (): Promise<TokenResponse> => {
+    const response = await apiClient.post<TokenResponse>('/api/auth/refresh');
     return response.data;
   },
 
   getMe: async (): Promise<User> => {
-    const response = await apiClient.get<User>('/auth/me');
+    const response = await apiClient.get<User>('/api/auth/me');
     return response.data;
   },
 
   logout: async (): Promise<void> => {
-    await apiClient.post('/auth/logout');
-    localStorage.removeItem('token');
+    await apiClient.post('/api/auth/logout');
+  },
+
+  revokeAllSessions: async (): Promise<void> => {
+    await apiClient.post('/api/auth/revoke-all-sessions');
   },
 };
 
@@ -317,3 +396,5 @@ export const subapps = {
 };
 
 export default apiClient;
+export { apiClient };
+export const api = apiClient;

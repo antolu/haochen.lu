@@ -128,7 +128,9 @@ async def upload_photo(
         return PhotoResponse.model_validate(photo)
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error processing image: {str(e)}"
+        ) from e
 
 
 @router.put("/{photo_id}", response_model=PhotoResponse)

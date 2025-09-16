@@ -8,11 +8,14 @@ from pydantic import BaseModel, ConfigDict
 class LoginRequest(BaseModel):
     username: str
     password: str
+    remember_me: bool = False
 
 
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    expires_in: int
+    user: UserResponse
 
 
 class UserResponse(BaseModel):

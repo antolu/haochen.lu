@@ -23,7 +23,7 @@ class SubAppCreate(SubAppBase):
     slug: str | None = None
 
 
-class SubAppUpdate(SubAppBase):
+class SubAppUpdate(BaseModel):
     name: str | None = None
     url: str | None = None
     enabled: bool | None = None

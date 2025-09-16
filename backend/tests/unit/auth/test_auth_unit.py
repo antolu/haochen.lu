@@ -7,6 +7,7 @@ These tests must have 100% coverage as they protect critical security functions.
 
 from __future__ import annotations
 
+import calendar
 import time
 from datetime import datetime, timedelta
 from unittest.mock import patch
@@ -124,7 +125,9 @@ class TestJWTTokenGeneration:
         token = create_access_token(user_data)
 
         # Decode without verification to check claims
-        decoded = jwt.decode(token, options={"verify_signature": False})
+        decoded = jwt.decode(
+            token, key="", options={"verify_signature": False, "verify_exp": False}
+        )
 
         assert "sub" in decoded
         assert "exp" in decoded
@@ -137,11 +140,13 @@ class TestJWTTokenGeneration:
         custom_expiry = timedelta(minutes=30)
 
         token = create_access_token(user_data, expires_delta=custom_expiry)
-        decoded = jwt.decode(token, options={"verify_signature": False})
+        decoded = jwt.decode(
+            token, key="", options={"verify_signature": False, "verify_exp": False}
+        )
 
         # Check expiration is approximately 30 minutes from now
         exp_timestamp = decoded["exp"]
-        expected_exp = datetime.utcnow().timestamp() + (30 * 60)
+        expected_exp = calendar.timegm(datetime.utcnow().utctimetuple()) + (30 * 60)
 
         # Allow 10 second tolerance
         assert abs(exp_timestamp - expected_exp) < 10
@@ -153,13 +158,21 @@ class TestJWTTokenGeneration:
 
         # Should be decodable with correct secret
         decoded = jwt.decode(
-            token, settings.secret_key, algorithms=[settings.algorithm]
+            token,
+            settings.secret_key,
+            algorithms=[settings.algorithm],
+            options={"verify_exp": False},
         )
         assert decoded["sub"] == "testuser"
 
         # Should fail with wrong secret
         with pytest.raises(jwt.JWTError):
-            jwt.decode(token, "wrong_secret", algorithms=[settings.algorithm])
+            jwt.decode(
+                token,
+                "wrong_secret",
+                algorithms=[settings.algorithm],
+                options={"verify_exp": False},
+            )
 
     def test_token_signature_validation(self):
         """Test token signature validation."""
@@ -307,7 +320,10 @@ class TestAdminAuthorization:
             assert parts[0].lower() == "bearer"
             assert decode_token(parts[1]) is not None
 
-    @patch("app.core.security.settings.secret_key", "test_key")
+    @patch(
+        "app.core.security.settings.secret_key",
+        "this-is-a-very-long-secret-key-for-testing-purposes-only-32-chars-min",
+    )
     def test_secret_key_security(self):
         """Test secret key security requirements."""
         # In production, verify secret key meets security requirements

@@ -9,6 +9,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.api import auth, blog, photos, projects, subapps
 from app.config import settings
+from app.core.redis import close_redis, init_redis
 
 
 class NoCacheMiddleware(BaseHTTPMiddleware):
@@ -24,8 +25,10 @@ class NoCacheMiddleware(BaseHTTPMiddleware):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
+    await init_redis()
     yield
     # Shutdown
+    await close_redis()
 
 
 app = FastAPI(

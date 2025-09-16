@@ -20,7 +20,7 @@ class BlogPostCreate(BlogPostBase):
     slug: str | None = None
 
 
-class BlogPostUpdate(BlogPostBase):
+class BlogPostUpdate(BaseModel):
     title: str | None = None
     content: str | None = None
     published: bool | None = None

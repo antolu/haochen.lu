@@ -14,9 +14,19 @@ class Settings(BaseSettings):
 
     # Security
     secret_key: str = "your-secret-key-change-this-in-production"
+    session_secret_key: str = "your-session-secret-key-change-this-in-production"
     algorithm: str = "HS256"
-    access_token_expire_minutes: int = 30
+    access_token_expire_minutes: int = 15
+    refresh_token_expire_days: int = 30
+    refresh_token_expire_minutes: int = 60
     admin_password: str = "admin"
+
+    # Cookie settings
+    refresh_cookie_name: str = "refresh_token"
+    cookie_secure: bool = False  # Set to True in production with HTTPS
+    cookie_httponly: bool = True
+    cookie_samesite: str = "lax"
+    cookie_domain: str | None = None
 
     # CORS
     cors_origins: str = "http://localhost:3000,http://localhost:5173"

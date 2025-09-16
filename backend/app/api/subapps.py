@@ -141,7 +141,7 @@ async def create_subapp_endpoint(
     except Exception as e:
         raise HTTPException(
             status_code=400, detail=f"Error creating sub-application: {str(e)}"
-        )
+        ) from e
 
 
 @router.put(

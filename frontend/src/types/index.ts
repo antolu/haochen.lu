@@ -127,6 +127,8 @@ export interface LoginRequest {
 export interface TokenResponse {
   access_token: string;
   token_type: string;
+  expires_in: number;
+  user?: User;
 }
 
 export interface ApiError {
