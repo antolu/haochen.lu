@@ -134,24 +134,105 @@ extend-exclude = '''
 '''
 
 [tool.ruff]
-target-version = "py311"
+
+exclude = [
+  ".bzr",
+  ".direnv",
+  ".eggs",
+  ".git",
+  ".hg",
+  ".mypy_cache",
+  ".nox",
+  ".pants.d",
+  ".pytype",
+  ".ruff_cache",
+  ".svn",
+  ".tox",
+  ".venv",
+  "__pypackages__",
+  "_build",
+  "buck-out",
+  "build",
+  "dist",
+  "node_modules",
+  "venv",
+  ".venv",
+]
+
 line-length = 88
+target-version = "py311"
+
+preview = true
+unsafe-fixes = true
 
 [tool.ruff.lint]
+# All rules can be found here: https://docs.astral.sh/ruff/rules/
 select = [
-    "E",  # pycodestyle errors
-    "W",  # pycodestyle warnings
-    "F",  # pyflakes
-    "I",  # isort
-    "B",  # flake8-bugbear
-    "C4", # flake8-comprehensions
-    "UP", # pyupgrade
+  "F",   # pyflakes
+  "E",   # error  (pycodestyle)
+  "W",   # warning (pycodestyle)
+  "I",   # isort
+  "N",   # naming  (pep8)
+  "UP",  # pyupgrade
+  "PLC", # convention  (pylint)
+  "PLE", # error  (pylint)
+  "PLW", # warning  (pylint)
+  # "D",  # docstring (pydocstyle),  # not enabled by default
+  "PD",   # pandas
+  "TRY",  # tryceratops
+  "NPY",  # numpy
+  "PERF", # perflint
+  "RUF",  # ruff
+  # v flake8 v
+  "B",
+  "C4",
+  "FBT",
+  "A",
+  "EM",
+  "ISC",
+  "FA",
+  "G",
+  "PIE",
+  "PYI",
+  "PT",
+  "Q",
+  "RSE",
+  "RET",
+  "SLF",
+  "SIM",
 ]
+fixable = ["ALL"]
 ignore = [
-    "E501",  # line too long, handled by black
-    "B008",  # do not perform function calls in argument defaults
-    "C901",  # too complex
+  "E501",
+  "W505",
+  "ISC001",
+  "PD901",
+  "PLW2901",
+  "N812",
+  "N806",
+  "G004",
+  "RUF002",
+  "FBT001",   # Boolean-typed positional argument
+  "FBT002",   # Boolean default positional argument
+  "FBT003",   # Boolean positional value in function call
+  "NPY002",   # Replace legacy numpy random calls
+  "E721",     # Type comparison with ==
+  "RUF043",   # Raw string for regex patterns
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+  "SLF001",    # Private member accessed (common in tests)
+  "PLC2701",   # Private name import (common in tests)
+  "PLC0415",   # Import should be at top-level (common in test functions)
+]
+"docs/**" = [
+  "SLF001",    # Private member accessed (needed for docs)
+]
+
+[tool.ruff.format]
+preview = true
+
 per-file-ignores = {"__init__.py" = ["F401"], "tests/**/*" = ["S101", "S603"]}
 
 [tool.mypy]
