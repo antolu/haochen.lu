@@ -1000,13 +1000,17 @@ All quality checks run automatically on commit via pre-commit hooks. This ensure
 
 ### Environment Variables (.env)
 ```bash
+# Required Security Variables (Application will not start without these)
+SECRET_KEY=your_64_character_secret_key_minimum_32_chars
+SESSION_SECRET_KEY=your_session_secret_key_minimum_32_chars
+ADMIN_PASSWORD=your_admin_password_minimum_8_chars
+
 # Database
 POSTGRES_DB=portfolio
 POSTGRES_PASSWORD=secure_password_change_this
 
-# Security
-SECRET_KEY=your-64-character-secret-key
-ADMIN_PASSWORD=secure_admin_password
+# Environment Detection
+ENVIRONMENT=development  # or 'production'
 
 # Image Processing
 WEBP_QUALITY=85
@@ -1014,7 +1018,18 @@ THUMBNAIL_SIZE=400
 
 # Database URL for development
 DATABASE_URL=postgresql+asyncpg://postgres:password@localhost:5432/portfolio
+
+# Production Additional Settings
+COOKIE_SECURE=true      # for HTTPS deployments
+CORS_ORIGINS=https://yourdomain.com
 ```
+
+### 🔐 **Security Validation**
+The application now enforces strict security requirements:
+- **Startup Validation**: Application checks all required environment variables before starting
+- **No Fallbacks**: Removed all hardcoded secrets and default values for security-critical variables
+- **Clear Errors**: Specific error messages guide developers to fix configuration issues
+- **Production Mode**: Enhanced validation when `ENVIRONMENT=production`
 
 ### Production Checklist
 - Set secure passwords in `.env`
@@ -1034,6 +1049,62 @@ DATABASE_URL=postgresql+asyncpg://postgres:password@localhost:5432/portfolio
 - **Mobile Viewing**: 70% bandwidth reduction (800px optimized)
 - **Desktop Viewing**: 43% smaller files (1200px vs original)
 - **Smart Loading**: Browser selects appropriate size automatically
+
+## Environment Variables & Security
+
+### Required Environment Variables
+**Critical:** All deployments now require these environment variables. The application **will not start** without them:
+
+- `SECRET_KEY` - JWT signing key (minimum 32 characters)
+- `SESSION_SECRET_KEY` - Session encryption key (minimum 32 characters) 
+- `ADMIN_PASSWORD` - Admin user password (minimum 8 characters)
+
+### Security Features
+- ✅ **No backwards compatibility** - Removed all hardcoded secrets and default fallbacks
+- ✅ **Strict validation** - Application fails fast with clear error messages if requirements not met
+- ✅ **Key length enforcement** - SECRET_KEY and SESSION_SECRET_KEY must be 32+ characters
+- ✅ **Password strength** - ADMIN_PASSWORD must be 8+ characters
+- ✅ **Production mode** - Enforces HTTPS cookies when `ENVIRONMENT=production`
+- ✅ **Environment detection** - Different validation rules for development vs production
+
+### Configuration Files
+- `backend/.env` - Environment variables (not committed to git)
+- `ENVIRONMENT_SETUP.md` - Complete setup guide with examples
+- `docker-compose.yml` - No default values for security-critical variables
+
+### Quick Setup Examples
+
+**Development:**
+```bash
+# Generate secure keys
+python -c "import secrets; print('SECRET_KEY=' + secrets.token_urlsafe(32))"
+python -c "import secrets; print('SESSION_SECRET_KEY=' + secrets.token_urlsafe(32))"
+
+# Create .env file
+cat > .env << 'EOF'
+SECRET_KEY=generated_key_from_above
+SESSION_SECRET_KEY=generated_key_from_above
+ADMIN_PASSWORD=admin
+EOF
+```
+
+**Production:**
+```bash
+# Create production .env file
+cat > .env << 'EOF'
+ENVIRONMENT=production
+SECRET_KEY=your_production_secret_key_minimum_32_chars
+SESSION_SECRET_KEY=your_production_session_key_minimum_32_chars
+ADMIN_PASSWORD=your_secure_admin_password
+COOKIE_SECURE=true
+CORS_ORIGINS=https://yourdomain.com
+EOF
+```
+
+### Validation Behavior
+- **Development**: Provides helpful fallbacks while still requiring environment variables
+- **Production**: Strict validation with no fallbacks, enforces HTTPS settings
+- **Startup**: Application validates all requirements before starting any services
 
 ## Responsive Image Configuration
 
@@ -1084,4 +1155,4 @@ The `001_add_variants_column.py` migration adds:
 ALTER TABLE photos ADD COLUMN variants JSONB;
 ```
 
-This stores all responsive image metadata in a structured format while maintaining backward compatibility with existing `webp_path` and `thumbnail_path` columns.
+This stores all responsive image metadata in a structured format. Legacy `webp_path` and `thumbnail_path` columns have been removed.

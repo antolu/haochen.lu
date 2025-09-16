@@ -22,11 +22,18 @@ services:
     build: ./backend
     container_name: portfolio-backend
     environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
       - DATABASE_URL=postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-portfolio}
       - REDIS_URL=redis://redis:6379/0
-      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-this-in-production}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
-      - CORS_ORIGINS=http://localhost,https://localhost,http://localhost:80,https://localhost:443
+      - SECRET_KEY=${SECRET_KEY}
+      - SESSION_SECRET_KEY=${SESSION_SECRET_KEY}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost,https://localhost,http://localhost:80,https://localhost:443}
+      - COOKIE_SECURE=${COOKIE_SECURE:-false}
+      - COOKIE_DOMAIN=${COOKIE_DOMAIN:-}
+      - WEBP_QUALITY=${WEBP_QUALITY:-85}
+      - THUMBNAIL_SIZE=${THUMBNAIL_SIZE:-400}
+      - MAX_FILE_SIZE=${MAX_FILE_SIZE:-52428800}
     volumes:
       - ./uploads:/app/uploads
       - ./compressed:/app/compressed

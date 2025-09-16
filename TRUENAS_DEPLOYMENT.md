@@ -131,16 +131,29 @@ First, ensure your backend Docker image is built with the correct Dockerfile fro
 
 ### Environment Variables
 ```
-DATABASE_URL=postgresql+asyncpg://postgres:your_secure_db_password_here@<TRUENAS_IP>:5432/portfolio
-REDIS_URL=redis://<TRUENAS_IP>:6379/0
+# Required Security Variables (Application will not start without these)
 SECRET_KEY=your_very_secure_secret_key_minimum_32_chars
 SESSION_SECRET_KEY=your_session_secret_key_minimum_32_chars
 ADMIN_PASSWORD=your_admin_panel_password
+
+# Database and Services
+DATABASE_URL=postgresql+asyncpg://postgres:your_secure_db_password_here@<TRUENAS_IP>:5432/portfolio
+REDIS_URL=redis://<TRUENAS_IP>:6379/0
+
+# Application Configuration
+ENVIRONMENT=production
 CORS_ORIGINS=http://<TRUENAS_IP>,https://<TRUENAS_IP>,http://<TRUENAS_IP>:80,https://<TRUENAS_IP>:443
-ENV=production
 COOKIE_SECURE=false
 COOKIE_HTTPONLY=true
 COOKIE_SAMESITE=lax
+```
+
+### 🔐 **Critical Security Note**
+The application **will not start** if `SECRET_KEY`, `SESSION_SECRET_KEY`, or `ADMIN_PASSWORD` are missing or don't meet minimum requirements. Generate secure keys using:
+```bash
+# Generate SECRET_KEY and SESSION_SECRET_KEY
+python -c "import secrets; print('SECRET_KEY=' + secrets.token_urlsafe(32))"
+python -c "import secrets; print('SESSION_SECRET_KEY=' + secrets.token_urlsafe(32))"
 ```
 
 ### Port Configuration
@@ -329,14 +342,27 @@ Access logs through TrueNAS Scale web interface:
 |----------|-------------|---------|----------|
 | `DATABASE_URL` | PostgreSQL connection string | - | ✅ |
 | `REDIS_URL` | Redis connection string | - | ✅ |
-| `SECRET_KEY` | JWT signing key | - | ✅ |
-| `SESSION_SECRET_KEY` | Session encryption key | - | ✅ |
-| `ADMIN_PASSWORD` | Default admin password | `admin` | ✅ |
+| `SECRET_KEY` | JWT signing key (min 32 chars) | - | ✅ |
+| `SESSION_SECRET_KEY` | Session encryption key (min 32 chars) | - | ✅ |
+| `ADMIN_PASSWORD` | Admin password (min 8 chars) | - | ✅ |
 | `CORS_ORIGINS` | Allowed CORS origins | - | ✅ |
-| `ENV` | Environment (development/production) | `development` | ❌ |
+| `ENVIRONMENT` | Environment (development/production) | `development` | ❌ |
 | `COOKIE_SECURE` | Use secure cookies (HTTPS only) | `false` | ❌ |
 | `COOKIE_HTTPONLY` | HTTP-only cookies | `true` | ❌ |
 | `COOKIE_SAMESITE` | SameSite cookie policy | `lax` | ❌ |
+
+### ⚠️ **Security Requirements**
+
+**All deployments now require these environment variables:**
+- `SECRET_KEY` - Minimum 32 characters, used for JWT token signing
+- `SESSION_SECRET_KEY` - Minimum 32 characters, used for session encryption  
+- `ADMIN_PASSWORD` - Minimum 8 characters, admin user password
+
+**Security Features:**
+- ✅ **No backwards compatibility** - Application will not start without proper environment variables
+- ✅ **Automatic validation** - Key lengths and password strength enforced at startup
+- ✅ **Production mode** - Enforces HTTPS cookies when `ENVIRONMENT=production`
+- ✅ **Environment detection** - Different validation rules for development vs production
 
 ### Database Environment Variables
 | Variable | Description | Default | Required |

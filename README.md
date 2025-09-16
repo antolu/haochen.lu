@@ -33,8 +33,18 @@ A comprehensive full-stack web application built with FastAPI (Python) backend a
    ```bash
    git clone <your-repo-url>
    cd portfolio-app
-   cp .env.example .env
-   # Edit .env with your secure passwords
+   
+   # Create .env file with required security variables
+   cat > .env << 'EOF'
+   SECRET_KEY=your_64_character_secret_key_minimum_32_chars
+   SESSION_SECRET_KEY=your_session_secret_key_minimum_32_chars
+   ADMIN_PASSWORD=your_secure_admin_password
+   POSTGRES_PASSWORD=your_secure_db_password
+   EOF
+   
+   # Generate secure keys (recommended)
+   python -c "import secrets; print('SECRET_KEY=' + secrets.token_urlsafe(32))"
+   python -c "import secrets; print('SESSION_SECRET_KEY=' + secrets.token_urlsafe(32))"
    ```
 
 2. **Deploy with Docker**
@@ -211,11 +221,30 @@ npm run dev
 
 ### Docker Production
 ```bash
-# Use environment variables for production
-cp .env.example .env
-# Set secure passwords and keys
+# Create production .env file with required security variables
+cat > .env << 'EOF'
+ENVIRONMENT=production
+SECRET_KEY=your_production_secret_key_minimum_32_chars
+SESSION_SECRET_KEY=your_production_session_key_minimum_32_chars
+ADMIN_PASSWORD=your_secure_admin_password
+POSTGRES_PASSWORD=your_secure_db_password
+COOKIE_SECURE=true
+CORS_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
+EOF
+
+# Generate secure keys
+python -c "import secrets; print('SECRET_KEY=' + secrets.token_urlsafe(32))"
+python -c "import secrets; print('SESSION_SECRET_KEY=' + secrets.token_urlsafe(32))"
+
+# Deploy
 docker-compose up -d
 ```
+
+### 🔐 **Production Security Requirements**
+- ✅ **Application will not start** without valid SECRET_KEY, SESSION_SECRET_KEY, and ADMIN_PASSWORD
+- ✅ **Set ENVIRONMENT=production** for enhanced security validation
+- ✅ **Enable COOKIE_SECURE=true** for HTTPS deployments
+- ✅ **Use strong, unique passwords** for all services
 
 ### TrueNAS Scale
 1. Create datasets for persistent data
@@ -249,15 +278,32 @@ docker-compose up -d
 
 ### Environment Variables (.env)
 ```env
+# Required Security Variables (Application will not start without these)
+SECRET_KEY=your_64_character_secret_key_minimum_32_chars
+SESSION_SECRET_KEY=your_session_secret_key_minimum_32_chars
+ADMIN_PASSWORD=your_admin_password_minimum_8_chars
+
 # Database
 POSTGRES_PASSWORD=your_secure_password
-SECRET_KEY=your_64_character_secret_key
-ADMIN_PASSWORD=your_admin_password
 
 # Optional customization
 WEBP_QUALITY=85
 THUMBNAIL_SIZE=400
 MAX_FILE_SIZE=52428800
+```
+
+### 🔐 **Security Requirements**
+
+**Critical:** The application enforces strict security requirements and **will not start** without proper environment variables:
+
+- `SECRET_KEY` - JWT signing key (minimum 32 characters)
+- `SESSION_SECRET_KEY` - Session encryption key (minimum 32 characters)
+- `ADMIN_PASSWORD` - Admin user password (minimum 8 characters)
+
+**Generate secure keys:**
+```bash
+python -c "import secrets; print('SECRET_KEY=' + secrets.token_urlsafe(32))"
+python -c "import secrets; print('SESSION_SECRET_KEY=' + secrets.token_urlsafe(32))"
 ```
 
 ### Database Migrations
