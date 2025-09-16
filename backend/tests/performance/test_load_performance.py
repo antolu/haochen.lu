@@ -105,9 +105,9 @@ class TestAPIPerformance:
 
         # Execute concurrent requests
         start_time = time.time()
-        results = await asyncio.gather(
-            *[make_request(endpoint) for endpoint in requests]
-        )
+        results = await asyncio.gather(*[
+            make_request(endpoint) for endpoint in requests
+        ])
         total_time = time.time() - start_time
 
         # Analyze results
@@ -395,9 +395,9 @@ class TestImageProcessingPerformance:
 
             # Execute concurrent uploads
             start_time = time.time()
-            results = await asyncio.gather(
-                *[upload_image(temp_file, i) for i, temp_file in enumerate(temp_files)]
-            )
+            results = await asyncio.gather(*[
+                upload_image(temp_file, i) for i, temp_file in enumerate(temp_files)
+            ])
             total_time = time.time() - start_time
 
             # Analyze results
@@ -441,24 +441,25 @@ class TestDatabasePerformance:
         total_records = 500
 
         for batch_start in range(0, total_records, batch_size):
-            batch_photos = []
-            for i in range(batch_start, min(batch_start + batch_size, total_records)):
-                batch_photos.append(
-                    await PhotoFactory.create_async(
-                        test_session,
-                        category="landscape"
-                        if i % 4 == 0
-                        else "portrait"
-                        if i % 4 == 1
-                        else "street",
-                        tags=["nature"]
-                        if i % 3 == 0
-                        else ["urban"]
-                        if i % 3 == 1
-                        else ["abstract"],
-                        is_public=i % 5 != 0,
-                    )
+            [
+                await PhotoFactory.create_async(
+                    test_session,
+                    category="landscape"
+                    if i % 4 == 0
+                    else "portrait"
+                    if i % 4 == 1
+                    else "street",
+                    tags=["nature"]
+                    if i % 3 == 0
+                    else ["urban"]
+                    if i % 3 == 1
+                    else ["abstract"],
+                    is_public=i % 5 != 0,
                 )
+                for i in range(
+                    batch_start, min(batch_start + batch_size, total_records)
+                )
+            ]
 
         # Test various query patterns
         query_tests = [
@@ -660,9 +661,9 @@ class TestPerformanceBenchmarks:
 
         for batch_start in range(0, num_requests, concurrent_limit):
             batch_size = min(concurrent_limit, num_requests - batch_start)
-            batch_results = await asyncio.gather(
-                *[make_request() for _ in range(batch_size)]
-            )
+            batch_results = await asyncio.gather(*[
+                make_request() for _ in range(batch_size)
+            ])
             successful_requests += sum(batch_results)
 
         total_time = time.time() - start_time

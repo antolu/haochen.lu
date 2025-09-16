@@ -34,12 +34,13 @@ async def get_subapps(
     query = query.order_by(SubApp.order, SubApp.name)
 
     result = await db.execute(query)
-    return result.scalars().all()
+    return list(result.scalars().all())
 
 
 async def get_subapp_count(db: AsyncSession) -> int:
     result = await db.execute(select(func.count(SubApp.id)))
-    return result.scalar()
+    count = result.scalar()
+    return count or 0
 
 
 async def get_subapp(db: AsyncSession, subapp_id: UUID) -> SubApp | None:

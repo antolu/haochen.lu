@@ -216,11 +216,10 @@ class TestConcurrentModifications:
                 from app.database import async_session_maker
 
                 async with async_session_maker() as session:
-                    photo = await PhotoFactory.create_async(
+                    return await PhotoFactory.create_async(
                         session,
                         filename=f"{slug}.jpg",  # Use filename as pseudo-slug
                     )
-                    return photo
             except IntegrityError:
                 # Expected if unique constraint is violated
                 return None

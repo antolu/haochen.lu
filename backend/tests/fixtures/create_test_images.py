@@ -130,7 +130,7 @@ def create_malicious_svg(fixtures_dir: Path):
     <circle cx="50" cy="50" r="40" fill="red"/>
 </svg>"""
 
-    with open(fixtures_dir / "malicious_script.svg", "w") as f:
+    with open(fixtures_dir / "malicious_script.svg", "w", encoding="utf-8") as f:
         f.write(svg_content)
 
 

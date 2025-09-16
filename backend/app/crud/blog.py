@@ -27,7 +27,7 @@ async def get_blog_posts(
     query = query.offset(skip).limit(limit)
 
     result = await db.execute(query)
-    return result.scalars().all()
+    return list(result.scalars().all())
 
 
 async def get_blog_post_count(db: AsyncSession, published_only: bool = True) -> int:
@@ -37,7 +37,8 @@ async def get_blog_post_count(db: AsyncSession, published_only: bool = True) -> 
         query = query.where(BlogPost.published)
 
     result = await db.execute(query)
-    return result.scalar()
+    count = result.scalar()
+    return count or 0
 
 
 async def get_blog_post(db: AsyncSession, post_id: UUID) -> BlogPost | None:
@@ -122,5 +123,5 @@ async def increment_view_count(db: AsyncSession, post_id: UUID) -> None:
     db_post = result.scalar_one_or_none()
 
     if db_post:
-        db_post.view_count += 1
+        db_post.view_count += 1  # type: ignore[assignment]
         await db.commit()

@@ -105,7 +105,7 @@ class TestFileTypeValidation:
             "fake_gif": b"GIF87a_fake",
         }
 
-        for _name, data in fake_image_data.items():
+        for data in fake_image_data.values():
             with tempfile.NamedTemporaryFile(suffix=".jpg") as temp_file:
                 temp_file.write(data)
                 temp_file.flush()
@@ -187,17 +187,13 @@ class TestFileTypeValidation:
         path = Path(filename)
         all_suffixes = "".join(path.suffixes).lower()
 
-        for ext in dangerous_extensions:
-            if ext in all_suffixes:
-                return False
-        return True
+        return all(ext not in all_suffixes for ext in dangerous_extensions)
 
     def _sanitize_filename(self, filename: str) -> str:
         """Helper to sanitize filename (placeholder implementation)."""
         # Remove null bytes and other dangerous characters
         sanitized = filename.replace("\x00", "").replace("%00", "")
-        sanitized = "".join(c for c in sanitized if ord(c) > 31)
-        return sanitized
+        return "".join(c for c in sanitized if ord(c) > 31)
 
     def _is_valid_image_file(self, filepath: str) -> bool:
         """Helper to validate image file by content (placeholder implementation)."""
@@ -222,10 +218,7 @@ class TestFileTypeValidation:
             b"<script>",  # JavaScript
         ]
 
-        for pattern in dangerous_patterns:
-            if pattern in content:
-                return False
-        return True
+        return all(pattern not in content for pattern in dangerous_patterns)
 
     def _sanitize_metadata(self, metadata: str) -> str:
         """Helper to sanitize metadata (placeholder implementation)."""
@@ -413,7 +406,7 @@ class TestFileSizeValidation:
         """Helper to check disk space."""
         import shutil
 
-        total, used, free = shutil.disk_usage(".")
+        _total, _used, free = shutil.disk_usage(".")
         return free > required_bytes
 
 
@@ -452,7 +445,7 @@ class TestFilenameSanitization:
             "file*name.jpg": "filename.jpg",
         }
 
-        for original, _expected in special_chars.items():
+        for original in special_chars:
             sanitized = self._sanitize_filename(original)
             # Should remove or replace special characters
             dangerous_chars = '<>:"|?*'

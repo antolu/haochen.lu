@@ -140,7 +140,7 @@ async def create_subapp_endpoint(
         return convert_to_response(db_subapp)
     except Exception as e:
         raise HTTPException(
-            status_code=400, detail=f"Error creating sub-application: {str(e)}"
+            status_code=400, detail=f"Error creating sub-application: {e!s}"
         ) from e
 
 

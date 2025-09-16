@@ -37,7 +37,7 @@ async def get_photos(
 
     query = query.offset(skip).limit(limit)
     result = await db.execute(query)
-    return result.scalars().all()
+    return list(result.scalars().all())
 
 
 async def get_photo_count(
@@ -52,7 +52,8 @@ async def get_photo_count(
         query = query.where(Photo.featured == featured)
 
     result = await db.execute(query)
-    return result.scalar()
+    count = result.scalar()
+    return count or 0
 
 
 async def get_photo(db: AsyncSession, photo_id: UUID) -> Photo | None:
@@ -102,5 +103,5 @@ async def increment_view_count(db: AsyncSession, photo_id: UUID) -> None:
     db_photo = result.scalar_one_or_none()
 
     if db_photo:
-        db_photo.view_count += 1
+        db_photo.view_count += 1  # type: ignore[assignment]
         await db.commit()

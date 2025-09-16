@@ -129,7 +129,7 @@ async def upload_photo(
 
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error processing image: {str(e)}"
+            status_code=500, detail=f"Error processing image: {e!s}"
         ) from e
 
 

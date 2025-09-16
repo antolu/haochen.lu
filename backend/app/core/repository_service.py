@@ -72,10 +72,9 @@ class RepositoryService:
         try:
             if repo_info.type == "github":
                 return await self._fetch_github_readme(repo_info)
-            elif repo_info.type == "gitlab":
+            if repo_info.type == "gitlab":
                 return await self._fetch_gitlab_readme(repo_info)
-            else:
-                return None, None
+            return None, None
         except Exception as e:
             print(f"Error fetching README from {repo_info.url}: {e}")
             return None, None
@@ -210,7 +209,7 @@ class RepositoryService:
         try:
             if repo_info.type == "github":
                 return await self._validate_github_repo(repo_info)
-            elif repo_info.type == "gitlab":
+            if repo_info.type == "gitlab":
                 return await self._validate_gitlab_repo(repo_info)
             return False
         except Exception:

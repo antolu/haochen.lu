@@ -6,6 +6,7 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.repository_service import repository_service
 from app.models.project import Project
 from app.schemas.project import ProjectCreate, ProjectUpdate
 
@@ -61,17 +62,13 @@ async def create_project(db: AsyncSession, project: ProjectCreate) -> Project:
 
     # Parse repository URL if provided and not already parsed
     if project.github_url and not project.repository_type:
-        from app.core.repository_service import repository_service
-
         repo_info = repository_service.parse_repository_url(project.github_url)
         if repo_info:
-            project_data.update(
-                {
-                    "repository_type": repo_info.type,
-                    "repository_owner": repo_info.owner,
-                    "repository_name": repo_info.name,
-                }
-            )
+            project_data.update({
+                "repository_type": repo_info.type,
+                "repository_owner": repo_info.owner,
+                "repository_name": repo_info.name,
+            })
 
     db_project = Project(**project_data)
     db.add(db_project)

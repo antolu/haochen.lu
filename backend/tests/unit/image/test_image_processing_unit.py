@@ -270,7 +270,7 @@ class TestImageProcessing:
         """Test processing invalid image file raises appropriate error."""
         # Create a text file pretending to be an image
         with tempfile.NamedTemporaryFile(
-            suffix=".jpg", mode="w", delete=False
+            encoding="utf-8", suffix=".jpg", mode="w", delete=False
         ) as temp_file:
             temp_file.write("This is not an image file")
             temp_file_path = temp_file.name
@@ -327,8 +327,10 @@ class TestImageProcessing:
             # All should succeed
             for result in results:
                 assert not isinstance(result, Exception)
-                assert "width" in result
-                assert "height" in result
+                # Type assertion for mypy
+                result_dict = result  # type: ignore[assignment]
+                assert "width" in result_dict
+                assert "height" in result_dict
 
         finally:
             # Clean up
@@ -513,13 +515,13 @@ class TestImageMetadata:
             params = await image_processor.extract_shooting_parameters(temp_file_path)
 
             # Check for common shooting parameters
-            if "aperture" in params and params["aperture"]:
+            if params.get("aperture"):
                 assert isinstance(params["aperture"], (int, float, str))
-            if "shutter_speed" in params and params["shutter_speed"]:
+            if params.get("shutter_speed"):
                 assert isinstance(params["shutter_speed"], (int, float, str))
-            if "iso" in params and params["iso"]:
+            if params.get("iso"):
                 assert isinstance(params["iso"], (int, str))
-            if "focal_length" in params and params["focal_length"]:
+            if params.get("focal_length"):
                 assert isinstance(params["focal_length"], (int, float, str))
 
         finally:

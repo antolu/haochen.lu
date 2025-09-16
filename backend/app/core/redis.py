@@ -88,7 +88,7 @@ class RedisClient:
             await self._redis.set(key, value, ex=ex)
             return True
         except Exception as e:
-            logger.error(f"Redis SET failed: {e}")
+            logger.exception(f"Redis SET failed: {e}")
             return False
 
     async def setex(self, key: str, time: int, value: str) -> bool:
@@ -103,7 +103,7 @@ class RedisClient:
         try:
             return await self._redis.get(key)
         except Exception as e:
-            logger.error(f"Redis GET failed: {e}")
+            logger.exception(f"Redis GET failed: {e}")
             return None
 
     async def delete(self, *keys: str) -> int:
@@ -114,7 +114,7 @@ class RedisClient:
         try:
             return await self._redis.delete(*keys)
         except Exception as e:
-            logger.error(f"Redis DELETE failed: {e}")
+            logger.exception(f"Redis DELETE failed: {e}")
             return 0
 
     async def keys(self, pattern: str) -> list[str]:
@@ -125,7 +125,7 @@ class RedisClient:
         try:
             return await self._redis.keys(pattern)
         except Exception as e:
-            logger.error(f"Redis KEYS failed: {e}")
+            logger.exception(f"Redis KEYS failed: {e}")
             return []
 
     async def exists(self, key: str) -> bool:
@@ -136,7 +136,7 @@ class RedisClient:
         try:
             return bool(await self._redis.exists(key))
         except Exception as e:
-            logger.error(f"Redis EXISTS failed: {e}")
+            logger.exception(f"Redis EXISTS failed: {e}")
             return False
 
     async def ttl(self, key: str) -> int:
@@ -147,7 +147,7 @@ class RedisClient:
         try:
             return await self._redis.ttl(key)
         except Exception as e:
-            logger.error(f"Redis TTL failed: {e}")
+            logger.exception(f"Redis TTL failed: {e}")
             return -1
 
 

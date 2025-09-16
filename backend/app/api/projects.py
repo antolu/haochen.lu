@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.repository_service import repository_service
+from app.core.repository_service import RepositoryInfo, repository_service
 from app.crud.project import (
     create_project,
     delete_project,
@@ -14,6 +14,7 @@ from app.crud.project import (
     get_project_count,
     get_projects,
     update_project,
+    update_project_readme,
 )
 from app.database import get_session
 from app.dependencies import get_current_admin_user
@@ -126,7 +127,7 @@ async def create_project_endpoint(
         return ProjectResponse.model_validate(db_project)
     except Exception as e:
         raise HTTPException(
-            status_code=400, detail=f"Error creating project: {str(e)}"
+            status_code=400, detail=f"Error creating project: {e!s}"
         ) from e
 
 
@@ -198,8 +199,6 @@ async def get_project_readme(
 
     # Fetch fresh README from repository
     if project.repository_type and project.repository_owner and project.repository_name:
-        from app.core.repository_service import RepositoryInfo
-
         repo_info = RepositoryInfo(
             type=project.repository_type,
             owner=project.repository_owner,
@@ -211,8 +210,6 @@ async def get_project_readme(
 
         if readme_content:
             # Update cached README in database
-            from app.crud.project import update_project_readme
-
             await update_project_readme(db, project.id, readme_content, last_updated)
 
             return ReadmeResponse(

@@ -24,17 +24,12 @@ def create_access_token(
     else:
         expire = now + timedelta(minutes=settings.access_token_expire_minutes)
 
-    to_encode.update(
-        {
-            "exp": calendar.timegm(expire.utctimetuple()),
-            "iat": calendar.timegm(now.utctimetuple()),
-            "type": "access",
-        }
-    )
-    encoded_jwt = jwt.encode(
-        to_encode, settings.secret_key, algorithm=settings.algorithm
-    )
-    return encoded_jwt
+    to_encode.update({
+        "exp": calendar.timegm(expire.utctimetuple()),
+        "iat": calendar.timegm(now.utctimetuple()),
+        "type": "access",
+    })
+    return jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -43,7 +38,8 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def get_password_hash(password: str) -> str:
     if not password or not password.strip():
-        raise ValueError("Password cannot be empty")
+        msg = "Password cannot be empty"
+        raise ValueError(msg)
     return pwd_context.hash(password)
 
 
@@ -51,10 +47,7 @@ def decode_token(token: str | None) -> dict[str, Any] | None:
     if not token:
         return None
     try:
-        payload = jwt.decode(
-            token, settings.secret_key, algorithms=[settings.algorithm]
-        )
-        return payload
+        return jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
     except (JWTError, AttributeError):
         return None
 
@@ -74,13 +67,11 @@ class TokenManager:
         else:
             expire = now + timedelta(minutes=settings.access_token_expire_minutes)
 
-        to_encode.update(
-            {
-                "exp": calendar.timegm(expire.utctimetuple()),
-                "iat": calendar.timegm(now.utctimetuple()),
-                "type": "access",
-            }
-        )
+        to_encode.update({
+            "exp": calendar.timegm(expire.utctimetuple()),
+            "iat": calendar.timegm(now.utctimetuple()),
+            "type": "access",
+        })
 
         return jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
 
@@ -102,15 +93,13 @@ class TokenManager:
         # Generate unique JWT ID for revocation
         jti = str(uuid.uuid4())
 
-        to_encode.update(
-            {
-                "exp": calendar.timegm(expire.utctimetuple()),
-                "iat": calendar.timegm(datetime.utcnow().utctimetuple()),
-                "type": "refresh",
-                "remember_me": remember_me,
-                "jti": jti,
-            }
-        )
+        to_encode.update({
+            "exp": calendar.timegm(expire.utctimetuple()),
+            "iat": calendar.timegm(datetime.utcnow().utctimetuple()),
+            "type": "refresh",
+            "remember_me": remember_me,
+            "jti": jti,
+        })
 
         return jwt.encode(
             to_encode, settings.session_secret_key, algorithm=settings.algorithm

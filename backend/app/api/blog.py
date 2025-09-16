@@ -103,7 +103,9 @@ async def get_blog_post_detail(
     # you'd want to check if user is admin when showing unpublished posts
 
     if increment_views and post.published:
-        await increment_view_count(db, post.id)
+        # Type assertion to help mypy understand post.id is a UUID
+        post_uuid: UUID = post.id  # type: ignore[assignment]
+        await increment_view_count(db, post_uuid)
         await db.refresh(post)
 
     return BlogPostResponse.model_validate(post)
@@ -121,7 +123,7 @@ async def create_blog_post_endpoint(
         return BlogPostResponse.model_validate(db_post)
     except Exception as e:
         raise HTTPException(
-            status_code=400, detail=f"Error creating blog post: {str(e)}"
+            status_code=400, detail=f"Error creating blog post: {e!s}"
         ) from e
 
 

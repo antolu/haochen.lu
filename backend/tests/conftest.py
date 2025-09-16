@@ -59,7 +59,7 @@ async def test_engine():
 
 
 @pytest_asyncio.fixture
-async def test_session(test_engine) -> AsyncSession:
+async def test_session(test_engine) -> AsyncGenerator[AsyncSession, None]:
     """Create a test database session."""
     async_session_maker = async_sessionmaker(
         test_engine, class_=AsyncSession, expire_on_commit=False
@@ -104,19 +104,17 @@ async def async_client(
 @pytest_asyncio.fixture
 async def admin_user(test_session: AsyncSession) -> User:
     """Create an admin user for testing."""
-    user = await UserFactory.create_async(
+    return await UserFactory.create_async(
         test_session, username="admin", is_admin=True, is_active=True
     )
-    return user
 
 
 @pytest_asyncio.fixture
 async def regular_user(test_session: AsyncSession) -> User:
     """Create a regular user for testing."""
-    user = await UserFactory.create_async(
+    return await UserFactory.create_async(
         test_session, username="testuser", is_admin=False, is_active=True
     )
-    return user
 
 
 @pytest_asyncio.fixture
@@ -194,8 +192,7 @@ def mock_email_service():
 @pytest_asyncio.fixture
 async def sample_photo(test_session: AsyncSession) -> Photo:
     """Create a sample photo for testing."""
-    photo = await PhotoFactory.create_async(test_session)
-    return photo
+    return await PhotoFactory.create_async(test_session)
 
 
 @pytest_asyncio.fixture
@@ -215,15 +212,13 @@ async def sample_photos(test_session: AsyncSession) -> list[Photo]:
 @pytest_asyncio.fixture
 async def sample_project(test_session: AsyncSession) -> Project:
     """Create a sample project for testing."""
-    project = await ProjectFactory.create_async(test_session)
-    return project
+    return await ProjectFactory.create_async(test_session)
 
 
 @pytest_asyncio.fixture
 async def sample_blog_post(test_session: AsyncSession) -> BlogPost:
     """Create a sample blog post for testing."""
-    post = await BlogPostFactory.create_async(test_session)
-    return post
+    return await BlogPostFactory.create_async(test_session)
 
 
 # Image test fixtures
@@ -314,7 +309,7 @@ def event_loop():
 @pytest.fixture(autouse=True)
 def cleanup_files(temp_upload_dir, temp_compressed_dir):
     """Automatically clean up test files after each test."""
-    yield
+    return
     # Cleanup happens automatically with temp directories
 
 

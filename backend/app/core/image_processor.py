@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import os
 import uuid
 from datetime import datetime
@@ -38,12 +39,10 @@ class ImageProcessor:
                         tag = TAGS.get(tag_id, tag_id)
 
                         if tag == "DateTime":
-                            try:
+                            with contextlib.suppress(ValueError, TypeError):
                                 exif_data["date_taken"] = datetime.strptime(
                                     str(value), "%Y:%m:%d %H:%M:%S"
                                 )
-                            except (ValueError, TypeError):
-                                pass
 
                         elif tag == "Make":
                             exif_data["camera_make"] = str(value).strip()

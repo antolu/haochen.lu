@@ -99,7 +99,7 @@ class TestImageProcessingIntegration:
 
         # Verify each format is accessible
         for url_key in ["original_url", "webp_url", "thumbnail_url"]:
-            if url_key in photo_data and photo_data[url_key]:
+            if photo_data.get(url_key):
                 # The URLs should be valid (test depends on storage implementation)
                 assert isinstance(photo_data[url_key], str)
                 assert photo_data[url_key].startswith(("http", "/"))
@@ -266,7 +266,9 @@ class TestImageProcessingIntegration:
             successful_uploads = 0
             for response in responses:
                 if not isinstance(response, Exception):
-                    assert response.status_code == 201
+                    # Type assertion for mypy
+                    http_response = response  # type: ignore[assignment]
+                    assert http_response.status_code == 201
                     successful_uploads += 1
 
             assert successful_uploads == len(temp_files)

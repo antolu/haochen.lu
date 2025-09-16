@@ -256,7 +256,7 @@ class TestPhotosAPI:
 
         # Create text file pretending to be image
         with tempfile.NamedTemporaryFile(
-            suffix=".jpg", mode="w", delete=False
+            encoding="utf-8", suffix=".jpg", mode="w", delete=False
         ) as temp_file:
             temp_file.write("This is not an image file")
             temp_file_path = temp_file.name
