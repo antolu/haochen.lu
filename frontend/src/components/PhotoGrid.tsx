@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useInView } from 'react-intersection-observer';
 import { motion } from 'framer-motion';
+import MiniMap from './MiniMap';
 import type { Photo } from '../types';
 
 interface PhotoGridProps {
@@ -103,24 +104,60 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
             </div>
           )}
 
+          {/* Mini Map for Geotagged Photos */}
+          {photo.location_lat && photo.location_lon && (
+            <div className="absolute top-2 left-2">
+              <MiniMap
+                latitude={photo.location_lat}
+                longitude={photo.location_lon}
+                size={60}
+                zoom={11}
+                className="shadow-lg"
+                onClick={() => {
+                  // Could open full map view
+                }}
+              />
+            </div>
+          )}
+
           {/* Metadata Overlay */}
           {showMetadata && isLoaded && (
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-200">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-200">
               <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
                 <h3 className="font-medium text-sm truncate">{photo.title || 'Untitled'}</h3>
+
+                {photo.location_name && (
+                  <p className="text-xs text-gray-300 truncate mb-1">📍 {photo.location_name}</p>
+                )}
+
                 {photo.category && (
                   <p className="text-xs text-gray-300 truncate">{photo.category}</p>
                 )}
+
+                {/* Camera Info */}
                 {(photo.camera_make || photo.camera_model) && (
                   <p className="text-xs text-gray-400 truncate">
-                    {photo.camera_make} {photo.camera_model}
+                    📷 {photo.camera_make} {photo.camera_model}
                   </p>
                 )}
-                {photo.date_taken && (
-                  <p className="text-xs text-gray-400">
-                    {new Date(photo.date_taken).toLocaleDateString()}
+
+                {/* Technical Details */}
+                {(photo.iso || photo.aperture || photo.shutter_speed || photo.focal_length) && (
+                  <p className="text-xs text-gray-400 truncate">
+                    {photo.iso && `ISO ${photo.iso}`}
+                    {photo.aperture && ` f/${photo.aperture}`}
+                    {photo.shutter_speed && ` ${photo.shutter_speed}s`}
+                    {photo.focal_length && ` ${photo.focal_length}mm`}
                   </p>
                 )}
+
+                {/* Date Information */}
+                <div className="flex justify-between items-center mt-1 text-xs text-gray-400">
+                  {photo.date_taken && (
+                    <span>📅 {new Date(photo.date_taken).toLocaleDateString()}</span>
+                  )}
+                  {photo.timezone && <span className="text-xs opacity-75">{photo.timezone}</span>}
+                </div>
               </div>
             </div>
           )}

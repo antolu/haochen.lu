@@ -40,11 +40,8 @@ class RedisClient:
         self._connection_attempted = True
 
         try:
-            self._redis = redis.Redis(
-                host=getattr(settings, "REDIS_HOST", "localhost"),
-                port=getattr(settings, "REDIS_PORT", 6379),
-                db=getattr(settings, "REDIS_DB", 0),
-                password=getattr(settings, "REDIS_PASSWORD", None),
+            self._redis = redis.from_url(
+                settings.redis_url,
                 decode_responses=True,
                 socket_connect_timeout=5,
                 socket_keepalive=True,

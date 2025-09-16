@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from app.api import auth, blog, photos, projects, subapps
+from app.api import auth, blog, locations, photos, projects, subapps
 from app.config import settings
 from app.core.redis import close_redis, init_redis
 
@@ -56,6 +56,7 @@ app.include_router(photos.router, prefix="/api/photos", tags=["photos"])
 app.include_router(projects.router, prefix="/api/projects", tags=["projects"])
 app.include_router(blog.router, prefix="/api/blog", tags=["blog"])
 app.include_router(subapps.router, prefix="/api/subapps", tags=["subapps"])
+app.include_router(locations.router, prefix="/api", tags=["locations"])
 
 # Static files
 app.mount("/uploads", StaticFiles(directory=settings.upload_dir), name="uploads")

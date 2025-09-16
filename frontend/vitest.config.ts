@@ -9,8 +9,23 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     css: true,
-    reporters: ['verbose', 'html'],
+    reporters: ['verbose'],
     outputFile: './coverage/test-report.html',
+    // Resource limits to prevent process spawning issues
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true,
+        maxForks: 1,
+        minForks: 1,
+      },
+    },
+    // Timeout configurations
+    testTimeout: 10000,
+    hookTimeout: 10000,
+    teardownTimeout: 10000,
+    // Disable watch mode in CI-like runs
+    watch: false,
     coverage: {
       reporter: ['text', 'json', 'html'],
       exclude: [

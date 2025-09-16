@@ -11,13 +11,6 @@ class LoginRequest(BaseModel):
     remember_me: bool = False
 
 
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-    expires_in: int
-    user: UserResponse
-
-
 class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -28,3 +21,10 @@ class UserResponse(BaseModel):
     is_admin: bool = False
     created_at: datetime
     updated_at: datetime | None = None
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int
+    user: UserResponse

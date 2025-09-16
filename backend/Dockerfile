@@ -5,10 +5,10 @@ WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc=4:11.2.0-1ubuntu1 \
-    g++=4:11.2.0-1ubuntu1 \
-    libpq-dev=14.13-0ubuntu0.22.04.1 \
-    curl=7.81.0-1ubuntu1.18 \
+    gcc \
+    g++ \
+    libpq-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy pyproject.toml first for better caching
@@ -24,8 +24,12 @@ COPY . .
 # Create directories for uploads and compressed images
 RUN mkdir -p uploads compressed
 
+# Copy and make entrypoint script executable
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
 # Expose port
 EXPOSE 8000
 
-# Command to run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Use custom entrypoint that handles migrations
+ENTRYPOINT ["/docker-entrypoint.sh"]

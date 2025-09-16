@@ -7,13 +7,27 @@ export interface Photo {
   comments?: string;
   filename: string;
   original_path: string;
-  webp_path: string;
-  thumbnail_path?: string;
+
+  // Responsive image variants
+  variants?: Record<
+    string,
+    {
+      path: string;
+      filename: string;
+      width: number;
+      height: number;
+      size_bytes: number;
+      format: string;
+    }
+  >;
 
   // EXIF data
   location_lat?: number;
   location_lon?: number;
   location_name?: string;
+  location_address?: string;
+  altitude?: number;
+  timezone?: string;
   camera_make?: string;
   camera_model?: string;
   lens?: string;
@@ -22,6 +36,9 @@ export interface Photo {
   shutter_speed?: string;
   focal_length?: number;
   date_taken?: string;
+
+  // Flexible metadata
+  metadata?: Record<string, any>;
 
   // Metadata
   file_size: number;

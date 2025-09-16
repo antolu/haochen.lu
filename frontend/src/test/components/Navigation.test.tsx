@@ -4,6 +4,7 @@
  * Tests for navigation components including responsive behavior,
  * authentication states, and accessibility.
  */
+import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import { renderWithProviders, mockUser, mockAdminUser } from '../utils';

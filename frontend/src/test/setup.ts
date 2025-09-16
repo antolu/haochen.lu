@@ -154,4 +154,13 @@ beforeAll(() => {
 
 afterAll(() => {
   // Cleanup any global test state
+
+  // Force cleanup of any hanging processes
+  if (typeof global.gc === 'function') {
+    global.gc();
+  }
+
+  // Clear all timers
+  vi.clearAllTimers();
+  vi.useRealTimers();
 });

@@ -4,7 +4,7 @@ import math
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.image_processor import image_processor
@@ -26,14 +26,31 @@ router = APIRouter()
 
 @router.get("/", response_model=PhotoListResponse)
 async def list_photos(
-    page: int = 1,
-    per_page: int = 20,
-    category: str | None = None,
+    page: int = Query(1, ge=1, description="Page number"),
+    per_page: int = Query(20, ge=1, le=100, description="Items per page"),
+    category: str | None = Query(None, max_length=100),
     featured: bool | None = None,
-    order_by: str = "created_at",
+    has_location: bool | None = None,
+    near_lat: float | None = Query(
+        None, ge=-90, le=90, description="Latitude for proximity search"
+    ),
+    near_lon: float | None = Query(
+        None, ge=-180, le=180, description="Longitude for proximity search"
+    ),
+    radius: float = Query(
+        10.0, ge=0.1, le=50.0, description="Search radius in kilometers"
+    ),
+    order_by: str = Query("created_at", regex="^(created_at|date_taken|views|title)$"),
     db: AsyncSession = Depends(get_session),
 ):
     """List photos with pagination and filtering."""
+    # Validate proximity search parameters
+    if (near_lat is None) != (near_lon is None):
+        raise HTTPException(
+            status_code=422,
+            detail="Both near_lat and near_lon must be provided for proximity search",
+        )
+
     skip = (page - 1) * per_page
 
     photos = await get_photos(
@@ -42,10 +59,22 @@ async def list_photos(
         limit=per_page,
         category=category,
         featured=featured,
+        has_location=has_location,
+        near_lat=near_lat,
+        near_lon=near_lon,
+        radius=radius,
         order_by=order_by,
     )
 
-    total = await get_photo_count(db, category=category, featured=featured)
+    total = await get_photo_count(
+        db,
+        category=category,
+        featured=featured,
+        has_location=has_location,
+        near_lat=near_lat,
+        near_lon=near_lon,
+        radius=radius,
+    )
     pages = math.ceil(total / per_page)
 
     return PhotoListResponse(

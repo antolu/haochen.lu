@@ -8,10 +8,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import BinaryIO
 
+import piexif
 from PIL import Image
 from PIL.ExifTags import TAGS
 
 from app.config import settings
+from app.core.location_service import location_service
 
 
 class ImageProcessor:
@@ -21,8 +23,8 @@ class ImageProcessor:
         self.upload_dir.mkdir(exist_ok=True, parents=True)
         self.compressed_dir.mkdir(exist_ok=True, parents=True)
 
-    def extract_exif_data(self, image_path: str) -> dict:
-        """Extract EXIF data from image."""
+    async def extract_exif_data(self, image_path: str) -> dict:
+        """Extract comprehensive EXIF data from image including timezone and GPS."""
         exif_data = {}
 
         try:
@@ -31,63 +33,237 @@ class ImageProcessor:
                 exif_data["width"] = img.width
                 exif_data["height"] = img.height
 
-                # Get EXIF data
-                if hasattr(img, "_getexif") and img._getexif() is not None:
-                    exif = img._getexif()
-
-                    for tag_id, value in exif.items():
-                        tag = TAGS.get(tag_id, tag_id)
-
-                        if tag == "DateTime":
-                            with contextlib.suppress(ValueError, TypeError):
-                                exif_data["date_taken"] = datetime.strptime(
-                                    str(value), "%Y:%m:%d %H:%M:%S"
-                                )
-
-                        elif tag == "Make":
-                            exif_data["camera_make"] = str(value).strip()
-
-                        elif tag == "Model":
-                            exif_data["camera_model"] = str(value).strip()
-
-                        elif tag == "LensModel":
-                            exif_data["lens"] = str(value).strip()
-
-                        elif tag == "ISOSpeedRatings":
-                            exif_data["iso"] = (
-                                int(value) if isinstance(value, (int, float)) else None
-                            )
-
-                        elif tag == "FNumber":
-                            if hasattr(value, "num") and hasattr(value, "den"):
-                                exif_data["aperture"] = float(value.num / value.den)
-                            elif isinstance(value, (int, float)):
-                                exif_data["aperture"] = float(value)
-
-                        elif tag == "ExposureTime":
-                            if hasattr(value, "num") and hasattr(value, "den"):
-                                if value.num == 1:
-                                    exif_data["shutter_speed"] = f"1/{value.den}"
-                                else:
-                                    exif_data["shutter_speed"] = (
-                                        f"{value.num}/{value.den}"
-                                    )
-
-                        elif tag == "FocalLength":
-                            if hasattr(value, "num") and hasattr(value, "den"):
-                                exif_data["focal_length"] = int(value.num / value.den)
-
-                        elif tag == "GPSInfo":
-                            gps_data = self._extract_gps_data(value)
-                            exif_data.update(gps_data)
+                # Try piexif for more comprehensive EXIF data
+                try:
+                    exif_dict = piexif.load(image_path)
+                    comprehensive_data = await self._extract_comprehensive_exif(
+                        exif_dict
+                    )
+                    exif_data.update(comprehensive_data)
+                except Exception:
+                    # Fallback to PIL's EXIF extraction
+                    if hasattr(img, "_getexif") and img._getexif() is not None:
+                        exif = img._getexif()
+                        exif_data.update(self._extract_basic_exif(exif))
 
         except Exception as e:
             print(f"Error extracting EXIF data: {e}")
 
         return exif_data
 
+    async def _extract_comprehensive_exif(self, exif_dict: dict) -> dict:
+        """Extract comprehensive EXIF data using piexif."""
+        data = {}
+
+        # Extract from 0th IFD (main image)
+        if "0th" in exif_dict:
+            ifd = exif_dict["0th"]
+
+            # Camera make and model
+            if piexif.ImageIFD.Make in ifd:
+                data["camera_make"] = ifd[piexif.ImageIFD.Make].decode().strip()
+            if piexif.ImageIFD.Model in ifd:
+                data["camera_model"] = ifd[piexif.ImageIFD.Model].decode().strip()
+
+            # Date and time
+            if piexif.ImageIFD.DateTime in ifd:
+                try:
+                    dt_str = ifd[piexif.ImageIFD.DateTime].decode()
+                    data["date_taken"] = datetime.strptime(dt_str, "%Y:%m:%d %H:%M:%S")
+                except (ValueError, AttributeError):
+                    pass
+
+        # Extract from Exif IFD (detailed camera settings)
+        if "Exif" in exif_dict:
+            ifd = exif_dict["Exif"]
+
+            # Original date (often more accurate)
+            if piexif.ExifIFD.DateTimeOriginal in ifd:
+                try:
+                    dt_str = ifd[piexif.ExifIFD.DateTimeOriginal].decode()
+                    data["date_taken"] = datetime.strptime(dt_str, "%Y:%m:%d %H:%M:%S")
+                except (ValueError, AttributeError):
+                    pass
+
+            # Camera settings
+            if piexif.ExifIFD.ISOSpeedRatings in ifd:
+                data["iso"] = ifd[piexif.ExifIFD.ISOSpeedRatings]
+
+            if piexif.ExifIFD.FNumber in ifd:
+                f_num = ifd[piexif.ExifIFD.FNumber]
+                if isinstance(f_num, tuple) and len(f_num) == 2:
+                    data["aperture"] = float(f_num[0] / f_num[1])
+
+            if piexif.ExifIFD.ExposureTime in ifd:
+                exp_time = ifd[piexif.ExifIFD.ExposureTime]
+                if isinstance(exp_time, tuple) and len(exp_time) == 2:
+                    if exp_time[0] == 1:
+                        data["shutter_speed"] = f"1/{exp_time[1]}"
+                    else:
+                        data["shutter_speed"] = f"{exp_time[0]}/{exp_time[1]}"
+
+            if piexif.ExifIFD.FocalLength in ifd:
+                focal = ifd[piexif.ExifIFD.FocalLength]
+                if isinstance(focal, tuple) and len(focal) == 2:
+                    data["focal_length"] = int(focal[0] / focal[1])
+
+            # Lens information
+            if piexif.ExifIFD.LensModel in ifd:
+                data["lens"] = ifd[piexif.ExifIFD.LensModel].decode().strip()
+
+            # Timezone information from SubSecTimeOriginal or OffsetTime
+            timezone_offset = None
+            if piexif.ExifIFD.OffsetTimeOriginal in ifd:
+                try:
+                    timezone_offset = (
+                        ifd[piexif.ExifIFD.OffsetTimeOriginal].decode().strip()
+                    )
+                    data["timezone"] = timezone_offset
+                except (ValueError, AttributeError):
+                    pass
+
+        # Extract GPS data
+        if "GPS" in exif_dict:
+            gps_data = self._extract_enhanced_gps_data(exif_dict["GPS"])
+            data.update(gps_data)
+
+            # Try to get location name if we have coordinates
+            if "location_lat" in gps_data and "location_lon" in gps_data:
+                location_info = await location_service.reverse_geocode(
+                    gps_data["location_lat"], gps_data["location_lon"]
+                )
+                if location_info:
+                    data["location_name"] = location_info["location_name"]
+                    data["location_address"] = location_info["location_address"]
+
+        return data
+
+    def _extract_basic_exif(self, exif: dict) -> dict:
+        """Fallback basic EXIF extraction using PIL."""
+        data = {}
+
+        for tag_id, value in exif.items():
+            tag = TAGS.get(tag_id, tag_id)
+
+            if tag == "DateTime":
+                with contextlib.suppress(ValueError, TypeError):
+                    data["date_taken"] = datetime.strptime(
+                        str(value), "%Y:%m:%d %H:%M:%S"
+                    )
+
+            elif tag == "Make":
+                data["camera_make"] = str(value).strip()
+
+            elif tag == "Model":
+                data["camera_model"] = str(value).strip()
+
+            elif tag == "LensModel":
+                data["lens"] = str(value).strip()
+
+            elif tag == "ISOSpeedRatings":
+                data["iso"] = int(value) if isinstance(value, (int, float)) else None
+
+            elif tag == "FNumber":
+                if hasattr(value, "num") and hasattr(value, "den"):
+                    data["aperture"] = float(value.num / value.den)
+                elif isinstance(value, (int, float)):
+                    data["aperture"] = float(value)
+
+            elif tag == "ExposureTime":
+                if hasattr(value, "num") and hasattr(value, "den"):
+                    if value.num == 1:
+                        data["shutter_speed"] = f"1/{value.den}"
+                    else:
+                        data["shutter_speed"] = f"{value.num}/{value.den}"
+
+            elif tag == "FocalLength":
+                if hasattr(value, "num") and hasattr(value, "den"):
+                    data["focal_length"] = int(value.num / value.den)
+
+            elif tag == "GPSInfo":
+                gps_data = self._extract_gps_data(value)
+                data.update(gps_data)
+
+        return data
+
+    def _extract_enhanced_gps_data(self, gps_info: dict) -> dict:
+        """Extract enhanced GPS coordinates and altitude from EXIF GPS info using piexif."""
+        gps_data = {}
+
+        try:
+
+            def convert_dms_to_decimal(dms_tuple):
+                """Convert DMS (degrees, minutes, seconds) tuple to decimal degrees."""
+                if not dms_tuple or len(dms_tuple) != 3:
+                    return None
+
+                degrees = (
+                    float(dms_tuple[0][0] / dms_tuple[0][1])
+                    if dms_tuple[0][1] != 0
+                    else 0
+                )
+                minutes = (
+                    float(dms_tuple[1][0] / dms_tuple[1][1])
+                    if dms_tuple[1][1] != 0
+                    else 0
+                )
+                seconds = (
+                    float(dms_tuple[2][0] / dms_tuple[2][1])
+                    if dms_tuple[2][1] != 0
+                    else 0
+                )
+
+                return degrees + (minutes / 60.0) + (seconds / 3600.0)
+
+            # Extract latitude
+            if (
+                piexif.GPSIFD.GPSLatitude in gps_info
+                and piexif.GPSIFD.GPSLatitudeRef in gps_info
+            ):
+                lat_dms = gps_info[piexif.GPSIFD.GPSLatitude]
+                lat_ref = gps_info[piexif.GPSIFD.GPSLatitudeRef].decode()
+
+                lat_decimal = convert_dms_to_decimal(lat_dms)
+                if lat_decimal is not None:
+                    if lat_ref in ["S", "s"]:
+                        lat_decimal = -lat_decimal
+                    gps_data["location_lat"] = lat_decimal
+
+            # Extract longitude
+            if (
+                piexif.GPSIFD.GPSLongitude in gps_info
+                and piexif.GPSIFD.GPSLongitudeRef in gps_info
+            ):
+                lon_dms = gps_info[piexif.GPSIFD.GPSLongitude]
+                lon_ref = gps_info[piexif.GPSIFD.GPSLongitudeRef].decode()
+
+                lon_decimal = convert_dms_to_decimal(lon_dms)
+                if lon_decimal is not None:
+                    if lon_ref in ["W", "w"]:
+                        lon_decimal = -lon_decimal
+                    gps_data["location_lon"] = lon_decimal
+
+            # Extract altitude (optional)
+            if piexif.GPSIFD.GPSAltitude in gps_info:
+                alt_tuple = gps_info[piexif.GPSIFD.GPSAltitude]
+                if alt_tuple and len(alt_tuple) == 2 and alt_tuple[1] != 0:
+                    altitude = float(alt_tuple[0] / alt_tuple[1])
+
+                    # Check altitude reference (0 = above sea level, 1 = below sea level)
+                    if piexif.GPSIFD.GPSAltitudeRef in gps_info:
+                        alt_ref = gps_info[piexif.GPSIFD.GPSAltitudeRef]
+                        if alt_ref == 1:
+                            altitude = -altitude
+
+                    gps_data["altitude"] = altitude
+
+        except Exception as e:
+            print(f"Error extracting enhanced GPS data: {e}")
+
+        return gps_data
+
     def _extract_gps_data(self, gps_info: dict) -> dict:
-        """Extract GPS coordinates from EXIF GPS info."""
+        """Fallback GPS extraction for PIL-based EXIF."""
         gps_data = {}
 
         try:
@@ -137,7 +313,7 @@ class ImageProcessor:
             buffer.write(content)
 
         # Extract EXIF data
-        exif_data = await asyncio.to_thread(self.extract_exif_data, str(original_path))
+        exif_data = await self.extract_exif_data(str(original_path))
 
         # Generate all responsive sizes
         variants = await asyncio.to_thread(

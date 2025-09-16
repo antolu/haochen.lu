@@ -15,6 +15,10 @@ async def get_photos(
     limit: int = 20,
     category: str | None = None,
     featured: bool | None = None,
+    has_location: bool | None = None,
+    near_lat: float | None = None,
+    near_lon: float | None = None,
+    radius: float = 10.0,
     order_by: str = "created_at",
 ) -> list[Photo]:
     query = select(Photo)
@@ -24,6 +28,28 @@ async def get_photos(
 
     if featured is not None:
         query = query.where(Photo.featured == featured)
+
+    if has_location is not None:
+        if has_location:
+            query = query.where(
+                Photo.location_lat.isnot(None) & Photo.location_lon.isnot(None)
+            )
+        else:
+            query = query.where(
+                Photo.location_lat.is_(None) | Photo.location_lon.is_(None)
+            )
+
+    if near_lat is not None and near_lon is not None:
+        # Filter by proximity using Haversine formula approximation
+        # For small distances, we can use a simple bounding box
+        # Convert radius from km to degrees (rough approximation)
+        lat_range = radius / 111.0  # 1 degree ≈ 111 km
+        lon_range = radius / (111.0 * func.cos(func.radians(near_lat)))
+
+        query = query.where(
+            Photo.location_lat.between(near_lat - lat_range, near_lat + lat_range)
+            & Photo.location_lon.between(near_lon - lon_range, near_lon + lon_range)
+        )
 
     # Order by
     if order_by == "date_taken":
@@ -41,7 +67,13 @@ async def get_photos(
 
 
 async def get_photo_count(
-    db: AsyncSession, category: str | None = None, featured: bool | None = None
+    db: AsyncSession,
+    category: str | None = None,
+    featured: bool | None = None,
+    has_location: bool | None = None,
+    near_lat: float | None = None,
+    near_lon: float | None = None,
+    radius: float = 10.0,
 ) -> int:
     query = select(func.count(Photo.id))
 
@@ -50,6 +82,26 @@ async def get_photo_count(
 
     if featured is not None:
         query = query.where(Photo.featured == featured)
+
+    if has_location is not None:
+        if has_location:
+            query = query.where(
+                Photo.location_lat.isnot(None) & Photo.location_lon.isnot(None)
+            )
+        else:
+            query = query.where(
+                Photo.location_lat.is_(None) | Photo.location_lon.is_(None)
+            )
+
+    if near_lat is not None and near_lon is not None:
+        # Filter by proximity using same logic as get_photos
+        lat_range = radius / 111.0
+        lon_range = radius / (111.0 * func.cos(func.radians(near_lat)))
+
+        query = query.where(
+            Photo.location_lat.between(near_lat - lat_range, near_lat + lat_range)
+            & Photo.location_lon.between(near_lon - lon_range, near_lon + lon_range)
+        )
 
     result = await db.execute(query)
     count = result.scalar()
