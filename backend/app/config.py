@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     # Database
     database_url: str = (
-        "postgresql+asyncpg://postgres:password@localhost:5432/photography"
+        "postgresql+asyncpg://postgres:password@localhost:5432/portfolio"
     )
 
     # Redis

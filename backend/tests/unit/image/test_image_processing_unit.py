@@ -2,7 +2,7 @@
 P1 - Core Image Processing Unit Tests
 
 Tests image processing functionality including EXIF extraction, format conversion,
-resizing, and optimization. These ensure core photography portfolio features work correctly.
+resizing, and optimization. These ensure core portfolio features work correctly.
 """
 
 from __future__ import annotations

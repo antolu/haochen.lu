@@ -1,6 +1,6 @@
-# Modern Photography Portfolio & Blog
+# Modern Portfolio & Blog
 
-A comprehensive full-stack web application built with FastAPI (Python) backend and React (TypeScript) frontend, featuring photography portfolio, blog system, project showcase, and authenticated sub-applications access.
+A comprehensive full-stack web application built with FastAPI (Python) backend and React (TypeScript) frontend, featuring portfolio management, blog system, project showcase, and authenticated sub-applications access.
 
 ## 🌟 Features
 
@@ -32,7 +32,7 @@ A comprehensive full-stack web application built with FastAPI (Python) backend a
 1. **Clone and setup**
    ```bash
    git clone <your-repo-url>
-   cd photography-portfolio
+   cd portfolio-app
    cp .env.example .env
    # Edit .env with your secure passwords
    ```
@@ -294,10 +294,10 @@ docker-compose logs -f db
 ### Backup & Restore
 ```bash
 # Database backup
-docker-compose exec db pg_dump -U postgres photography > backup.sql
+docker-compose exec db pg_dump -U postgres portfolio > backup.sql
 
 # Restore
-docker-compose exec -T db psql -U postgres photography < backup.sql
+docker-compose exec -T db psql -U postgres portfolio < backup.sql
 
 # File backup
 tar -czf backup.tar.gz uploads/ compressed/
@@ -362,4 +362,4 @@ MIT License - see LICENSE file for details.
 
 ---
 
-Built with modern tools and best practices for photographers and developers who demand excellence in both form and function.
+Built with modern tools and best practices for creators and developers who demand excellence in both form and function.

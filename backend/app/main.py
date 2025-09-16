@@ -32,8 +32,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Photography Portfolio API",
-    description="A comprehensive photography portfolio and blog API",
+    title="Portfolio API",
+    description="A comprehensive portfolio and blog API",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -66,7 +66,7 @@ app.mount(
 
 @app.get("/")
 async def root():
-    return {"message": "Photography Portfolio API", "version": "1.0.0"}
+    return {"message": "Portfolio API", "version": "1.0.0"}
 
 
 @app.get("/health")

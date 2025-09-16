@@ -1,5 +1,5 @@
 """
-Test configuration and fixtures for the photography portfolio backend.
+Test configuration and fixtures for the portfolio backend.
 """
 
 from __future__ import annotations

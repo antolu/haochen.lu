@@ -3,14 +3,14 @@
 services:
   frontend:
     build: ./frontend
-    container_name: photography-frontend
+    container_name: portfolio-frontend
     ports:
       - "80:80"
       - "443:443"
     depends_on:
       - backend
     networks:
-      - photography-network
+      - portfolio-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/"]
@@ -20,9 +20,9 @@ services:
 
   backend:
     build: ./backend
-    container_name: photography-backend
+    container_name: portfolio-backend
     environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-photography}
+      - DATABASE_URL=postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-portfolio}
       - REDIS_URL=redis://redis:6379/0
       - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-this-in-production}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
@@ -34,7 +34,7 @@ services:
       - db
       - redis
     networks:
-      - photography-network
+      - portfolio-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -46,15 +46,15 @@ services:
 
   db:
     image: postgres:15-alpine
-    container_name: photography-db
+    container_name: portfolio-db
     environment:
-      - POSTGRES_DB=${POSTGRES_DB:-photography}
+      - POSTGRES_DB=${POSTGRES_DB:-portfolio}
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - photography-network
+      - portfolio-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
@@ -67,11 +67,11 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: photography-redis
+    container_name: portfolio-redis
     volumes:
       - redis_data:/data
     networks:
-      - photography-network
+      - portfolio-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -85,20 +85,20 @@ services:
   # Database migration service
   migrate:
     build: ./backend
-    container_name: photography-migrate
+    container_name: portfolio-migrate
     environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-photography}
+      - DATABASE_URL=postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-portfolio}
     command: ["alembic", "upgrade", "head"]
     depends_on:
       - db
     networks:
-      - photography-network
+      - portfolio-network
     restart: "no"
 
 networks:
-  photography-network:
+  portfolio-network:
     driver: bridge
-    name: photography-network
+    name: portfolio-network
 
 volumes:
   postgres_data:
