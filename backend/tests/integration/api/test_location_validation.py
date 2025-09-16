@@ -125,7 +125,9 @@ class TestLocationAPIValidation:
     async def test_photos_api_invalid_radius(self):
         """Test photos API with invalid radius."""
         async with AsyncClient(app=app, base_url="http://test") as client:
-            response = await client.get("/api/photos/?near_lat=37.7749&near_lon=-122.4194&radius=51")
+            response = await client.get(
+                "/api/photos/?near_lat=37.7749&near_lon=-122.4194&radius=51"
+            )
             assert response.status_code == 422
 
     @pytest.mark.asyncio

@@ -5,7 +5,7 @@ import MiniMap from '../../components/MiniMap';
 
 // Mock Leaflet and react-leaflet
 vi.mock('leaflet', () => {
-  const mockIcon = vi.fn((config) => ({
+  const mockIcon = vi.fn(config => ({
     options: config,
   }));
 
@@ -108,7 +108,9 @@ describe('MiniMap', () => {
     expect(screen.getByTestId('mini-map-container')).toBeInTheDocument();
 
     // Should have hover overlay with magnifying glass icon
-    const overlay = screen.getByTestId('mini-map-container').parentElement?.querySelector('.absolute.inset-0');
+    const overlay = screen
+      .getByTestId('mini-map-container')
+      .parentElement?.querySelector('.absolute.inset-0');
     expect(overlay).toBeInTheDocument();
   });
 
@@ -177,7 +179,9 @@ describe('MiniMap', () => {
       const onClick = vi.fn();
       render(<MiniMap {...defaultProps} onClick={onClick} />);
 
-      const overlay = screen.getByTestId('mini-map-container').parentElement?.querySelector('.hover\\:bg-blue-500');
+      const overlay = screen
+        .getByTestId('mini-map-container')
+        .parentElement?.querySelector('.hover\\:bg-blue-500');
       expect(overlay).toBeInTheDocument();
     });
 
@@ -236,7 +240,9 @@ describe('MiniMap', () => {
       render(<MiniMap {...defaultProps} onClick={onClick} />);
 
       // The hover overlay should have appropriate opacity for contrast
-      const overlay = screen.getByTestId('mini-map-container').parentElement?.querySelector('.hover\\:bg-blue-500');
+      const overlay = screen
+        .getByTestId('mini-map-container')
+        .parentElement?.querySelector('.hover\\:bg-blue-500');
       expect(overlay).toHaveClass('hover:bg-opacity-10');
     });
 
@@ -293,7 +299,7 @@ describe('MiniMap', () => {
       const { rerender } = render(<MiniMap {...defaultProps} />);
 
       // Multiple rapid updates
-      rerender(<MiniMap latitude={37.7750} longitude={-122.4195} />);
+      rerender(<MiniMap latitude={37.775} longitude={-122.4195} />);
       rerender(<MiniMap latitude={37.7751} longitude={-122.4196} />);
       rerender(<MiniMap latitude={37.7752} longitude={-122.4197} />);
 

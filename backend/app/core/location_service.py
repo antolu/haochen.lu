@@ -19,10 +19,7 @@ class LocationService:
     """Service for geocoding and reverse geocoding using OpenStreetMap Nominatim."""
 
     def __init__(self):
-        self.geolocator = Nominatim(
-            user_agent="photography-portfolio/1.0",
-            timeout=10
-        )
+        self.geolocator = Nominatim(user_agent="photography-portfolio/1.0", timeout=10)
         # Cache TTL in seconds (24 hours for geocoding, 1 hour for search)
         self.geocoding_cache_ttl = 24 * 60 * 60
         self.search_cache_ttl = 60 * 60
@@ -35,7 +32,9 @@ class LocationService:
         key_data = f"{operation}:{':'.join(str(arg) for arg in args)}"
         return f"location:{hashlib.md5(key_data.encode()).hexdigest()}"
 
-    async def _get_cached_result(self, cache_key: str) -> dict[str, Any] | list[dict[str, Any]] | None:
+    async def _get_cached_result(
+        self, cache_key: str
+    ) -> dict[str, Any] | list[dict[str, Any]] | None:
         """Get cached result from Redis."""
         try:
             if await redis_client.is_connected():
@@ -46,7 +45,9 @@ class LocationService:
             logger.warning(f"Error reading from cache: {e}")
         return None
 
-    async def _cache_result(self, cache_key: str, result: dict[str, Any] | list[dict[str, Any]], ttl: int) -> None:
+    async def _cache_result(
+        self, cache_key: str, result: dict[str, Any] | list[dict[str, Any]], ttl: int
+    ) -> None:
         """Cache result in Redis."""
         try:
             if await redis_client.is_connected() and result is not None:
@@ -63,7 +64,9 @@ class LocationService:
             msg = f"Longitude must be between -180 and 180, got {longitude}"
             raise ValueError(msg)
 
-    def _validate_string_input(self, text: str, field_name: str, min_length: int = 1, max_length: int = 500) -> str:
+    def _validate_string_input(
+        self, text: str, field_name: str, min_length: int = 1, max_length: int = 500
+    ) -> str:
         """Validate and sanitize string input."""
         if not isinstance(text, str):
             msg = f"{field_name} must be a string"
@@ -91,10 +94,7 @@ class LocationService:
         self._last_request_times[operation] = time.time()
 
     async def reverse_geocode(
-        self,
-        latitude: float,
-        longitude: float,
-        language: str = "en"
+        self, latitude: float, longitude: float, language: str = "en"
     ) -> dict[str, Any] | None:
         """Get location information from coordinates."""
         # Validate inputs
@@ -116,9 +116,7 @@ class LocationService:
 
             # Run the blocking geocoding operation in a thread
             location = await asyncio.to_thread(
-                self.geolocator.reverse,
-                f"{latitude}, {longitude}",
-                language=language
+                self.geolocator.reverse, f"{latitude}, {longitude}", language=language
             )
 
             if not location or not location.address:
@@ -169,9 +167,7 @@ class LocationService:
             return None
 
     async def forward_geocode(
-        self,
-        address: str,
-        language: str = "en"
+        self, address: str, language: str = "en"
     ) -> dict[str, Any] | None:
         """Get coordinates from address."""
         # Validate inputs
@@ -192,9 +188,7 @@ class LocationService:
             await self._rate_limit_check("forward")
 
             location = await asyncio.to_thread(
-                self.geolocator.geocode,
-                address,
-                language=language
+                self.geolocator.geocode, address, language=language
             )
 
             if not location:
@@ -223,10 +217,7 @@ class LocationService:
             return None
 
     async def search_locations(
-        self,
-        query: str,
-        limit: int = 10,
-        language: str = "en"
+        self, query: str, limit: int = 10, language: str = "en"
     ) -> list[dict[str, Any]]:
         """Search for locations matching query."""
         # Validate inputs
@@ -259,12 +250,10 @@ class LocationService:
                         "format": "json",
                         "addressdetails": 1,
                         "limit": limit,
-                        "accept-language": language
+                        "accept-language": language,
                     },
-                    headers={
-                        "User-Agent": "photography-portfolio/1.0"
-                    },
-                    timeout=10
+                    headers={"User-Agent": "photography-portfolio/1.0"},
+                    timeout=10,
                 )
 
                 if response.status_code == 200:
@@ -289,7 +278,11 @@ class LocationService:
                         if "country" in address:
                             location_parts.append(address["country"])
 
-                        location_name = ", ".join(location_parts) if location_parts else result.get("display_name")
+                        location_name = (
+                            ", ".join(location_parts)
+                            if location_parts
+                            else result.get("display_name")
+                        )
 
                         locations.append({
                             "latitude": float(result["lat"]),
@@ -299,11 +292,13 @@ class LocationService:
                             "place_id": result.get("place_id"),
                             "osm_type": result.get("osm_type"),
                             "osm_id": result.get("osm_id"),
-                            "raw_address": address
+                            "raw_address": address,
                         })
 
                     # Cache the results
-                    await self._cache_result(cache_key, locations, self.search_cache_ttl)
+                    await self._cache_result(
+                        cache_key, locations, self.search_cache_ttl
+                    )
                     return locations
 
         except ValueError:
@@ -319,7 +314,7 @@ class LocationService:
         latitude: float,
         longitude: float,
         radius_km: float = 10.0,
-        limit: int = 20
+        limit: int = 20,
     ) -> list[dict[str, Any]]:
         """Get notable locations near given coordinates."""
         # Validate inputs
@@ -347,18 +342,17 @@ class LocationService:
                         "addressdetails": 1,
                         "limit": limit,
                         "extratags": 1,
-                        "namedetails": 1
+                        "namedetails": 1,
                     },
-                    headers={
-                        "User-Agent": "photography-portfolio/1.0"
-                    },
-                    timeout=10
+                    headers={"User-Agent": "photography-portfolio/1.0"},
+                    timeout=10,
                 )
 
                 if response.status_code == 200:
                     results = response.json()
 
-                    locations = [{
+                    locations = [
+                        {
                             "latitude": float(result["lat"]),
                             "longitude": float(result["lon"]),
                             "name": result.get("display_name"),
@@ -366,10 +360,14 @@ class LocationService:
                             "class": result.get("class"),
                             "place_id": result.get("place_id"),
                             "distance_km": self._calculate_distance(
-                                latitude, longitude,
-                                float(result["lat"]), float(result["lon"])
-                            )
-                        } for result in results]
+                                latitude,
+                                longitude,
+                                float(result["lat"]),
+                                float(result["lon"]),
+                            ),
+                        }
+                        for result in results
+                    ]
 
                     # Sort by distance
                     locations.sort(key=lambda x: x["distance_km"])
@@ -379,16 +377,14 @@ class LocationService:
             # Re-raise validation errors
             raise
         except Exception as e:
-            logger.exception(f"Error getting nearby locations for {latitude}, {longitude}: {e}")
+            logger.exception(
+                f"Error getting nearby locations for {latitude}, {longitude}: {e}"
+            )
 
         return []
 
     def _calculate_distance(
-        self,
-        lat1: float,
-        lon1: float,
-        lat2: float,
-        lon2: float
+        self, lat1: float, lon1: float, lat2: float, lon2: float
     ) -> float:
         """Calculate distance between two points in kilometers using Haversine formula."""
         import math
@@ -399,7 +395,10 @@ class LocationService:
         # Haversine formula
         dlat = lat2 - lat1
         dlon = lon2 - lon1
-        a = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
+        a = (
+            math.sin(dlat / 2) ** 2
+            + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
+        )
         c = 2 * math.asin(math.sqrt(a))
 
         # Earth radius in kilometers
@@ -418,7 +417,9 @@ class LocationService:
             keys = await redis_client.keys(pattern)
             if keys:
                 deleted = await redis_client.delete(*keys)
-                logger.info(f"Cleared {deleted} location cache entries for pattern '{pattern}'")
+                logger.info(
+                    f"Cleared {deleted} location cache entries for pattern '{pattern}'"
+                )
                 return deleted
             return 0
 
@@ -430,7 +431,12 @@ class LocationService:
         """Get location cache statistics."""
         try:
             if not await redis_client.is_connected():
-                return {"total_keys": 0, "reverse_keys": 0, "forward_keys": 0, "search_keys": 0}
+                return {
+                    "total_keys": 0,
+                    "reverse_keys": 0,
+                    "forward_keys": 0,
+                    "search_keys": 0,
+                }
 
             all_keys = await redis_client.keys("location:*")
 
@@ -441,7 +447,7 @@ class LocationService:
                 "total_keys": total,
                 "cache_enabled": True,
                 "geocoding_ttl": self.geocoding_cache_ttl,
-                "search_ttl": self.search_cache_ttl
+                "search_ttl": self.search_cache_ttl,
             }
 
         except Exception as e:

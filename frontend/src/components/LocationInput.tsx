@@ -25,9 +25,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
     async (lat: number, lng: number) => {
       // Try to get location name from coordinates
       try {
-        const response = await fetch(
-          `/api/locations/reverse?lat=${lat}&lng=${lng}`
-        );
+        const response = await fetch(`/api/locations/reverse?lat=${lat}&lng=${lng}`);
         if (response.ok) {
           const data = await response.json();
           setManualLocationName(data.location_name || '');
@@ -62,9 +60,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
       <div className="space-y-4">
         {/* Location Name Input */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Location Name
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Location Name</label>
           <input
             type="text"
             value={manualLocationName}
@@ -81,14 +77,12 @@ const LocationInput: React.FC<LocationInputProps> = ({
         {/* Coordinates Display/Input */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Latitude
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
             <input
               type="number"
               step="any"
               value={latitude || ''}
-              onChange={(e) => {
+              onChange={e => {
                 const lat = parseFloat(e.target.value);
                 if (!isNaN(lat) && longitude !== undefined) {
                   handleLocationSelect(lat, longitude);
@@ -100,14 +94,12 @@ const LocationInput: React.FC<LocationInputProps> = ({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Longitude
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Longitude</label>
             <input
               type="number"
               step="any"
               value={longitude || ''}
-              onChange={(e) => {
+              onChange={e => {
                 const lng = parseFloat(e.target.value);
                 if (!isNaN(lng) && latitude !== undefined) {
                   handleLocationSelect(latitude, lng);
@@ -128,12 +120,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
             disabled={disabled}
             className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <svg
-              className="h-4 w-4 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -178,15 +165,14 @@ const LocationInput: React.FC<LocationInputProps> = ({
             onClick={() => {
               if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
-                  (position) => {
-                    handleLocationSelect(
-                      position.coords.latitude,
-                      position.coords.longitude
-                    );
+                  position => {
+                    handleLocationSelect(position.coords.latitude, position.coords.longitude);
                   },
-                  (error) => {
+                  error => {
                     console.error('Error getting current location:', error);
-                    alert('Unable to get your current location. Please check your browser permissions.');
+                    alert(
+                      'Unable to get your current location. Please check your browser permissions.'
+                    );
                   }
                 );
               } else {
@@ -195,12 +181,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
             }}
             className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
-            <svg
-              className="h-4 w-4 mr-1.5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"

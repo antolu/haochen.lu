@@ -30,7 +30,7 @@ interface MapEventsProps {
 // Component to handle map click events
 const MapEvents: React.FC<MapEventsProps> = ({ onLocationSelect, disabled }) => {
   useMapEvents({
-    click: (e) => {
+    click: e => {
       if (!disabled && onLocationSelect) {
         onLocationSelect(e.latlng.lat, e.latlng.lng);
       }
@@ -155,12 +155,7 @@ const LocationSearch: React.FC<{
       )}
 
       {/* Overlay to close dropdown */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
+      {isOpen && <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />}
     </div>
   );
 };
@@ -204,9 +199,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
 
   return (
     <div className={className}>
-      {showSearch && (
-        <LocationSearch onLocationSelect={handleSearchLocationSelect} />
-      )}
+      {showSearch && <LocationSearch onLocationSelect={handleSearchLocationSelect} />}
 
       <div className="relative">
         <MapContainer
@@ -220,16 +213,9 @@ const MapPicker: React.FC<MapPickerProps> = ({
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
 
-          <MapEvents
-            onLocationSelect={handleLocationSelect}
-            disabled={disabled}
-          />
+          <MapEvents onLocationSelect={handleLocationSelect} disabled={disabled} />
 
-          <MapController
-            latitude={currentLat}
-            longitude={currentLng}
-            zoom={zoom}
-          />
+          <MapController latitude={currentLat} longitude={currentLng} zoom={zoom} />
 
           <Marker position={[currentLat, currentLng]} />
         </MapContainer>
@@ -245,7 +231,8 @@ const MapPicker: React.FC<MapPickerProps> = ({
 
       {!disabled && (
         <div className="mt-2 text-sm text-gray-500">
-          Click on the map to select a location • Coordinates: {currentLat.toFixed(6)}, {currentLng.toFixed(6)}
+          Click on the map to select a location • Coordinates: {currentLat.toFixed(6)},{' '}
+          {currentLng.toFixed(6)}
         </div>
       )}
     </div>

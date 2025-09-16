@@ -41,7 +41,9 @@ class TestLocationValidation:
         assert result == "San Francisco"
 
         # Should strip whitespace
-        result = self.location_service._validate_string_input("  San Francisco  ", "city")
+        result = self.location_service._validate_string_input(
+            "  San Francisco  ", "city"
+        )
         assert result == "San Francisco"
 
     def test_validate_string_input_too_short(self):
@@ -100,16 +102,24 @@ class TestLocationValidation:
     async def test_nearby_locations_invalid_radius(self):
         """Test nearby locations with invalid radius."""
         with pytest.raises(ValueError, match="Radius must be between 0.1 and 50.0 km"):
-            await self.location_service.get_nearby_locations(37.7749, -122.4194, radius_km=0.05)
+            await self.location_service.get_nearby_locations(
+                37.7749, -122.4194, radius_km=0.05
+            )
 
         with pytest.raises(ValueError, match="Radius must be between 0.1 and 50.0 km"):
-            await self.location_service.get_nearby_locations(37.7749, -122.4194, radius_km=51)
+            await self.location_service.get_nearby_locations(
+                37.7749, -122.4194, radius_km=51
+            )
 
     @pytest.mark.asyncio
     async def test_nearby_locations_invalid_limit(self):
         """Test nearby locations with invalid limit."""
         with pytest.raises(ValueError, match="Limit must be between 1 and 100"):
-            await self.location_service.get_nearby_locations(37.7749, -122.4194, limit=0)
+            await self.location_service.get_nearby_locations(
+                37.7749, -122.4194, limit=0
+            )
 
         with pytest.raises(ValueError, match="Limit must be between 1 and 100"):
-            await self.location_service.get_nearby_locations(37.7749, -122.4194, limit=101)
+            await self.location_service.get_nearby_locations(
+                37.7749, -122.4194, limit=101
+            )

@@ -11,7 +11,7 @@ vi.mock('leaflet', () => {
     isValid: () => true,
   }));
 
-  const mockDivIcon = vi.fn((config) => ({
+  const mockDivIcon = vi.fn(config => ({
     options: config,
     _className: config.className || '',
     _html: config.html || '',
@@ -35,11 +35,7 @@ vi.mock('react-leaflet', () => ({
   ),
   TileLayer: (props: any) => <div data-testid="photo-tile-layer" {...props} />,
   Marker: ({ children, eventHandlers, ...props }: any) => (
-    <div
-      data-testid="photo-marker"
-      onClick={() => eventHandlers?.click?.()}
-      {...props}
-    >
+    <div data-testid="photo-marker" onClick={() => eventHandlers?.click?.()} {...props}>
       {children}
     </div>
   ),
@@ -95,7 +91,7 @@ describe('PhotoMap', () => {
         },
       },
       location_lat: 37.8267,
-      location_lon: -122.4230,
+      location_lon: -122.423,
       location_name: 'Alcatraz Island, San Francisco',
       date_taken: '2023-12-25T15:45:00Z',
       camera_make: 'Sony',
@@ -380,14 +376,20 @@ describe('PhotoMap', () => {
       render(<PhotoMap photos={[]} />);
 
       expect(screen.getByText('No geotagged photos')).toBeInTheDocument();
-      expect(screen.getByText('Upload photos with GPS coordinates to see them on the map')).toBeInTheDocument();
+      expect(
+        screen.getByText('Upload photos with GPS coordinates to see them on the map')
+      ).toBeInTheDocument();
     });
 
     it('applies correct styling to empty state', () => {
       render(<PhotoMap photos={[]} height={500} />);
 
-      const emptyStateContainer = screen.getByText('No geotagged photos').parentElement?.parentElement;
-      expect(emptyStateContainer).toHaveAttribute('style', expect.stringContaining('height: 500px'));
+      const emptyStateContainer =
+        screen.getByText('No geotagged photos').parentElement?.parentElement;
+      expect(emptyStateContainer).toHaveAttribute(
+        'style',
+        expect.stringContaining('height: 500px')
+      );
     });
   });
 
@@ -396,8 +398,8 @@ describe('PhotoMap', () => {
       const manyPhotos = Array.from({ length: 100 }, (_, i) => ({
         ...mockPhotos[0],
         id: `photo-${i}`,
-        location_lat: 37.8199 + (i * 0.001),
-        location_lon: -122.4783 + (i * 0.001),
+        location_lat: 37.8199 + i * 0.001,
+        location_lon: -122.4783 + i * 0.001,
       }));
 
       render(<PhotoMap photos={manyPhotos} />);

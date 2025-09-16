@@ -1,7 +1,7 @@
 """enhance_photo_metadata_with_timezone_and_flexible_fields
 
-Revision ID: 003_enhance_photo_metadata
-Revises: 002
+Revision ID: 002_enhance_photo_metadata
+Revises:
 Create Date: 2025-09-16 12:26:00.000000
 
 """
@@ -13,8 +13,8 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers
-revision = "003_enhance_photo_metadata"
-down_revision = "002"
+revision = "002_enhance_photo_metadata"
+down_revision = None
 branch_labels = None
 depends_on = None
 

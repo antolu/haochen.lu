@@ -22,7 +22,8 @@ const MiniMap: React.FC<MiniMapProps> = ({
   const marker = useMemo(() => {
     return L.icon({
       iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-      iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+      iconRetinaUrl:
+        'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
       shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
       iconSize: [20, 32],
       iconAnchor: [10, 32],
@@ -51,9 +52,7 @@ const MiniMap: React.FC<MiniMapProps> = ({
         doubleClickZoom={false}
         attributionControl={false}
       >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
+        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <Marker position={[latitude, longitude]} icon={marker} />
       </MapContainer>
 

@@ -33,7 +33,7 @@ const MapBounds: React.FC<{ photos: Photo[] }> = ({ photos }) => {
     if (photos.length === 0) return;
 
     const bounds = L.latLngBounds([]);
-    photos.forEach((photo) => {
+    photos.forEach(photo => {
       if (photo.location_lat && photo.location_lon) {
         bounds.extend([photo.location_lat, photo.location_lon]);
       }
@@ -56,9 +56,7 @@ const PhotoMap: React.FC<PhotoMapProps> = ({
 }) => {
   // Filter photos that have location data
   const photosWithLocation = useMemo(() => {
-    return photos.filter(
-      (photo) => photo.location_lat && photo.location_lon
-    );
+    return photos.filter(photo => photo.location_lat && photo.location_lon);
   }, [photos]);
 
   // Default center (San Francisco)
@@ -127,56 +125,54 @@ const PhotoMap: React.FC<PhotoMapProps> = ({
 
         <MapBounds photos={photosWithLocation} />
 
-        {photosWithLocation.map((photo) => {
-            // Get thumbnail URL - using variants system or fallback
-            const thumbnailUrl = photo.variants?.thumbnail?.path ||
-                               photo.original_path;
+        {photosWithLocation.map(photo => {
+          // Get thumbnail URL - using variants system or fallback
+          const thumbnailUrl = photo.variants?.thumbnail?.path || photo.original_path;
 
-            return (
-              <Marker
-                key={photo.id}
-                position={[photo.location_lat!, photo.location_lon!]}
-                icon={createPhotoMarker(thumbnailUrl)}
-                eventHandlers={{
-                  click: () => onPhotoClick?.(photo),
-                }}
-              >
-                <Popup>
-                  <div className="min-w-0 max-w-xs">
-                    <div className="aspect-video mb-2 rounded overflow-hidden">
-                      <img
-                        src={thumbnailUrl}
-                        alt={photo.title || 'Photo'}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <h3 className="font-semibold text-sm mb-1 truncate">
-                      {photo.title || 'Untitled'}
-                    </h3>
-                    {photo.location_name && (
-                      <p className="text-xs text-gray-600 mb-1">
-                        📍 {photo.location_name}
-                      </p>
-                    )}
-                    {photo.date_taken && (
-                      <p className="text-xs text-gray-500">
-                        📅 {new Date(photo.date_taken).toLocaleDateString()}
-                      </p>
-                    )}
-                    {(photo.camera_make || photo.camera_model) && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        📷 {photo.camera_make} {photo.camera_model}
-                      </p>
-                    )}
+          return (
+            <Marker
+              key={photo.id}
+              position={[photo.location_lat!, photo.location_lon!]}
+              icon={createPhotoMarker(thumbnailUrl)}
+              eventHandlers={{
+                click: () => onPhotoClick?.(photo),
+              }}
+            >
+              <Popup>
+                <div className="min-w-0 max-w-xs">
+                  <div className="aspect-video mb-2 rounded overflow-hidden">
+                    <img
+                      src={thumbnailUrl}
+                      alt={photo.title || 'Photo'}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                </Popup>
-              </Marker>
-            );
-          })}
+                  <h3 className="font-semibold text-sm mb-1 truncate">
+                    {photo.title || 'Untitled'}
+                  </h3>
+                  {photo.location_name && (
+                    <p className="text-xs text-gray-600 mb-1">📍 {photo.location_name}</p>
+                  )}
+                  {photo.date_taken && (
+                    <p className="text-xs text-gray-500">
+                      📅 {new Date(photo.date_taken).toLocaleDateString()}
+                    </p>
+                  )}
+                  {(photo.camera_make || photo.camera_model) && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      📷 {photo.camera_make} {photo.camera_model}
+                    </p>
+                  )}
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
       </MapContainer>
 
       <div className="mt-2 text-sm text-gray-500">
-        Showing {photosWithLocation.length} geotagged photo{photosWithLocation.length !== 1 ? 's' : ''} of {photos.length} total
+        Showing {photosWithLocation.length} geotagged photo
+        {photosWithLocation.length !== 1 ? 's' : ''} of {photos.length} total
       </div>
     </div>
   );
