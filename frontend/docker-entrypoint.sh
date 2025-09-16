@@ -9,7 +9,8 @@ fi
 echo "Configuring nginx to use backend: $BACKEND_URL"
 
 # Replace the template variable with the actual backend URL
-envsubst "${BACKEND_URL}" < /etc/nginx/conf.d/nginx.conf.template > /etc/nginx/conf.d/default.conf
+# shellcheck disable=SC2016
+envsubst '$BACKEND_URL' < /etc/nginx/conf.d/nginx.conf.template > /etc/nginx/conf.d/default.conf
 
 # Remove the template file
 rm /etc/nginx/conf.d/nginx.conf.template
