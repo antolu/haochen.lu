@@ -57,3 +57,16 @@
 .gap-4 {
   /* Force include gap-4 */
 }
+
+/* Typography classes for header scaling */
+.text-5xl {
+  /* Force include text-5xl for collapsed header */
+}
+.text-6xl {
+  /* Force include text-6xl for large header */
+}
+
+/* Height classes for larger header */
+.h-28 {
+  /* Force include h-28 for expanded header */
+}

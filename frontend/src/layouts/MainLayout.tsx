@@ -46,12 +46,12 @@ const MainLayout: React.FC = () => {
   };
 
   // Dynamic styles based on scroll position
-  const headerHeight = isScrolled ? 'h-16' : 'h-20 md:h-24';
+  const headerHeight = isScrolled ? 'h-16' : 'h-24 md:h-28';
 
   // More dramatic logo scaling with font weight and letter spacing
   const logoClasses = isScrolled
-    ? 'text-lg md:text-xl font-semibold tracking-tight'
-    : 'text-2xl md:text-4xl font-bold tracking-normal';
+    ? 'text-3xl md:text-5xl font-semibold tracking-tight'
+    : 'text-4xl md:text-6xl font-black tracking-normal';
 
   // Enhanced navigation styling
   const navClasses = isScrolled
