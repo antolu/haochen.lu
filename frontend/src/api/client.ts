@@ -11,9 +11,14 @@ import type {
   User,
   LoginRequest,
   TokenResponse,
+  Content,
+  ContentCreate,
+  ContentUpdate,
+  ContentListResponse,
+  ContentKeyValue,
 } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 // Flag to track if we're already refreshing to prevent multiple refresh attempts
 let isRefreshing = false;
@@ -151,14 +156,14 @@ export const photos = {
       order_by?: string;
     } = {}
   ): Promise<PhotoListResponse> => {
-    const response = await apiClient.get<PhotoListResponse>('/photos', { params });
+    const response = await apiClient.get<PhotoListResponse>('/api/photos', { params });
     return response.data;
   },
 
   getFeatured: async (limit = 10): Promise<Photo[]> => {
     try {
-      console.log('Fetching featured photos from:', `/photos/featured?limit=${limit}`);
-      const response = await apiClient.get<Photo[]>(`/photos/featured?limit=${limit}`);
+      console.log('Fetching featured photos from:', `/api/photos/featured?limit=${limit}`);
+      const response = await apiClient.get<Photo[]>(`/api/photos/featured?limit=${limit}`);
       console.log('Featured photos response:', response.data);
       return response.data;
     } catch (error) {
@@ -169,7 +174,9 @@ export const photos = {
   },
 
   getById: async (id: string, incrementViews = true): Promise<Photo> => {
-    const response = await apiClient.get<Photo>(`/photos/${id}?increment_views=${incrementViews}`);
+    const response = await apiClient.get<Photo>(
+      `/api/photos/${id}?increment_views=${incrementViews}`
+    );
     return response.data;
   },
 
@@ -204,7 +211,7 @@ export const photos = {
       }
     });
 
-    const response = await apiClient.post<Photo>('/photos', formData, {
+    const response = await apiClient.post<Photo>('/api/photos', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -213,16 +220,16 @@ export const photos = {
   },
 
   update: async (id: string, updates: Partial<Photo>): Promise<Photo> => {
-    const response = await apiClient.put<Photo>(`/photos/${id}`, updates);
+    const response = await apiClient.put<Photo>(`/api/photos/${id}`, updates);
     return response.data;
   },
 
   delete: async (id: string): Promise<void> => {
-    await apiClient.delete(`/photos/${id}`);
+    await apiClient.delete(`/api/photos/${id}`);
   },
 
   getStats: async () => {
-    const response = await apiClient.get('/photos/stats/summary');
+    const response = await apiClient.get('/api/photos/stats/summary');
     return response.data;
   },
 };
@@ -235,14 +242,14 @@ export const projects = {
       status?: string;
     } = {}
   ): Promise<ProjectListResponse> => {
-    const response = await apiClient.get<ProjectListResponse>('/projects', { params });
+    const response = await apiClient.get<ProjectListResponse>('/api/projects', { params });
     return response.data;
   },
 
   getFeatured: async (): Promise<Project[]> => {
     try {
-      console.log('Fetching featured projects from:', '/projects/featured');
-      const response = await apiClient.get<Project[]>('/projects/featured');
+      console.log('Fetching featured projects from:', '/api/projects/featured');
+      const response = await apiClient.get<Project[]>('/api/projects/featured');
       console.log('Featured projects response:', response.data);
       return response.data;
     } catch (error) {
@@ -253,28 +260,28 @@ export const projects = {
   },
 
   getByIdOrSlug: async (identifier: string): Promise<Project> => {
-    const response = await apiClient.get<Project>(`/projects/${identifier}`);
+    const response = await apiClient.get<Project>(`/api/projects/${identifier}`);
     return response.data;
   },
 
   create: async (
     project: Omit<Project, 'id' | 'slug' | 'created_at' | 'updated_at'>
   ): Promise<Project> => {
-    const response = await apiClient.post<Project>('/projects', project);
+    const response = await apiClient.post<Project>('/api/projects', project);
     return response.data;
   },
 
   update: async (id: string, updates: Partial<Project>): Promise<Project> => {
-    const response = await apiClient.put<Project>(`/projects/${id}`, updates);
+    const response = await apiClient.put<Project>(`/api/projects/${id}`, updates);
     return response.data;
   },
 
   delete: async (id: string): Promise<void> => {
-    await apiClient.delete(`/projects/${id}`);
+    await apiClient.delete(`/api/projects/${id}`);
   },
 
   getStats: async () => {
-    const response = await apiClient.get('/projects/stats/summary');
+    const response = await apiClient.get('/api/projects/stats/summary');
     return response.data;
   },
 };
@@ -288,7 +295,7 @@ export const blog = {
       published_only?: boolean;
     } = {}
   ): Promise<BlogPostListResponse> => {
-    const response = await apiClient.get<BlogPostListResponse>('/blog', { params });
+    const response = await apiClient.get<BlogPostListResponse>('/api/blog', { params });
     return response.data;
   },
 
@@ -298,13 +305,13 @@ export const blog = {
       per_page?: number;
     } = {}
   ): Promise<BlogPostListResponse> => {
-    const response = await apiClient.get<BlogPostListResponse>('/blog/admin', { params });
+    const response = await apiClient.get<BlogPostListResponse>('/api/blog/admin', { params });
     return response.data;
   },
 
   getByIdOrSlug: async (identifier: string, incrementViews = true): Promise<BlogPost> => {
     const response = await apiClient.get<BlogPost>(
-      `/blog/${identifier}?increment_views=${incrementViews}`
+      `/api/blog/${identifier}?increment_views=${incrementViews}`
     );
     return response.data;
   },
@@ -312,21 +319,21 @@ export const blog = {
   create: async (
     post: Omit<BlogPost, 'id' | 'slug' | 'view_count' | 'read_time' | 'created_at' | 'updated_at'>
   ): Promise<BlogPost> => {
-    const response = await apiClient.post<BlogPost>('/blog', post);
+    const response = await apiClient.post<BlogPost>('/api/blog', post);
     return response.data;
   },
 
   update: async (id: string, updates: Partial<BlogPost>): Promise<BlogPost> => {
-    const response = await apiClient.put<BlogPost>(`/blog/${id}`, updates);
+    const response = await apiClient.put<BlogPost>(`/api/blog/${id}`, updates);
     return response.data;
   },
 
   delete: async (id: string): Promise<void> => {
-    await apiClient.delete(`/blog/${id}`);
+    await apiClient.delete(`/api/blog/${id}`);
   },
 
   getStats: async () => {
-    const response = await apiClient.get('/blog/stats/summary');
+    const response = await apiClient.get('/api/blog/stats/summary');
     return response.data;
   },
 };
@@ -335,8 +342,8 @@ export const blog = {
 export const subapps = {
   list: async (menuOnly = true): Promise<SubAppListResponse> => {
     try {
-      console.log('Fetching subapps from:', '/subapps', { params: { menu_only: menuOnly } });
-      const response = await apiClient.get<SubAppListResponse>('/subapps', {
+      console.log('Fetching subapps from:', '/api/subapps', { params: { menu_only: menuOnly } });
+      const response = await apiClient.get<SubAppListResponse>('/api/subapps', {
         params: { menu_only: menuOnly },
       });
       console.log('Subapps response:', response.data);
@@ -350,8 +357,8 @@ export const subapps = {
 
   listAuthenticated: async (menuOnly = true): Promise<SubAppListResponse> => {
     try {
-      console.log('Fetching authenticated subapps from:', '/subapps/authenticated');
-      const response = await apiClient.get<SubAppListResponse>('/subapps/authenticated', {
+      console.log('Fetching authenticated subapps from:', '/api/subapps/authenticated');
+      const response = await apiClient.get<SubAppListResponse>('/api/subapps/authenticated', {
         params: { menu_only: menuOnly },
       });
       console.log('Authenticated subapps response:', response.data);
@@ -364,34 +371,90 @@ export const subapps = {
   },
 
   listAll: async (): Promise<SubAppListResponse> => {
-    const response = await apiClient.get<SubAppListResponse>('/subapps/admin');
+    const response = await apiClient.get<SubAppListResponse>('/api/subapps/admin');
     return response.data;
   },
 
   getByIdOrSlug: async (identifier: string): Promise<SubApp> => {
-    const response = await apiClient.get<SubApp>(`/subapps/${identifier}`);
+    const response = await apiClient.get<SubApp>(`/api/subapps/${identifier}`);
     return response.data;
   },
 
   create: async (
     subapp: Omit<SubApp, 'id' | 'slug' | 'created_at' | 'updated_at'>
   ): Promise<SubApp> => {
-    const response = await apiClient.post<SubApp>('/subapps', subapp);
+    const response = await apiClient.post<SubApp>('/api/subapps', subapp);
     return response.data;
   },
 
   update: async (id: string, updates: Partial<SubApp>): Promise<SubApp> => {
-    const response = await apiClient.put<SubApp>(`/subapps/${id}`, updates);
+    const response = await apiClient.put<SubApp>(`/api/subapps/${id}`, updates);
     return response.data;
   },
 
   delete: async (id: string): Promise<void> => {
-    await apiClient.delete(`/subapps/${id}`);
+    await apiClient.delete(`/api/subapps/${id}`);
   },
 
   getStats: async () => {
-    const response = await apiClient.get('/subapps/stats/summary');
+    const response = await apiClient.get('/api/subapps/stats/summary');
     return response.data;
+  },
+};
+
+// Content API
+export const content = {
+  // Public endpoints (no auth required)
+  getByKey: async (key: string): Promise<ContentKeyValue> => {
+    const response = await apiClient.get<ContentKeyValue>(`/api/content/key/${key}`);
+    return response.data;
+  },
+
+  getByKeys: async (keys: string[]): Promise<Record<string, ContentKeyValue>> => {
+    const response = await apiClient.get<Record<string, ContentKeyValue>>('/api/content/public', {
+      params: { keys: keys.join(',') },
+    });
+    return response.data;
+  },
+
+  getByCategory: async (category: string): Promise<Record<string, ContentKeyValue>> => {
+    const response = await apiClient.get<Record<string, ContentKeyValue>>('/api/content/public', {
+      params: { category },
+    });
+    return response.data;
+  },
+
+  // Admin endpoints (auth required)
+  list: async (
+    params: {
+      category?: string;
+      is_active?: boolean;
+      search?: string;
+      page?: number;
+      per_page?: number;
+    } = {}
+  ): Promise<ContentListResponse> => {
+    const response = await apiClient.get<ContentListResponse>('/api/content', { params });
+    return response.data;
+  },
+
+  getById: async (id: string): Promise<Content> => {
+    const response = await apiClient.get<Content>(`/api/content/${id}`);
+    return response.data;
+  },
+
+  create: async (contentData: ContentCreate): Promise<Content> => {
+    const response = await apiClient.post<Content>('/api/content', contentData);
+    return response.data;
+  },
+
+  update: async (id: string, updates: ContentUpdate): Promise<Content> => {
+    const response = await apiClient.put<Content>(`/api/content/${id}`, updates);
+    return response.data;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete(`/api/content/${id}`);
   },
 };
 

@@ -6,6 +6,7 @@ import {
   FolderIcon,
   PencilSquareIcon,
   RectangleStackIcon,
+  DocumentTextIcon,
   ArrowRightOnRectangleIcon,
 } from '@heroicons/react/24/outline';
 
@@ -30,6 +31,7 @@ const AdminLayout: React.FC = () => {
     { name: 'Photos', href: '/admin/photos', icon: PhotoIcon },
     { name: 'Projects', href: '/admin/projects', icon: FolderIcon },
     { name: 'Blog', href: '/admin/blog', icon: PencilSquareIcon },
+    { name: 'Content', href: '/admin/content', icon: DocumentTextIcon },
     { name: 'Sub-Apps', href: '/admin/subapps', icon: RectangleStackIcon },
   ];
 

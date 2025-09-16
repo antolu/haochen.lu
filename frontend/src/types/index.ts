@@ -152,6 +152,50 @@ export interface TokenResponse {
   user?: User;
 }
 
+export interface Content {
+  id: string;
+  key: string;
+  title: string;
+  content: string;
+  content_type: string;
+  category: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ContentCreate {
+  key: string;
+  title: string;
+  content: string;
+  content_type?: string;
+  category?: string;
+  is_active?: boolean;
+}
+
+export interface ContentUpdate {
+  title?: string;
+  content?: string;
+  content_type?: string;
+  category?: string;
+  is_active?: boolean;
+}
+
+export interface ContentListResponse {
+  content: Content[];
+  total: number;
+  page: number;
+  per_page: number;
+  pages: number;
+}
+
+export interface ContentKeyValue {
+  key: string;
+  content: string;
+  title: string;
+  content_type: string;
+}
+
 export interface ApiError {
   detail: string;
   status?: number;

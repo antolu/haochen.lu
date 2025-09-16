@@ -1,6 +1,12 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { PhotoIcon, FolderIcon, PencilSquareIcon, EyeIcon } from '@heroicons/react/24/outline';
+import {
+  PhotoIcon,
+  FolderIcon,
+  PencilSquareIcon,
+  DocumentTextIcon,
+  EyeIcon,
+} from '@heroicons/react/24/outline';
 
 import { photos, projects, blog } from '../../api/client';
 
@@ -82,7 +88,7 @@ const AdminDashboard: React.FC = () => {
           <h2 className="text-lg font-medium text-gray-900">Quick Actions</h2>
         </div>
         <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <a
               href="/admin/photos"
               className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-primary-300 hover:shadow-md transition-all duration-200"
@@ -113,6 +119,17 @@ const AdminDashboard: React.FC = () => {
               <div>
                 <h3 className="text-sm font-medium text-gray-900">Write Blog Post</h3>
                 <p className="text-sm text-gray-500">Create new blog content</p>
+              </div>
+            </a>
+
+            <a
+              href="/admin/content"
+              className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-primary-300 hover:shadow-md transition-all duration-200"
+            >
+              <DocumentTextIcon className="h-8 w-8 text-primary-600 mr-3" />
+              <div>
+                <h3 className="text-sm font-medium text-gray-900">Edit Content</h3>
+                <p className="text-sm text-gray-500">Update website text content</p>
               </div>
             </a>
           </div>

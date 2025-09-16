@@ -22,6 +22,7 @@ import AdminPhotos from './pages/admin/AdminPhotos';
 import AdminProjects from './pages/admin/AdminProjects';
 import AdminBlog from './pages/admin/AdminBlog';
 import AdminSubApps from './pages/admin/AdminSubApps';
+import AdminContent from './pages/admin/AdminContent';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -66,6 +67,7 @@ function App() {
               <Route path="projects" element={<AdminProjects />} />
               <Route path="blog" element={<AdminBlog />} />
               <Route path="subapps" element={<AdminSubApps />} />
+              <Route path="content" element={<AdminContent />} />
             </Route>
           </Routes>
 
