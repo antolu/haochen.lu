@@ -206,16 +206,25 @@ class TestTokenSecurity:
                 break
 
         # Remember me cookie should have longer duration
-        if cookie_no_remember and cookie_remember:
-            # Check max_age if available
-            if hasattr(cookie_remember, "max_age") and hasattr(
-                cookie_no_remember, "max_age"
-            ):
-                if cookie_remember.max_age and cookie_no_remember.max_age:
-                    assert cookie_remember.max_age > cookie_no_remember.max_age
-                elif cookie_remember.max_age and not cookie_no_remember.max_age:
-                    # Remember me has expiry, session doesn't
-                    assert cookie_remember.max_age > 86400  # More than 1 day
+        if (
+            cookie_no_remember
+            and cookie_remember
+            and hasattr(cookie_remember, "max_age")
+            and hasattr(cookie_no_remember, "max_age")
+            and cookie_remember.max_age
+            and cookie_no_remember.max_age
+        ):
+            assert cookie_remember.max_age > cookie_no_remember.max_age
+        elif (
+            cookie_no_remember
+            and cookie_remember
+            and hasattr(cookie_remember, "max_age")
+            and hasattr(cookie_no_remember, "max_age")
+            and cookie_remember.max_age
+            and not cookie_no_remember.max_age
+        ):
+            # Remember me has expiry, session doesn't
+            assert cookie_remember.max_age > 86400  # More than 1 day
 
 
 @pytest.mark.security
