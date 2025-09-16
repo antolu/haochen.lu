@@ -161,8 +161,6 @@ class MockRedis:
 class AsyncRedisMock(MockRedis):
     """Async version of MockRedis for easier testing."""
 
-    pass
-
 
 def create_redis_mock() -> MockRedis:
     """Create a mock Redis instance."""
@@ -208,7 +206,6 @@ class MockRedisPool:
 
     async def release(self, connection):
         """Release a connection back to the pool."""
-        pass
 
     async def close(self):
         """Close the connection pool."""

@@ -440,7 +440,7 @@ class TestAuthorizationMiddleware:
         # This would test edge case handling in your middleware
         # Most HTTP clients don't allow multiple headers with same name,
         # but it's good to verify server handles it gracefully
-        pass  # Implementation depends on framework behavior
+        # Implementation depends on framework behavior
 
     @patch("app.dependencies.get_current_user")
     async def test_authorization_bypass_attempts_blocked(
