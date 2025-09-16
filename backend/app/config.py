@@ -44,6 +44,24 @@ class Settings(BaseSettings):
     webp_quality: int = 85
     thumbnail_size: int = 400
 
+    # Responsive image sizes
+    responsive_sizes: dict = {
+        "thumbnail": 400,
+        "small": 800,
+        "medium": 1200,
+        "large": 1600,
+        "xlarge": 2400,
+    }
+
+    # Quality settings per size
+    quality_settings: dict = {
+        "thumbnail": 75,
+        "small": 80,
+        "medium": 85,
+        "large": 90,
+        "xlarge": 95,
+    }
+
     class Config:
         env_file = ".env"
 

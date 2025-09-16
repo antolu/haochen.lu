@@ -28,12 +28,26 @@ class PhotoUpdate(BaseModel):
     featured: bool | None = None
 
 
+class ImageVariant(BaseModel):
+    """Individual image variant details."""
+
+    path: str
+    filename: str
+    width: int
+    height: int
+    size_bytes: int
+    format: str
+
+
 class PhotoResponse(PhotoBase):
     id: str | UUID
     filename: str
     original_path: str
-    webp_path: str
-    thumbnail_path: str | None
+    webp_path: str  # Legacy, kept for compatibility
+    thumbnail_path: str | None  # Legacy, kept for compatibility
+
+    # Responsive image variants
+    variants: dict[str, ImageVariant] | None = None
 
     # EXIF data
     location_lat: float | None
