@@ -27,3 +27,11 @@ services:
         "8000",
         "--reload",
       ]
+  frontend:
+    environment:
+      - BACKEND_URL=http://backend:8000
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend
