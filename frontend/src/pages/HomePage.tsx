@@ -17,10 +17,13 @@ const HomePage: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen w-full m-0 p-0">
+    <div className="min-h-screen w-full m-0 p-0 mobile-safe">
       {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        {/* Hero Background Image */}
+        {/* Hero Background Image with responsive focal points:
+             Mobile: 70% center (more to the right for portrait crops)
+             Tablet: 60% center (balanced for medium screens)
+             Desktop: 55% center (more centered for wide screens) */}
         <picture className="absolute inset-0 w-full h-full">
           <source media="(min-width: 1920px)" srcSet="/images/hero-xl.webp" type="image/webp" />
           <source media="(min-width: 1200px)" srcSet="/images/hero-lg.webp" type="image/webp" />
@@ -33,7 +36,7 @@ const HomePage: React.FC = () => {
           <img
             src="/images/hero-lg.jpg"
             alt="Mountain landscape with person standing on ridge"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover hero-focal-point"
             loading="eager"
           />
         </picture>
@@ -63,11 +66,11 @@ const HomePage: React.FC = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.2, delay: 0.6 }}
-            className="flex flex-col sm:flex-row gap-8 sm:gap-12 justify-center items-center animate-fade-in-delay-2 px-4"
+            className="flex flex-col sm:flex-row gap-4 sm:gap-8 justify-center items-center animate-fade-in-delay-2 px-4 max-w-full"
           >
             <Link
               to="/photography"
-              className="bg-primary-600 hover:bg-primary-700 text-white px-8 py-4 rounded-lg transition-colors font-medium min-w-[200px] text-center"
+              className="bg-primary-600 hover:bg-primary-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg transition-colors font-medium w-full sm:min-w-[200px] text-center"
             >
               Discover My Work
             </Link>
@@ -75,7 +78,7 @@ const HomePage: React.FC = () => {
               onClick={() => {
                 document.querySelector('#contact-section')?.scrollIntoView({ behavior: 'smooth' });
               }}
-              className="border-2 border-white text-white hover:bg-white hover:text-gray-900 px-8 py-4 rounded-lg transition-colors font-medium min-w-[200px] text-center"
+              className="border-2 border-white text-white hover:bg-white hover:text-gray-900 px-6 sm:px-8 py-3 sm:py-4 rounded-lg transition-colors font-medium w-full sm:min-w-[200px] text-center"
             >
               Get In Touch
             </button>
@@ -209,7 +212,7 @@ const HomePage: React.FC = () => {
                     <img
                       src={`/${photo.thumbnail_path || photo.webp_path}`}
                       alt={photo.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover group-hover:scale-102 md:group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
                 </motion.div>
