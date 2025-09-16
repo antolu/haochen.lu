@@ -152,9 +152,6 @@ class ImageProcessor:
             "original_path": str(original_path),
             "file_size": file_size,
             "variants": variants,
-            # Backward compatibility
-            "webp_path": variants.get("medium", {}).get("path", ""),
-            "thumbnail_path": variants.get("thumbnail", {}).get("path", ""),
             **exif_data,
         }
 
@@ -251,12 +248,6 @@ class ImageProcessor:
             photo_data.get("original_path"),
         ]
 
-        # Add legacy paths for backward compatibility
-        if photo_data.get("webp_path"):
-            files_to_delete.append(photo_data.get("webp_path"))
-        if photo_data.get("thumbnail_path"):
-            files_to_delete.append(photo_data.get("thumbnail_path"))
-
         # Add all variant files
         variants = photo_data.get("variants", {})
         files_to_delete.extend(
@@ -290,14 +281,6 @@ class ImageProcessor:
             if fallback_size in variants:
                 path = variants[fallback_size]["path"]
                 return f"{base_url}/{path}" if base_url else path
-
-        # Legacy fallback
-        if photo_data.get("webp_path"):
-            return (
-                f"{base_url}/{photo_data['webp_path']}"
-                if base_url
-                else photo_data["webp_path"]
-            )
 
         return ""
 

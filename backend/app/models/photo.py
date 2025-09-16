@@ -22,11 +22,9 @@ class Photo(Base):
     # File paths
     filename = Column(String(255), nullable=False)
     original_path = Column(String(500), nullable=False)
-    webp_path = Column(String(500), nullable=False)  # Legacy, kept for compatibility
-    thumbnail_path = Column(String(500))  # Legacy, kept for compatibility
 
     # Responsive image variants (JSON: {size_name: {path, width, height, size_bytes, format}})
-    variants = Column(JSON)
+    variants = Column(JSON, nullable=False)
 
     # EXIF data
     location_lat = Column(Float)

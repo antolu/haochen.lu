@@ -41,8 +41,8 @@ class Settings(BaseSettings):
     max_file_size: int = 50 * 1024 * 1024  # 50MB
 
     # Image processing
-    webp_quality: int = 85
-    thumbnail_size: int = 400
+    webp_quality: int = int(os.getenv("WEBP_QUALITY", "85"))
+    thumbnail_size: int = int(os.getenv("THUMBNAIL_SIZE", "400"))
 
     # Responsive image sizes
     responsive_sizes: dict = {

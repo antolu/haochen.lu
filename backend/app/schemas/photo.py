@@ -43,11 +43,9 @@ class PhotoResponse(PhotoBase):
     id: str | UUID
     filename: str
     original_path: str
-    webp_path: str  # Legacy, kept for compatibility
-    thumbnail_path: str | None  # Legacy, kept for compatibility
 
     # Responsive image variants
-    variants: dict[str, ImageVariant] | None = None
+    variants: dict[str, ImageVariant]
 
     # EXIF data
     location_lat: float | None
