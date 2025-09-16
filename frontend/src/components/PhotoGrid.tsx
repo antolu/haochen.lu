@@ -64,9 +64,9 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3, delay: index * 0.02 }}
       className={`
-        relative bg-gray-100 rounded-lg overflow-hidden cursor-pointer
-        transform transition-transform duration-200 hover:scale-105
-        ${onClick ? 'hover:shadow-lg' : ''}
+        group relative bg-gray-100 rounded-lg overflow-hidden cursor-pointer
+        transform transition-all duration-300 hover:scale-110
+        ${onClick ? 'hover:shadow-xl' : ''}
       `}
       style={{ width, height }}
       onClick={handleClick}
@@ -90,6 +90,9 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
             onError={handleImageError}
             loading="lazy"
           />
+
+          {/* Semi-transparent overlay that fades on hover */}
+          <div className="absolute inset-0 bg-black/25 group-hover:bg-transparent transition-all duration-300" />
 
           {/* Featured Badge */}
           {photo.featured && (
@@ -120,44 +123,21 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
             </div>
           )}
 
-          {/* Metadata Overlay */}
+          {/* Simplified Metadata Overlay */}
           {showMetadata && isLoaded && (
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-200">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
-                <h3 className="font-medium text-sm truncate">{photo.title || 'Untitled'}</h3>
+                <h3 className="font-medium text-sm truncate mb-1">{photo.title || 'Untitled'}</h3>
 
                 {photo.location_name && (
                   <p className="text-xs text-gray-300 truncate mb-1">📍 {photo.location_name}</p>
                 )}
 
-                {photo.category && (
-                  <p className="text-xs text-gray-300 truncate">{photo.category}</p>
-                )}
-
-                {/* Camera Info */}
-                {(photo.camera_make || photo.camera_model) && (
+                {photo.date_taken && (
                   <p className="text-xs text-gray-400 truncate">
-                    📷 {photo.camera_make} {photo.camera_model}
+                    📅 {new Date(photo.date_taken).toLocaleDateString()}
                   </p>
                 )}
-
-                {/* Technical Details */}
-                {(photo.iso || photo.aperture || photo.shutter_speed || photo.focal_length) && (
-                  <p className="text-xs text-gray-400 truncate">
-                    {photo.iso && `ISO ${photo.iso}`}
-                    {photo.aperture && ` f/${photo.aperture}`}
-                    {photo.shutter_speed && ` ${photo.shutter_speed}s`}
-                    {photo.focal_length && ` ${photo.focal_length}mm`}
-                  </p>
-                )}
-
-                {/* Date Information */}
-                <div className="flex justify-between items-center mt-1 text-xs text-gray-400">
-                  {photo.date_taken && (
-                    <span>📅 {new Date(photo.date_taken).toLocaleDateString()}</span>
-                  )}
-                  {photo.timezone && <span className="text-xs opacity-75">{photo.timezone}</span>}
-                </div>
               </div>
             </div>
           )}
