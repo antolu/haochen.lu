@@ -65,7 +65,7 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
       transition={{ duration: 0.3, delay: index * 0.02 }}
       className={`
         group relative bg-gray-100 rounded-lg overflow-hidden cursor-pointer
-        transform transition-all duration-300 hover:scale-110
+        transform transition-all duration-300 hover:scale-105 md:hover:scale-110
         ${onClick ? 'hover:shadow-xl' : ''}
       `}
       style={{ width, height }}
@@ -191,7 +191,10 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({
   };
 
   const numColumns = getColumns();
-  const itemWidth = Math.floor((containerWidth - gap * (numColumns - 1)) / numColumns);
+  const itemWidth = Math.max(
+    100,
+    Math.floor((containerWidth - gap * (numColumns - 1)) / numColumns)
+  );
   const itemHeight = Math.floor(itemWidth * 0.75); // 4:3 aspect ratio
 
   // Update container width on resize

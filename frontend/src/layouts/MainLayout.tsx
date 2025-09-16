@@ -61,7 +61,7 @@ const MainLayout: React.FC = () => {
   const navPadding = isScrolled ? 'py-2' : 'py-3 md:py-4';
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white mobile-safe">
       {/* Header */}
       <header
         className={`fixed top-0 w-full z-50 transition-all duration-500 ease-out ${
