@@ -16,13 +16,13 @@ class Settings(BaseSettings):
     redis_url: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
     # Security - REQUIRED
-    secret_key: str = os.getenv("SECRET_KEY")
-    session_secret_key: str = os.getenv("SESSION_SECRET_KEY")
+    secret_key: str = os.getenv("SECRET_KEY") or ""
+    session_secret_key: str = os.getenv("SESSION_SECRET_KEY") or ""
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 15
     refresh_token_expire_days: int = 30
     refresh_token_expire_minutes: int = 60
-    admin_password: str = os.getenv("ADMIN_PASSWORD")
+    admin_password: str = os.getenv("ADMIN_PASSWORD") or ""
 
     # Cookie settings
     refresh_cookie_name: str = "refresh_token"

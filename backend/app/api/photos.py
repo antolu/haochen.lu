@@ -160,10 +160,9 @@ async def delete_photo_endpoint(
         raise HTTPException(status_code=404, detail="Photo not found")
 
     # Delete files
-    photo_data = {
+    photo_data: dict = {
         "original_path": photo.original_path,
-        "webp_path": photo.webp_path,
-        "thumbnail_path": photo.thumbnail_path,
+        "variants": photo.variants or {},
     }
     await image_processor.delete_image_files(photo_data)
 
