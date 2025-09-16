@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from datetime import datetime
+from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 
 
 class LoginRequest(BaseModel):
@@ -21,6 +22,13 @@ class UserResponse(BaseModel):
     is_admin: bool = False
     created_at: datetime
     updated_at: datetime | None = None
+
+    @field_validator("id", mode="before")
+    @classmethod
+    def validate_id(cls, v):
+        if isinstance(v, UUID):
+            return str(v)
+        return v
 
 
 class TokenResponse(BaseModel):
