@@ -28,7 +28,7 @@ from app.schemas.blog import (
 router = APIRouter()
 
 
-@router.get("/", response_model=BlogPostListResponse)
+@router.get("", response_model=BlogPostListResponse)
 async def list_blog_posts(
     page: int = 1,
     per_page: int = 10,
@@ -111,7 +111,7 @@ async def get_blog_post_detail(
     return BlogPostResponse.model_validate(post)
 
 
-@router.post("/", response_model=BlogPostResponse)
+@router.post("", response_model=BlogPostResponse)
 async def create_blog_post_endpoint(
     post: BlogPostCreate,
     db: AsyncSession = Depends(get_session),

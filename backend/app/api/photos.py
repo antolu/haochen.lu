@@ -24,7 +24,7 @@ from app.schemas.photo import PhotoCreate, PhotoListResponse, PhotoResponse, Pho
 router = APIRouter()
 
 
-@router.get("/", response_model=PhotoListResponse)
+@router.get("", response_model=PhotoListResponse)
 async def list_photos(
     page: int = Query(1, ge=1, description="Page number"),
     per_page: int = Query(20, ge=1, le=100, description="Items per page"),
@@ -113,7 +113,7 @@ async def get_photo_detail(
     return PhotoResponse.model_validate(photo)
 
 
-@router.post("/", response_model=PhotoResponse)
+@router.post("", response_model=PhotoResponse)
 async def upload_photo(
     file: UploadFile = File(..., description="Image file to upload"),
     title: Annotated[str, Form()] = "",

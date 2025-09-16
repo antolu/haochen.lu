@@ -29,7 +29,7 @@ from app.schemas.project import (
 router = APIRouter()
 
 
-@router.get("/", response_model=ProjectListResponse)
+@router.get("", response_model=ProjectListResponse)
 async def list_projects(
     featured_only: bool = False,
     status: str | None = None,
@@ -115,7 +115,7 @@ async def get_project_detail(
     return ProjectResponse.model_validate(project)
 
 
-@router.post("/", response_model=ProjectResponse)
+@router.post("", response_model=ProjectResponse)
 async def create_project_endpoint(
     project: ProjectCreate,
     db: AsyncSession = Depends(get_session),
