@@ -8,6 +8,10 @@ export interface Photo {
   filename: string;
   original_path: string;
 
+  // Image paths
+  thumbnail_path?: string;
+  webp_path?: string;
+
   // Responsive image variants
   variants?: Record<
     string,
