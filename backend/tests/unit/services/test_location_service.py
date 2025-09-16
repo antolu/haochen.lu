@@ -28,8 +28,8 @@ def mock_geopy_location():
         "address": {
             "city": "San Francisco",
             "state": "California",
-            "country": "United States"
-        }
+            "country": "United States",
+        },
     }
     return location
 
@@ -38,20 +38,26 @@ class TestLocationService:
     """Test cases for LocationService."""
 
     @pytest.mark.asyncio
-    async def test_reverse_geocode_success(self, mock_location_service, mock_geopy_location):
+    async def test_reverse_geocode_success(
+        self, mock_location_service, mock_geopy_location
+    ):
         """Test successful reverse geocoding."""
-        with patch.object(mock_location_service.geolocator, "reverse"):
+        with (
+            patch.object(mock_location_service.geolocator, "reverse"),
             # Mock asyncio.to_thread to return our mock location
-            with patch("asyncio.to_thread", return_value=mock_geopy_location):
-                result = await mock_location_service.reverse_geocode(37.7749, -122.4194)
+            patch("asyncio.to_thread", return_value=mock_geopy_location),
+        ):
+            result = await mock_location_service.reverse_geocode(37.7749, -122.4194)
 
-                assert result is not None
-                assert result["location_name"] == "San Francisco, California, United States"
-                assert result["location_address"] == "San Francisco, California, United States"
-                assert result["place_id"] == "123456"
-                assert result["osm_type"] == "way"
-                assert result["osm_id"] == "987654"
-                assert "raw_address" in result
+            assert result is not None
+            assert result["location_name"] == "San Francisco, California, United States"
+            assert (
+                result["location_address"] == "San Francisco, California, United States"
+            )
+            assert result["place_id"] == "123456"
+            assert result["osm_type"] == "way"
+            assert result["osm_id"] == "987654"
+            assert "raw_address" in result
 
     @pytest.mark.asyncio
     async def test_reverse_geocode_with_detailed_address(self, mock_location_service):
@@ -64,7 +70,7 @@ class TestLocationService:
                 "road": "Main Street",
                 "city": "San Francisco",
                 "state": "California",
-                "country": "United States"
+                "country": "United States",
             }
         }
 
@@ -84,7 +90,7 @@ class TestLocationService:
                 "town": "Small Town",
                 "county": "Some County",
                 "state": "Some State",
-                "country": "Some Country"
+                "country": "Some Country",
             }
         }
 
@@ -109,7 +115,9 @@ class TestLocationService:
             assert result is None
 
     @pytest.mark.asyncio
-    async def test_forward_geocode_success(self, mock_location_service, mock_geopy_location):
+    async def test_forward_geocode_success(
+        self, mock_location_service, mock_geopy_location
+    ):
         """Test successful forward geocoding."""
         with patch("asyncio.to_thread", return_value=mock_geopy_location):
             result = await mock_location_service.forward_geocode("San Francisco, CA")
@@ -143,8 +151,8 @@ class TestLocationService:
                 "address": {
                     "city": "San Francisco",
                     "state": "California",
-                    "country": "United States"
-                }
+                    "country": "United States",
+                },
             }
         ]
 
@@ -158,7 +166,9 @@ class TestLocationService:
             assert len(result) == 1
             assert result[0]["latitude"] == 37.7749
             assert result[0]["longitude"] == -122.4194
-            assert result[0]["location_name"] == "San Francisco, California, United States"
+            assert (
+                result[0]["location_name"] == "San Francisco, California, United States"
+            )
 
     @pytest.mark.asyncio
     async def test_search_locations_empty_query(self, mock_location_service):
@@ -192,7 +202,7 @@ class TestLocationService:
                 "display_name": "Nearby Point of Interest",
                 "type": "attraction",
                 "class": "tourism",
-                "place_id": "789012"
+                "place_id": "789012",
             }
         ]
 
@@ -201,7 +211,9 @@ class TestLocationService:
             mock_client_class.return_value.__aenter__.return_value = mock_client
             mock_client.get.return_value = mock_response
 
-            result = await mock_location_service.get_nearby_locations(37.7749, -122.4194)
+            result = await mock_location_service.get_nearby_locations(
+                37.7749, -122.4194
+            )
 
             assert len(result) == 1
             assert result[0]["latitude"] == 37.7849
@@ -216,7 +228,7 @@ class TestLocationService:
         mock_response.status_code = 200
         mock_response.json.return_value = [
             {"lat": "37.8000", "lon": "-122.4000", "display_name": "Far Location"},
-            {"lat": "37.7750", "lon": "-122.4190", "display_name": "Near Location"}
+            {"lat": "37.7750", "lon": "-122.4190", "display_name": "Near Location"},
         ]
 
         with patch("httpx.AsyncClient") as mock_client_class:
@@ -224,7 +236,9 @@ class TestLocationService:
             mock_client_class.return_value.__aenter__.return_value = mock_client
             mock_client.get.return_value = mock_response
 
-            result = await mock_location_service.get_nearby_locations(37.7749, -122.4194)
+            result = await mock_location_service.get_nearby_locations(
+                37.7749, -122.4194
+            )
 
             assert len(result) == 2
             # Nearer location should be first
@@ -236,14 +250,18 @@ class TestLocationService:
         sf_lat, sf_lon = 37.7749, -122.4194
         la_lat, la_lon = 34.0522, -118.2437
 
-        distance = mock_location_service._calculate_distance(sf_lat, sf_lon, la_lat, la_lon)
+        distance = mock_location_service._calculate_distance(
+            sf_lat, sf_lon, la_lat, la_lon
+        )
 
         # Should be approximately 560 km (allow some variance)
         assert 550 <= distance <= 570
 
     def test_calculate_distance_same_point(self, mock_location_service):
         """Test distance calculation for same point."""
-        distance = mock_location_service._calculate_distance(37.7749, -122.4194, 37.7749, -122.4194)
+        distance = mock_location_service._calculate_distance(
+            37.7749, -122.4194, 37.7749, -122.4194
+        )
         assert distance == 0.0
 
     def test_global_instance_exists(self):
@@ -267,7 +285,9 @@ class TestLocationServiceEdgeCases:
     async def test_forward_geocode_special_characters(self, mock_location_service):
         """Test forward geocoding with special characters."""
         with patch("asyncio.to_thread", return_value=None):
-            result = await mock_location_service.forward_geocode("Location with émojis 🌍")
+            result = await mock_location_service.forward_geocode(
+                "Location with émojis 🌍"
+            )
             assert result is None
 
     @pytest.mark.asyncio
@@ -275,7 +295,9 @@ class TestLocationServiceEdgeCases:
         """Test location search respects limit parameter."""
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.json.return_value = [{"lat": "37.0", "lon": "-122.0", "display_name": "Test"}] * 10
+        mock_response.json.return_value = [
+            {"lat": "37.0", "lon": "-122.0", "display_name": "Test"}
+        ] * 10
 
         with patch("httpx.AsyncClient") as mock_client_class:
             mock_client = AsyncMock()
@@ -293,7 +315,9 @@ class TestLocationServiceEdgeCases:
     async def test_language_parameter_handling(self, mock_location_service):
         """Test that language parameters are correctly passed."""
         with patch("asyncio.to_thread", return_value=None) as mock_to_thread:
-            await mock_location_service.reverse_geocode(37.7749, -122.4194, language="es")
+            await mock_location_service.reverse_geocode(
+                37.7749, -122.4194, language="es"
+            )
 
             # Verify language parameter was passed
             call_args = mock_to_thread.call_args

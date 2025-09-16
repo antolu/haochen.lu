@@ -88,12 +88,7 @@ describe('MapPicker', () => {
 
   it('calls onLocationSelect when location is selected', async () => {
     const onLocationSelect = vi.fn();
-    render(
-      <MapPicker
-        {...defaultProps}
-        onLocationSelect={onLocationSelect}
-      />
-    );
+    render(<MapPicker {...defaultProps} onLocationSelect={onLocationSelect} />);
 
     // Simulate map click event
     // This would be triggered by the useMapEvents hook
@@ -102,12 +97,7 @@ describe('MapPicker', () => {
 
   it('calls onLocationChange when location changes', async () => {
     const onLocationChange = vi.fn();
-    render(
-      <MapPicker
-        {...defaultProps}
-        onLocationChange={onLocationChange}
-      />
-    );
+    render(<MapPicker {...defaultProps} onLocationChange={onLocationChange} />);
 
     // Location change would be triggered by map interaction
     expect(onLocationChange).not.toHaveBeenCalled();
@@ -118,7 +108,7 @@ describe('MapPicker', () => {
 
     expect(screen.getByText(/37\.774900/)).toBeInTheDocument();
 
-    rerender(<MapPicker {...defaultProps} latitude={40.7128} longitude={-74.0060} />);
+    rerender(<MapPicker {...defaultProps} latitude={40.7128} longitude={-74.006} />);
 
     expect(screen.getByText(/40\.712800/)).toBeInTheDocument();
     expect(screen.getByText(/-74\.006000/)).toBeInTheDocument();
@@ -142,14 +132,15 @@ describe('MapPicker', () => {
 
       mockFetch.mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve([
-          {
-            latitude: 40.7128,
-            longitude: -74.0060,
-            location_name: 'New York City',
-            location_address: 'New York, NY, USA',
-          },
-        ]),
+        json: () =>
+          Promise.resolve([
+            {
+              latitude: 40.7128,
+              longitude: -74.006,
+              location_name: 'New York City',
+              location_address: 'New York, NY, USA',
+            },
+          ]),
       });
 
       render(<MapPicker {...defaultProps} showSearch={true} />);
@@ -159,11 +150,12 @@ describe('MapPicker', () => {
       await user.type(searchInput, 'New York');
 
       // Wait for debounced search
-      await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledWith(
-          '/api/locations/search?q=New%20York&limit=5'
-        );
-      }, { timeout: 500 });
+      await waitFor(
+        () => {
+          expect(mockFetch).toHaveBeenCalledWith('/api/locations/search?q=New%20York&limit=5');
+        },
+        { timeout: 500 }
+      );
     });
 
     it('displays search results in dropdown', async () => {
@@ -171,14 +163,15 @@ describe('MapPicker', () => {
 
       mockFetch.mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve([
-          {
-            latitude: 40.7128,
-            longitude: -74.0060,
-            location_name: 'New York City',
-            location_address: 'New York, NY, USA',
-          },
-        ]),
+        json: () =>
+          Promise.resolve([
+            {
+              latitude: 40.7128,
+              longitude: -74.006,
+              location_name: 'New York City',
+              location_address: 'New York, NY, USA',
+            },
+          ]),
       });
 
       render(<MapPicker {...defaultProps} showSearch={true} />);
@@ -200,23 +193,18 @@ describe('MapPicker', () => {
 
       mockFetch.mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve([
-          {
-            latitude: 40.7128,
-            longitude: -74.0060,
-            location_name: 'New York City',
-            location_address: 'New York, NY, USA',
-          },
-        ]),
+        json: () =>
+          Promise.resolve([
+            {
+              latitude: 40.7128,
+              longitude: -74.006,
+              location_name: 'New York City',
+              location_address: 'New York, NY, USA',
+            },
+          ]),
       });
 
-      render(
-        <MapPicker
-          {...defaultProps}
-          showSearch={true}
-          onLocationSelect={onLocationSelect}
-        />
-      );
+      render(<MapPicker {...defaultProps} showSearch={true} onLocationSelect={onLocationSelect} />);
 
       const searchInput = screen.getByPlaceholderText('Search for a location...');
 
@@ -229,7 +217,7 @@ describe('MapPicker', () => {
 
       await user.click(screen.getByText('New York City'));
 
-      expect(onLocationSelect).toHaveBeenCalledWith(40.7128, -74.0060);
+      expect(onLocationSelect).toHaveBeenCalledWith(40.7128, -74.006);
       expect(searchInput).toHaveValue('New York City');
     });
 
@@ -237,13 +225,18 @@ describe('MapPicker', () => {
       const user = userEvent.setup();
 
       // Mock a delayed response
-      mockFetch.mockImplementation(() =>
-        new Promise(resolve =>
-          setTimeout(() => resolve({
-            ok: true,
-            json: () => Promise.resolve([]),
-          }), 100)
-        )
+      mockFetch.mockImplementation(
+        () =>
+          new Promise(resolve =>
+            setTimeout(
+              () =>
+                resolve({
+                  ok: true,
+                  json: () => Promise.resolve([]),
+                }),
+              100
+            )
+          )
       );
 
       render(<MapPicker {...defaultProps} showSearch={true} />);
@@ -296,14 +289,15 @@ describe('MapPicker', () => {
 
       mockFetch.mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve([
-          {
-            latitude: 40.7128,
-            longitude: -74.0060,
-            location_name: 'Test Location',
-            location_address: 'Test Address',
-          },
-        ]),
+        json: () =>
+          Promise.resolve([
+            {
+              latitude: 40.7128,
+              longitude: -74.006,
+              location_name: 'Test Location',
+              location_address: 'Test Address',
+            },
+          ]),
       });
 
       render(<MapPicker {...defaultProps} showSearch={true} />);
@@ -339,9 +333,12 @@ describe('MapPicker', () => {
       expect(mockFetch).not.toHaveBeenCalled();
 
       // Wait for debounce timeout
-      await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledTimes(1);
-      }, { timeout: 500 });
+      await waitFor(
+        () => {
+          expect(mockFetch).toHaveBeenCalledTimes(1);
+        },
+        { timeout: 500 }
+      );
     });
   });
 
@@ -358,14 +355,15 @@ describe('MapPicker', () => {
 
       mockFetch.mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve([
-          {
-            latitude: 40.7128,
-            longitude: -74.0060,
-            location_name: 'New York City',
-            location_address: 'New York, NY, USA',
-          },
-        ]),
+        json: () =>
+          Promise.resolve([
+            {
+              latitude: 40.7128,
+              longitude: -74.006,
+              location_name: 'New York City',
+              location_address: 'New York, NY, USA',
+            },
+          ]),
       });
 
       render(<MapPicker {...defaultProps} showSearch={true} />);

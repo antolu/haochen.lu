@@ -46,11 +46,11 @@ async def reverse_geocode(
     try:
         result = await location_service.reverse_geocode(lat, lng, language)
     except ValueError as e:
-        raise HTTPException(status_code=422, detail=f"Invalid coordinates: {e}")
-    except Exception:
+        raise HTTPException(status_code=422, detail=f"Invalid coordinates: {e}") from e
+    except Exception as e:
         raise HTTPException(
             status_code=503, detail="Location service temporarily unavailable"
-        )
+        ) from e
 
     if not result:
         raise HTTPException(
@@ -76,10 +76,10 @@ async def search_locations(
 
     try:
         results = await location_service.search_locations(q, limit, language)
-    except Exception:
+    except Exception as e:
         raise HTTPException(
             status_code=503, detail="Location service temporarily unavailable"
-        )
+        ) from e
 
     return [
         LocationSearchResult(
@@ -112,10 +112,10 @@ async def forward_geocode(
 
     try:
         result = await location_service.forward_geocode(address, language)
-    except Exception:
+    except Exception as e:
         raise HTTPException(
             status_code=503, detail="Location service temporarily unavailable"
-        )
+        ) from e
 
     if not result:
         raise HTTPException(
@@ -158,11 +158,11 @@ async def get_nearby_locations(
     try:
         results = await location_service.get_nearby_locations(lat, lng, radius, limit)
     except ValueError as e:
-        raise HTTPException(status_code=422, detail=f"Invalid coordinates: {e}")
-    except Exception:
+        raise HTTPException(status_code=422, detail=f"Invalid coordinates: {e}") from e
+    except Exception as e:
         raise HTTPException(
             status_code=503, detail="Location service temporarily unavailable"
-        )
+        ) from e
 
     return [
         NearbyLocation(
@@ -192,7 +192,7 @@ async def clear_cache(
         None, description="Operation type to clear (reverse, forward, search)"
     ),
     current_user=Depends(get_current_admin_user),
-) -> dict[str, int]:
+) -> dict[str, int | str]:
     """Clear location cache (admin only)."""
     deleted_count = await location_service.clear_cache(operation)
     return {"deleted_keys": deleted_count, "operation": operation or "all"}

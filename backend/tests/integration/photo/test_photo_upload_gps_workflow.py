@@ -17,9 +17,11 @@ from app.crud.photo import create_photo, get_photo
 @pytest.fixture
 def temp_dirs():
     """Create temporary directories for testing."""
-    with tempfile.TemporaryDirectory() as upload_dir:
-        with tempfile.TemporaryDirectory() as compressed_dir:
-            yield upload_dir, compressed_dir
+    with (
+        tempfile.TemporaryDirectory() as upload_dir,
+        tempfile.TemporaryDirectory() as compressed_dir,
+    ):
+        yield upload_dir, compressed_dir
 
 
 @pytest.fixture
@@ -53,11 +55,15 @@ def test_image_with_gps():
         "GPS": {
             piexif.GPSIFD.GPSLatitude: ((37, 1), (46, 1), (2940, 100)),  # 37°46'29.4"N
             piexif.GPSIFD.GPSLatitudeRef: "N",
-            piexif.GPSIFD.GPSLongitude: ((122, 1), (25, 1), (1164, 100)),  # 122°25'11.64"W
+            piexif.GPSIFD.GPSLongitude: (
+                (122, 1),
+                (25, 1),
+                (1164, 100),
+            ),  # 122°25'11.64"W
             piexif.GPSIFD.GPSLongitudeRef: "W",
             piexif.GPSIFD.GPSAltitude: (12500, 100),  # 125m
             piexif.GPSIFD.GPSAltitudeRef: 0,  # Above sea level
-        }
+        },
     }
 
     exif_bytes = piexif.dump(exif_dict)
@@ -83,7 +89,7 @@ def test_image_without_gps():
         },
         "Exif": {
             piexif.ExifIFD.ISOSpeedRatings: 800,
-        }
+        },
     }
 
     exif_bytes = piexif.dump(exif_dict)
@@ -100,25 +106,22 @@ class TestPhotoUploadGPSWorkflow:
 
     @pytest.mark.asyncio
     async def test_complete_gps_upload_workflow(
-        self,
-        test_image_with_gps,
-        test_image_processor,
-        db_session: AsyncSession
+        self, test_image_with_gps, test_image_processor, db_session: AsyncSession
     ):
         """Test complete workflow from upload to database storage."""
 
         # Mock location service
-        with patch("app.core.location_service.location_service") as mock_location_service:
+        with patch(
+            "app.core.location_service.location_service"
+        ) as mock_location_service:
             mock_location_service.reverse_geocode.return_value = {
                 "location_name": "San Francisco, California, United States",
-                "location_address": "San Francisco, CA 94102, USA"
+                "location_address": "San Francisco, CA 94102, USA",
             }
 
             # Process the image
             result = await test_image_processor.process_image(
-                test_image_with_gps,
-                "test_gps_photo.jpg",
-                "Test GPS Photo"
+                test_image_with_gps, "test_gps_photo.jpg", "Test GPS Photo"
             )
 
             # Verify EXIF extraction
@@ -136,8 +139,7 @@ class TestPhotoUploadGPSWorkflow:
 
             # Verify location service was called
             mock_location_service.reverse_geocode.assert_called_once_with(
-                result["location_lat"],
-                result["location_lon"]
+                result["location_lat"], result["location_lon"]
             )
 
             # Verify location name was added
@@ -169,15 +171,20 @@ class TestPhotoUploadGPSWorkflow:
             }
 
             from app.schemas.photo import PhotoCreate
+
             photo_create = PhotoCreate(
                 title=photo_data["title"],
                 description="",
                 category="",
                 tags="",
                 comments="",
-                featured=False
+                featured=False,
             )
-            photo = await create_photo(db_session, photo_create, **{k: v for k, v in photo_data.items() if k != "title"})
+            photo = await create_photo(
+                db_session,
+                photo_create,
+                **{k: v for k, v in photo_data.items() if k != "title"},
+            )
 
             # Verify database storage
             assert photo.location_lat is not None
@@ -188,17 +195,12 @@ class TestPhotoUploadGPSWorkflow:
 
     @pytest.mark.asyncio
     async def test_upload_without_gps_data(
-        self,
-        test_image_without_gps,
-        test_image_processor,
-        db_session: AsyncSession
+        self, test_image_without_gps, test_image_processor, db_session: AsyncSession
     ):
         """Test upload workflow for image without GPS data."""
 
         result = await test_image_processor.process_image(
-            test_image_without_gps,
-            "test_no_gps.jpg",
-            "Test Photo No GPS"
+            test_image_without_gps, "test_no_gps.jpg", "Test Photo No GPS"
         )
 
         # Should have basic camera data but no location
@@ -214,20 +216,20 @@ class TestPhotoUploadGPSWorkflow:
 
     @pytest.mark.asyncio
     async def test_location_service_failure_handling(
-        self,
-        test_image_with_gps,
-        test_image_processor
+        self, test_image_with_gps, test_image_processor
     ):
         """Test handling when location service fails."""
 
         # Mock location service to fail
-        with patch("app.core.location_service.location_service") as mock_location_service:
-            mock_location_service.reverse_geocode.side_effect = Exception("Service error")
+        with patch(
+            "app.core.location_service.location_service"
+        ) as mock_location_service:
+            mock_location_service.reverse_geocode.side_effect = Exception(
+                "Service error"
+            )
 
             result = await test_image_processor.process_image(
-                test_image_with_gps,
-                "test_gps_failure.jpg",
-                "Test GPS Failure"
+                test_image_with_gps, "test_gps_failure.jpg", "Test GPS Failure"
             )
 
             # Should still have GPS coordinates
@@ -240,21 +242,19 @@ class TestPhotoUploadGPSWorkflow:
 
     @pytest.mark.asyncio
     async def test_responsive_image_generation_with_gps(
-        self,
-        test_image_with_gps,
-        test_image_processor
+        self, test_image_with_gps, test_image_processor
     ):
         """Test that responsive images are generated correctly for GPS photos."""
 
-        with patch("app.core.location_service.location_service") as mock_location_service:
+        with patch(
+            "app.core.location_service.location_service"
+        ) as mock_location_service:
             mock_location_service.reverse_geocode.return_value = {
                 "location_name": "Test Location"
             }
 
             result = await test_image_processor.process_image(
-                test_image_with_gps,
-                "test_responsive_gps.jpg",
-                "Test Responsive GPS"
+                test_image_with_gps, "test_responsive_gps.jpg", "Test Responsive GPS"
             )
 
             # Should have variants
@@ -274,16 +274,13 @@ class TestPhotoUploadGPSWorkflow:
             assert thumbnail["format"] == "webp"
 
     @pytest.mark.asyncio
-    async def test_timezone_extraction_and_processing(
-        self,
-        test_image_processor
-    ):
+    async def test_timezone_extraction_and_processing(self, test_image_processor):
         """Test timezone extraction from various formats."""
 
         test_cases = [
             ("+05:30", "+05:30"),  # Standard offset
             ("-08:00", "-08:00"),  # Negative offset
-            ("Z", "Z"),           # UTC
+            ("Z", "Z"),  # UTC
         ]
 
         for exif_timezone, expected_timezone in test_cases:
@@ -297,7 +294,7 @@ class TestPhotoUploadGPSWorkflow:
                 },
                 "Exif": {
                     piexif.ExifIFD.OffsetTimeOriginal: exif_timezone.encode(),
-                }
+                },
             }
 
             exif_bytes = piexif.dump(exif_dict)
@@ -308,16 +305,13 @@ class TestPhotoUploadGPSWorkflow:
             result = await test_image_processor.process_image(
                 img_buffer,
                 f"test_timezone_{exif_timezone.replace(':', '_').replace('+', 'plus').replace('-', 'minus')}.jpg",
-                "Test Timezone"
+                "Test Timezone",
             )
 
             assert result.get("timezone") == expected_timezone
 
     @pytest.mark.asyncio
-    async def test_coordinate_precision_preservation(
-        self,
-        test_image_processor
-    ):
+    async def test_coordinate_precision_preservation(self, test_image_processor):
         """Test that GPS coordinates maintain proper precision."""
 
         # Create image with high precision coordinates
@@ -340,9 +334,7 @@ class TestPhotoUploadGPSWorkflow:
         img_buffer.seek(0)
 
         result = await test_image_processor.process_image(
-            img_buffer,
-            "test_precision.jpg",
-            "Test Precision"
+            img_buffer, "test_precision.jpg", "Test Precision"
         )
 
         # Verify precision is maintained
@@ -350,16 +342,13 @@ class TestPhotoUploadGPSWorkflow:
         assert abs(result["location_lon"] + 122.419167) < 0.000001
 
     @pytest.mark.asyncio
-    async def test_altitude_positive_negative_handling(
-        self,
-        test_image_processor
-    ):
+    async def test_altitude_positive_negative_handling(self, test_image_processor):
         """Test handling of positive and negative altitudes."""
 
         test_cases = [
-            (12500, 100, 0, 125.0),    # 125m above sea level
-            (5000, 100, 1, -50.0),     # 50m below sea level
-            (0, 100, 0, 0.0),          # Sea level
+            (12500, 100, 0, 125.0),  # 125m above sea level
+            (5000, 100, 1, -50.0),  # 50m below sea level
+            (0, 100, 0, 0.0),  # Sea level
         ]
 
         for alt_tuple, alt_divisor, alt_ref, expected_alt in test_cases:
@@ -382,18 +371,13 @@ class TestPhotoUploadGPSWorkflow:
             img_buffer.seek(0)
 
             result = await test_image_processor.process_image(
-                img_buffer,
-                f"test_altitude_{expected_alt}.jpg",
-                "Test Altitude"
+                img_buffer, f"test_altitude_{expected_alt}.jpg", "Test Altitude"
             )
 
             assert result.get("altitude") == expected_alt
 
     @pytest.mark.asyncio
-    async def test_malformed_gps_data_handling(
-        self,
-        test_image_processor
-    ):
+    async def test_malformed_gps_data_handling(self, test_image_processor):
         """Test handling of malformed GPS data."""
 
         test_cases = [
@@ -416,7 +400,7 @@ class TestPhotoUploadGPSWorkflow:
                 piexif.GPSIFD.GPSLatitudeRef: "N",
                 piexif.GPSIFD.GPSLongitude: ((122, 1), (25, 1), (1164, 100)),
                 piexif.GPSIFD.GPSLongitudeRef: "W",
-            }
+            },
         ]
 
         for i, gps_data in enumerate(test_cases):
@@ -430,9 +414,7 @@ class TestPhotoUploadGPSWorkflow:
 
             # Should not raise exception
             result = await test_image_processor.process_image(
-                img_buffer,
-                f"test_malformed_{i}.jpg",
-                "Test Malformed"
+                img_buffer, f"test_malformed_{i}.jpg", "Test Malformed"
             )
 
             # Should handle gracefully without GPS data
@@ -445,29 +427,27 @@ class TestPhotoUploadAPIWorkflow:
 
     @pytest.mark.asyncio
     async def test_api_upload_with_gps(
-        self,
-        test_image_with_gps,
-        authenticated_client: TestClient
+        self, test_image_with_gps, authenticated_client: TestClient
     ):
         """Test photo upload API with GPS data."""
 
-        with patch("app.core.location_service.location_service") as mock_location_service:
+        with patch(
+            "app.core.location_service.location_service"
+        ) as mock_location_service:
             mock_location_service.reverse_geocode.return_value = {
                 "location_name": "API Test Location",
-                "location_address": "API Test Address"
+                "location_address": "API Test Address",
             }
 
             # Upload via API
             response = authenticated_client.post(
                 "/api/photos",
-                files={
-                    "file": ("test_api_gps.jpg", test_image_with_gps, "image/jpeg")
-                },
+                files={"file": ("test_api_gps.jpg", test_image_with_gps, "image/jpeg")},
                 data={
                     "title": "API GPS Test",
                     "description": "Test GPS upload via API",
-                    "category": "Test"
-                }
+                    "category": "Test",
+                },
             )
 
             assert response.status_code == 201
@@ -486,13 +466,13 @@ class TestPhotoUploadAPIWorkflow:
 
     @pytest.mark.asyncio
     async def test_api_upload_override_location(
-        self,
-        test_image_with_gps,
-        authenticated_client: TestClient
+        self, test_image_with_gps, authenticated_client: TestClient
     ):
         """Test that manual location can override EXIF location."""
 
-        with patch("app.core.location_service.location_service") as mock_location_service:
+        with patch(
+            "app.core.location_service.location_service"
+        ) as mock_location_service:
             mock_location_service.reverse_geocode.return_value = {
                 "location_name": "EXIF Location"
             }
@@ -508,7 +488,7 @@ class TestPhotoUploadAPIWorkflow:
                     "location_name": "Manual Location Override",
                     "location_lat": "40.7128",  # NYC coordinates
                     "location_lon": "-74.0060",
-                }
+                },
             )
 
             assert response.status_code == 201
@@ -520,13 +500,12 @@ class TestPhotoUploadAPIWorkflow:
             assert photo_data["location_name"] == "Manual Location Override"
 
     @pytest.mark.asyncio
-    async def test_api_batch_upload_performance(
-        self,
-        authenticated_client: TestClient
-    ):
+    async def test_api_batch_upload_performance(self, authenticated_client: TestClient):
         """Test performance with multiple uploads containing GPS data."""
 
-        with patch("app.core.location_service.location_service") as mock_location_service:
+        with patch(
+            "app.core.location_service.location_service"
+        ) as mock_location_service:
             mock_location_service.reverse_geocode.return_value = {
                 "location_name": "Batch Location"
             }
@@ -555,13 +534,8 @@ class TestPhotoUploadAPIWorkflow:
 
                 response = authenticated_client.post(
                     "/api/photos",
-                    files={
-                        "file": (f"batch_test_{i}.jpg", img_buffer, "image/jpeg")
-                    },
-                    data={
-                        "title": f"Batch Test {i}",
-                        "category": "Batch"
-                    }
+                    files={"file": (f"batch_test_{i}.jpg", img_buffer, "image/jpeg")},
+                    data={"title": f"Batch Test {i}", "category": "Batch"},
                 )
 
                 assert response.status_code == 201
@@ -582,29 +556,25 @@ class TestPhotoUploadAPIWorkflow:
 
 @pytest.mark.asyncio
 async def test_end_to_end_workflow_with_database(
-    test_image_with_gps,
-    db_session: AsyncSession,
-    authenticated_client: TestClient
+    test_image_with_gps, db_session: AsyncSession, authenticated_client: TestClient
 ):
     """Test complete end-to-end workflow from API upload to database query."""
 
     with patch("app.core.location_service.location_service") as mock_location_service:
         mock_location_service.reverse_geocode.return_value = {
             "location_name": "E2E Test Location",
-            "location_address": "E2E Test Address"
+            "location_address": "E2E Test Address",
         }
 
         # 1. Upload photo via API
         upload_response = authenticated_client.post(
             "/api/photos",
-            files={
-                "file": ("e2e_test.jpg", test_image_with_gps, "image/jpeg")
-            },
+            files={"file": ("e2e_test.jpg", test_image_with_gps, "image/jpeg")},
             data={
                 "title": "End-to-End Test",
                 "description": "Complete workflow test",
-                "category": "Integration"
-            }
+                "category": "Integration",
+            },
         )
 
         assert upload_response.status_code == 201
@@ -626,9 +596,7 @@ async def test_end_to_end_workflow_with_database(
         assert retrieved_photo["variants"] is not None
 
         # 4. Verify photo appears in location-based queries
-        location_query = authenticated_client.get(
-            "/api/photos?has_location=true"
-        )
+        location_query = authenticated_client.get("/api/photos?has_location=true")
         assert location_query.status_code == 200
 
         photos_with_location = location_query.json()
@@ -637,6 +605,7 @@ async def test_end_to_end_workflow_with_database(
 
         # 5. Verify database record directly
         from uuid import UUID
+
         db_photo = await get_photo(db_session, UUID(photo_id))
         assert db_photo is not None
         assert db_photo.location_lat is not None

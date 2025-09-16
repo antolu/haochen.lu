@@ -26,7 +26,7 @@ test.describe('Map Interaction and Location Editing', () => {
       id: '2',
       title: 'NYC Skyline',
       location_lat: 40.7128,
-      location_lon: -74.0060,
+      location_lon: -74.006,
       location_name: 'New York City, NY',
       variants: {
         thumbnail: {
@@ -40,7 +40,7 @@ test.describe('Map Interaction and Location Editing', () => {
 
   test.beforeEach(async ({ page }) => {
     // Mock API responses
-    await page.route('/api/photos*', async (route) => {
+    await page.route('/api/photos*', async route => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -48,7 +48,7 @@ test.describe('Map Interaction and Location Editing', () => {
       });
     });
 
-    await page.route('/api/locations/search*', async (route) => {
+    await page.route('/api/locations/search*', async route => {
       const url = new URL(route.request().url());
       const query = url.searchParams.get('q');
 
@@ -64,7 +64,7 @@ test.describe('Map Interaction and Location Editing', () => {
         : [
             {
               latitude: 40.7128,
-              longitude: -74.0060,
+              longitude: -74.006,
               location_name: 'New York City, New York, United States',
               location_address: 'New York, NY, USA',
             },
@@ -77,7 +77,7 @@ test.describe('Map Interaction and Location Editing', () => {
       });
     });
 
-    await page.route('/api/locations/reverse*', async (route) => {
+    await page.route('/api/locations/reverse*', async route => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -146,9 +146,15 @@ test.describe('Map Interaction and Location Editing', () => {
       // Test map panning by dragging
       const mapBounds = await mapContainer.boundingBox();
       if (mapBounds) {
-        await page.mouse.move(mapBounds.x + mapBounds.width / 2, mapBounds.y + mapBounds.height / 2);
+        await page.mouse.move(
+          mapBounds.x + mapBounds.width / 2,
+          mapBounds.y + mapBounds.height / 2
+        );
         await page.mouse.down();
-        await page.mouse.move(mapBounds.x + mapBounds.width / 2 + 100, mapBounds.y + mapBounds.height / 2 + 50);
+        await page.mouse.move(
+          mapBounds.x + mapBounds.width / 2 + 100,
+          mapBounds.y + mapBounds.height / 2 + 50
+        );
         await page.mouse.up();
       }
 
@@ -168,7 +174,9 @@ test.describe('Map Interaction and Location Editing', () => {
       await page.click('[data-testid="location-tab"]');
 
       // Verify location inputs are populated
-      await expect(page.locator('[data-testid="location-name-input"]')).toHaveValue('Golden Gate Bridge, San Francisco, CA');
+      await expect(page.locator('[data-testid="location-name-input"]')).toHaveValue(
+        'Golden Gate Bridge, San Francisco, CA'
+      );
       await expect(page.locator('[data-testid="latitude-input"]')).toHaveValue('37.8199');
       await expect(page.locator('[data-testid="longitude-input"]')).toHaveValue('-122.4783');
 
@@ -191,7 +199,9 @@ test.describe('Map Interaction and Location Editing', () => {
       }
 
       // Verify coordinates were updated (mocked reverse geocoding will provide new location)
-      await expect(page.locator('[data-testid="location-name-input"]')).toHaveValue('Reverse Geocoded Location');
+      await expect(page.locator('[data-testid="location-name-input"]')).toHaveValue(
+        'Reverse Geocoded Location'
+      );
 
       // Save the changes
       await page.click('[data-testid="save-photo-button"]');
@@ -213,7 +223,9 @@ test.describe('Map Interaction and Location Editing', () => {
       await page.waitForTimeout(1000); // Wait for debounced geocoding
 
       // Verify location name was updated
-      await expect(page.locator('[data-testid="location-name-input"]')).toHaveValue('Reverse Geocoded Location');
+      await expect(page.locator('[data-testid="location-name-input"]')).toHaveValue(
+        'Reverse Geocoded Location'
+      );
 
       // Save changes
       await page.click('[data-testid="save-photo-button"]');
@@ -224,7 +236,7 @@ test.describe('Map Interaction and Location Editing', () => {
       // Mock geolocation API
       await page.addInitScript(() => {
         navigator.geolocation = {
-          getCurrentPosition: (success) => {
+          getCurrentPosition: success => {
             success({
               coords: {
                 latitude: 37.7749,
@@ -261,7 +273,9 @@ test.describe('Map Interaction and Location Editing', () => {
 
       // Should show validation errors
       await expect(page.locator('[data-testid="validation-error"]')).toBeVisible();
-      await expect(page.locator('[data-testid="validation-error"]')).toContainText('Invalid coordinates');
+      await expect(page.locator('[data-testid="validation-error"]')).toContainText(
+        'Invalid coordinates'
+      );
     });
   });
 
@@ -284,7 +298,9 @@ test.describe('Map Interaction and Location Editing', () => {
       await page.click('[data-testid="search-result-item"]');
 
       // Verify location was selected
-      await expect(page.locator('[data-testid="location-name-input"]')).toHaveValue('San Francisco, California, United States');
+      await expect(page.locator('[data-testid="location-name-input"]')).toHaveValue(
+        'San Francisco, California, United States'
+      );
       await expect(page.locator('[data-testid="latitude-input"]')).toHaveValue('37.7749');
       await expect(page.locator('[data-testid="longitude-input"]')).toHaveValue('-122.4194');
 
@@ -296,7 +312,7 @@ test.describe('Map Interaction and Location Editing', () => {
       let searchCallCount = 0;
 
       // Count search API calls
-      await page.route('/api/locations/search*', async (route) => {
+      await page.route('/api/locations/search*', async route => {
         searchCallCount++;
         await route.fulfill({
           status: 200,
@@ -421,10 +437,11 @@ test.describe('Map Interaction and Location Editing', () => {
 
     test('truncates long location names appropriately', async ({ page }) => {
       // Mock a photo with very long location name
-      await page.route('/api/photos*', async (route) => {
+      await page.route('/api/photos*', async route => {
         const photoWithLongLocation = {
           ...mockPhotoWithLocation,
-          location_name: 'This is an extremely long location name that should be truncated when displayed in the metadata overlay to prevent layout issues',
+          location_name:
+            'This is an extremely long location name that should be truncated when displayed in the metadata overlay to prevent layout issues',
         };
 
         await route.fulfill({
@@ -453,7 +470,7 @@ test.describe('Map Interaction and Location Editing', () => {
   test.describe('Error Handling and Edge Cases', () => {
     test('handles location service errors gracefully', async ({ page }) => {
       // Mock location service to return error
-      await page.route('/api/locations/reverse*', async (route) => {
+      await page.route('/api/locations/reverse*', async route => {
         await route.fulfill({
           status: 500,
           contentType: 'application/json',
@@ -479,7 +496,7 @@ test.describe('Map Interaction and Location Editing', () => {
 
     test('handles map loading failures', async ({ page }) => {
       // Mock map tile requests to fail
-      await page.route('https://**/*.tile.openstreetmap.org/**', async (route) => {
+      await page.route('https://**/*.tile.openstreetmap.org/**', async route => {
         await route.abort();
       });
 
@@ -516,7 +533,7 @@ test.describe('Map Interaction and Location Editing', () => {
       await page.click('[data-testid="current-location-button"]');
 
       // Should show error message
-      page.on('dialog', async (dialog) => {
+      page.on('dialog', async dialog => {
         expect(dialog.message()).toContain('Unable to get your current location');
         await dialog.accept();
       });
@@ -551,7 +568,9 @@ test.describe('Map Interaction and Location Editing', () => {
       await page.keyboard.press('Enter');
 
       // Location should be selected
-      await expect(page.locator('[data-testid="location-name-input"]')).toHaveValue('San Francisco, California, United States');
+      await expect(page.locator('[data-testid="location-name-input"]')).toHaveValue(
+        'San Francisco, California, United States'
+      );
     });
 
     test('provides proper ARIA labels and roles', async ({ page }) => {
@@ -585,7 +604,10 @@ test.describe('Map Interaction and Location Editing', () => {
 
       // Map should have appropriate ARIA attributes
       await expect(mapContainer).toHaveAttribute('role', 'application');
-      await expect(mapContainer).toHaveAttribute('aria-label', 'Interactive map for location selection');
+      await expect(mapContainer).toHaveAttribute(
+        'aria-label',
+        'Interactive map for location selection'
+      );
 
       // Status messages should be announced
       const statusRegion = page.locator('[aria-live="polite"]');
@@ -636,7 +658,7 @@ test.describe('Map Interaction and Location Editing', () => {
     test('debounces coordinate input changes', async ({ page }) => {
       let geocodeCallCount = 0;
 
-      await page.route('/api/locations/reverse*', async (route) => {
+      await page.route('/api/locations/reverse*', async route => {
         geocodeCallCount++;
         await route.fulfill({
           status: 200,

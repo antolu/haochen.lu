@@ -30,10 +30,14 @@ class TestLocationAPI:
         mock_location_service.reverse_geocode.return_value = {
             "location_name": "San Francisco, California, United States",
             "location_address": "San Francisco, CA 94102, USA",
-            "raw_address": {"city": "San Francisco", "state": "California", "country": "United States"},
+            "raw_address": {
+                "city": "San Francisco",
+                "state": "California",
+                "country": "United States",
+            },
             "place_id": "123456",
             "osm_type": "way",
-            "osm_id": "987654"
+            "osm_id": "987654",
         }
 
         response = client.get("/api/locations/reverse?lat=37.7749&lng=-122.4194")
@@ -47,7 +51,9 @@ class TestLocationAPI:
         assert data["osm_id"] == "987654"
         assert "raw_address" in data
 
-        mock_location_service.reverse_geocode.assert_called_once_with(37.7749, -122.4194, "en")
+        mock_location_service.reverse_geocode.assert_called_once_with(
+            37.7749, -122.4194, "en"
+        )
 
     def test_reverse_geocode_with_language(self, client, mock_location_service):
         """Test reverse geocoding with custom language."""
@@ -57,16 +63,20 @@ class TestLocationAPI:
             "raw_address": {},
             "place_id": None,
             "osm_type": None,
-            "osm_id": None
+            "osm_id": None,
         }
 
-        response = client.get("/api/locations/reverse?lat=37.7749&lng=-122.4194&language=es")
+        response = client.get(
+            "/api/locations/reverse?lat=37.7749&lng=-122.4194&language=es"
+        )
 
         assert response.status_code == 200
         data = response.json()
         assert data["location_name"] == "San Francisco, California, Estados Unidos"
 
-        mock_location_service.reverse_geocode.assert_called_once_with(37.7749, -122.4194, "es")
+        mock_location_service.reverse_geocode.assert_called_once_with(
+            37.7749, -122.4194, "es"
+        )
 
     def test_reverse_geocode_not_found(self, client, mock_location_service):
         """Test reverse geocoding when no location is found."""
@@ -113,7 +123,7 @@ class TestLocationAPI:
                 "location_address": "San Francisco, CA, USA",
                 "place_id": "123456",
                 "osm_type": "way",
-                "osm_id": "987654"
+                "osm_id": "987654",
             },
             {
                 "latitude": 37.7849,
@@ -122,8 +132,8 @@ class TestLocationAPI:
                 "location_address": "Bay Area, CA, USA",
                 "place_id": "789012",
                 "osm_type": "relation",
-                "osm_id": "345678"
-            }
+                "osm_id": "345678",
+            },
         ]
 
         response = client.get("/api/locations/search?q=San Francisco")
@@ -135,7 +145,9 @@ class TestLocationAPI:
         assert data[0]["longitude"] == -122.4194
         assert data[0]["location_name"] == "San Francisco, California, United States"
 
-        mock_location_service.search_locations.assert_called_once_with("San Francisco", 10, "en")
+        mock_location_service.search_locations.assert_called_once_with(
+            "San Francisco", 10, "en"
+        )
 
     def test_search_locations_with_limit(self, client, mock_location_service):
         """Test location search with custom limit."""
@@ -183,7 +195,7 @@ class TestLocationAPI:
             "location_name": "San Francisco, California, United States",
             "place_id": "123456",
             "osm_type": "way",
-            "osm_id": "987654"
+            "osm_id": "987654",
         }
 
         response = client.get("/api/locations/geocode?address=San Francisco, CA")
@@ -193,9 +205,13 @@ class TestLocationAPI:
         assert data["latitude"] == 37.7749
         assert data["longitude"] == -122.4194
         assert data["location_name"] == "San Francisco, California, United States"
-        assert data["location_address"] == "San Francisco, California, United States"  # Uses location_name as fallback
+        assert (
+            data["location_address"] == "San Francisco, California, United States"
+        )  # Uses location_name as fallback
 
-        mock_location_service.forward_geocode.assert_called_once_with("San Francisco, CA", "en")
+        mock_location_service.forward_geocode.assert_called_once_with(
+            "San Francisco, CA", "en"
+        )
 
     def test_forward_geocode_not_found(self, client, mock_location_service):
         """Test forward geocoding when address is not found."""
@@ -221,7 +237,7 @@ class TestLocationAPI:
                 "type": "attraction",
                 "class": "tourism",
                 "place_id": "123456",
-                "distance_km": 1.2
+                "distance_km": 1.2,
             },
             {
                 "latitude": 37.7649,
@@ -230,8 +246,8 @@ class TestLocationAPI:
                 "type": "attraction",
                 "class": "tourism",
                 "place_id": "789012",
-                "distance_km": 2.5
-            }
+                "distance_km": 2.5,
+            },
         ]
 
         response = client.get("/api/locations/nearby?lat=37.7749&lng=-122.4194")
@@ -243,16 +259,24 @@ class TestLocationAPI:
         assert data[0]["distance_km"] == 1.2
         assert data[0]["type"] == "attraction"
 
-        mock_location_service.get_nearby_locations.assert_called_once_with(37.7749, -122.4194, 10.0, 20)
+        mock_location_service.get_nearby_locations.assert_called_once_with(
+            37.7749, -122.4194, 10.0, 20
+        )
 
-    def test_get_nearby_locations_with_custom_params(self, client, mock_location_service):
+    def test_get_nearby_locations_with_custom_params(
+        self, client, mock_location_service
+    ):
         """Test nearby locations with custom radius and limit."""
         mock_location_service.get_nearby_locations.return_value = []
 
-        response = client.get("/api/locations/nearby?lat=37.7749&lng=-122.4194&radius=5.0&limit=10")
+        response = client.get(
+            "/api/locations/nearby?lat=37.7749&lng=-122.4194&radius=5.0&limit=10"
+        )
 
         assert response.status_code == 200
-        mock_location_service.get_nearby_locations.assert_called_once_with(37.7749, -122.4194, 5.0, 10)
+        mock_location_service.get_nearby_locations.assert_called_once_with(
+            37.7749, -122.4194, 5.0, 10
+        )
 
     def test_get_nearby_locations_parameter_validation(self, client):
         """Test nearby locations parameter validation."""
@@ -261,11 +285,15 @@ class TestLocationAPI:
         assert response.status_code == 422
 
         # Invalid radius (too small)
-        response = client.get("/api/locations/nearby?lat=37.7749&lng=-122.4194&radius=0.05")
+        response = client.get(
+            "/api/locations/nearby?lat=37.7749&lng=-122.4194&radius=0.05"
+        )
         assert response.status_code == 422
 
         # Invalid radius (too large)
-        response = client.get("/api/locations/nearby?lat=37.7749&lng=-122.4194&radius=100.0")
+        response = client.get(
+            "/api/locations/nearby?lat=37.7749&lng=-122.4194&radius=100.0"
+        )
         assert response.status_code == 422
 
         # Invalid limit (too small)
@@ -273,7 +301,9 @@ class TestLocationAPI:
         assert response.status_code == 422
 
         # Invalid limit (too large)
-        response = client.get("/api/locations/nearby?lat=37.7749&lng=-122.4194&limit=200")
+        response = client.get(
+            "/api/locations/nearby?lat=37.7749&lng=-122.4194&limit=200"
+        )
         assert response.status_code == 422
 
     def test_get_nearby_locations_empty_results(self, client, mock_location_service):
@@ -299,11 +329,13 @@ class TestLocationAPIIntegration:
             "raw_address": {},
             "place_id": None,
             "osm_type": None,
-            "osm_id": None
+            "osm_id": None,
         }
 
         async with AsyncClient(app=app, base_url="http://test") as client:
-            response = await client.get("/api/locations/reverse?lat=37.7749&lng=-122.4194")
+            response = await client.get(
+                "/api/locations/reverse?lat=37.7749&lng=-122.4194"
+            )
 
             assert response.status_code == 200
             data = response.json()
@@ -320,7 +352,7 @@ class TestLocationAPIIntegration:
                 "location_address": "Test Address",
                 "place_id": "123",
                 "osm_type": "way",
-                "osm_id": "456"
+                "osm_id": "456",
             }
         ]
 
@@ -399,7 +431,7 @@ class TestLocationAPIPerformance:
             "raw_address": {},
             "place_id": None,
             "osm_type": None,
-            "osm_id": None
+            "osm_id": None,
         }
 
         results = []
@@ -433,7 +465,7 @@ class TestLocationAPIPerformance:
             "raw_address": {},
             "place_id": None,
             "osm_type": None,
-            "osm_id": None
+            "osm_id": None,
         }
 
         start_time = time.time()

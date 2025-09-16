@@ -18,13 +18,13 @@ async def check_db():
     if not database_url:
         print("No DATABASE_URL found, skipping DB check")
         return True
-    
+
     # Extract connection details from DATABASE_URL
     # Format: postgresql+asyncpg://user:pass@host:port/dbname
     url_parts = database_url.replace('postgresql+asyncpg://', '').split('/')
     db_name = url_parts[-1] if len(url_parts) > 1 else 'postgres'
     user_host_part = url_parts[0]
-    
+
     if '@' in user_host_part:
         user_pass, host_port = user_host_part.split('@')
         if ':' in user_pass:
@@ -34,16 +34,16 @@ async def check_db():
     else:
         host_port = user_host_part
         user, password = 'postgres', ''
-    
+
     if ':' in host_port:
         host, port = host_port.split(':')
         port = int(port)
     else:
         host, port = host_port, 5432
-    
+
     max_attempts = 30
     attempt = 0
-    
+
     while attempt < max_attempts:
         try:
             conn = await asyncpg.connect(
@@ -62,7 +62,7 @@ async def check_db():
             print(f"Database not ready (attempt {attempt}/{max_attempts}): {e}")
             if attempt < max_attempts:
                 time.sleep(2)
-    
+
     print("Database failed to become ready")
     return False
 
@@ -75,7 +75,7 @@ END
 # Function to run migrations
 run_migrations() {
     echo "Running database migrations..."
-    
+
     # Check if alembic is available and migrations exist
     if [ -d "alembic" ] && [ -f "alembic.ini" ]; then
         echo "Found Alembic configuration, running migrations..."
@@ -102,4 +102,3 @@ run_migrations
 # Start the application
 echo "Starting FastAPI application..."
 exec uvicorn app.main:app --host 0.0.0.0 --port 8000
-

@@ -127,7 +127,7 @@ describe('Enhanced PhotoGrid with Location Metadata', () => {
       },
       // Minimal metadata photo
       location_lat: 40.7128,
-      location_lon: -74.0060,
+      location_lon: -74.006,
       location_name: 'New York City, NY',
       file_size: 1800000,
       width: 2000,
@@ -316,7 +316,9 @@ describe('Enhanced PhotoGrid with Location Metadata', () => {
       render(<PhotoGrid {...defaultProps} />);
 
       // First photo is featured
-      const featuredBadges = screen.getAllByRole('img')[0].parentElement?.querySelectorAll('svg[fill="currentColor"]');
+      const featuredBadges = screen
+        .getAllByRole('img')[0]
+        .parentElement?.querySelectorAll('svg[fill="currentColor"]');
       expect(featuredBadges?.length).toBeGreaterThan(0);
     });
 
@@ -328,7 +330,9 @@ describe('Enhanced PhotoGrid with Location Metadata', () => {
       const secondPhotoCard = photoCards[1].parentElement;
 
       // Should not have the featured star SVG
-      const starPath = secondPhotoCard?.querySelector('path[d*="M9.049 2.927c.3-.921 1.603-.921 1.902"]');
+      const starPath = secondPhotoCard?.querySelector(
+        'path[d*="M9.049 2.927c.3-.921 1.603-.921 1.902"]'
+      );
       expect(starPath).not.toBeInTheDocument();
     });
 

@@ -49,11 +49,15 @@ def comprehensive_exif_dict():
         "GPS": {
             piexif.GPSIFD.GPSLatitude: ((37, 1), (46, 1), (2940, 100)),  # 37°46'29.4"N
             piexif.GPSIFD.GPSLatitudeRef: b"N",
-            piexif.GPSIFD.GPSLongitude: ((122, 1), (25, 1), (1164, 100)),  # 122°25'11.64"W
+            piexif.GPSIFD.GPSLongitude: (
+                (122, 1),
+                (25, 1),
+                (1164, 100),
+            ),  # 122°25'11.64"W
             piexif.GPSIFD.GPSLongitudeRef: b"W",
             piexif.GPSIFD.GPSAltitude: (12500, 100),  # 125m
             piexif.GPSIFD.GPSAltitudeRef: 0,  # Above sea level
-        }
+        },
     }
 
 
@@ -73,7 +77,7 @@ def basic_pil_exif():
             2: (37, 46, 29.4),
             3: "W",
             4: (122, 25, 11.64),
-        }
+        },
     }
 
 
@@ -81,60 +85,78 @@ class TestEnhancedEXIFProcessing:
     """Test cases for enhanced EXIF data extraction."""
 
     @pytest.mark.asyncio
-    async def test_extract_comprehensive_exif_success(self, mock_image_processor, mock_image, comprehensive_exif_dict):
+    async def test_extract_comprehensive_exif_success(
+        self, mock_image_processor, mock_image, comprehensive_exif_dict
+    ):
         """Test successful comprehensive EXIF extraction with piexif."""
-        with patch("PIL.Image.open", return_value=mock_image):
-            with patch("piexif.load", return_value=comprehensive_exif_dict):
-                with patch.object(mock_image_processor, "_extract_comprehensive_exif") as mock_extract:
-                    mock_extract.return_value = {
-                        "camera_make": "Canon",
-                        "camera_model": "EOS R5",
-                        "date_taken": datetime(2023, 12, 25, 14, 30, 0),
-                        "iso": 400,
-                        "aperture": 2.8,
-                        "shutter_speed": "1/250",
-                        "focal_length": 85,
-                        "lens": "RF85mm F2 MACRO IS STM",
-                        "timezone": "+02:00",
-                        "location_lat": 37.774167,
-                        "location_lon": -122.419167,
-                        "altitude": 125.0,
-                    }
+        with (
+            patch("PIL.Image.open", return_value=mock_image),
+            patch("piexif.load", return_value=comprehensive_exif_dict),
+            patch.object(
+                mock_image_processor, "_extract_comprehensive_exif"
+            ) as mock_extract,
+        ):
+            mock_extract.return_value = {
+                "camera_make": "Canon",
+                "camera_model": "EOS R5",
+                "date_taken": datetime(2023, 12, 25, 14, 30, 0),
+                "iso": 400,
+                "aperture": 2.8,
+                "shutter_speed": "1/250",
+                "focal_length": 85,
+                "lens": "RF85mm F2 MACRO IS STM",
+                "timezone": "+02:00",
+                "location_lat": 37.774167,
+                "location_lon": -122.419167,
+                "altitude": 125.0,
+            }
 
-                    result = await mock_image_processor.extract_exif_data("/fake/image.jpg")
+            result = await mock_image_processor.extract_exif_data("/fake/image.jpg")
 
-                    assert result["camera_make"] == "Canon"
-                    assert result["camera_model"] == "EOS R5"
-                    assert result["iso"] == 400
-                    assert result["aperture"] == 2.8
-                    assert result["shutter_speed"] == "1/250"
-                    assert result["focal_length"] == 85
-                    assert result["lens"] == "RF85mm F2 MACRO IS STM"
-                    assert result["timezone"] == "+02:00"
-                    assert abs(result["location_lat"] - 37.774167) < 0.001
-                    assert abs(result["location_lon"] + 122.419167) < 0.001
-                    assert result["altitude"] == 125.0
-                    assert result["width"] == 3000
-                    assert result["height"] == 2000
+            assert result["camera_make"] == "Canon"
+            assert result["camera_model"] == "EOS R5"
+            assert result["iso"] == 400
+            assert result["aperture"] == 2.8
+            assert result["shutter_speed"] == "1/250"
+            assert result["focal_length"] == 85
+            assert result["lens"] == "RF85mm F2 MACRO IS STM"
+            assert result["timezone"] == "+02:00"
+            assert abs(result["location_lat"] - 37.774167) < 0.001
+            assert abs(result["location_lon"] + 122.419167) < 0.001
+            assert result["altitude"] == 125.0
+            assert result["width"] == 3000
+            assert result["height"] == 2000
 
     @pytest.mark.asyncio
-    async def test_extract_comprehensive_exif_camera_data(self, mock_image_processor, comprehensive_exif_dict):
+    async def test_extract_comprehensive_exif_camera_data(
+        self, mock_image_processor, comprehensive_exif_dict
+    ):
         """Test extraction of camera make and model."""
-        result = await mock_image_processor._extract_comprehensive_exif(comprehensive_exif_dict)
+        result = await mock_image_processor._extract_comprehensive_exif(
+            comprehensive_exif_dict
+        )
 
         assert result["camera_make"] == "Canon"
         assert result["camera_model"] == "EOS R5"
 
-    def test_extract_comprehensive_exif_datetime(self, mock_image_processor, comprehensive_exif_dict):
+    def test_extract_comprehensive_exif_datetime(
+        self, mock_image_processor, comprehensive_exif_dict
+    ):
         """Test extraction and parsing of datetime."""
-        result = mock_image_processor._extract_comprehensive_exif(comprehensive_exif_dict)
+        result = mock_image_processor._extract_comprehensive_exif(
+            comprehensive_exif_dict
+        )
 
         assert isinstance(result["date_taken"], datetime)
         assert result["date_taken"] == datetime(2023, 12, 25, 14, 30, 0)
 
-    def test_extract_comprehensive_exif_camera_settings(self, mock_image_processor, comprehensive_exif_dict):
+    def test_extract_comprehensive_exif_camera_settings(
+        self, mock_image_processor, comprehensive_exif_dict
+    ):
         """Test extraction of camera settings."""
-        result = mock_image_processor._extract_comprehensive_exif(comprehensive_exif_dict)
+        result = mock_image_processor._extract_comprehensive_exif(
+            comprehensive_exif_dict
+        )
 
         assert result["iso"] == 400
         assert result["aperture"] == 2.8  # 280/100
@@ -143,16 +165,22 @@ class TestEnhancedEXIFProcessing:
         assert result["lens"] == "RF85mm F2 MACRO IS STM"
         assert result["timezone"] == "+02:00"
 
-    def test_extract_comprehensive_exif_gps_coordinates(self, mock_image_processor, comprehensive_exif_dict):
+    def test_extract_comprehensive_exif_gps_coordinates(
+        self, mock_image_processor, comprehensive_exif_dict
+    ):
         """Test GPS coordinate extraction and conversion."""
-        with patch.object(mock_image_processor, "_extract_enhanced_gps_data") as mock_gps:
+        with patch.object(
+            mock_image_processor, "_extract_enhanced_gps_data"
+        ) as mock_gps:
             mock_gps.return_value = {
                 "location_lat": 37.774167,
                 "location_lon": -122.419167,
-                "altitude": 125.0
+                "altitude": 125.0,
             }
 
-            result = mock_image_processor._extract_comprehensive_exif(comprehensive_exif_dict)
+            result = mock_image_processor._extract_comprehensive_exif(
+                comprehensive_exif_dict
+            )
 
             mock_gps.assert_called_once_with(comprehensive_exif_dict["GPS"])
             assert abs(result["location_lat"] - 37.774167) < 0.001
@@ -160,28 +188,41 @@ class TestEnhancedEXIFProcessing:
             assert result["altitude"] == 125.0
 
     @pytest.mark.asyncio
-    async def test_extract_comprehensive_exif_with_location_service(self, mock_image_processor, comprehensive_exif_dict):
+    async def test_extract_comprehensive_exif_with_location_service(
+        self, mock_image_processor, comprehensive_exif_dict
+    ):
         """Test EXIF extraction with location service integration."""
         mock_location_info = {
             "location_name": "San Francisco, California, United States",
-            "location_address": "San Francisco, CA 94102, USA"
+            "location_address": "San Francisco, CA 94102, USA",
         }
 
-        with patch("app.core.location_service.location_service") as mock_location_service:
+        with patch(
+            "app.core.location_service.location_service"
+        ) as mock_location_service:
             mock_location_service.reverse_geocode.return_value = mock_location_info
 
             # Mock the GPS extraction to return coordinates
-            with patch.object(mock_image_processor, "_extract_enhanced_gps_data") as mock_gps:
+            with patch.object(
+                mock_image_processor, "_extract_enhanced_gps_data"
+            ) as mock_gps:
                 mock_gps.return_value = {
                     "location_lat": 37.774167,
-                    "location_lon": -122.419167
+                    "location_lon": -122.419167,
                 }
 
-                result = mock_image_processor._extract_comprehensive_exif(comprehensive_exif_dict)
+                result = mock_image_processor._extract_comprehensive_exif(
+                    comprehensive_exif_dict
+                )
 
                 # Verify location service was called
-                mock_location_service.reverse_geocode.assert_called_once_with(37.774167, -122.419167)
-                assert result["location_name"] == "San Francisco, California, United States"
+                mock_location_service.reverse_geocode.assert_called_once_with(
+                    37.774167, -122.419167
+                )
+                assert (
+                    result["location_name"]
+                    == "San Francisco, California, United States"
+                )
                 assert result["location_address"] == "San Francisco, CA 94102, USA"
 
     def test_extract_enhanced_gps_data_north_east(self, mock_image_processor):
@@ -246,28 +287,36 @@ class TestEnhancedEXIFProcessing:
         result = mock_image_processor._extract_enhanced_gps_data(gps_info)
 
         # Should handle gracefully and not include invalid data
-        assert len(result) == 0 or all(key not in result for key in ["location_lat", "location_lon"])
+        assert len(result) == 0 or all(
+            key not in result for key in ["location_lat", "location_lon"]
+        )
 
     @pytest.mark.asyncio
-    async def test_fallback_to_basic_exif(self, mock_image_processor, mock_image, basic_pil_exif):
+    async def test_fallback_to_basic_exif(
+        self, mock_image_processor, mock_image, basic_pil_exif
+    ):
         """Test fallback to basic PIL EXIF when piexif fails."""
-        with patch("PIL.Image.open", return_value=mock_image):
-            with patch("piexif.load", side_effect=Exception("piexif failed")):
-                mock_image._getexif.return_value = basic_pil_exif
+        with (
+            patch("PIL.Image.open", return_value=mock_image),
+            patch("piexif.load", side_effect=Exception("piexif failed")),
+        ):
+            mock_image._getexif.return_value = basic_pil_exif
 
-                with patch.object(mock_image_processor, "_extract_basic_exif") as mock_extract:
-                    mock_extract.return_value = {
-                        "date_taken": datetime(2023, 12, 25, 14, 30, 0),
-                        "camera_make": "Canon",
-                        "camera_model": "EOS R5",
-                        "iso": 400,
-                    }
+            with patch.object(
+                mock_image_processor, "_extract_basic_exif"
+            ) as mock_extract:
+                mock_extract.return_value = {
+                    "date_taken": datetime(2023, 12, 25, 14, 30, 0),
+                    "camera_make": "Canon",
+                    "camera_model": "EOS R5",
+                    "iso": 400,
+                }
 
-                    result = await mock_image_processor.extract_exif_data("/fake/image.jpg")
+                result = await mock_image_processor.extract_exif_data("/fake/image.jpg")
 
-                    mock_extract.assert_called_once_with(basic_pil_exif)
-                    assert result["camera_make"] == "Canon"
-                    assert result["camera_model"] == "EOS R5"
+                mock_extract.assert_called_once_with(basic_pil_exif)
+                assert result["camera_make"] == "Canon"
+                assert result["camera_model"] == "EOS R5"
 
     def test_extract_basic_exif_datetime_parsing(self, mock_image_processor):
         """Test basic EXIF datetime parsing."""
@@ -314,21 +363,25 @@ class TestEnhancedEXIFProcessing:
         """Test EXIF extraction when no EXIF data is present."""
         mock_image._getexif.return_value = None
 
-        with patch("PIL.Image.open", return_value=mock_image):
-            with patch("piexif.load", side_effect=Exception("No EXIF")):
-                result = await mock_image_processor.extract_exif_data("/fake/image.jpg")
+        with (
+            patch("PIL.Image.open", return_value=mock_image),
+            patch("piexif.load", side_effect=Exception("No EXIF")),
+        ):
+            result = await mock_image_processor.extract_exif_data("/fake/image.jpg")
 
-                # Should still return basic image dimensions
-                assert result["width"] == 3000
-                assert result["height"] == 2000
-                # But no camera data
-                assert "camera_make" not in result
+            # Should still return basic image dimensions
+            assert result["width"] == 3000
+            assert result["height"] == 2000
+            # But no camera data
+            assert "camera_make" not in result
 
     @pytest.mark.asyncio
     async def test_extract_exif_file_not_found(self, mock_image_processor):
         """Test EXIF extraction when image file doesn't exist."""
         with patch("PIL.Image.open", side_effect=FileNotFoundError("File not found")):
-            result = await mock_image_processor.extract_exif_data("/nonexistent/image.jpg")
+            result = await mock_image_processor.extract_exif_data(
+                "/nonexistent/image.jpg"
+            )
 
             assert result == {}
 
@@ -370,9 +423,9 @@ class TestEXIFProcessingEdgeCases:
         """Test aperture calculation with various fraction formats."""
         test_cases = [
             {piexif.ExifIFD.FNumber: (280, 100)},  # f/2.8
-            {piexif.ExifIFD.FNumber: (0, 100)},    # Zero numerator
-            {piexif.ExifIFD.FNumber: (280, 0)},    # Zero denominator
-            {piexif.ExifIFD.FNumber: (280,)},      # Single value tuple
+            {piexif.ExifIFD.FNumber: (0, 100)},  # Zero numerator
+            {piexif.ExifIFD.FNumber: (280, 0)},  # Zero denominator
+            {piexif.ExifIFD.FNumber: (280,)},  # Single value tuple
         ]
 
         for exif_dict in test_cases:
@@ -388,10 +441,10 @@ class TestEXIFProcessingEdgeCases:
     def test_shutter_speed_formats(self, mock_image_processor):
         """Test various shutter speed fraction formats."""
         test_cases = [
-            ((1, 250), "1/250"),      # Fast shutter
-            ((1, 60), "1/60"),        # Normal shutter
-            ((2, 1), "2/1"),          # Slow shutter (2 seconds)
-            ((10, 5), "10/5"),        # Fraction that reduces to 2
+            ((1, 250), "1/250"),  # Fast shutter
+            ((1, 60), "1/60"),  # Normal shutter
+            ((2, 1), "2/1"),  # Slow shutter (2 seconds)
+            ((10, 5), "10/5"),  # Fraction that reduces to 2
         ]
 
         for fraction, expected in test_cases:
@@ -408,7 +461,7 @@ class TestEXIFProcessingEdgeCases:
             },
             "Exif": {
                 piexif.ExifIFD.LensModel: b"RF85mm F2 MACRO IS STM\x00\x00",  # Multiple nulls
-            }
+            },
         }
 
         result = mock_image_processor._extract_comprehensive_exif(exif_dict)
@@ -425,10 +478,14 @@ class TestEXIFProcessingEdgeCases:
         large_mock_image.height = 8000
         large_mock_image.size = (10000, 8000)
 
-        with patch("PIL.Image.open", return_value=large_mock_image):
-            with patch("piexif.load", return_value={}):
-                result = await mock_image_processor.extract_exif_data("/fake/large_image.raw")
+        with (
+            patch("PIL.Image.open", return_value=large_mock_image),
+            patch("piexif.load", return_value={}),
+        ):
+            result = await mock_image_processor.extract_exif_data(
+                "/fake/large_image.raw"
+            )
 
-                # Should successfully extract dimensions without memory issues
-                assert result["width"] == 10000
-                assert result["height"] == 8000
+            # Should successfully extract dimensions without memory issues
+            assert result["width"] == 10000
+            assert result["height"] == 8000

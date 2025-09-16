@@ -40,19 +40,19 @@ vi.mock('../../components/LocationInput', () => ({
       <input
         data-testid="location-lat"
         value={latitude || ''}
-        onChange={(e) => onLocationChange?.(parseFloat(e.target.value), longitude, locationName)}
+        onChange={e => onLocationChange?.(parseFloat(e.target.value), longitude, locationName)}
         disabled={disabled}
       />
       <input
         data-testid="location-lng"
         value={longitude || ''}
-        onChange={(e) => onLocationChange?.(latitude, parseFloat(e.target.value), locationName)}
+        onChange={e => onLocationChange?.(latitude, parseFloat(e.target.value), locationName)}
         disabled={disabled}
       />
       <input
         data-testid="location-name"
         value={locationName || ''}
-        onChange={(e) => onLocationChange?.(latitude, longitude, e.target.value)}
+        onChange={e => onLocationChange?.(latitude, longitude, e.target.value)}
         disabled={disabled}
       />
     </div>
@@ -242,7 +242,9 @@ describe('Enhanced PhotoEditForm', () => {
 
       expect(screen.getByTestId('location-lat')).toHaveValue('37.8199');
       expect(screen.getByTestId('location-lng')).toHaveValue('-122.4783');
-      expect(screen.getByTestId('location-name')).toHaveValue('Golden Gate Bridge, San Francisco, CA');
+      expect(screen.getByTestId('location-name')).toHaveValue(
+        'Golden Gate Bridge, San Francisco, CA'
+      );
     });
 
     it('updates form data when location changes', async () => {
@@ -577,7 +579,9 @@ describe('Enhanced PhotoEditForm', () => {
 
       // Should be able to navigate with keyboard
       await user.tab();
-      expect(document.activeElement).toBe(tabs[0] || screen.getByRole('button', { name: /basic/i }));
+      expect(document.activeElement).toBe(
+        tabs[0] || screen.getByRole('button', { name: /basic/i })
+      );
     });
 
     it('announces tab changes to screen readers', async () => {

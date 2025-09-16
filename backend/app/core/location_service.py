@@ -4,6 +4,7 @@ import asyncio
 import hashlib
 import json
 import logging
+import math
 import time
 from typing import Any
 
@@ -30,7 +31,7 @@ class LocationService:
     def _generate_cache_key(self, operation: str, *args) -> str:
         """Generate a cache key for the given operation and arguments."""
         key_data = f"{operation}:{':'.join(str(arg) for arg in args)}"
-        return f"location:{hashlib.md5(key_data.encode()).hexdigest()}"
+        return f"location:{hashlib.md5(key_data.encode(), usedforsecurity=False).hexdigest()}"
 
     async def _get_cached_result(
         self, cache_key: str
@@ -70,7 +71,7 @@ class LocationService:
         """Validate and sanitize string input."""
         if not isinstance(text, str):
             msg = f"{field_name} must be a string"
-            raise ValueError(msg)
+            raise TypeError(msg)
 
         text = text.strip()
         if len(text) < min_length:
@@ -106,7 +107,7 @@ class LocationService:
 
         # Try to get from cache first
         cached_result = await self._get_cached_result(cache_key)
-        if cached_result:
+        if cached_result and isinstance(cached_result, dict):
             logger.debug(f"Cache hit for reverse geocoding {latitude}, {longitude}")
             return cached_result
 
@@ -179,7 +180,7 @@ class LocationService:
 
         # Try to get from cache first
         cached_result = await self._get_cached_result(cache_key)
-        if cached_result:
+        if cached_result and isinstance(cached_result, dict):
             logger.debug(f"Cache hit for forward geocoding '{address}'")
             return cached_result
 
@@ -387,7 +388,6 @@ class LocationService:
         self, lat1: float, lon1: float, lat2: float, lon2: float
     ) -> float:
         """Calculate distance between two points in kilometers using Haversine formula."""
-        import math
 
         # Convert to radians
         lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])

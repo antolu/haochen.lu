@@ -42,11 +42,12 @@ describe('LocationInput', () => {
     vi.clearAllMocks();
     mockFetch.mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({
-        location_name: 'San Francisco, California, United States',
-      }),
+      json: () =>
+        Promise.resolve({
+          location_name: 'San Francisco, California, United States',
+        }),
     });
-    mockGeolocation.getCurrentPosition.mockImplementation((success) => {
+    mockGeolocation.getCurrentPosition.mockImplementation(success => {
       success({
         coords: {
           latitude: 37.7749,
@@ -88,34 +89,20 @@ describe('LocationInput', () => {
     const user = userEvent.setup();
     const onLocationChange = vi.fn();
 
-    render(
-      <LocationInput
-        {...defaultProps}
-        onLocationChange={onLocationChange}
-      />
-    );
+    render(<LocationInput {...defaultProps} onLocationChange={onLocationChange} />);
 
     const nameInput = screen.getByLabelText('Location Name');
     await user.clear(nameInput);
     await user.type(nameInput, 'New Location Name');
 
-    expect(onLocationChange).toHaveBeenLastCalledWith(
-      37.7749,
-      -122.4194,
-      'New Location Name'
-    );
+    expect(onLocationChange).toHaveBeenLastCalledWith(37.7749, -122.4194, 'New Location Name');
   });
 
   it('calls onLocationChange when latitude is changed', async () => {
     const user = userEvent.setup();
     const onLocationChange = vi.fn();
 
-    render(
-      <LocationInput
-        {...defaultProps}
-        onLocationChange={onLocationChange}
-      />
-    );
+    render(<LocationInput {...defaultProps} onLocationChange={onLocationChange} />);
 
     const latInput = screen.getByLabelText('Latitude');
     await user.clear(latInput);
@@ -128,30 +115,20 @@ describe('LocationInput', () => {
     const user = userEvent.setup();
     const onLocationChange = vi.fn();
 
-    render(
-      <LocationInput
-        {...defaultProps}
-        onLocationChange={onLocationChange}
-      />
-    );
+    render(<LocationInput {...defaultProps} onLocationChange={onLocationChange} />);
 
     const lonInput = screen.getByLabelText('Longitude');
     await user.clear(lonInput);
     await user.type(lonInput, '-74.0060');
 
-    expect(onLocationChange).toHaveBeenLastCalledWith(37.7749, -74.0060);
+    expect(onLocationChange).toHaveBeenLastCalledWith(37.7749, -74.006);
   });
 
   it('does not call onLocationChange with invalid coordinates', async () => {
     const user = userEvent.setup();
     const onLocationChange = vi.fn();
 
-    render(
-      <LocationInput
-        latitude={37.7749}
-        onLocationChange={onLocationChange}
-      />
-    );
+    render(<LocationInput latitude={37.7749} onLocationChange={onLocationChange} />);
 
     const latInput = screen.getByLabelText('Latitude');
     await user.clear(latInput);
@@ -205,9 +182,7 @@ describe('LocationInput', () => {
       await user.click(screen.getByTestId('map-click-simulator'));
 
       await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledWith(
-          '/api/locations/reverse?lat=37.7749&lng=-122.4194'
-        );
+        expect(mockFetch).toHaveBeenCalledWith('/api/locations/reverse?lat=37.7749&lng=-122.4194');
       });
 
       expect(onLocationChange).toHaveBeenCalledWith(
@@ -425,14 +400,18 @@ describe('LocationInput', () => {
     it('provides helpful placeholder text', () => {
       render(<LocationInput />);
 
-      expect(screen.getByPlaceholderText('Enter location name or let it be auto-detected')).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText('Enter location name or let it be auto-detected')
+      ).toBeInTheDocument();
       expect(screen.getByPlaceholderText('0.000000')).toBeInTheDocument();
     });
 
     it('provides helpful instructions', () => {
       render(<LocationInput {...defaultProps} />);
 
-      expect(screen.getByText('Override the auto-detected location name if needed')).toBeInTheDocument();
+      expect(
+        screen.getByText('Override the auto-detected location name if needed')
+      ).toBeInTheDocument();
     });
 
     it('supports keyboard navigation', async () => {
@@ -502,9 +481,7 @@ describe('LocationInput', () => {
       await user.click(screen.getByTestId('map-click-simulator'));
 
       await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledWith(
-          '/api/locations/reverse?lat=37.7749&lng=-122.4194'
-        );
+        expect(mockFetch).toHaveBeenCalledWith('/api/locations/reverse?lat=37.7749&lng=-122.4194');
       });
     });
 

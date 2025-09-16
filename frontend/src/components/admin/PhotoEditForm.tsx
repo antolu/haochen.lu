@@ -58,15 +58,23 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
   onCancel,
   isLoading = false,
 }) => {
-  const [activeTab, setActiveTab] = useState<'basic' | 'location' | 'technical' | 'custom'>('basic');
-  const [customFields, setCustomFields] = useState<Array<{ key: string; type: string; label: string; value: any; options?: string[] }>>(
-    []
+  const [activeTab, setActiveTab] = useState<'basic' | 'location' | 'technical' | 'custom'>(
+    'basic'
   );
+  const [customFields, setCustomFields] = useState<
+    Array<{ key: string; type: string; label: string; value: any; options?: string[] }>
+  >([]);
   const [newFieldKey, setNewFieldKey] = useState('');
   const [newFieldType, setNewFieldType] = useState('text');
   const [newFieldLabel, setNewFieldLabel] = useState('');
 
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<FormData>({
     defaultValues: {
       title: photo.title || '',
       description: photo.description || '',
@@ -97,8 +105,8 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
     if (photo.metadata) {
       const fields = Object.entries(photo.metadata).map(([key, value]) => ({
         key,
-        type: typeof value === 'boolean' ? 'boolean' :
-              typeof value === 'number' ? 'number' : 'text',
+        type:
+          typeof value === 'boolean' ? 'boolean' : typeof value === 'number' ? 'number' : 'text',
         label: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' '),
         value,
       }));
@@ -129,8 +137,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
       key: newFieldKey,
       type: newFieldType,
       label: newFieldLabel,
-      value: newFieldType === 'boolean' ? false :
-             newFieldType === 'number' ? 0 : '',
+      value: newFieldType === 'boolean' ? false : newFieldType === 'number' ? 0 : '',
     };
 
     setCustomFields([...customFields, newField]);
@@ -153,10 +160,13 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
   const onSubmit = async (data: FormData) => {
     try {
       // Build metadata object from custom fields
-      const metadata = customFields.reduce((acc, field) => {
-        acc[field.key] = field.value;
-        return acc;
-      }, {} as Record<string, any>);
+      const metadata = customFields.reduce(
+        (acc, field) => {
+          acc[field.key] = field.value;
+          return acc;
+        },
+        {} as Record<string, any>
+      );
 
       const updatedPhoto: Partial<Photo> = {
         ...data,
@@ -172,7 +182,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
     }
   };
 
-  const renderCustomField = (field: typeof customFields[0], index: number) => {
+  const renderCustomField = (field: (typeof customFields)[0], index: number) => {
     switch (field.type) {
       case 'boolean':
         return (
@@ -180,7 +190,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
             <input
               type="checkbox"
               checked={field.value}
-              onChange={(e) => updateCustomField(index, e.target.checked)}
+              onChange={e => updateCustomField(index, e.target.checked)}
               className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
             />
             <span className="ml-2 text-sm text-gray-700">{field.label}</span>
@@ -190,13 +200,11 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
       case 'number':
         return (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {field.label}
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
             <input
               type="number"
               value={field.value}
-              onChange={(e) => updateCustomField(index, parseFloat(e.target.value) || 0)}
+              onChange={e => updateCustomField(index, parseFloat(e.target.value) || 0)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -205,12 +213,10 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
       case 'textarea':
         return (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {field.label}
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
             <textarea
               value={field.value}
-              onChange={(e) => updateCustomField(index, e.target.value)}
+              onChange={e => updateCustomField(index, e.target.value)}
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
@@ -220,13 +226,11 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
       case 'date':
         return (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {field.label}
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
             <input
               type="date"
               value={field.value}
-              onChange={(e) => updateCustomField(index, e.target.value)}
+              onChange={e => updateCustomField(index, e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -235,13 +239,11 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
       default: // text
         return (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {field.label}
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
             <input
               type="text"
               value={field.value}
-              onChange={(e) => updateCustomField(index, e.target.value)}
+              onChange={e => updateCustomField(index, e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -307,7 +309,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
       {/* Tabs */}
       <div className="border-b border-gray-200">
         <nav className="flex space-x-8 px-6">
-          {tabs.map((tab) => (
+          {tabs.map(tab => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
@@ -337,9 +339,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Title *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
                   <input
                     type="text"
                     {...register('title', { required: 'Title is required' })}
@@ -351,9 +351,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Category
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
                   <input
                     type="text"
                     {...register('category')}
@@ -364,9 +362,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <textarea
                   {...register('description')}
                   rows={4}
@@ -376,9 +372,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tags
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
                 <input
                   type="text"
                   {...register('tags')}
@@ -388,9 +382,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Comments
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Comments</label>
                 <textarea
                   {...register('comments')}
                   rows={3}
@@ -405,9 +397,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
                   {...register('featured')}
                   className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                 />
-                <label className="ml-2 text-sm text-gray-700">
-                  Featured Photo
-                </label>
+                <label className="ml-2 text-sm text-gray-700">Featured Photo</label>
               </div>
             </div>
           )}
@@ -477,9 +467,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Lens
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Lens</label>
                   <input
                     type="text"
                     {...register('lens')}
@@ -488,9 +476,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    ISO
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">ISO</label>
                   <input
                     type="number"
                     {...register('iso')}
@@ -534,9 +520,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Date Taken
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date Taken</label>
                   <input
                     type="datetime-local"
                     {...register('date_taken')}
@@ -545,9 +529,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Timezone
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
                   <input
                     type="text"
                     {...register('timezone')}
@@ -576,8 +558,18 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
                             onClick={() => removeCustomField(index)}
                             className="text-red-600 hover:text-red-800"
                           >
-                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            <svg
+                              className="h-5 w-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
                             </svg>
                           </button>
                         </div>
@@ -599,7 +591,9 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
                     <input
                       type="text"
                       value={newFieldKey}
-                      onChange={(e) => setNewFieldKey(e.target.value.toLowerCase().replace(/\s+/g, '_'))}
+                      onChange={e =>
+                        setNewFieldKey(e.target.value.toLowerCase().replace(/\s+/g, '_'))
+                      }
                       placeholder="field_name"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
@@ -612,7 +606,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
                     <input
                       type="text"
                       value={newFieldLabel}
-                      onChange={(e) => setNewFieldLabel(e.target.value)}
+                      onChange={e => setNewFieldLabel(e.target.value)}
                       placeholder="Display Name"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
@@ -624,10 +618,10 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
                     </label>
                     <select
                       value={newFieldType}
-                      onChange={(e) => setNewFieldType(e.target.value)}
+                      onChange={e => setNewFieldType(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
-                      {FIELD_TYPES.map((type) => (
+                      {FIELD_TYPES.map(type => (
                         <option key={type.value} value={type.value}>
                           {type.label}
                         </option>
@@ -641,8 +635,18 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
                   onClick={addCustomField}
                   className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
-                  <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  <svg
+                    className="h-4 w-4 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
+                    />
                   </svg>
                   Add Field
                 </button>
