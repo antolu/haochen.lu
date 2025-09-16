@@ -80,12 +80,23 @@ def upgrade() -> None:
         sa.Column("slug", sa.String(200), nullable=False, unique=True),
         sa.Column("description", sa.Text(), nullable=False),
         sa.Column("short_description", sa.String(500)),
+        # URLs
         sa.Column("github_url", sa.String(500)),
         sa.Column("demo_url", sa.String(500)),
         sa.Column("image_url", sa.String(500)),
-        sa.Column("technologies", sa.String(500)),
+        # Repository Integration
+        sa.Column("repository_type", sa.String(20)),
+        sa.Column("repository_owner", sa.String(100)),
+        sa.Column("repository_name", sa.String(100)),
+        sa.Column("use_readme", sa.Boolean(), default=False),
+        sa.Column("readme_content", sa.Text()),
+        sa.Column("readme_last_updated", sa.DateTime()),
+        # Technologies (JSON string)
+        sa.Column("technologies", sa.Text()),
+        # Status
         sa.Column("featured", sa.Boolean(), default=False),
         sa.Column("status", sa.String(50), default="active"),
+        # Timestamps
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=False),
     )
