@@ -14,6 +14,17 @@ This is a modern, full-stack portfolio website built with **FastAPI (Python) bac
 - Complete rebuild: `docker system prune -f && docker compose build --no-cache && docker compose up -d`
 - Run migrations: `docker compose run --rm migrate`
 
+### Multi-platform Docker Builds
+For building and pushing images to registry:
+- Backend: `docker buildx build --platform linux/amd64,linux/arm64 -t antonlu/arcadia-backend:latest backend --push`
+- Frontend: `docker buildx build --platform linux/amd64,linux/arm64 -t antonlu/arcadia-frontend:latest frontend --push`
+
+For local development (loads images locally):
+- Backend: `docker buildx build --platform linux/amd64,linux/arm64 -t antonlu/arcadia-backend:latest backend --load`
+- Frontend: `docker buildx build --platform linux/amd64,linux/arm64 -t antonlu/arcadia-frontend:latest frontend --load`
+
+**Note**: Use `--load` for local development, `--push` for registry deployment. When using `--push`, images are not stored locally and Docker Compose may not find them.
+
 **Access URLs:**
 - Website: http://localhost
 - API Documentation: http://localhost/api/docs  
