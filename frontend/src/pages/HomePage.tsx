@@ -6,9 +6,9 @@ import { useQuery } from '@tanstack/react-query';
 import { photos, projects } from '../api/client';
 
 const HomePage: React.FC = () => {
-  const { data: featuredPhotos } = useQuery({
-    queryKey: ['photos', 'featured'],
-    queryFn: () => photos.getFeatured(6),
+  const { data: latestPhotos } = useQuery({
+    queryKey: ['photos', 'latest'],
+    queryFn: () => photos.list({ per_page: 6, order_by: 'created_at' }),
   });
 
   const { data: latestProjects } = useQuery({
@@ -71,12 +71,14 @@ const HomePage: React.FC = () => {
             >
               Discover My Work
             </Link>
-            <Link
-              to="/projects"
+            <button
+              onClick={() => {
+                document.querySelector('#contact-section')?.scrollIntoView({ behavior: 'smooth' });
+              }}
               className="border-2 border-white text-white hover:bg-white hover:text-gray-900 px-8 py-4 rounded-lg transition-colors font-medium min-w-[200px] text-center"
             >
               Get In Touch
-            </Link>
+            </button>
           </motion.div>
         </div>
 
@@ -186,17 +188,15 @@ const HomePage: React.FC = () => {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-4xl font-serif font-bold text-gray-900 mb-4">
-              Featured Photography
-            </h2>
+            <h2 className="text-4xl font-serif font-bold text-gray-900 mb-4">Latest Photography</h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              A curated selection of my favorite captures, each telling its own unique story.
+              My most recent captures from travels, adventures, and everyday moments.
             </p>
           </motion.div>
 
-          {featuredPhotos && featuredPhotos.length > 0 && (
+          {latestPhotos?.photos && latestPhotos.photos.length > 0 && (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-10">
-              {featuredPhotos.slice(0, 6).map((photo, index) => (
+              {latestPhotos.photos.slice(0, 6).map((photo, index) => (
                 <motion.div
                   key={photo.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -207,7 +207,7 @@ const HomePage: React.FC = () => {
                 >
                   <div className="aspect-square rounded-lg overflow-hidden bg-gray-200">
                     <img
-                      src={`/${photo.webp_path}`}
+                      src={`/${photo.thumbnail_path || photo.webp_path}`}
                       alt={photo.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
@@ -332,7 +332,7 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Contact Section */}
-      <section className="py-20">
+      <section id="contact-section" className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
