@@ -43,7 +43,7 @@ Create the following dataset structure in TrueNAS:
 ```
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=your_secure_db_password_here
-# No POSTGRES_DB - will create databases as needed by applications
+POSTGRES_DB=portfolio
 ```
 
 ### Port Configuration
@@ -126,7 +126,7 @@ First, ensure your backend Docker image is built with the correct Dockerfile fro
 
 ### Service Configuration
 - **Application Name**: `portfolio-backend`
-- **Image**: `your-registry/portfolio-backend:latest` (or local image)
+- **Image**: `antonlu/arcadia-backend:latest`
 - **Restart Policy**: `Always`
 
 ### Environment Variables
@@ -189,10 +189,19 @@ Mount Path: /app/data
 ### Build Requirements
 Ensure your frontend Docker image is built with the Nginx configuration from the project.
 
+**✅ Backend URL Configuration**: The frontend now supports configurable backend URLs through environment variables!
+
 ### Service Configuration
 - **Application Name**: `portfolio-frontend`
-- **Image**: `your-registry/portfolio-frontend:latest` (or local image)
+- **Image**: `antonlu/arcadia-frontend:latest`
 - **Restart Policy**: `Always`
+
+### Environment Variables
+```
+BACKEND_URL=http://<TRUENAS_IP>:8000
+```
+
+**Important**: Replace `<TRUENAS_IP>` with your actual TrueNAS server IP address.
 
 ### Port Configuration
 - **Container Port**: `80`
@@ -226,6 +235,14 @@ The portfolio application automatically creates an admin user on first login att
 
 ### Database Schema Migration
 The backend service automatically runs database migrations on startup using Alembic.
+
+**Note**: If you encounter migration errors during deployment, the application includes fallback table creation. The following core tables will be created automatically:
+- `projects` - Portfolio project information
+- `photos` - Photo metadata and EXIF data  
+- `subapps` - Sub-application configuration
+- `users` - User authentication data
+
+These tables include all necessary columns for the current application version.
 
 ### Manual Database Access (if needed)
 To access the PostgreSQL server and portfolio database:
@@ -367,8 +384,8 @@ Access logs through TrueNAS Scale web interface:
 ### Database Environment Variables
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `POSTGRES_DB` | Database name | - | ✅ |
-| `POSTGRES_USER` | Database user | - | ✅ |
+| `POSTGRES_DB` | Database name | `portfolio` | ✅ |
+| `POSTGRES_USER` | Database user | `postgres` | ✅ |
 | `POSTGRES_PASSWORD` | Database password | - | ✅ |
 
 ## 🎯 Production Recommendations

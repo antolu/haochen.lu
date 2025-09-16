@@ -3,7 +3,10 @@
 services:
   frontend:
     build: ./frontend
+    image: antonlu/arcadia-frontend:latest
     container_name: portfolio-frontend
+    environment:
+      - BACKEND_URL=http://backend:8000
     ports:
       - "80:80"
       - "443:443"
@@ -20,6 +23,7 @@ services:
 
   backend:
     build: ./backend
+    image: antonlu/arcadia-backend:latest
     container_name: portfolio-backend
     environment:
       - ENVIRONMENT=${ENVIRONMENT:-development}
@@ -92,9 +96,13 @@ services:
   # Database migration service
   migrate:
     build: ./backend
+    image: antonlu/arcadia-backend:latest
     container_name: portfolio-migrate
     environment:
       - DATABASE_URL=postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-portfolio}
+      - SECRET_KEY=${SECRET_KEY}
+      - SESSION_SECRET_KEY=${SESSION_SECRET_KEY}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
     command: ["alembic", "upgrade", "head"]
     depends_on:
       - db
