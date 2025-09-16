@@ -1,12 +1,14 @@
-"""Initial database schema
+"""Complete initial database schema
 
 Revision ID: 001_initial_schema
 Revises:
-Create Date: 2025-09-16 18:51:00.000000
+Create Date: 2025-09-16 21:30:00.000000
 
 """
 
 from __future__ import annotations
+
+from uuid import uuid4
 
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import JSON, UUID
@@ -30,6 +32,7 @@ def upgrade() -> None:
         sa.Column("username", sa.String(50), nullable=False, unique=True),
         sa.Column("email", sa.String(255), unique=True),
         sa.Column("hashed_password", sa.String(255), nullable=False),
+        sa.Column("is_active", sa.Boolean(), default=True),
         sa.Column("is_admin", sa.Boolean(), default=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=False),
@@ -141,6 +144,24 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(), nullable=False),
     )
 
+    # Create content table for editable website content
+    content_table = op.create_table(
+        "content",
+        sa.Column("id", UUID(as_uuid=True), primary_key=True),
+        sa.Column("key", sa.String(100), nullable=False),
+        sa.Column("title", sa.String(200), nullable=False),
+        sa.Column("content", sa.Text(), nullable=False),
+        sa.Column("content_type", sa.String(50), nullable=False, default="text"),
+        sa.Column("category", sa.String(50), nullable=False, default="general"),
+        sa.Column("is_active", sa.Boolean(), nullable=False, default=True),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), server_default=sa.func.now()
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.func.now()
+        ),
+    )
+
     # Create indexes
     op.create_index("ix_photos_location", "photos", ["location_lat", "location_lon"])
     op.create_index("ix_photos_date_taken", "photos", ["date_taken"])
@@ -150,9 +171,92 @@ def upgrade() -> None:
     op.create_index("ix_blog_posts_published", "blog_posts", ["published"])
     op.create_index("ix_blog_posts_published_at", "blog_posts", ["published_at"])
 
+    # Content table indexes with explicit naming to avoid conflicts
+    op.create_index("idx_content_category", "content", ["category"])
+    op.create_index("idx_content_is_active", "content", ["is_active"])
+
+    # Content table unique constraint with explicit naming
+    op.create_unique_constraint("uq_content_key_value", "content", ["key"])
+
+    # Insert initial content data
+    initial_content = [
+        {
+            "id": uuid4(),
+            "key": "hero.tagline",
+            "title": "Hero Tagline",
+            "content": "Student. Traveler. Photographer.",
+            "content_type": "text",
+            "category": "hero",
+            "is_active": True,
+        },
+        {
+            "id": uuid4(),
+            "key": "hero.subtitle",
+            "title": "Hero Subtitle",
+            "content": "Machine Learning at KTH Stockholm",
+            "content_type": "text",
+            "category": "hero",
+            "is_active": True,
+        },
+        {
+            "id": uuid4(),
+            "key": "about.title",
+            "title": "About Section Title",
+            "content": "About Me",
+            "content_type": "text",
+            "category": "about",
+            "is_active": True,
+        },
+        {
+            "id": uuid4(),
+            "key": "about.description",
+            "title": "About Section Description",
+            "content": "My name is Anton (Hào-chen) Lu, and I'm a M.Sc. student at KTH Royal Institute of Technology in Stockholm, Sweden. I'm currently enrolled in a five-year degree programme in Engineering Physics, pursuing a M.Sc. in Machine Learning with specialization in deep learning and computational linguistics. My biggest passion is learning new things, whether it be a new problem solving method, a new programming language, a new spoken language, or how to capture the perfect moment through photography.",
+            "content_type": "text",
+            "category": "about",
+            "is_active": True,
+        },
+        {
+            "id": uuid4(),
+            "key": "photography.title",
+            "title": "Photography Section Title",
+            "content": "Latest Photography",
+            "content_type": "text",
+            "category": "photography",
+            "is_active": True,
+        },
+        {
+            "id": uuid4(),
+            "key": "projects.title",
+            "title": "Projects Section Title",
+            "content": "Latest Projects",
+            "content_type": "text",
+            "category": "projects",
+            "is_active": True,
+        },
+        {
+            "id": uuid4(),
+            "key": "contact.title",
+            "title": "Contact Section Title",
+            "content": "Get In Touch",
+            "content_type": "text",
+            "category": "contact",
+            "is_active": True,
+        },
+    ]
+
+    # Insert the initial content
+    op.bulk_insert(content_table, initial_content)
+
 
 def downgrade() -> None:
     """Drop all tables."""
+    # Drop content constraints and indexes
+    op.drop_constraint("uq_content_key_value", "content", type_="unique")
+    op.drop_index("idx_content_is_active", table_name="content")
+    op.drop_index("idx_content_category", table_name="content")
+
+    # Drop indexes
     op.drop_index("ix_blog_posts_published_at", table_name="blog_posts")
     op.drop_index("ix_blog_posts_published", table_name="blog_posts")
     op.drop_index("ix_projects_featured", table_name="projects")
@@ -161,6 +265,8 @@ def downgrade() -> None:
     op.drop_index("ix_photos_date_taken", table_name="photos")
     op.drop_index("ix_photos_location", table_name="photos")
 
+    # Drop tables
+    op.drop_table("content")
     op.drop_table("subapps")
     op.drop_table("blog_posts")
     op.drop_table("projects")
