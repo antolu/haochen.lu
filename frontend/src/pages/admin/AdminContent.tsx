@@ -13,27 +13,6 @@ const AdminContent: React.FC = () => {
       </div>
 
       <ContentManager />
-
-      <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="text-lg font-semibold text-blue-900 mb-2">💡 Quick Start Guide</h3>
-        <div className="text-blue-800 space-y-2">
-          <p>
-            <strong>Key Format:</strong> Use descriptive keys like "hero.title",
-            "about.description", etc.
-          </p>
-          <p>
-            <strong>Categories:</strong> Group content by section (hero, about, contact, navigation,
-            general).
-          </p>
-          <p>
-            <strong>Content Types:</strong> Choose between text (plain), HTML (formatted), or
-            markdown.
-          </p>
-          <p>
-            <strong>Active/Inactive:</strong> Only active content is displayed on the website.
-          </p>
-        </div>
-      </div>
     </div>
   );
 };
