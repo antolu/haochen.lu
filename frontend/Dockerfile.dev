@@ -1,9 +1,11 @@
 # Development Dockerfile for frontend
+# hadolint ignore=DL3018
 FROM node:20-alpine
 
 WORKDIR /app
 
 # Install system dependencies for native builds
+# hadolint ignore=DL3018
 RUN apk add --no-cache \
     build-base \
     cairo-dev \

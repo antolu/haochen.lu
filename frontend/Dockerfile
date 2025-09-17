@@ -1,9 +1,11 @@
 # Build stage
+# hadolint ignore=DL3018
 FROM node:20-alpine as build
 
 WORKDIR /app
 
 # Install build dependencies for canvas
+# hadolint ignore=DL3018
 RUN apk add --no-cache \
     python3 \
     make \

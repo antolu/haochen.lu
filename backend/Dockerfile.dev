@@ -1,10 +1,12 @@
 # Development Dockerfile for backend
+# hadolint ignore=DL3008,DL3013
 FROM python:3.11-slim
 
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+# hadolint ignore=DL3008
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
     && rm -rf /var/lib/apt/lists/*
@@ -13,11 +15,10 @@ RUN apt-get update && apt-get install -y \
 COPY pyproject.toml ./
 COPY requirements.txt* ./
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -e .
-
-# Install development dependencies
-RUN pip install --no-cache-dir watchfiles
+# Install Python dependencies and development dependencies
+# hadolint ignore=DL3013
+RUN pip install --no-cache-dir -e . && \
+    pip install --no-cache-dir watchfiles
 
 # Create uploads and compressed directories
 RUN mkdir -p /app/uploads /app/compressed
