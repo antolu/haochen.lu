@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from sqlalchemy import asc, desc, func, select
+from sqlalchemy import asc, desc, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql import case
 
 from app.models.photo import Photo
 from app.schemas.photo import PhotoCreate, PhotoUpdate
@@ -52,7 +53,11 @@ async def get_photos(
         )
 
     # Order by
-    if order_by == "date_taken":
+    if order_by == "order":
+        query = query.order_by(
+            asc(Photo.order), desc(Photo.date_taken), desc(Photo.created_at)
+        )
+    elif order_by == "date_taken":
         query = query.order_by(desc(Photo.date_taken))
     elif order_by == "views":
         query = query.order_by(desc(Photo.view_count))
@@ -157,3 +162,45 @@ async def increment_view_count(db: AsyncSession, photo_id: UUID) -> None:
     if db_photo:
         db_photo.view_count += 1  # type: ignore[assignment]
         await db.commit()
+
+
+async def bulk_reorder_photos(
+    db: AsyncSession,
+    items: list[tuple[UUID, int]] | list[dict],
+    normalize: bool = False,
+) -> None:
+    """Bulk update the order of multiple photos in a single transaction.
+
+    Args:
+        db: Async database session
+        items: List of (photo_id, order) tuples or dicts with keys 'id' and 'order'
+        normalize: If True, reassign orders to be consecutive starting from 0 based on
+                   ascending provided order values, scoped to the provided items only.
+    """
+    if not items:
+        return
+
+    # Normalize input to list of tuples
+    pairs: list[tuple[UUID, int]] = []
+    for it in items:
+        if isinstance(it, dict):
+            pairs.append((UUID(str(it["id"])), int(it["order"])))
+        else:
+            pairs.append((UUID(str(it[0])), int(it[1])))
+
+    if normalize:
+        # Reassign orders to 0..n-1 based on ascending order
+        pairs = [
+            (pid, idx)
+            for idx, (pid, _ord) in enumerate(sorted(pairs, key=lambda x: x[1]))
+        ]
+
+    ids = [pid for pid, _ in pairs]
+    # Build CASE statement for bulk update using boolean whens
+    order_case = case(
+        *[(Photo.id == pid, ord_val) for pid, ord_val in pairs], else_=Photo.order
+    )
+
+    # Execute update
+    await db.execute(update(Photo).where(Photo.id.in_(ids)).values(order=order_case))
+    await db.commit()

@@ -108,8 +108,8 @@ apiClient.interceptors.response.use(
 
         // Only redirect if not already on login page and if this was an authenticated request
         // Don't redirect for public pages or failed auth refresh attempts
-        const isPublicPage = ['/', '/photography', '/projects', '/blog'].some(path =>
-          window.location.pathname === path || window.location.pathname.startsWith(path)
+        const isPublicPage = ['/', '/photography', '/projects', '/blog'].some(
+          path => window.location.pathname === path || window.location.pathname.startsWith(path)
         );
         const isAuthRefresh = originalRequest.url?.includes('/auth/refresh');
 
@@ -179,10 +179,13 @@ export const photos = {
     }
   },
 
+  getTags: async (): Promise<string[]> => {
+    const response = await apiClient.get<string[]>('/photos/tags');
+    return response.data;
+  },
+
   getById: async (id: string, incrementViews = true): Promise<Photo> => {
-    const response = await apiClient.get<Photo>(
-      `/photos/${id}?increment_views=${incrementViews}`
-    );
+    const response = await apiClient.get<Photo>(`/photos/${id}?increment_views=${incrementViews}`);
     return response.data;
   },
 
@@ -227,6 +230,17 @@ export const photos = {
 
   update: async (id: string, updates: Partial<Photo>): Promise<Photo> => {
     const response = await apiClient.put<Photo>(`/photos/${id}`, updates);
+    return response.data;
+  },
+
+  reorder: async (
+    items: { id: string; order: number }[],
+    normalize = true
+  ): Promise<{ message: string }> => {
+    const response = await apiClient.post<{ message: string }>(`/photos/reorder`, {
+      items,
+      normalize,
+    });
     return response.data;
   },
 
@@ -288,6 +302,11 @@ export const projects = {
 
   getStats: async () => {
     const response = await apiClient.get('/projects/stats/summary');
+    return response.data;
+  },
+
+  getTechnologies: async (): Promise<string[]> => {
+    const response = await apiClient.get<string[]>('/projects/technologies');
     return response.data;
   },
 };

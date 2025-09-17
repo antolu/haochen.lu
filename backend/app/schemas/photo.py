@@ -189,3 +189,13 @@ class PhotoListResponse(BaseModel):
     page: int
     per_page: int
     pages: int
+
+
+class PhotoReorderItem(BaseModel):
+    id: str | UUID
+    order: int
+
+
+class PhotoReorderRequest(BaseModel):
+    items: list[PhotoReorderItem]
+    normalize: bool = False

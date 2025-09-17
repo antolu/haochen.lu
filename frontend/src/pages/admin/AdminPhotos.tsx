@@ -5,6 +5,9 @@ import 'photoswipe/dist/photoswipe.css';
 
 import PhotoUpload from '../../components/PhotoUpload';
 import PhotoGrid from '../../components/PhotoGrid';
+import PhotoListTable from '../../components/admin/PhotoListTable';
+import PhotoEditorDrawer from '../../components/admin/PhotoEditorDrawer';
+import PhotoForm from '../../components/admin/PhotoForm';
 import {
   usePhotos,
   usePhotoStats,
@@ -17,6 +20,7 @@ const AdminPhotos: React.FC = () => {
   const [showUpload, setShowUpload] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [editingPhoto, setEditingPhoto] = useState<Photo | null>(null);
 
   // Query hooks
   const { data: photosData, isLoading: isLoadingPhotos, error: photosError } = usePhotos();
@@ -64,8 +68,8 @@ const AdminPhotos: React.FC = () => {
   };
 
   const handlePhotoClick = (photo: Photo, index: number) => {
-    console.log('Admin photo clicked:', photo.title, 'at index:', index);
-    openPhotoSwipe(index);
+    // Open full-page editor instead of lightbox in admin
+    setEditingPhoto(photo);
   };
 
   const handleSelectAll = () => {
@@ -409,7 +413,7 @@ const AdminPhotos: React.FC = () => {
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-medium text-gray-900">All Photos ({photos.length})</h2>
 
-          {photos.length > 0 && (
+          {photos.length > 0 && !editingPhoto && (
             <button
               onClick={handleSelectAll}
               className="text-sm text-blue-600 hover:text-blue-800 font-medium"
@@ -419,16 +423,34 @@ const AdminPhotos: React.FC = () => {
           )}
         </div>
 
-        <div className="min-h-[600px]">
-          <PhotoGrid
-            photos={photos}
-            isLoading={isLoadingPhotos}
-            onPhotoClick={handlePhotoClick}
-            showMetadata={true}
-            className="h-[600px]"
-          />
-        </div>
+        {viewMode === 'grid' ? (
+          editingPhoto ? (
+            <PhotoForm
+              photo={editingPhoto}
+              onCancel={() => setEditingPhoto(null)}
+              onSuccess={() => setEditingPhoto(null)}
+            />
+          ) : (
+            <div className="min-h-[600px]">
+              <PhotoGrid
+                photos={photos}
+                isLoading={isLoadingPhotos}
+                onPhotoClick={handlePhotoClick}
+                showMetadata={true}
+                className="h-[600px]"
+              />
+            </div>
+          )
+        ) : (
+          <PhotoListTable photos={photos} isLoading={isLoadingPhotos} onEdit={setEditingPhoto} />
+        )}
       </div>
+      {/* Drawer for list view edits */}
+      <AnimatePresence>
+        {viewMode === 'list' && editingPhoto && (
+          <PhotoEditorDrawer photo={editingPhoto} onClose={() => setEditingPhoto(null)} />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

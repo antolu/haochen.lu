@@ -5,10 +5,12 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.image_processor import image_processor
 from app.crud.photo import (
+    bulk_reorder_photos,
     create_photo,
     delete_photo,
     get_photo,
@@ -19,7 +21,13 @@ from app.crud.photo import (
 )
 from app.database import get_session
 from app.dependencies import get_current_admin_user
-from app.schemas.photo import PhotoCreate, PhotoListResponse, PhotoResponse, PhotoUpdate
+from app.schemas.photo import (
+    PhotoCreate,
+    PhotoListResponse,
+    PhotoReorderRequest,
+    PhotoResponse,
+    PhotoUpdate,
+)
 
 router = APIRouter()
 
@@ -41,7 +49,9 @@ async def list_photos(
     radius: float = Query(
         10.0, ge=0.1, le=50.0, description="Search radius in kilometers"
     ),
-    order_by: str = Query("created_at", regex="^(created_at|date_taken|views|title)$"),
+    order_by: str = Query(
+        "created_at", regex="^(created_at|date_taken|views|title|order)$"
+    ),
     db: AsyncSession = Depends(get_session),
 ):
     """List photos with pagination and filtering."""
@@ -94,6 +104,23 @@ async def list_featured_photos(
     """Get featured photos."""
     photos = await get_photos(db, limit=limit, featured=True)
     return [PhotoResponse.model_validate(photo) for photo in photos]
+
+
+@router.get("/tags", response_model=list[str])
+async def list_distinct_tags(db: AsyncSession = Depends(get_session)):
+    """Return a distinct, sorted list of tags across all photos."""
+    # Fetch tags column for all photos (could paginate in large datasets)
+    from app.models.photo import Photo as PhotoModel  # local import to avoid cycle
+
+    result = await db.execute(select(PhotoModel.tags))
+    tag_strings = [row[0] for row in result.all() if row[0]]
+    tags_set: set[str] = set()
+    for s in tag_strings:
+        for t in s.split(","):
+            cleaned = t.strip()
+            if cleaned:
+                tags_set.add(cleaned)
+    return sorted(tags_set, key=lambda x: x.lower())
 
 
 @router.get("/{photo_id}", response_model=PhotoResponse)
@@ -202,6 +229,19 @@ async def delete_photo_endpoint(
         raise HTTPException(status_code=404, detail="Photo not found")
 
     return {"message": "Photo deleted successfully"}
+
+
+@router.post("/reorder")
+async def reorder_photos(
+    payload: PhotoReorderRequest,
+    db: AsyncSession = Depends(get_session),
+    current_user=Depends(get_current_admin_user),
+):
+    """Bulk reorder photos (admin only)."""
+    # Convert to simple dicts for the crud layer
+    items = [{"id": i.id, "order": i.order} for i in payload.items]
+    await bulk_reorder_photos(db, items, normalize=payload.normalize)
+    return {"message": "Reordered successfully"}
 
 
 @router.get("/stats/summary")

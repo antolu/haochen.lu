@@ -3,6 +3,7 @@ from __future__ import annotations
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.repository_service import RepositoryInfo, repository_service
@@ -51,6 +52,41 @@ async def list_featured_projects(db: AsyncSession = Depends(get_session)):
     """Get featured projects."""
     projects = await get_projects(db, featured_only=True)
     return [ProjectResponse.model_validate(project) for project in projects]
+
+
+@router.get("/technologies", response_model=list[str])
+async def list_distinct_technologies(db: AsyncSession = Depends(get_session)):
+    """Return a distinct, sorted list of technologies across all projects."""
+    from app.models.project import (
+        Project as ProjectModel,
+    )  # local import to avoid cycle
+
+    result = await db.execute(select(ProjectModel.technologies))
+    tech_strings = [row[0] for row in result.all() if row[0]]
+
+    techs_set: set[str] = set()
+    for s in tech_strings:
+        # Prefer JSON arrays; fallback to comma-separated
+        try:
+            import json
+
+            arr = json.loads(s)
+            if isinstance(arr, list):
+                for t in arr:
+                    if isinstance(t, str):
+                        cleaned = t.strip()
+                        if cleaned:
+                            techs_set.add(cleaned)
+                continue
+        except Exception:
+            pass
+
+        for t in s.split(","):
+            cleaned = t.strip()
+            if cleaned:
+                techs_set.add(cleaned)
+
+    return sorted(techs_set, key=lambda x: x.lower())
 
 
 @router.get("/stats/summary")

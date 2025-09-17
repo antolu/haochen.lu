@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import MDEditor from '@uiw/react-md-editor';
 import { motion } from 'framer-motion';
 import RepositoryConnector from './RepositoryConnector';
+import TagMultiSelect from './admin/TagMultiSelect';
 import type { Project, ProjectCreate, ProjectUpdate } from '../hooks/useProjects';
 import {
   useCreateProject,
@@ -12,6 +13,7 @@ import {
   formatTechnologies,
   generateSlug,
 } from '../hooks/useProjects';
+import { useProjectTechnologies } from '../hooks/useProjects';
 
 interface ProjectFormProps {
   project?: Project;
@@ -47,6 +49,8 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
   const [useReadme, setUseReadme] = useState(false);
   const [readmePreview, setReadmePreview] = useState<string | null>(null);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+
+  const { data: distinctTechnologies = [] } = useProjectTechnologies();
 
   const {
     register,
@@ -299,15 +303,17 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
             {/* Technologies */}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Technologies</label>
-              <input
-                type="text"
-                value={technologiesInput}
-                onChange={e => handleTechnologiesChange(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="React, TypeScript, Node.js, PostgreSQL"
+              <TagMultiSelect
+                value={technologiesInput
+                  .split(',')
+                  .map(t => t.trim())
+                  .filter(Boolean)}
+                options={distinctTechnologies}
+                onChange={vals => handleTechnologiesChange(vals.join(', '))}
+                placeholder="Search or create technologies..."
               />
               <p className="mt-1 text-xs text-gray-500">
-                Comma-separated list of technologies used
+                Type to search or press Enter to create a new technology
               </p>
             </div>
 

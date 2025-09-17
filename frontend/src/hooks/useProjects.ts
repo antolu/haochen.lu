@@ -1,5 +1,5 @@
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '../api/client';
+import { apiClient, projects as projectsApi } from '../api/client';
 
 export interface Project {
   id: string;
@@ -213,6 +213,14 @@ export function useProjectStats() {
       const response = await apiClient.get('/projects/stats/summary');
       return response.data;
     },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useProjectTechnologies() {
+  return useQuery({
+    queryKey: [...projectKeys.all, 'technologies'],
+    queryFn: () => projectsApi.getTechnologies(),
     staleTime: 5 * 60 * 1000,
   });
 }

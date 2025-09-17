@@ -87,6 +87,15 @@ export const usePhotoStats = () => {
   });
 };
 
+// Hook to load distinct tags
+export const usePhotoTags = () => {
+  return useQuery({
+    queryKey: [...photoKeys.all, 'tags'],
+    queryFn: () => photos.getTags(),
+    staleTime: 1000 * 60 * 5,
+  });
+};
+
 // Hook to upload a new photo
 export const useUploadPhoto = () => {
   const queryClient = useQueryClient();
@@ -320,6 +329,58 @@ export const useTogglePhotoFeatured = () => {
       queryClient.invalidateQueries({ queryKey: photoKeys.stats() });
 
       toast.success(featured ? 'Photo added to featured!' : 'Photo removed from featured!');
+    },
+  });
+};
+
+// Hook to reorder photos
+export const useReorderPhotos = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      items,
+      normalize = true,
+    }: {
+      items: { id: string; order: number }[];
+      normalize?: boolean;
+    }) => photos.reorder(items, normalize),
+
+    onMutate: async ({ items }) => {
+      await queryClient.cancelQueries({ queryKey: photoKeys.lists() });
+
+      const previousData = queryClient.getQueryData(photoKeys.list('admin'));
+
+      // Optimistically apply new order
+      queryClient.setQueryData(photoKeys.list('admin'), (old: any) => {
+        if (!old) return old;
+        const orderMap = new Map(items.map(i => [i.id, i.order]));
+        const updated = old.photos.map((p: Photo) =>
+          orderMap.has(p.id) ? { ...p, order: orderMap.get(p.id)! } : p
+        );
+        // Keep list sorted by order then date
+        updated.sort((a: Photo, b: Photo) => {
+          if (a.order !== b.order) return a.order - b.order;
+          return (
+            new Date(b.date_taken || b.created_at).getTime() -
+            new Date(a.date_taken || a.created_at).getTime()
+          );
+        });
+        return { ...old, photos: updated };
+      });
+
+      return { previousData };
+    },
+
+    onError: (_err, _vars, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(photoKeys.list('admin'), context.previousData);
+      }
+      toast.error('Failed to reorder photos. Please try again.');
+    },
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
     },
   });
 };
