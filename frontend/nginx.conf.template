@@ -5,6 +5,9 @@ server {
     root /usr/share/nginx/html;
     index index.html index.htm;
 
+    # Allow file uploads up to 50MB
+    client_max_body_size 50M;
+
     # Gzip compression
     gzip on;
     gzip_vary on;
@@ -19,21 +22,12 @@ server {
     add_header Referrer-Policy "no-referrer-when-downgrade" always;
     add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
 
-    # Cache static assets
-    location ~* \.(?:css|js|jpg|jpeg|gif|png|ico|cur|gz|svg|svgz|mp4|ogg|ogv|webm|htc)$ {
-        expires 1M;
-        add_header Cache-Control "public, immutable";
-        access_log off;
-    }
-
-    # Handle client-side routing
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    # Handle API requests (proxy to backend)
+    # Handle API requests (proxy to backend) - MUST BE BEFORE generic location /
     location /api/ {
-        proxy_pass ${BACKEND_URL}/;
+        # Strip /api/ prefix and any trailing slashes to make it agnostic
+        rewrite ^/api/(.*)/$ /$1 break;
+        rewrite ^/api/(.*)$ /$1 break;
+        proxy_pass ${BACKEND_URL};
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -47,16 +41,28 @@ server {
         add_header Expires "0" always;
     }
 
-    # Serve uploaded files
+    # Serve uploaded files - MUST BE BEFORE static assets regex
     location /uploads/ {
-        proxy_pass ${BACKEND_URL};
+        proxy_pass ${BACKEND_URL}/uploads/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
     }
 
     location /compressed/ {
-        proxy_pass ${BACKEND_URL};
+        proxy_pass ${BACKEND_URL}/compressed/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    # Cache static assets - exclude /uploads/ and /compressed/ paths
+    location ~* ^/(?!(?:uploads|compressed)/).*\.(?:css|js|jpg|jpeg|gif|png|ico|cur|gz|svg|svgz|mp4|ogg|ogv|webm|htc)$ {
+        expires 1M;
+        add_header Cache-Control "public, immutable";
+        access_log off;
+    }
+
+    # Handle client-side routing - MUST BE LAST
+    location / {
+        try_files $uri $uri/ /index.html;
     }
 }
