@@ -1,9 +1,10 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import type { Photo } from '../../types';
 import { useUpdatePhoto, usePhotoTags } from '../../hooks/usePhotos';
 import TagMultiSelect from './TagMultiSelect';
-import MapPicker from '../MapPicker';
+// Remove direct import of MapPicker and lazy-load it instead
+const LazyMapPicker = lazy(() => import('../MapPicker'));
 
 interface PhotoFormProps {
   photo: Photo;
@@ -276,17 +277,25 @@ const PhotoForm: React.FC<PhotoFormProps> = ({ photo, onSuccess, onCancel }) => 
                 </div>
 
                 <div className="grid grid-cols-1 gap-4">
-                  <MapPicker
-                    latitude={typeof form.location_lat === 'number' ? form.location_lat : 37.7749}
-                    longitude={
-                      typeof form.location_lon === 'number' ? form.location_lon : -122.4194
+                  <Suspense
+                    fallback={
+                      <div className="h-[320px] w-full rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-500">
+                        Loading map...
+                      </div>
                     }
-                    zoom={13}
-                    height={320}
-                    onLocationSelect={handleMapSelect}
-                    onLocationChange={handleMapSelect}
-                    showSearch
-                  />
+                  >
+                    <LazyMapPicker
+                      latitude={typeof form.location_lat === 'number' ? form.location_lat : 37.7749}
+                      longitude={
+                        typeof form.location_lon === 'number' ? form.location_lon : -122.4194
+                      }
+                      zoom={13}
+                      height={320}
+                      onLocationSelect={handleMapSelect}
+                      onLocationChange={handleMapSelect}
+                      showSearch
+                    />
+                  </Suspense>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
