@@ -27,7 +27,7 @@ const PhotoLightboxItem: React.FC<PhotoLightboxItemProps> = ({
   children,
 }) => {
   // Use the highest quality image available
-  const fullImageUrl = photo.webp_path || photo.original_path;
+  const fullImageUrl = photo.variants?.xlarge?.path || photo.variants?.large?.path || photo.original_path;
 
   // Fallback dimensions if not provided
   const imageWidth = width || photo.width || 1200;
@@ -110,7 +110,7 @@ const PhotoLightboxItem: React.FC<PhotoLightboxItemProps> = ({
   return (
     <Item
       original={fullImageUrl}
-      thumbnail={photo.thumbnail_path || fullImageUrl}
+      thumbnail={photo.variants?.thumbnail?.path || fullImageUrl}
       width={imageWidth}
       height={imageHeight}
       caption={generateCaption()}
@@ -143,7 +143,7 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({ photos, children, options
         ...defaultOptions,
         // Custom styling for the lightbox
         dataSource: photos.map((photo, index) => ({
-          src: photo.webp_path || photo.original_path,
+          src: photo.variants?.xlarge?.path || photo.variants?.large?.path || photo.original_path,
           width: photo.width || 1200,
           height: photo.height || 800,
           alt: photo.title || `Photo ${index + 1}`,

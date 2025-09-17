@@ -54,8 +54,8 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
     }
   };
 
-  // Determine image source - prefer thumbnail for grid, fallback to WebP, then original
-  const imageUrl = photo.thumbnail_path || photo.webp_path || photo.original_path;
+  // Determine image source - prefer thumbnail for grid, fallback to small, then original
+  const imageUrl = photo.variants?.thumbnail?.path || photo.variants?.small?.path || photo.original_path;
 
   return (
     <motion.div
@@ -181,13 +181,13 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({
   const parentRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
 
-  // Auto-calculate columns based on container width
+  // Auto-calculate columns based on container width - reduced for larger photos
   const getColumns = () => {
     if (columns) return columns;
-    if (containerWidth < 640) return 2; // sm
-    if (containerWidth < 1024) return 3; // md
-    if (containerWidth < 1280) return 4; // lg
-    return 5; // xl
+    if (containerWidth < 640) return 1; // sm - single column on mobile
+    if (containerWidth < 1024) return 2; // md - two columns on tablet
+    if (containerWidth < 1280) return 2; // lg - two columns on desktop
+    return 3; // xl - three columns on large screens
   };
 
   const numColumns = getColumns();
@@ -225,7 +225,7 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({
   if (isLoading) {
     return (
       <div className={`space-y-4 ${className}`}>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2">
           {Array.from({ length: 20 }).map((_, i) => (
             <div key={i} className="aspect-[4/3] bg-gray-200 rounded-lg animate-pulse" />
           ))}

@@ -39,7 +39,7 @@ interface FormData {
   timezone?: string;
 
   // Custom metadata
-  metadata?: Record<string, any>;
+  custom_metadata?: Record<string, any>;
 }
 
 // Define available custom field types
@@ -96,14 +96,14 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
       focal_length: photo.focal_length,
       date_taken: photo.date_taken ? new Date(photo.date_taken).toISOString().slice(0, 16) : '',
       timezone: photo.timezone || '',
-      metadata: photo.metadata || {},
+      custom_metadata: photo.custom_metadata || {},
     },
   });
 
   // Initialize custom fields from photo metadata
   useEffect(() => {
-    if (photo.metadata) {
-      const fields = Object.entries(photo.metadata).map(([key, value]) => ({
+    if (photo.custom_metadata) {
+      const fields = Object.entries(photo.custom_metadata).map(([key, value]) => ({
         key,
         type:
           typeof value === 'boolean' ? 'boolean' : typeof value === 'number' ? 'number' : 'text',
@@ -112,7 +112,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
       }));
       setCustomFields(fields);
     }
-  }, [photo.metadata]);
+  }, [photo.custom_metadata]);
 
   const handleLocationChange = (lat: number, lng: number, name?: string) => {
     setValue('location_lat', lat);
@@ -170,7 +170,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
 
       const updatedPhoto: Partial<Photo> = {
         ...data,
-        metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
+        custom_metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
         date_taken: data.date_taken ? new Date(data.date_taken).toISOString() : undefined,
       };
 

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
@@ -44,6 +44,21 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
     },
     mode: 'onBlur', // Validate on blur for better UX
   });
+
+  // Watch for upload completion and call onComplete when all files are done
+  useEffect(() => {
+    if (uploadFiles.length === 0) return; // No files to check
+
+    const allCompleted = uploadFiles.every(f => f.status === 'completed');
+    const hasErrors = uploadFiles.some(f => f.status === 'error');
+    const hasUploading = uploadFiles.some(f => f.status === 'uploading');
+
+    // Only trigger completion if we have files, all are completed, and none are currently uploading
+    if (allCompleted && !hasErrors && !hasUploading && onComplete) {
+      console.log('All uploads completed successfully - closing dialog');
+      setTimeout(onComplete, 500); // Small delay to show completion state
+    }
+  }, [uploadFiles, onComplete]);
 
   // Handle file drops
   const onDrop = useCallback(
@@ -360,15 +375,8 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
       }
     }
 
-    // Check if all uploads completed successfully
-    const allCompleted = uploadFiles.every(f => f.status === 'completed');
-    const hasErrors = uploadFiles.some(f => f.status === 'error');
-
-    console.log('Batch upload complete:', { allCompleted, hasErrors });
-
-    if (allCompleted && onComplete) {
-      setTimeout(onComplete, 500); // Small delay to show completion
-    }
+    console.log('Batch upload process completed');
+    // Note: Completion check is now handled by useEffect watching uploadFiles state
   };
 
   const onSubmit = (data: PhotoMetadata) => {
