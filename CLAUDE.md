@@ -358,6 +358,19 @@ Tailwind v4 requires all reset styles inside `@layer base` in `/frontend/src/ind
 - EXIF processing requires valid image files
 - Use browser dev tools to inspect FormData being sent
 
+### File Upload Size Issues
+If getting "File is too large" errors for files under 50MB:
+- **Nginx Default Limit**: Add `client_max_body_size 50M;` to nginx.conf.template
+- **HTTP 413 Payload Too Large**: Usually indicates nginx limit, not backend limit
+- **Rebuild required**: Frontend container must be rebuilt after nginx config changes
+
+### API Routing Issues
+**Double API Prefix Problem** (`/api/api/endpoint`):
+- **Root Cause**: FastAPI routes with `/api/` prefix + nginx proxy stripping
+- **Solution**: Remove `/api/` prefixes from FastAPI router registrations in main.py
+- **Nginx Config**: Ensure `proxy_pass ${BACKEND_URL}/;` has trailing slash to strip prefix
+- **Frontend**: Set `VITE_API_URL=` (empty) to prevent double prefixing
+
 ### Authentication
 - Default admin credentials: `admin` / `admin`
 - JWT tokens stored in browser localStorage
