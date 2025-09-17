@@ -46,7 +46,7 @@ services:
       - WEBP_QUALITY=85
       - THUMBNAIL_SIZE=400
       - MAX_FILE_SIZE=52428800
-    command: 
+    command:
       - "uvicorn"
       - "app.main:app"
       - "--host"
@@ -80,7 +80,7 @@ services:
       - NODE_ENV=development
       - VITE_API_URL=/api  # Use relative URLs since nginx will proxy
       - CHOKIDAR_USEPOLLING=true  # For Docker file watching
-    command: 
+    command:
       - "npm"
       - "run"
       - "dev"

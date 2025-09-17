@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -19,6 +20,7 @@ from app.crud.project import (
 )
 from app.database import get_session
 from app.dependencies import get_current_admin_user
+from app.models.project import Project as ProjectModel
 from app.schemas.project import (
     ProjectCreate,
     ProjectListResponse,
@@ -57,9 +59,6 @@ async def list_featured_projects(db: AsyncSession = Depends(get_session)):
 @router.get("/technologies", response_model=list[str])
 async def list_distinct_technologies(db: AsyncSession = Depends(get_session)):
     """Return a distinct, sorted list of technologies across all projects."""
-    from app.models.project import (
-        Project as ProjectModel,
-    )  # local import to avoid cycle
 
     result = await db.execute(select(ProjectModel.technologies))
     tech_strings = [row[0] for row in result.all() if row[0]]
@@ -68,8 +67,6 @@ async def list_distinct_technologies(db: AsyncSession = Depends(get_session)):
     for s in tech_strings:
         # Prefer JSON arrays; fallback to comma-separated
         try:
-            import json
-
             arr = json.loads(s)
             if isinstance(arr, list):
                 for t in arr:
@@ -78,8 +75,9 @@ async def list_distinct_technologies(db: AsyncSession = Depends(get_session)):
                         if cleaned:
                             techs_set.add(cleaned)
                 continue
-        except Exception:
-            pass
+        except json.JSONDecodeError:
+            # Fallback to comma-separated parsing below
+            ...
 
         for t in s.split(","):
             cleaned = t.strip()

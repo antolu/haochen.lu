@@ -1,13 +1,13 @@
-from typing import Any, Optional
+from typing import Any
 
-from sqlalchemy import select, func, and_
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.content import Content
 from app.schemas.content import ContentCreate, ContentUpdate
 
 
-async def get_content_by_key(db: AsyncSession, key: str) -> Optional[Content]:
+async def get_content_by_key(db: AsyncSession, key: str) -> Content | None:
     """Retrieve content by its unique key."""
     result = await db.execute(select(Content).filter(Content.key == key))
     return result.scalar_one_or_none()
@@ -18,7 +18,7 @@ async def get_public_content_by_keys(
 ) -> list[Content]:
     """Retrieve active content items by a list of keys."""
     result = await db.execute(
-        select(Content).filter(Content.key.in_(keys), Content.is_active == True)
+        select(Content).filter(Content.key.in_(keys), Content.is_active)
     )
     return result.scalars().all()
 
@@ -28,12 +28,12 @@ async def get_public_content_by_category(
 ) -> list[Content]:
     """Retrieve active content items by category."""
     result = await db.execute(
-        select(Content).filter(Content.category == category, Content.is_active == True)
+        select(Content).filter(Content.category == category, Content.is_active)
     )
     return result.scalars().all()
 
 
-async def get_content_by_id(db: AsyncSession, content_id: str) -> Optional[Content]:
+async def get_content_by_id(db: AsyncSession, content_id: str) -> Content | None:
     """Get content by ID."""
     result = await db.execute(select(Content).filter(Content.id == content_id))
     return result.scalar_one_or_none()
@@ -44,9 +44,9 @@ async def get_content_list(
     *,
     page: int = 1,
     per_page: int = 10,
-    category: Optional[str] = None,
-    is_active: Optional[bool] = None,
-    search: Optional[str] = None,
+    category: str | None = None,
+    is_active: bool | None = None,
+    search: str | None = None,
     order_by: str = "created_at",
     order_direction: str = "desc",
 ) -> dict[str, Any]:
@@ -100,7 +100,7 @@ async def create_content(db: AsyncSession, content_data: ContentCreate) -> Conte
 
 async def update_content(
     db: AsyncSession, content_id: str, content_data: ContentUpdate
-) -> Optional[Content]:
+) -> Content | None:
     """Update existing content."""
     result = await db.execute(select(Content).filter(Content.id == content_id))
     content = result.scalar_one_or_none()

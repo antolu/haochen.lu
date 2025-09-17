@@ -29,7 +29,7 @@ check_dependencies() {
         print_error "Docker is not installed or not in PATH"
         exit 1
     fi
-    
+
     if ! docker compose version &> /dev/null; then
         print_error "Docker Compose is not available"
         exit 1
@@ -44,18 +44,18 @@ start_dev() {
     print_status "  - Use nginx proxy on standard ports"
     print_status "  - Frontend (Vite dev server) with HMR"
     print_status "  - Backend (Uvicorn) with auto-reload"
-    
+
     # Stop any existing containers
     docker compose -f docker-compose.dev.yml down
-    
+
     # Build development images
     print_status "Building development images..."
     docker compose -f docker-compose.dev.yml build
-    
+
     # Start development environment
     print_status "Starting containers..."
     docker compose -f docker-compose.dev.yml up -d
-    
+
     print_status "Development environment started!"
     print_status "Application: http://localhost"
     print_status "API: http://localhost/api"
@@ -93,13 +93,13 @@ show_logs() {
 start_prod() {
     print_status "Starting production environment..."
     print_status "This will use pre-built images without source mounting"
-    
+
     # Stop development environment if running
     docker compose -f docker-compose.yml -f docker-compose.dev.yml down 2>/dev/null || true
-    
+
     # Start production environment
     docker compose up -d
-    
+
     print_status "Production environment started!"
     print_status "Application: http://localhost"
 }

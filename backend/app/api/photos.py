@@ -21,6 +21,7 @@ from app.crud.photo import (
 )
 from app.database import get_session
 from app.dependencies import get_current_admin_user
+from app.models.photo import Photo as PhotoModel
 from app.schemas.photo import (
     PhotoCreate,
     PhotoListResponse,
@@ -110,8 +111,6 @@ async def list_featured_photos(
 async def list_distinct_tags(db: AsyncSession = Depends(get_session)):
     """Return a distinct, sorted list of tags across all photos."""
     # Fetch tags column for all photos (could paginate in large datasets)
-    from app.models.photo import Photo as PhotoModel  # local import to avoid cycle
-
     result = await db.execute(select(PhotoModel.tags))
     tag_strings = [row[0] for row in result.all() if row[0]]
     tags_set: set[str] = set()

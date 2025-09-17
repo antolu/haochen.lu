@@ -1,7 +1,6 @@
 """Content schemas for API validation."""
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -27,17 +26,15 @@ class ContentBase(BaseModel):
 class ContentCreate(ContentBase):
     """Schema for creating content."""
 
-    pass
-
 
 class ContentUpdate(BaseModel):
     """Schema for updating content."""
 
-    title: Optional[str] = Field(None, max_length=200)
-    content: Optional[str] = None
-    content_type: Optional[str] = Field(None, max_length=50)
-    category: Optional[str] = Field(None, max_length=50)
-    is_active: Optional[bool] = None
+    title: str | None = Field(None, max_length=200)
+    content: str | None = None
+    content_type: str | None = Field(None, max_length=50)
+    category: str | None = Field(None, max_length=50)
+    is_active: bool | None = None
 
 
 class ContentResponse(ContentBase):
