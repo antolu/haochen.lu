@@ -50,7 +50,7 @@ async def get_public_content(
         )
 
     return {
-        item.key: ContentKeyValueResponse.model_validate(item) for item in content_items
+        item.key: ContentKeyValueResponse.model_validate(item, from_attributes=True) for item in content_items
     }
 
 
@@ -68,7 +68,7 @@ async def get_public_content_by_key_endpoint(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Content not found or not active",
         )
-    return ContentKeyValueResponse.model_validate(content_item)
+    return ContentKeyValueResponse.model_validate(content_item, from_attributes=True)
 
 
 @router.get("", response_model=ContentListResponse)

@@ -11,6 +11,7 @@ services:
 
     # Enable live reload for development (optional)
     volumes:
+      - ./backend:/app  # Mount source code for live reload
       - ./data:/app/data
       - ./assets/images:/app/assets/images
       - ./uploads:/app/uploads
