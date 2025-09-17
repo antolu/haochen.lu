@@ -51,8 +51,6 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('PhotoCard clicked!', photo.title);
-    alert(`PhotoCard clicked: ${photo.title}`);
     if (onClick) {
       onClick(photo, index);
     }
@@ -294,6 +292,7 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({
               <div className="flex" style={{ gap: `${gap}px` }}>
                 {rowPhotos.map((photo, colIndex) => {
                   const photoIndex = startIndex + colIndex;
+                  
                   return (
                     <PhotoCard
                       key={photo.id}

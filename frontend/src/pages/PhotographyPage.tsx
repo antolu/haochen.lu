@@ -53,6 +53,10 @@ const PhotographyPage: React.FC = () => {
       caption: photo.title || '',
     }));
 
+    if (dataSource.length === 0 || index >= dataSource.length) {
+      return;
+    }
+
     // PhotoSwipe options
     const options = {
       dataSource,
@@ -72,8 +76,6 @@ const PhotographyPage: React.FC = () => {
   };
 
   const handlePhotoClick = (photo: Photo, index: number) => {
-    console.log('Photo clicked:', photo.title, 'at index:', index);
-    alert(`Photo clicked: ${photo.title} at index ${index}`);
     openPhotoSwipe(index);
   };
 
