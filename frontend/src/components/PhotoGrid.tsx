@@ -56,8 +56,9 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
     }
   };
 
-  // Determine image source - prefer thumbnail for grid, fallback to small, then original
-  const imageUrl = photo.variants?.thumbnail?.path || photo.variants?.small?.path || photo.original_path;
+  // Determine image source - prefer small variant for better quality, fallback to thumbnail, then original
+  const imageUrl =
+    photo.variants?.small?.path || photo.variants?.medium?.path || photo.original_path;
 
   return (
     <motion.div
@@ -70,7 +71,19 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
         transform transition-all duration-300 hover:scale-105 md:hover:scale-110
         ${onClick ? 'hover:shadow-xl' : ''}
       `}
-      style={{ width, height }}
+      style={{
+        width,
+        height,
+        zIndex: 1, // Base z-index for all photos
+      }}
+      onMouseEnter={e => {
+        // Ensure hovered element is always on top
+        (e.currentTarget as HTMLElement).style.zIndex = '100';
+      }}
+      onMouseLeave={e => {
+        // Reset z-index when not hovered
+        (e.currentTarget as HTMLElement).style.zIndex = '1';
+      }}
       onClick={handleClick}
     >
       {/* Loading Skeleton */}
@@ -183,21 +196,21 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({
   const parentRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
 
-  // Auto-calculate columns based on container width - reduced for larger photos
+  // Auto-calculate columns based on container width - reduced for larger square photos
   const getColumns = () => {
     if (columns) return columns;
     if (containerWidth < 640) return 1; // sm - single column on mobile
     if (containerWidth < 1024) return 2; // md - two columns on tablet
-    if (containerWidth < 1280) return 2; // lg - two columns on desktop
-    return 3; // xl - three columns on large screens
+    if (containerWidth < 1536) return 2; // lg/xl - two columns on desktop
+    return 3; // 2xl - three columns on very large screens
   };
 
   const numColumns = getColumns();
   const itemWidth = Math.max(
-    100,
+    300, // Reduced from 400px to 300px
     Math.floor((containerWidth - gap * (numColumns - 1)) / numColumns)
   );
-  const itemHeight = Math.floor(itemWidth * 0.75); // 4:3 aspect ratio
+  const itemHeight = itemWidth; // 1:1 aspect ratio (square)
 
   // Update container width on resize
   useEffect(() => {
@@ -212,9 +225,9 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({
     return () => window.removeEventListener('resize', updateWidth);
   }, []);
 
-  // Calculate rows for virtualization
+  // Calculate rows for virtualization - add extra height for hover effects
   const rowCount = Math.ceil(photos.length / numColumns);
-  const rowHeight = itemHeight + gap;
+  const rowHeight = itemHeight + gap + 32; // Extra 32px for padding and hover effects
 
   const virtualizer = useVirtualizer({
     count: rowCount,
@@ -227,9 +240,9 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({
   if (isLoading) {
     return (
       <div className={`space-y-4 ${className}`}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3 gap-2">
           {Array.from({ length: 20 }).map((_, i) => (
-            <div key={i} className="aspect-[4/3] bg-gray-200 rounded-lg animate-pulse" />
+            <div key={i} className="aspect-square bg-gray-200 rounded-lg animate-pulse" />
           ))}
         </div>
       </div>
@@ -263,7 +276,7 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({
     <div
       ref={parentRef}
       className={`h-full overflow-auto ${className}`}
-      style={{ height: '100%', width: '100%' }}
+      style={{ height: '100%', width: '100%', padding: '24px' }}
     >
       <div
         style={{
@@ -289,10 +302,10 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({
                 transform: `translateY(${virtualRow.start}px)`,
               }}
             >
-              <div className="flex" style={{ gap: `${gap}px` }}>
+              <div className="flex overflow-visible" style={{ gap: `${gap}px`, padding: '16px' }}>
                 {rowPhotos.map((photo, colIndex) => {
                   const photoIndex = startIndex + colIndex;
-                  
+
                   return (
                     <PhotoCard
                       key={photo.id}

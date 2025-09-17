@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import 'photoswipe/dist/photoswipe.css';
 
 import { photos } from '../api/client';
 import PhotoGrid from '../components/PhotoGrid';
-import PhotoSwipeCustomUI from '../components/PhotoSwipeCustomUI';
+import LightGallerySimple from '../components/LightGallerySimple';
 import type { Photo, PhotoListResponse } from '../types';
 
 const PhotographyPage: React.FC = () => {
@@ -174,8 +173,8 @@ const PhotographyPage: React.FC = () => {
         )}
       </div>
 
-      {/* PhotoSwipe Custom UI */}
-      <PhotoSwipeCustomUI
+      {/* LightGallery Simple UI */}
+      <LightGallerySimple
         photos={allPhotos}
         isOpen={isPhotoSwipeOpen}
         initialIndex={photoSwipeIndex}
