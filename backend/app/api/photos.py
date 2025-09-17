@@ -25,6 +25,7 @@ router = APIRouter()
 
 
 @router.get("", response_model=PhotoListResponse)
+@router.get("/", response_model=PhotoListResponse)
 async def list_photos(
     page: int = Query(1, ge=1, description="Page number"),
     per_page: int = Query(20, ge=1, le=100, description="Items per page"),

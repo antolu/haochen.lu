@@ -56,7 +56,7 @@ app.include_router(photos.router, prefix="/photos", tags=["photos"])
 app.include_router(projects.router, prefix="/projects", tags=["projects"])
 app.include_router(blog.router, prefix="/blog", tags=["blog"])
 app.include_router(subapps.router, prefix="/subapps", tags=["subapps"])
-app.include_router(content.router, prefix="", tags=["content"])
+app.include_router(content.router)
 app.include_router(locations.router, prefix="", tags=["locations"])
 
 # Static files
