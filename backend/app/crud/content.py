@@ -20,7 +20,7 @@ async def get_public_content_by_keys(
     result = await db.execute(
         select(Content).filter(Content.key.in_(keys), Content.is_active)
     )
-    return result.scalars().all()
+    return list(result.scalars().all())
 
 
 async def get_public_content_by_category(
@@ -30,7 +30,7 @@ async def get_public_content_by_category(
     result = await db.execute(
         select(Content).filter(Content.category == category, Content.is_active)
     )
-    return result.scalars().all()
+    return list(result.scalars().all())
 
 
 async def get_content_by_id(db: AsyncSession, content_id: str) -> Content | None:

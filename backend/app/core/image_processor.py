@@ -6,7 +6,7 @@ import os
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import BinaryIO
+from typing import Any, BinaryIO
 
 import piexif
 from PIL import Image
@@ -23,9 +23,9 @@ class ImageProcessor:
         self.upload_dir.mkdir(exist_ok=True, parents=True)
         self.compressed_dir.mkdir(exist_ok=True, parents=True)
 
-    async def extract_exif_data(self, image_path: str) -> dict:
+    async def extract_exif_data(self, image_path: str) -> dict[str, Any]:
         """Extract comprehensive EXIF data from image including timezone and GPS."""
-        exif_data = {}
+        exif_data: dict[str, Any] = {}
 
         try:
             with Image.open(image_path) as img:
@@ -51,9 +51,9 @@ class ImageProcessor:
 
         return exif_data
 
-    async def _extract_comprehensive_exif(self, exif_dict: dict) -> dict:
+    async def _extract_comprehensive_exif(self, exif_dict: dict) -> dict[str, Any]:
         """Extract comprehensive EXIF data using piexif."""
-        data = {}
+        data: dict[str, Any] = {}
 
         # Extract from 0th IFD (main image)
         if "0th" in exif_dict:
@@ -138,9 +138,9 @@ class ImageProcessor:
 
         return data
 
-    def _extract_basic_exif(self, exif: dict) -> dict:
+    def _extract_basic_exif(self, exif: dict) -> dict[str, Any]:
         """Fallback basic EXIF extraction using PIL."""
-        data = {}
+        data: dict[str, Any] = {}
 
         for tag_id, value in exif.items():
             tag = TAGS.get(tag_id, tag_id)

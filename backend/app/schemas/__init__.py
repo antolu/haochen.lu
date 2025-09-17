@@ -1,6 +1,15 @@
-from app.schemas.auth import LoginRequest as LoginRequest
-from app.schemas.auth import TokenResponse as TokenResponse
-from app.schemas.auth import UserResponse as User
+# Auth schemas
+from app.schemas.auth import (
+    LoginRequest as LoginRequest,
+)
+from app.schemas.auth import (
+    TokenResponse as TokenResponse,
+)
+from app.schemas.auth import (
+    UserResponse,
+)
+
+# Blog schemas
 from app.schemas.blog import (
     BlogPostCreate as BlogPostCreate,
 )
@@ -13,21 +22,23 @@ from app.schemas.blog import (
 from app.schemas.blog import (
     BlogPostUpdate as BlogPostUpdate,
 )
+
+# Content schemas
 from app.schemas.content import (
     ContentCreate as ContentCreate,
 )
 from app.schemas.content import (
-    ContentKeyValueResponse as ContentKeyValue,
+    ContentKeyValueResponse,
+    ContentResponse,
 )
 from app.schemas.content import (
     ContentListResponse as ContentListResponse,
 )
 from app.schemas.content import (
-    ContentResponse as Content,
-)
-from app.schemas.content import (
     ContentUpdate as ContentUpdate,
 )
+
+# Photo schemas
 from app.schemas.photo import (
     ImageVariant as ImageVariant,
 )
@@ -49,6 +60,8 @@ from app.schemas.photo import (
 from app.schemas.photo import (
     PhotoUpdate as PhotoUpdate,
 )
+
+# Project schemas
 from app.schemas.project import (
     ProjectCreate as ProjectCreate,
 )
@@ -64,6 +77,8 @@ from app.schemas.project import (
 from app.schemas.project import (
     ReadmeResponse as ReadmeResponse,
 )
+
+# SubApp schemas
 from app.schemas.subapp import (
     SubAppCreate as SubAppCreate,
 )
@@ -71,8 +86,14 @@ from app.schemas.subapp import (
     SubAppListResponse as SubAppListResponse,
 )
 from app.schemas.subapp import (
-    SubAppResponse as SubApp,
+    SubAppResponse,
 )
 from app.schemas.subapp import (
     SubAppUpdate as SubAppUpdate,
 )
+
+# Legacy aliases for backward compatibility
+User = UserResponse
+Content = ContentResponse
+ContentKeyValue = ContentKeyValueResponse
+SubApp = SubAppResponse
