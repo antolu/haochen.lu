@@ -20,7 +20,6 @@ const PhotoSwipeCustomUI: React.FC<PhotoSwipeCustomUIProps> = ({
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(initialIndex);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const lightboxRef = useRef<PhotoSwipe | null>(null);
-  const pswpRef = useRef<HTMLDivElement>(null);
 
   const currentPhoto = photos[currentPhotoIndex];
 
@@ -44,7 +43,7 @@ const PhotoSwipeCustomUI: React.FC<PhotoSwipeCustomUIProps> = ({
   }, [handleSidebarToggle]);
 
   useEffect(() => {
-    if (!isOpen || !pswpRef.current || photos.length === 0) return;
+    if (!isOpen || photos.length === 0) return;
 
     // PhotoSwipe options
     const options = {
@@ -60,7 +59,7 @@ const PhotoSwipeCustomUI: React.FC<PhotoSwipeCustomUIProps> = ({
       wheelToZoom: true,
       pinchToClose: true,
       closeOnVerticalDrag: true,
-      padding: { top: 60, bottom: 60, left: 60, right: isSidebarOpen ? 420 : 60 },
+      padding: { top: 60, bottom: 60, left: 60, right: 60 },
     };
 
     // Initialize PhotoSwipe
@@ -92,6 +91,18 @@ const PhotoSwipeCustomUI: React.FC<PhotoSwipeCustomUIProps> = ({
 
     // Initialize PhotoSwipe
     lightboxRef.current.init();
+    
+    // Apply initial transform if sidebar should be open
+    if (isSidebarOpen) {
+      setTimeout(() => {
+        const pswpElement = lightboxRef.current?.element;
+        const scrollWrap = pswpElement?.querySelector('.pswp__scroll-wrap');
+        if (scrollWrap) {
+          (scrollWrap as HTMLElement).style.transform = 'translateX(-200px)';
+          (scrollWrap as HTMLElement).style.transition = 'transform 0.3s ease-out';
+        }
+      }, 100);
+    }
 
     // Add global keyboard listener
     document.addEventListener('keydown', handleKeyPress);
@@ -104,16 +115,21 @@ const PhotoSwipeCustomUI: React.FC<PhotoSwipeCustomUIProps> = ({
     };
   }, [isOpen, initialIndex, photos, dataSource, onClose, handleSidebarToggle, handleKeyPress, isSidebarOpen]);
 
-  // Update padding when sidebar state changes
+  // Update PhotoSwipe container positioning when sidebar state changes
   useEffect(() => {
-    if (lightboxRef.current) {
-      lightboxRef.current.options.padding = {
-        top: 60,
-        bottom: 60,
-        left: 60,
-        right: isSidebarOpen ? 420 : 60,
-      };
-      lightboxRef.current.updateSize();
+    if (lightboxRef.current && lightboxRef.current.element) {
+      const pswpElement = lightboxRef.current.element;
+      const scrollWrap = pswpElement.querySelector('.pswp__scroll-wrap');
+      
+      if (scrollWrap) {
+        if (isSidebarOpen) {
+          (scrollWrap as HTMLElement).style.transform = 'translateX(-200px)';
+          (scrollWrap as HTMLElement).style.transition = 'transform 0.3s ease-out';
+        } else {
+          (scrollWrap as HTMLElement).style.transform = 'translateX(0)';
+          (scrollWrap as HTMLElement).style.transition = 'transform 0.3s ease-out';
+        }
+      }
     }
   }, [isSidebarOpen]);
 
@@ -123,60 +139,23 @@ const PhotoSwipeCustomUI: React.FC<PhotoSwipeCustomUIProps> = ({
 
   return (
     <>
-      {/* PhotoSwipe container */}
-      <div 
-        ref={pswpRef}
-        className="pswp"
-        tabIndex={-1}
-        role="dialog"
-        aria-hidden="true"
-        style={{ display: 'none' }}
-      >
-        <div className="pswp__bg"></div>
-        <div className="pswp__scroll-wrap">
-          <div className="pswp__container">
-            <div className="pswp__item"></div>
-            <div className="pswp__item"></div>
-            <div className="pswp__item"></div>
-          </div>
-          <div className="pswp__ui pswp__ui--hidden">
-            <div className="pswp__top-bar">
-              <div className="pswp__counter"></div>
-              <button className="pswp__button pswp__button--close" title="Close (Esc)"></button>
-              <button className="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
-              <div className="pswp__preloader">
-                <div className="pswp__preloader__icn">
-                  <div className="pswp__preloader__cut">
-                    <div className="pswp__preloader__donut"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
-              <div className="pswp__share-tooltip"></div>
-            </div>
-            <button className="pswp__button pswp__button--arrow--left" title="Previous (arrow left)"></button>
-            <button className="pswp__button pswp__button--arrow--right" title="Next (arrow right)"></button>
-            <div className="pswp__caption">
-              <div className="pswp__caption__center"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Custom UI overlay */}
-      <PhotoSwipeToggleButton
-        isVisible={isOpen}
-        isSidebarOpen={isSidebarOpen}
-        onClick={handleSidebarToggle}
-      />
+      {isOpen && (
+        <>
+          <PhotoSwipeToggleButton
+            isVisible={isOpen}
+            isSidebarOpen={isSidebarOpen}
+            onClick={handleSidebarToggle}
+          />
 
-      {/* Metadata sidebar */}
-      <PhotoSwipeMetadataSidebar
-        photo={currentPhoto}
-        isVisible={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-      />
+          {/* Metadata sidebar */}
+          <PhotoSwipeMetadataSidebar
+            photo={currentPhoto}
+            isVisible={isSidebarOpen}
+            onClose={() => setIsSidebarOpen(false)}
+          />
+        </>
+      )}
     </>
   );
 };

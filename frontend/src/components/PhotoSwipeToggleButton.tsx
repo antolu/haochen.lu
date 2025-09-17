@@ -22,7 +22,8 @@ const PhotoSwipeToggleButton: React.FC<PhotoSwipeToggleButtonProps> = ({
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       onClick={onClick}
-      className="fixed top-6 right-6 z-50 w-12 h-12 rounded-full bg-white bg-opacity-30 backdrop-blur-sm border border-white border-opacity-20 flex items-center justify-center text-white hover:bg-opacity-50 transition-all duration-200 shadow-lg hover:shadow-xl"
+      className="fixed top-6 right-6 w-12 h-12 rounded-full bg-white bg-opacity-30 backdrop-blur-sm border border-white border-opacity-20 flex items-center justify-center text-white hover:bg-opacity-50 transition-all duration-200 shadow-lg hover:shadow-xl"
+      style={{ zIndex: 2001 }}
       title={isSidebarOpen ? 'Hide photo details' : 'Show photo details'}
     >
       <motion.div
