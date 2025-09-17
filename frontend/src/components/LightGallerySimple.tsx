@@ -43,11 +43,6 @@ const LightGallerySimple: React.FC<LightGallerySimpleProps> = ({
 
   const onInit = useCallback(
     (detail: any) => {
-      console.log('LightGallery Simple initialized', {
-        photos: photos.length,
-        initialIndex,
-        detail,
-      });
       lightGalleryRef.current = detail.instance;
 
       // Add custom info button after gallery initialization
@@ -94,16 +89,14 @@ const LightGallerySimple: React.FC<LightGallerySimpleProps> = ({
   );
 
   const onAfterSlide = useCallback((detail: any) => {
-    console.log('After slide:', detail);
     setCurrentPhotoIndex(detail.index);
   }, []);
 
   const onBeforeSlide = useCallback((detail: any) => {
-    console.log('Before slide:', detail);
+    // Handle before slide event
   }, []);
 
   const onBeforeClose = useCallback(() => {
-    console.log('Before close - user triggered');
     setIsSidebarOpen(false);
     onClose();
   }, [onClose]);
@@ -111,34 +104,19 @@ const LightGallerySimple: React.FC<LightGallerySimpleProps> = ({
   // Open gallery by triggering click on the correct item
   useEffect(() => {
     if (isOpen && photos.length > 0) {
-      console.log('Triggering gallery open for index:', initialIndex);
       setTimeout(() => {
         const galleryItems = document.querySelectorAll('.lg-custom-gallery a');
         const targetItem = galleryItems[initialIndex];
         if (targetItem) {
-          console.log('Clicking gallery item:', initialIndex);
           (targetItem as HTMLElement).click();
         }
       }, 100);
     }
   }, [isOpen, initialIndex, photos.length]);
 
-  console.log('LightGallerySimple component called:', {
-    isOpen,
-    photosLength: photos.length,
-    initialIndex,
-  });
-
   if (!isOpen || photos.length === 0) {
-    console.log('LightGallerySimple not rendering:', { isOpen, photosLength: photos.length });
     return null;
   }
-
-  console.log('LightGallerySimple rendering...', {
-    isOpen,
-    photosLength: photos.length,
-    initialIndex,
-  });
 
   return (
     <>

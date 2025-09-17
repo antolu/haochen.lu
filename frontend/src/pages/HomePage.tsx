@@ -260,7 +260,7 @@ const HomePage: React.FC = () => {
               to="/photography"
               className="inline-flex items-center px-8 py-4 bg-primary-600 text-white text-lg font-medium rounded-lg hover:bg-primary-700 transition-colors duration-200"
             >
-              View Full Album
+              View Photography
               <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"

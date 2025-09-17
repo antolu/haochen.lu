@@ -63,6 +63,7 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
   isVisible,
   onClose,
 }) => {
+  // Debug logging to understand what data we're receiving
   const formatDate = (dateString: string) => {
     try {
       return new Date(dateString).toLocaleDateString('en-US', {
@@ -92,7 +93,7 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             className="fixed inset-0 bg-black bg-opacity-50 lg:hidden"
-            style={{ zIndex: 1999 }}
+            style={{ zIndex: 2050 }}
             onClick={onClose}
           />
 
@@ -103,7 +104,7 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
             exit={{ x: '100%' }}
             transition={{ type: 'tween', duration: 0.3 }}
             className="fixed top-0 right-0 h-full w-full lg:w-96 bg-gray-900 shadow-2xl overflow-y-auto"
-            style={{ zIndex: 2000 }}
+            style={{ zIndex: 2080 }}
           >
             {/* Header */}
             <div className="sticky top-0 bg-gray-900 border-b border-gray-700 px-4 py-4">
@@ -113,8 +114,18 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
                   onClick={onClose}
                   className="p-2 rounded-full hover:bg-gray-800 transition-colors"
                 >
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="h-5 w-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
@@ -122,23 +133,34 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
 
             {/* Content */}
             <div className="divide-y divide-gray-700">
-              {/* Basic Info */}
+              {/* Basic Info - Always show this section */}
               <CollapsibleSection
                 title="Information"
+                defaultOpen={true}
                 icon={
-                  <svg className="h-4 w-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    className="h-4 w-4 text-blue-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                 }
               >
                 <div className="space-y-3 text-sm">
                   <div>
                     <h3 className="text-white font-medium mb-1">{photo.title || 'Untitled'}</h3>
-                    {photo.description && (
+                    {photo.description && photo.description.trim() && (
                       <p className="text-gray-300 leading-relaxed">{photo.description}</p>
                     )}
                   </div>
-                  
+
                   {photo.date_taken && (
                     <div>
                       <span className="text-gray-400">Date taken:</span>
@@ -148,10 +170,19 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
 
                   <div>
                     <span className="text-gray-400">Dimensions:</span>
-                    <p className="text-gray-300">{photo.width} × {photo.height} pixels</p>
+                    <p className="text-gray-300">
+                      {photo.width} × {photo.height} pixels
+                    </p>
                   </div>
 
-                  {photo.tags && (
+                  <div>
+                    <span className="text-gray-400">File size:</span>
+                    <p className="text-gray-300">
+                      {Math.round((photo.file_size / 1024 / 1024) * 100) / 100} MB
+                    </p>
+                  </div>
+
+                  {photo.tags && photo.tags.trim() && (
                     <div>
                       <span className="text-gray-400">Tags:</span>
                       <p className="text-gray-300">{photo.tags}</p>
@@ -164,10 +195,26 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
               {hasCameraData && (
                 <CollapsibleSection
                   title="Camera"
+                  defaultOpen={true}
                   icon={
-                    <svg className="h-4 w-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <svg
+                      className="h-4 w-4 text-green-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
                     </svg>
                   }
                 >
@@ -175,7 +222,9 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
                     {(photo.camera_make || photo.camera_model) && (
                       <div>
                         <span className="text-gray-400">Camera:</span>
-                        <p className="text-gray-300">{photo.camera_make} {photo.camera_model}</p>
+                        <p className="text-gray-300">
+                          {photo.camera_make} {photo.camera_model}
+                        </p>
                       </div>
                     )}
                     {photo.lens && (
@@ -192,10 +241,26 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
               {hasTechnicalData && (
                 <CollapsibleSection
                   title="Settings"
+                  defaultOpen={true}
                   icon={
-                    <svg className="h-4 w-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <svg
+                      className="h-4 w-4 text-purple-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
                     </svg>
                   }
                 >
@@ -233,9 +298,24 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
                 <CollapsibleSection
                   title="Location"
                   icon={
-                    <svg className="h-4 w-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <svg
+                      className="h-4 w-4 text-red-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
                     </svg>
                   }
                 >
@@ -246,7 +326,7 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
                         <p className="text-gray-300">{photo.location_name}</p>
                       </div>
                     )}
-                    
+
                     <div>
                       <span className="text-gray-400 text-sm">Coordinates:</span>
                       <p className="text-gray-300 text-xs font-mono">

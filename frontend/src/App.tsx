@@ -9,7 +9,6 @@ import AdminLayout from './layouts/AdminLayout';
 
 // Public pages
 import HomePage from './pages/HomePage';
-import AlbumPage from './pages/AlbumPage';
 import PhotographyPage from './pages/PhotographyPage';
 import ProjectsPage from './pages/ProjectsPage';
 import ProjectDetailPage from './pages/ProjectDetailPage';
