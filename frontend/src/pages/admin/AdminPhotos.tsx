@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import PhotoSwipe from 'photoswipe';
+import 'photoswipe/dist/photoswipe.css';
 
 import PhotoUpload from '../../components/PhotoUpload';
 import PhotoGrid from '../../components/PhotoGrid';
-import PhotoLightbox from '../../components/PhotoLightbox';
 import {
   usePhotos,
   usePhotoStats,
@@ -32,8 +33,39 @@ const AdminPhotos: React.FC = () => {
     setShowUpload(false);
   };
 
-  const handlePhotoClick = (_photo: Photo, _index: number) => {
-    // Handle photo selection in admin mode - PhotoLightbox will handle the display
+  const lightboxRef = useRef<PhotoSwipe | null>(null);
+
+  const openPhotoSwipe = (index: number) => {
+    // Prepare data source for PhotoSwipe
+    const dataSource = photos.map(photo => ({
+      src: photo.variants?.xlarge?.path || photo.variants?.large?.path || photo.original_path,
+      width: photo.width || 1200,
+      height: photo.height || 800,
+      alt: photo.title || 'Photo',
+      caption: photo.title || '',
+    }));
+
+    // PhotoSwipe options
+    const options = {
+      dataSource,
+      index,
+      bgOpacity: 0.9,
+      showHideAnimationType: 'zoom',
+      zoom: true,
+      close: true,
+      counter: true,
+      arrowPrev: true,
+      arrowNext: true,
+    };
+
+    // Initialize and open PhotoSwipe
+    lightboxRef.current = new PhotoSwipe(options);
+    lightboxRef.current.init();
+  };
+
+  const handlePhotoClick = (photo: Photo, index: number) => {
+    console.log('Admin photo clicked:', photo.title, 'at index:', index);
+    openPhotoSwipe(index);
   };
 
   const handleSelectAll = () => {
@@ -387,17 +419,15 @@ const AdminPhotos: React.FC = () => {
           )}
         </div>
 
-        <PhotoLightbox photos={photos}>
-          <div className="min-h-[600px]">
-            <PhotoGrid
-              photos={photos}
-              isLoading={isLoadingPhotos}
-              onPhotoClick={handlePhotoClick}
-              showMetadata={true}
-              className="h-[600px]"
-            />
-          </div>
-        </PhotoLightbox>
+        <div className="min-h-[600px]">
+          <PhotoGrid
+            photos={photos}
+            isLoading={isLoadingPhotos}
+            onPhotoClick={handlePhotoClick}
+            showMetadata={true}
+            className="h-[600px]"
+          />
+        </div>
       </div>
     </div>
   );

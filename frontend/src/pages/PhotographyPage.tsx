@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Gallery, Item } from 'react-photoswipe-gallery';
+import PhotoSwipe from 'photoswipe';
 import 'photoswipe/dist/photoswipe.css';
 
 import { photos } from '../api/client';
@@ -41,9 +41,39 @@ const PhotographyPage: React.FC = () => {
     }
   }, [photoData, currentPage]);
 
+  const lightboxRef = useRef<PhotoSwipe | null>(null);
+
+  const openPhotoSwipe = (index: number) => {
+    // Prepare data source for PhotoSwipe
+    const dataSource = allPhotos.map(photo => ({
+      src: photo.variants?.xlarge?.path || photo.variants?.large?.path || photo.original_path,
+      width: photo.width || 1200,
+      height: photo.height || 800,
+      alt: photo.title || 'Photo',
+      caption: photo.title || '',
+    }));
+
+    // PhotoSwipe options
+    const options = {
+      dataSource,
+      index,
+      bgOpacity: 0.9,
+      showHideAnimationType: 'zoom',
+      zoom: true,
+      close: true,
+      counter: true,
+      arrowPrev: true,
+      arrowNext: true,
+    };
+
+    // Initialize and open PhotoSwipe
+    lightboxRef.current = new PhotoSwipe(options);
+    lightboxRef.current.init();
+  };
+
   const handlePhotoClick = (photo: Photo, index: number) => {
     console.log('Photo clicked:', photo.title, 'at index:', index);
-    // PhotoLightbox handles the lightbox functionality automatically
+    openPhotoSwipe(index);
   };
 
   const handleLoadMore = () => {
@@ -92,60 +122,13 @@ const PhotographyPage: React.FC = () => {
           transition={{ duration: 0.8, delay: 0.2 }}
           className="mb-12"
         >
-          <Gallery
-            options={{
-              bgOpacity: 0.9,
-              showHideOpacity: true,
-              showHideAnimationType: 'zoom',
-              closeOnVerticalDrag: true,
-              pinchToClose: true,
-              zoom: true,
-              close: true,
-              counter: true,
-              arrowPrev: true,
-              arrowNext: true,
-              mainClass: 'pswp--custom-bg',
-            }}
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {allPhotos.map((photo, index) => {
-                const fullImageUrl = photo.variants?.xlarge?.path || photo.variants?.large?.path || photo.original_path;
-                const thumbnailUrl = photo.variants?.thumbnail?.path || photo.variants?.small?.path || photo.original_path;
-                
-                return (
-                  <Item
-                    key={photo.id}
-                    original={fullImageUrl}
-                    thumbnail={thumbnailUrl}
-                    width={photo.width || 1200}
-                    height={photo.height || 800}
-                    caption={photo.title || ''}
-                    alt={photo.title || 'Photo'}
-                  >
-                    {({ ref, open }) => (
-                      <div
-                        ref={ref}
-                        onClick={open}
-                        className="cursor-pointer bg-gray-100 rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-300"
-                      >
-                        <img
-                          src={thumbnailUrl}
-                          alt={photo.title || 'Photo'}
-                          className="w-full h-64 object-cover"
-                          loading="lazy"
-                        />
-                        {photo.title && (
-                          <div className="p-3">
-                            <h3 className="text-sm font-medium text-gray-900">{photo.title}</h3>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </Item>
-                );
-              })}
-            </div>
-          </Gallery>
+          <PhotoGrid
+            photos={allPhotos}
+            isLoading={isLoading}
+            onPhotoClick={handlePhotoClick}
+            showMetadata={true}
+            className="min-h-[600px]"
+          />
         </motion.div>
 
         {/* Load More Button */}
