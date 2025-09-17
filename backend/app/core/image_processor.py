@@ -325,7 +325,7 @@ class ImageProcessor:
 
         return {
             "filename": original_filename,
-            "original_path": str(original_path),
+            "original_path": f"/uploads/{original_filename}",
             "file_size": file_size,
             "variants": variants,
             **exif_data,
@@ -370,7 +370,7 @@ class ImageProcessor:
                     )
 
                     variants[size_name] = {
-                        "path": str(webp_path),
+                        "path": f"/compressed/{webp_filename}",
                         "filename": webp_filename,
                         "width": resized_img.width,
                         "height": resized_img.height,

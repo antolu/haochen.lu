@@ -122,7 +122,7 @@ class PhotoUpdate(BaseModel):
         return v
 
     # Flexible metadata
-    metadata: dict | None = None
+    custom_metadata: dict | None = None
 
 
 class ImageVariant(BaseModel):
@@ -161,7 +161,7 @@ class PhotoResponse(PhotoBase):
     date_taken: datetime | None
 
     # Flexible metadata
-    metadata: dict | None
+    custom_metadata: dict | None
 
     # Metadata
     file_size: int

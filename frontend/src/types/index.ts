@@ -42,7 +42,7 @@ export interface Photo {
   date_taken?: string;
 
   // Flexible metadata
-  metadata?: Record<string, any>;
+  custom_metadata?: Record<string, any>;
 
   // Metadata
   file_size: number;
