@@ -50,7 +50,7 @@ const AdminPhotos: React.FC = () => {
       dataSource,
       index,
       bgOpacity: 0.9,
-      showHideAnimationType: 'zoom',
+      showHideAnimationType: 'zoom' as const,
       zoom: true,
       close: true,
       counter: true,

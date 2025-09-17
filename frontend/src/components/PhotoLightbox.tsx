@@ -126,7 +126,7 @@ const PhotoLightboxItem: React.FC<PhotoLightboxItemProps> = ({
   );
 };
 
-const PhotoLightbox: React.FC<PhotoLightboxProps> = ({ photos, children, options = {} }) => {
+const PhotoLightbox: React.FC<PhotoLightboxProps> = ({ children, options = {} }) => {
   const defaultOptions = {
     bgOpacity: 0.9,
     showHideOpacity: true,

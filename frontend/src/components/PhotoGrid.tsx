@@ -48,7 +48,11 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
     setIsLoaded(true);
   };
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('PhotoCard clicked!', photo.title);
+    alert(`PhotoCard clicked: ${photo.title}`);
     if (onClick) {
       onClick(photo, index);
     }

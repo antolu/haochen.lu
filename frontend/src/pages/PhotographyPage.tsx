@@ -58,7 +58,7 @@ const PhotographyPage: React.FC = () => {
       dataSource,
       index,
       bgOpacity: 0.9,
-      showHideAnimationType: 'zoom',
+      showHideAnimationType: 'zoom' as const,
       zoom: true,
       close: true,
       counter: true,
@@ -73,6 +73,7 @@ const PhotographyPage: React.FC = () => {
 
   const handlePhotoClick = (photo: Photo, index: number) => {
     console.log('Photo clicked:', photo.title, 'at index:', index);
+    alert(`Photo clicked: ${photo.title} at index ${index}`);
     openPhotoSwipe(index);
   };
 
