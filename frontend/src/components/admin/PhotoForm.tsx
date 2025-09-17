@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import type { Photo } from '../../types';
 import { useUpdatePhoto, usePhotoTags } from '../../hooks/usePhotos';
 import TagMultiSelect from './TagMultiSelect';
+import MapPicker from '../MapPicker';
 
 interface PhotoFormProps {
   photo: Photo;
@@ -21,6 +22,11 @@ const PhotoForm: React.FC<PhotoFormProps> = ({ photo, onSuccess, onCancel }) => 
     tags: photo.tags || '',
     comments: photo.comments || '',
     featured: !!photo.featured,
+    // Location
+    location_lat: typeof photo.location_lat === 'number' ? photo.location_lat : undefined,
+    location_lon: typeof photo.location_lon === 'number' ? photo.location_lon : undefined,
+    location_name: photo.location_name || '',
+    location_address: photo.location_address || '',
   });
 
   useEffect(() => {
@@ -31,6 +37,10 @@ const PhotoForm: React.FC<PhotoFormProps> = ({ photo, onSuccess, onCancel }) => 
       tags: photo.tags || '',
       comments: photo.comments || '',
       featured: !!photo.featured,
+      location_lat: typeof photo.location_lat === 'number' ? photo.location_lat : undefined,
+      location_lon: typeof photo.location_lon === 'number' ? photo.location_lon : undefined,
+      location_name: photo.location_name || '',
+      location_address: photo.location_address || '',
     });
   }, [photo]);
 
@@ -38,13 +48,53 @@ const PhotoForm: React.FC<PhotoFormProps> = ({ photo, onSuccess, onCancel }) => 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const updated = await updateMutation.mutateAsync({ id: photo.id, data: form });
+    const updated = await updateMutation.mutateAsync({ id: photo.id, data: form as any });
     onSuccess?.(updated as Photo);
+  };
+
+  // Reverse geocode when coordinates change (debounced)
+  const reverseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const doReverseGeocode = useCallback(async (lat: number, lng: number) => {
+    try {
+      const resp = await fetch(
+        `/api/locations/reverse?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}`
+      );
+      if (!resp.ok) return;
+      const data = await resp.json();
+      setForm(f => ({
+        ...f,
+        location_name: data.location_name || '',
+        location_address: data.location_address || '',
+      }));
+    } catch {
+      // ignore; keep coordinates
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof form.location_lat !== 'number' || typeof form.location_lon !== 'number') return;
+    if (reverseTimer.current) clearTimeout(reverseTimer.current);
+    reverseTimer.current = setTimeout(
+      () => doReverseGeocode(form.location_lat as number, form.location_lon as number),
+      400
+    );
+    return () => {
+      if (reverseTimer.current) clearTimeout(reverseTimer.current);
+    };
+  }, [form.location_lat, form.location_lon, doReverseGeocode]);
+
+  const handleMapSelect = (lat: number, lng: number) => {
+    setForm(f => ({ ...f, location_lat: lat, location_lon: lng }));
+  };
+
+  const parseNumber = (val: string) => {
+    const n = parseFloat(val);
+    return Number.isFinite(n) ? n : undefined;
   };
 
   return (
     <motion.div
-      className="max-w-3xl mx-auto"
+      className="max-w-5xl mx-auto"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
@@ -184,6 +234,116 @@ const PhotoForm: React.FC<PhotoFormProps> = ({ photo, onSuccess, onCancel }) => 
                   />
                   <span className="text-sm text-gray-700">Featured</span>
                 </label>
+              </div>
+
+              {/* Location Section */}
+              <div className="pt-2 border-t border-gray-200">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-medium text-gray-900">Location</h3>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      className="text-sm text-gray-600 hover:text-gray-800 underline"
+                      onClick={() =>
+                        setForm(f => ({
+                          ...f,
+                          location_lat: undefined,
+                          location_lon: undefined,
+                          location_name: '',
+                          location_address: '',
+                        }))
+                      }
+                    >
+                      Clear
+                    </button>
+                    {typeof photo.location_lat === 'number' &&
+                      typeof photo.location_lon === 'number' && (
+                        <button
+                          type="button"
+                          className="text-sm text-gray-600 hover:text-gray-800 underline"
+                          onClick={() =>
+                            setForm(f => ({
+                              ...f,
+                              location_lat: photo.location_lat,
+                              location_lon: photo.location_lon,
+                            }))
+                          }
+                        >
+                          Reset to EXIF
+                        </button>
+                      )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4">
+                  <MapPicker
+                    latitude={typeof form.location_lat === 'number' ? form.location_lat : 37.7749}
+                    longitude={
+                      typeof form.location_lon === 'number' ? form.location_lon : -122.4194
+                    }
+                    zoom={13}
+                    height={320}
+                    onLocationSelect={handleMapSelect}
+                    onLocationChange={handleMapSelect}
+                    showSearch
+                  />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Latitude</label>
+                      <input
+                        className="mt-1 w-full border border-gray-300 rounded px-3 py-2"
+                        inputMode="decimal"
+                        value={
+                          typeof form.location_lat === 'number' ? String(form.location_lat) : ''
+                        }
+                        placeholder="e.g., 37.7749"
+                        onChange={e => {
+                          const v = parseNumber(e.target.value);
+                          setForm(f => ({ ...f, location_lat: v }));
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Longitude</label>
+                      <input
+                        className="mt-1 w-full border border-gray-300 rounded px-3 py-2"
+                        inputMode="decimal"
+                        value={
+                          typeof form.location_lon === 'number' ? String(form.location_lon) : ''
+                        }
+                        placeholder="e.g., -122.4194"
+                        onChange={e => {
+                          const v = parseNumber(e.target.value);
+                          setForm(f => ({ ...f, location_lon: v }));
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Location Name
+                      </label>
+                      <input
+                        className="mt-1 w-full border border-gray-300 rounded px-3 py-2"
+                        value={form.location_name}
+                        onChange={e => setForm(f => ({ ...f, location_name: e.target.value }))}
+                        placeholder="City, State, Country"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Address</label>
+                      <input
+                        className="mt-1 w-full border border-gray-300 rounded px-3 py-2"
+                        value={form.location_address}
+                        onChange={e => setForm(f => ({ ...f, location_address: e.target.value }))}
+                        placeholder="Full address"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
