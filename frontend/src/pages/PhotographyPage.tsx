@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 
 import { photos } from '../api/client';
 import PhotoGrid from '../components/PhotoGrid';
-import LightGallerySimple from '../components/LightGallerySimple';
+import LightGalleryStable from '../components/LightGalleryStable';
 import type { Photo, PhotoListResponse } from '../types';
 
 const PhotographyPage: React.FC = () => {
@@ -12,6 +12,7 @@ const PhotographyPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isPhotoSwipeOpen, setIsPhotoSwipeOpen] = useState(false);
+  const [isLGOpening, setIsLGOpening] = useState(false);
   const [photoSwipeIndex, setPhotoSwipeIndex] = useState(0);
   const photosPerPage = 24;
 
@@ -44,10 +45,15 @@ const PhotographyPage: React.FC = () => {
 
   const handlePhotoClick = (photo: Photo, index: number) => {
     setPhotoSwipeIndex(index);
+    setIsLGOpening(true);
     setIsPhotoSwipeOpen(true);
   };
 
   const handlePhotoSwipeClose = () => {
+    if (isLGOpening) {
+      // Ignore close requests while opening to avoid destroy-loop
+      return;
+    }
     setIsPhotoSwipeOpen(false);
   };
 
@@ -173,12 +179,13 @@ const PhotographyPage: React.FC = () => {
         )}
       </div>
 
-      {/* LightGallery Simple UI */}
-      <LightGallerySimple
+      {/* LightGallery UI - Always mounted */}
+      <LightGalleryStable
         photos={allPhotos}
         isOpen={isPhotoSwipeOpen}
         initialIndex={photoSwipeIndex}
         onClose={handlePhotoSwipeClose}
+        onOpened={() => setIsLGOpening(false)}
       />
     </div>
   );

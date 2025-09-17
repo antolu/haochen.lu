@@ -8,6 +8,7 @@ interface PhotoSwipeMetadataSidebarProps {
   photo: Photo;
   isVisible: boolean;
   onClose?: () => void;
+  onSidebarClose?: () => void;
 }
 
 interface CollapsibleSectionProps {
@@ -62,6 +63,7 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
   photo,
   isVisible,
   onClose,
+  onSidebarClose,
 }) => {
   // Debug logging to understand what data we're receiving
   const formatDate = (dateString: string) => {
@@ -94,7 +96,7 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
             transition={{ duration: 0.2 }}
             className="fixed inset-0 bg-black bg-opacity-50 lg:hidden"
             style={{ zIndex: 2050 }}
-            onClick={onClose}
+            onClick={onSidebarClose || onClose}
           />
 
           {/* Sidebar */}
@@ -103,15 +105,25 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'tween', duration: 0.3 }}
-            className="fixed top-0 right-0 h-full w-full lg:w-96 bg-gray-900 shadow-2xl overflow-y-auto"
+            className="fixed top-0 right-0 h-full w-full lg:w-96 bg-gray-900 shadow-2xl overflow-y-auto lg:!w-[24rem] lg:max-w-[24rem]"
             style={{ zIndex: 2080 }}
+            onClick={e => e.stopPropagation()}
           >
+            {process.env.NODE_ENV !== 'production' && (
+              <div className="hidden" aria-hidden>
+                {console.log('[LG][Sidebar] render for photo', photo.id)}
+              </div>
+            )}
             {/* Header */}
             <div className="sticky top-0 bg-gray-900 border-b border-gray-700 px-4 py-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-white">Photo Details</h2>
                 <button
-                  onClick={onClose}
+                  onClick={e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    (onSidebarClose || onClose)?.();
+                  }}
                   className="p-2 rounded-full hover:bg-gray-800 transition-colors"
                 >
                   <svg
@@ -293,7 +305,7 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
                 </CollapsibleSection>
               )}
 
-              {/* Location */}
+              {/* Location at bottom of pane */}
               {hasLocationData && (
                 <CollapsibleSection
                   title="Location"
@@ -334,7 +346,7 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
                       </p>
                     </div>
 
-                    <div className="border border-gray-700 rounded-lg overflow-hidden">
+                    <div className="border border-gray-700 rounded-lg overflow-hidden mt-2">
                       <MiniMap
                         latitude={photo.location_lat!}
                         longitude={photo.location_lon!}

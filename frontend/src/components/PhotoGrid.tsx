@@ -49,9 +49,10 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
   };
 
   const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+    // Only prevent default if we have a click handler to avoid breaking accessibility
     if (onClick) {
+      e.preventDefault();
+      e.stopPropagation();
       onClick(photo, index);
     }
   };
@@ -201,8 +202,9 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({
     if (columns) return columns;
     if (containerWidth < 640) return 1; // sm - single column on mobile
     if (containerWidth < 1024) return 2; // md - two columns on tablet
-    if (containerWidth < 1536) return 2; // lg/xl - two columns on desktop
-    return 3; // 2xl - three columns on very large screens
+    if (containerWidth < 1280) return 3; // lg - three columns on desktop
+    if (containerWidth < 1536) return 4; // xl - four columns on large desktop
+    return 5; // 2xl - five columns on very large screens
   };
 
   const numColumns = getColumns();
