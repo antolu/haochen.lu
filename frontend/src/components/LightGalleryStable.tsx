@@ -110,9 +110,31 @@ const LightGalleryStable: React.FC<LightGalleryStableProps> = ({
 
       // Update slides and open
       try {
-        galleryRef.current.updateSlides(dynamicElements, initialIndex);
-        galleryRef.current.openGallery(initialIndex);
-        onOpened?.();
+        if (dynamicElements.length === 0) {
+          console.warn('[LG Stable] No slides to open');
+          return;
+        }
+        const safeIndex = Math.max(0, Math.min(initialIndex, dynamicElements.length - 1));
+
+        // Prefer refresh when available (LightGallery v2)
+        if (typeof galleryRef.current.refresh === 'function') {
+          galleryRef.current.refresh(dynamicElements);
+        } else if (typeof galleryRef.current.updateSlides === 'function') {
+          galleryRef.current.updateSlides(dynamicElements, safeIndex);
+        }
+
+        // Guard against empty items array at runtime
+        const items = galleryRef.current.galleryItems || [];
+        if (!items.length) {
+          console.warn('[LG Stable] Gallery has no items after refresh/update');
+          return;
+        }
+
+        setCurrentIndex(safeIndex);
+        if (typeof galleryRef.current.openGallery === 'function') {
+          galleryRef.current.openGallery(safeIndex);
+          onOpened?.();
+        }
       } catch (error) {
         console.error('Error opening gallery:', error);
       }

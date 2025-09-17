@@ -5,8 +5,15 @@ import './colors.css';
 import 'leaflet/dist/leaflet.css';
 import App from './App.tsx';
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>
-);
+const rootEl = document.getElementById('root')!;
+
+if (import.meta.env.DEV) {
+  // Disable StrictMode in development to avoid double mount/unmount that breaks LG
+  createRoot(rootEl).render(<App />);
+} else {
+  createRoot(rootEl).render(
+    <StrictMode>
+      <App />
+    </StrictMode>
+  );
+}
