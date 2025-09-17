@@ -41,25 +41,25 @@ start_dev() {
     print_status "Starting development environment..."
     print_status "This will:"
     print_status "  - Mount source code for live reload"
-    print_status "  - Frontend available at http://localhost:3000"
-    print_status "  - Backend available at http://localhost:8000"
-    print_status "  - API available at http://localhost:8000/api"
+    print_status "  - Use nginx proxy on standard ports"
+    print_status "  - Frontend (Vite dev server) with HMR"
+    print_status "  - Backend (Uvicorn) with auto-reload"
     
     # Stop any existing containers
-    docker compose -f docker-compose.yml -f docker-compose.dev.yml down
+    docker compose -f docker-compose.dev.yml down
     
     # Build development images
     print_status "Building development images..."
-    docker compose -f docker-compose.yml -f docker-compose.dev.yml build
+    docker compose -f docker-compose.dev.yml build
     
     # Start development environment
     print_status "Starting containers..."
-    docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+    docker compose -f docker-compose.dev.yml up -d
     
     print_status "Development environment started!"
-    print_status "Frontend: http://localhost:3000"
-    print_status "Backend: http://localhost:8000"
-    print_status "Backend API: http://localhost:8000/api"
+    print_status "Application: http://localhost"
+    print_status "API: http://localhost/api"
+    print_status "Direct backend: http://localhost:8000 (debugging)"
     print_status ""
     print_status "To view logs: ./dev.sh logs"
     print_status "To stop: ./dev.sh stop"
@@ -68,7 +68,7 @@ start_dev() {
 # Function to stop development environment
 stop_dev() {
     print_status "Stopping development environment..."
-    docker compose -f docker-compose.yml -f docker-compose.dev.yml down
+    docker compose -f docker-compose.dev.yml down
     print_status "Development environment stopped!"
 }
 
@@ -83,9 +83,9 @@ restart_dev() {
 show_logs() {
     service=${2:-""}
     if [ -n "$service" ]; then
-        docker compose -f docker-compose.yml -f docker-compose.dev.yml logs -f "$service"
+        docker compose -f docker-compose.dev.yml logs -f "$service"
     else
-        docker compose -f docker-compose.yml -f docker-compose.dev.yml logs -f
+        docker compose -f docker-compose.dev.yml logs -f
     fi
 }
 

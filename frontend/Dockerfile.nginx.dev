@@ -1,0 +1,14 @@
+# Development nginx proxy for frontend dev server and backend
+FROM nginx:alpine
+
+# Copy nginx configuration for development
+COPY nginx.conf.dev /etc/nginx/nginx.conf
+
+# Create directories for static files
+RUN mkdir -p /var/www/uploads /var/www/compressed
+
+# Expose ports
+EXPOSE 80 443
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]

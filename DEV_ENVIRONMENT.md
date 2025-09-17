@@ -28,11 +28,12 @@ This project supports both **production** and **development** environments using
 ## Environment Details
 
 ### Development Environment
-- **Frontend**: http://localhost:3000 (Vite dev server)
-- **Backend**: http://localhost:8000 (FastAPI with --reload)
-- **API**: http://localhost:8000/api
+- **Application**: http://localhost (nginx proxy on port 80)
+- **API**: http://localhost/api (proxied to backend)
+- **Direct Backend**: http://localhost:8000 (for debugging)
 - **Live Reload**: ✅ Source code changes reflected immediately
 - **Source Mounting**: ✅ Local files mounted into containers
+- **No CORS Issues**: ✅ Same origin for frontend and API
 - **Hot Module Replacement**: ✅ Frontend HMR enabled
 
 ### Production Environment

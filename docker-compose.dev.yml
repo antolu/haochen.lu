@@ -1,8 +1,25 @@
-# Development environment with live reload
-# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
-# This will mount source code and run development servers
+# Development environment with live reload and nginx proxy
+# Usage: ./dev.sh start
+# This will mount source code, run development servers, and proxy through nginx
 
 services:
+  nginx:
+    # Use the same nginx config but proxy to dev servers
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.nginx.dev
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./uploads:/var/www/uploads:ro
+      - ./compressed:/var/www/compressed:ro
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - portfolio-network
+
   backend:
     # Override the image to use a development base
     build:
@@ -11,14 +28,24 @@ services:
     volumes:
       # Mount source code for live reload
       - ./backend:/app
-      # Preserve node_modules and other build artifacts
+      - ./uploads:/app/uploads
+      - ./compressed:/app/compressed
+      # Preserve build artifacts
       - /app/__pycache__
       - /app/.pytest_cache
     environment:
-      - ENV=development
-      - LOG_LEVEL=debug
-      - PYTHONPATH=/app
-      - WATCHFILES_FORCE_POLLING=true  # For Docker file watching
+      - ENVIRONMENT=development
+      - DATABASE_URL=postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-portfolio}
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY}
+      - SESSION_SECRET_KEY=${SESSION_SECRET_KEY}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - CORS_ORIGINS=http://localhost,https://localhost
+      - COOKIE_SECURE=false
+      - COOKIE_DOMAIN=
+      - WEBP_QUALITY=85
+      - THUMBNAIL_SIZE=400
+      - MAX_FILE_SIZE=52428800
     command: 
       - "uvicorn"
       - "app.main:app"
@@ -31,6 +58,11 @@ services:
       - "/app"
     ports:
       - "8000:8000"  # Expose backend directly for debugging
+    depends_on:
+      - db
+      - redis
+    networks:
+      - portfolio-network
 
   frontend:
     # Override the image to use a development base
@@ -46,7 +78,7 @@ services:
       - /app/.vite
     environment:
       - NODE_ENV=development
-      - VITE_API_URL=http://localhost:8000
+      - VITE_API_URL=/api  # Use relative URLs since nginx will proxy
       - CHOKIDAR_USEPOLLING=true  # For Docker file watching
     command: 
       - "npm"
@@ -57,20 +89,44 @@ services:
       - "0.0.0.0"
       - "--port"
       - "3000"
-    ports:
-      - "3000:3000"  # Vite dev server
     depends_on:
       - backend
+    networks:
+      - portfolio-network
 
-  # Keep the database and redis as-is for development
   db:
-    # Use the same production config
-    
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-portfolio}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - portfolio-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   redis:
-    # Use the same production config
-    
-  migrate:
-    # Override to ensure it uses the development backend
-    depends_on:
-      - db
-      - backend
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - portfolio-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  db_data:
+
+networks:
+  portfolio-network:
+    driver: bridge
