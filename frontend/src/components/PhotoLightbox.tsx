@@ -12,7 +12,7 @@ import 'lightgallery/css/lg-fullscreen.css';
 import PhotoSwipeMetadataSidebar from './PhotoSwipeMetadataSidebar';
 import type { Photo } from '../types';
 
-interface LightGalleryStableProps {
+interface PhotoLightboxProps {
   photos: Photo[];
   isOpen: boolean;
   initialIndex: number;
@@ -20,7 +20,7 @@ interface LightGalleryStableProps {
   onOpened?: () => void;
 }
 
-const LightGalleryStable: React.FC<LightGalleryStableProps> = ({
+const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   photos,
   isOpen,
   initialIndex,
@@ -34,46 +34,36 @@ const LightGalleryStable: React.FC<LightGalleryStableProps> = ({
 
   const currentPhoto = photos[currentIndex];
 
-  // Initialize gallery once when component mounts
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Build dynamic elements
     const dynamicElements = photos.map(photo => ({
       src: photo.variants?.xlarge?.path || photo.variants?.large?.path || photo.original_path,
       thumb: photo.variants?.thumbnail?.path || photo.variants?.small?.path || photo.original_path,
       subHtml: `<h4>${photo.title || 'Untitled'}</h4>`,
     }));
 
-    // Initialize gallery with all settings
     galleryRef.current = lightGallery(containerRef.current, {
       plugins: [lgThumbnail, lgZoom, lgFullscreen],
       licenseKey: '0000-0000-000-0000',
-      // Dynamic mode
       dynamic: true,
       dynamicEl: dynamicElements,
-      // Core settings
       mode: 'lg-slide',
       speed: 500,
-      // Thumbnail settings
       thumbnail: true,
       showThumbByDefault: false,
       thumbWidth: 100,
       thumbHeight: 80,
       thumbMargin: 5,
-      // Zoom settings
       zoom: true,
       scale: 1,
-      // Controls
       controls: true,
       download: false,
-      // Close behavior
       closable: true,
       closeOnTap: false,
       escKey: true,
     });
 
-    // Add event listeners
     containerRef.current.addEventListener('lgBeforeSlide', (e: any) => {
       setCurrentIndex(e.detail.index);
     });
@@ -87,20 +77,17 @@ const LightGalleryStable: React.FC<LightGalleryStableProps> = ({
       onClose();
     });
 
-    // Cleanup on unmount
     return () => {
       if (galleryRef.current) {
         galleryRef.current.destroy();
       }
     };
-  }, []); // Only run once on mount
+  }, []);
 
-  // Handle opening/closing
   useEffect(() => {
     if (!galleryRef.current) return;
 
     if (isOpen) {
-      // Update dynamic elements if photos changed
       const dynamicElements = photos.map(photo => ({
         src: photo.variants?.xlarge?.path || photo.variants?.large?.path || photo.original_path,
         thumb:
@@ -108,57 +95,41 @@ const LightGalleryStable: React.FC<LightGalleryStableProps> = ({
         subHtml: `<h4>${photo.title || 'Untitled'}</h4>`,
       }));
 
-      // Update slides and open
       try {
         if (dynamicElements.length === 0) {
-          console.warn('[LG Stable] No slides to open');
           return;
         }
         const safeIndex = Math.max(0, Math.min(initialIndex, dynamicElements.length - 1));
-
-        // Prefer refresh when available (LightGallery v2)
         if (typeof galleryRef.current.refresh === 'function') {
           galleryRef.current.refresh(dynamicElements);
         } else if (typeof galleryRef.current.updateSlides === 'function') {
           galleryRef.current.updateSlides(dynamicElements, safeIndex);
         }
-
-        // Guard against empty items array at runtime
         const items = galleryRef.current.galleryItems || [];
         if (!items.length) {
-          console.warn('[LG Stable] Gallery has no items after refresh/update');
           return;
         }
-
         setCurrentIndex(safeIndex);
         if (typeof galleryRef.current.openGallery === 'function') {
           galleryRef.current.openGallery(safeIndex);
           onOpened?.();
         }
-      } catch (error) {
-        console.error('Error opening gallery:', error);
-      }
+      } catch (error) {}
     }
   }, [isOpen, initialIndex, photos, onOpened]);
 
-  // Always render the component, but hide it when closed
-
   return (
     <>
-      <div ref={containerRef} style={{ display: 'none' }}>
-        {/* Hidden container for LightGallery */}
-      </div>
-
-      {/* Sidebar - Disabled for testing */}
+      <div ref={containerRef} style={{ display: 'none' }} />
       {false && currentPhoto && sidebarOpen && (
         <PhotoSwipeMetadataSidebar
           photo={currentPhoto}
           isVisible={sidebarOpen}
-          onSidebarClose={() => setSidebarOpen(false)}
+          onClose={() => setSidebarOpen(false)}
         />
       )}
     </>
   );
 };
 
-export default LightGalleryStable;
+export default PhotoLightbox;

@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 
 import { photos } from '../api/client';
 import PhotoGrid from '../components/PhotoGrid';
-import LightGalleryStable from '../components/LightGalleryStable';
+import PhotoLightbox from '../components/PhotoLightbox';
 import type { Photo, PhotoListResponse } from '../types';
 
 const PhotographyPage: React.FC = () => {
@@ -179,8 +179,8 @@ const PhotographyPage: React.FC = () => {
         )}
       </div>
 
-      {/* LightGallery UI - Always mounted */}
-      <LightGalleryStable
+      {/* PhotoLightbox - Always mounted */}
+      <PhotoLightbox
         photos={allPhotos}
         isOpen={isPhotoSwipeOpen}
         initialIndex={photoSwipeIndex}
