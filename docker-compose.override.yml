@@ -29,10 +29,17 @@ services:
         "--reload",
       ]
   frontend:
+    # Development environment overrides
+    volumes:
+      - ./frontend:/app  # Mount source code for live reload
+      - /app/node_modules  # Prevent overwriting node_modules
     environment:
       - BACKEND_URL=http://backend:8000
+      - NODE_ENV=development
     ports:
       - "80:80"
       - "443:443"
     depends_on:
       - backend
+    # Override command for development
+    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "80"]

@@ -13,6 +13,7 @@ interface PhotoLightboxProps {
   };
 }
 
+
 interface PhotoLightboxItemProps {
   photo: Photo;
   width?: number;
@@ -135,58 +136,10 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({ photos, children, options
     ...options,
   };
 
-  // Custom PhotoSwipe options for better UX
-
   return (
     <Gallery
       options={{
         ...defaultOptions,
-        // Custom styling for the lightbox
-        dataSource: photos.map((photo, index) => ({
-          src: photo.variants?.xlarge?.path || photo.variants?.large?.path || photo.original_path,
-          width: photo.width || 1200,
-          height: photo.height || 800,
-          alt: photo.title || `Photo ${index + 1}`,
-          caption: (() => {
-            const parts = [];
-
-            if (photo.title) {
-              parts.push(
-                `<h3 style="font-size: 16px; font-weight: 600; margin: 0 0 8px 0; color: white;">${photo.title}</h3>`
-              );
-            }
-
-            if (photo.description) {
-              parts.push(
-                `<p style="font-size: 14px; margin: 0 0 12px 0; color: #e5e7eb; line-height: 1.4;">${photo.description}</p>`
-              );
-            }
-
-            // Camera and technical info
-            const techParts = [];
-            if (photo.camera_make && photo.camera_model) {
-              techParts.push(`${photo.camera_make} ${photo.camera_model}`);
-            }
-
-            const settings = [];
-            if (photo.aperture) settings.push(`f/${photo.aperture}`);
-            if (photo.shutter_speed) settings.push(`${photo.shutter_speed}s`);
-            if (photo.iso) settings.push(`ISO ${photo.iso}`);
-            if (photo.focal_length) settings.push(`${photo.focal_length}mm`);
-
-            if (settings.length > 0) {
-              techParts.push(settings.join(' • '));
-            }
-
-            if (techParts.length > 0) {
-              parts.push(
-                `<p style="font-size: 12px; margin: 0; color: #9ca3af;">${techParts.join('<br>')}</p>`
-              );
-            }
-
-            return parts.join('');
-          })(),
-        })),
         // Enhanced UI elements
         zoom: true,
         close: true,
@@ -195,8 +148,6 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({ photos, children, options
         arrowNext: true,
         // Custom CSS classes
         mainClass: 'pswp--custom-bg',
-        // Responsive breakpoints
-        thumbSelector: '.pswp__thumb',
       }}
       // Custom styles
       onOpen={pswp => {

@@ -3,6 +3,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { useInView } from 'react-intersection-observer';
 import { motion } from 'framer-motion';
 import MiniMap from './MiniMap';
+import { PhotoLightboxItem } from './PhotoLightbox';
 import type { Photo } from '../types';
 
 interface PhotoGridProps {
@@ -291,15 +292,21 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({
                 {rowPhotos.map((photo, colIndex) => {
                   const photoIndex = startIndex + colIndex;
                   return (
-                    <PhotoCard
+                    <PhotoLightboxItem
                       key={photo.id}
                       photo={photo}
-                      index={photoIndex}
-                      onClick={onPhotoClick}
-                      showMetadata={showMetadata}
-                      width={itemWidth}
-                      height={itemHeight}
-                    />
+                      width={photo.width}
+                      height={photo.height}
+                    >
+                      <PhotoCard
+                        photo={photo}
+                        index={photoIndex}
+                        onClick={onPhotoClick}
+                        showMetadata={showMetadata}
+                        width={itemWidth}
+                        height={itemHeight}
+                      />
+                    </PhotoLightboxItem>
                   );
                 })}
                 {/* Fill remaining columns if the last row is incomplete */}
