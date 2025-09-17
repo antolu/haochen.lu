@@ -1,17 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import PhotoSwipe from 'photoswipe';
 import 'photoswipe/dist/photoswipe.css';
 
 import { photos } from '../api/client';
 import PhotoGrid from '../components/PhotoGrid';
+import PhotoSwipeCustomUI from '../components/PhotoSwipeCustomUI';
 import type { Photo, PhotoListResponse } from '../types';
 
 const PhotographyPage: React.FC = () => {
   const [allPhotos, setAllPhotos] = useState<Photo[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isPhotoSwipeOpen, setIsPhotoSwipeOpen] = useState(false);
+  const [photoSwipeIndex, setPhotoSwipeIndex] = useState(0);
   const photosPerPage = 24;
 
   // Fetch photos from API
@@ -41,42 +43,13 @@ const PhotographyPage: React.FC = () => {
     }
   }, [photoData, currentPage]);
 
-  const lightboxRef = useRef<PhotoSwipe | null>(null);
-
-  const openPhotoSwipe = (index: number) => {
-    // Prepare data source for PhotoSwipe
-    const dataSource = allPhotos.map(photo => ({
-      src: photo.variants?.xlarge?.path || photo.variants?.large?.path || photo.original_path,
-      width: photo.width || 1200,
-      height: photo.height || 800,
-      alt: photo.title || 'Photo',
-      caption: photo.title || '',
-    }));
-
-    if (dataSource.length === 0 || index >= dataSource.length) {
-      return;
-    }
-
-    // PhotoSwipe options
-    const options = {
-      dataSource,
-      index,
-      bgOpacity: 0.9,
-      showHideAnimationType: 'zoom' as const,
-      zoom: true,
-      close: true,
-      counter: true,
-      arrowPrev: true,
-      arrowNext: true,
-    };
-
-    // Initialize and open PhotoSwipe
-    lightboxRef.current = new PhotoSwipe(options);
-    lightboxRef.current.init();
+  const handlePhotoClick = (photo: Photo, index: number) => {
+    setPhotoSwipeIndex(index);
+    setIsPhotoSwipeOpen(true);
   };
 
-  const handlePhotoClick = (photo: Photo, index: number) => {
-    openPhotoSwipe(index);
+  const handlePhotoSwipeClose = () => {
+    setIsPhotoSwipeOpen(false);
   };
 
   const handleLoadMore = () => {
@@ -200,6 +173,14 @@ const PhotographyPage: React.FC = () => {
           </motion.div>
         )}
       </div>
+
+      {/* PhotoSwipe Custom UI */}
+      <PhotoSwipeCustomUI
+        photos={allPhotos}
+        isOpen={isPhotoSwipeOpen}
+        initialIndex={photoSwipeIndex}
+        onClose={handlePhotoSwipeClose}
+      />
     </div>
   );
 };
