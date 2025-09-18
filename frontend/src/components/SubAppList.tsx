@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { SubApp } from '../types';
+import { formatDateSimple } from '../utils/dateFormat';
 
 interface SubAppListProps {
   subapps: SubApp[];
@@ -233,7 +234,7 @@ const SubAppList: React.FC<SubAppListProps> = ({
 
                       <div className="mt-2 flex items-center text-xs text-gray-500 space-x-4">
                         <span>Order: {subapp.order}</span>
-                        <span>Created: {new Date(subapp.created_at).toLocaleDateString()}</span>
+                        <span>Created: {formatDateSimple(subapp.created_at)}</span>
                       </div>
                     </div>
                   </div>
