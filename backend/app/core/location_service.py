@@ -151,9 +151,13 @@ class LocationService:
                 "location_name": location_name,
                 "location_address": location.address,
                 "raw_address": address,
-                "place_id": location.raw.get("place_id"),
+                "place_id": str(location.raw.get("place_id"))
+                if location.raw.get("place_id")
+                else None,
                 "osm_type": location.raw.get("osm_type"),
-                "osm_id": location.raw.get("osm_id"),
+                "osm_id": str(location.raw.get("osm_id"))
+                if location.raw.get("osm_id")
+                else None,
             }
 
             # Cache the result
@@ -201,9 +205,13 @@ class LocationService:
                 "location_name": location.address,
                 "location_address": location.address,
                 "raw_address": location.raw.get("address", {}),
-                "place_id": location.raw.get("place_id"),
+                "place_id": str(location.raw.get("place_id"))
+                if location.raw.get("place_id")
+                else None,
                 "osm_type": location.raw.get("osm_type"),
-                "osm_id": location.raw.get("osm_id"),
+                "osm_id": str(location.raw.get("osm_id"))
+                if location.raw.get("osm_id")
+                else None,
             }
 
             # Cache the result
@@ -290,9 +298,13 @@ class LocationService:
                             "longitude": float(result["lon"]),
                             "location_name": location_name,
                             "location_address": result.get("display_name"),
-                            "place_id": result.get("place_id"),
+                            "place_id": str(result.get("place_id"))
+                            if result.get("place_id")
+                            else None,
                             "osm_type": result.get("osm_type"),
-                            "osm_id": result.get("osm_id"),
+                            "osm_id": str(result.get("osm_id"))
+                            if result.get("osm_id")
+                            else None,
                             "raw_address": address,
                         })
 
@@ -359,7 +371,9 @@ class LocationService:
                             "name": result.get("display_name"),
                             "type": result.get("type"),
                             "class": result.get("class"),
-                            "place_id": result.get("place_id"),
+                            "place_id": str(result.get("place_id"))
+                            if result.get("place_id")
+                            else None,
                             "distance_km": self._calculate_distance(
                                 latitude,
                                 longitude,
