@@ -4,6 +4,7 @@ import { useInView } from 'react-intersection-observer';
 import { motion } from 'framer-motion';
 import MiniMap from './MiniMap';
 import type { Photo } from '../types';
+import { formatDateSimple } from '../utils/dateFormat';
 
 interface PhotoGridProps {
   photos: Photo[];
@@ -151,7 +152,7 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
 
                 {photo.date_taken && (
                   <p className="text-xs text-gray-400 truncate">
-                    📅 {new Date(photo.date_taken).toLocaleDateString()}
+                    📅 {formatDateSimple(photo.date_taken)}
                   </p>
                 )}
               </div>

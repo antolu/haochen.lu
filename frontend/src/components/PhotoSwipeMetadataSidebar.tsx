@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import MiniMap from './MiniMap';
 import type { Photo } from '../types';
+import { formatDate } from '../utils/dateFormat';
 
 interface PhotoSwipeMetadataSidebarProps {
   photo: Photo;
@@ -66,19 +67,6 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
   onSidebarClose,
 }) => {
   // Debug logging to understand what data we're receiving
-  const formatDate = (dateString: string) => {
-    try {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    } catch {
-      return dateString;
-    }
-  };
 
   const hasLocationData = photo.location_lat && photo.location_lon;
   const hasCameraData = photo.camera_make || photo.camera_model || photo.lens;

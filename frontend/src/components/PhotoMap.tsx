@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from 'react';
 import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import type { Photo } from '../types';
+import { formatDateSimple } from '../utils/dateFormat';
 
 // Custom photo marker icon
 const createPhotoMarker = (photoUrl: string) => {
@@ -154,9 +155,7 @@ const PhotoMap: React.FC<PhotoMapProps> = ({
                     <p className="text-xs text-gray-600 mb-1">📍 {photo.location_name}</p>
                   )}
                   {photo.date_taken && (
-                    <p className="text-xs text-gray-500">
-                      📅 {new Date(photo.date_taken).toLocaleDateString()}
-                    </p>
+                    <p className="text-xs text-gray-500">📅 {formatDateSimple(photo.date_taken)}</p>
                   )}
                   {(photo.camera_make || photo.camera_model) && (
                     <p className="text-xs text-gray-500 mt-1">
