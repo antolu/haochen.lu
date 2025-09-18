@@ -90,7 +90,7 @@ class RepositoryService:
         # Try different README filenames
         readme_files = ["README.md", "readme.md", "README.rst", "README.txt", "README"]
 
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=30.0) as client:
             for filename in readme_files:
                 try:
                     # First get file info to get last modified date
@@ -98,16 +98,25 @@ class RepositoryService:
                     info_response = await client.get(info_url, headers=headers)
 
                     if info_response.status_code == 200:
-                        info_response.json()
-
-                        # Get raw content
-                        raw_url = f"https://raw.githubusercontent.com/{repo_info.owner}/{repo_info.name}/main/{filename}"
+                        # Get raw content - try master branch first
+                        raw_url = f"https://raw.githubusercontent.com/{repo_info.owner}/{repo_info.name}/master/{filename}"
                         content_response = await client.get(raw_url)
+
+                        # If master branch fails, try main branch
+                        if content_response.status_code == 404:
+                            raw_url = f"https://raw.githubusercontent.com/{repo_info.owner}/{repo_info.name}/main/{filename}"
+                            content_response = await client.get(raw_url)
 
                         if content_response.status_code == 200:
                             # Try to get last commit date for this file
                             commits_url = f"https://api.github.com/repos/{repo_info.owner}/{repo_info.name}/commits"
-                            commits_params = {"path": filename, "per_page": 1}
+                            # Use the branch that worked for content
+                            branch = "master" if "master" in raw_url else "main"
+                            commits_params = {
+                                "path": filename,
+                                "per_page": 1,
+                                "sha": branch,
+                            }
                             commits_response = await client.get(
                                 commits_url, headers=headers, params=commits_params
                             )
@@ -157,7 +166,7 @@ class RepositoryService:
         # Try different README filenames
         readme_files = ["README.md", "readme.md", "README.rst", "README.txt", "README"]
 
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=30.0) as client:
             for filename in readme_files:
                 try:
                     # Get file content
@@ -223,7 +232,7 @@ class RepositoryService:
 
         url = f"https://api.github.com/repos/{repo_info.owner}/{repo_info.name}"
 
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=30.0) as client:
             try:
                 response = await client.get(url, headers=headers)
                 return response.status_code == 200
@@ -251,7 +260,7 @@ class RepositoryService:
         encoded_path = project_path.replace("/", "%2F")
         url = f"{base_url}/projects/{encoded_path}"
 
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=30.0) as client:
             try:
                 response = await client.get(url, headers=headers)
                 return response.status_code == 200

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { api } from '../api/client';
 
@@ -28,6 +28,14 @@ const RepositoryConnector: React.FC<RepositoryConnectorProps> = ({
   const [url, setUrl] = useState(value);
   const [repoInfo, setRepoInfo] = useState<RepositoryInfo | null>(null);
   const [error, setError] = useState<string>('');
+
+  // Sync internal state with value prop when it changes
+  useEffect(() => {
+    setUrl(value || '');
+    // Reset validation state when value changes externally
+    setRepoInfo(null);
+    setError('');
+  }, [value]);
 
   const validateMutation = useMutation({
     mutationFn: async (repositoryUrl: string) => {

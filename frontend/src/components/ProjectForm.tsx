@@ -127,6 +127,15 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
     setValue('repository_type', repoData.type);
     setValue('repository_owner', repoData.owner);
     setValue('repository_name', repoData.name);
+
+    // Auto-enable use_readme when repository is connected (for new projects only)
+    if (repoData.url && !isEditing) {
+      // Use setTimeout to ensure this happens after any potential form resets
+      setTimeout(() => {
+        setValue('use_readme', true);
+        setUseReadme(true);
+      }, 0);
+    }
   };
 
   // Handle technologies input
@@ -385,7 +394,10 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
                   {...register('use_readme')}
                   type="checkbox"
                   checked={useReadme}
-                  onChange={e => setUseReadme(e.target.checked)}
+                  onChange={e => {
+                    setUseReadme(e.target.checked);
+                    setValue('use_readme', e.target.checked);
+                  }}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
                 <span className="ml-2 text-sm font-medium text-gray-700">
