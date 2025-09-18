@@ -25,21 +25,6 @@ vi.mock('framer-motion', () => ({
   },
 }));
 
-vi.mock('../../components/MiniMap', () => ({
-  default: ({ latitude, longitude, onClick, size, className }: any) => (
-    <div
-      data-testid="mini-map"
-      data-latitude={latitude}
-      data-longitude={longitude}
-      data-size={size}
-      className={className}
-      onClick={onClick}
-    >
-      Mini Map
-    </div>
-  ),
-}));
-
 describe('Enhanced PhotoGrid with Location Metadata', () => {
   const mockPhotos: Photo[] = [
     {
@@ -312,17 +297,17 @@ describe('Enhanced PhotoGrid with Location Metadata', () => {
       const photoCards = screen.getAllByRole('img');
       photoCards.forEach(img => {
         const card = img.parentElement;
-        expect(card).toHaveClass('hover:scale-105', 'hover:shadow-lg');
+        expect(card).toHaveClass('hover:scale-105', 'hover:shadow-xl');
       });
     });
 
-    it('does not apply hover effects when not interactive', () => {
+    it('does not apply hover shadow when not interactive', () => {
       render(<PhotoGrid {...defaultProps} />);
 
       const photoCards = screen.getAllByRole('img');
       photoCards.forEach(img => {
         const card = img.parentElement;
-        expect(card).not.toHaveClass('hover:shadow-lg');
+        expect(card).not.toHaveClass('hover:shadow-xl');
       });
     });
   });
@@ -533,7 +518,7 @@ describe('Enhanced PhotoGrid with Location Metadata', () => {
       const photoCards = screen.getAllByRole('img');
       photoCards.forEach(img => {
         const card = img.parentElement;
-        expect(card).toHaveClass('transition-transform', 'duration-200');
+        expect(card).toHaveClass('transition-all', 'duration-300');
       });
     });
 
@@ -543,7 +528,7 @@ describe('Enhanced PhotoGrid with Location Metadata', () => {
       // Metadata overlay should have transition classes
       const photoCard = screen.getAllByRole('img')[0].parentElement;
       const overlay = photoCard?.querySelector('.bg-gradient-to-t');
-      expect(overlay).toHaveClass('transition-opacity', 'duration-200');
+      expect(overlay).toHaveClass('transition-opacity', 'duration-300');
     });
   });
 });
