@@ -243,6 +243,24 @@ def upgrade() -> None:
             "category": "contact",
             "is_active": True,
         },
+        {
+            "id": uuid4(),
+            "key": "contact.cv_url",
+            "title": "CV Download URL",
+            "content": "https://drive.google.com/file/d/your-cv-file-id/view",
+            "content_type": "text",
+            "category": "contact",
+            "is_active": True,
+        },
+        {
+            "id": uuid4(),
+            "key": "social.linkedin_url",
+            "title": "LinkedIn Profile URL",
+            "content": "https://www.linkedin.com/in/antolu/",
+            "content_type": "text",
+            "category": "social",
+            "is_active": True,
+        },
     ]
 
     # Insert the initial content
