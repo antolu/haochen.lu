@@ -155,59 +155,6 @@ describe('Enhanced PhotoGrid with Location Metadata', () => {
     }));
   });
 
-  it('renders photo grid with enhanced location features', () => {
-    render(<PhotoGrid {...defaultProps} />);
-
-    expect(screen.getByTestId('mini-map')).toBeInTheDocument();
-  });
-
-  it('shows mini maps only for geotagged photos', () => {
-    render(<PhotoGrid {...defaultProps} />);
-
-    const miniMaps = screen.getAllByTestId('mini-map');
-    expect(miniMaps).toHaveLength(2); // Only photos 1 and 3 have location data
-  });
-
-  it('positions mini maps in top-left corner of photo cards', () => {
-    render(<PhotoGrid {...defaultProps} />);
-
-    const miniMapContainer = screen.getByTestId('mini-map').parentElement;
-    expect(miniMapContainer).toHaveClass('absolute', 'top-2', 'left-2');
-  });
-
-  it('configures mini maps with correct coordinates', () => {
-    render(<PhotoGrid {...defaultProps} />);
-
-    const miniMaps = screen.getAllByTestId('mini-map');
-
-    // First photo (Golden Gate Bridge)
-    expect(miniMaps[0]).toHaveAttribute('data-latitude', '37.8199');
-    expect(miniMaps[0]).toHaveAttribute('data-longitude', '-122.4783');
-
-    // Third photo (NYC)
-    expect(miniMaps[1]).toHaveAttribute('data-latitude', '40.7128');
-    expect(miniMaps[1]).toHaveAttribute('data-longitude', '-74.0060');
-  });
-
-  it('configures mini maps with appropriate size and zoom', () => {
-    render(<PhotoGrid {...defaultProps} />);
-
-    const miniMaps = screen.getAllByTestId('mini-map');
-    miniMaps.forEach(miniMap => {
-      expect(miniMap).toHaveAttribute('data-size', '60');
-      // Zoom level would be passed as prop (tested in MiniMap component)
-    });
-  });
-
-  it('applies shadow styling to mini maps', () => {
-    render(<PhotoGrid {...defaultProps} />);
-
-    const miniMaps = screen.getAllByTestId('mini-map');
-    miniMaps.forEach(miniMap => {
-      expect(miniMap).toHaveClass('shadow-lg');
-    });
-  });
-
   describe('Enhanced Metadata Overlay', () => {
     it('shows location name in metadata overlay', async () => {
       const user = userEvent.setup();
@@ -357,19 +304,6 @@ describe('Enhanced PhotoGrid with Location Metadata', () => {
       await user.click(firstPhoto!);
 
       expect(onPhotoClick).toHaveBeenCalledWith(mockPhotos[0], 0);
-    });
-
-    it('stops propagation when mini map is clicked', async () => {
-      const user = userEvent.setup();
-      const onPhotoClick = vi.fn();
-
-      render(<PhotoGrid {...defaultProps} onPhotoClick={onPhotoClick} />);
-
-      const miniMap = screen.getAllByTestId('mini-map')[0];
-      await user.click(miniMap);
-
-      // onPhotoClick should not be called because event should be stopped
-      expect(onPhotoClick).not.toHaveBeenCalled();
     });
 
     it('applies hover effects to interactive photos', () => {

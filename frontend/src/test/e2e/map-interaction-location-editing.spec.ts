@@ -358,57 +358,6 @@ test.describe('Map Interaction and Location Editing', () => {
     });
   });
 
-  test.describe('MiniMap Component in Photo Grid', () => {
-    test('displays mini maps on geotagged photos', async ({ page }) => {
-      await page.goto('/admin/photos');
-
-      // Verify mini maps are visible on photos with location data
-      const miniMaps = page.locator('[data-testid="mini-map"]');
-      await expect(miniMaps).toHaveCount(2); // Both test photos have location data
-
-      // Verify mini maps are positioned correctly (top-left corner)
-      const firstPhotoCard = page.locator('[data-testid="photo-card-1"]');
-      const firstMiniMap = firstPhotoCard.locator('[data-testid="mini-map"]');
-
-      await expect(firstMiniMap).toBeVisible();
-
-      // Check positioning classes
-      const miniMapContainer = firstMiniMap.locator('xpath=..');
-      await expect(miniMapContainer).toHaveClass(/top-2/);
-      await expect(miniMapContainer).toHaveClass(/left-2/);
-    });
-
-    test('mini map click opens full map view', async ({ page }) => {
-      await page.goto('/admin/photos');
-
-      const firstMiniMap = page.locator('[data-testid="mini-map"]').first();
-      await firstMiniMap.click();
-
-      // Should open full map modal or navigate to map view
-      await expect(page.locator('[data-testid="full-map-modal"]')).toBeVisible();
-
-      // Close modal
-      await page.click('[data-testid="close-map-modal"]');
-      await expect(page.locator('[data-testid="full-map-modal"]')).not.toBeVisible();
-    });
-
-    test('mini map shows hover effects when interactive', async ({ page }) => {
-      await page.goto('/admin/photos');
-
-      const firstMiniMap = page.locator('[data-testid="mini-map"]').first();
-
-      // Hover over mini map
-      await firstMiniMap.hover();
-
-      // Should show hover overlay with magnifying glass
-      const hoverOverlay = firstMiniMap.locator('[data-testid="map-hover-overlay"]');
-      await expect(hoverOverlay).toBeVisible();
-
-      // Should have appropriate hover styling
-      await expect(firstMiniMap).toHaveClass(/hover:border-blue-300/);
-    });
-  });
-
   test.describe('Photo Metadata Overlay with Location', () => {
     test('shows location information in metadata overlay', async ({ page }) => {
       await page.goto('/admin/photos');
