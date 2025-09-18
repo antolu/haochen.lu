@@ -1,7 +1,6 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, memo } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useInView } from 'react-intersection-observer';
-import { motion } from 'framer-motion';
 import type { Photo } from '../types';
 import { formatDateSimple } from '../utils/dateFormat';
 
@@ -62,21 +61,20 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
     photo.variants?.small?.path || photo.variants?.medium?.path || photo.original_path;
 
   return (
-    <motion.div
+    <div
       ref={ref}
       data-testid={`photo-card-${index + 1}`}
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.3, delay: index * 0.02 }}
       className={`
         group relative bg-gray-100 rounded-lg overflow-hidden cursor-pointer
         transform transition-all duration-300 hover:scale-105 md:hover:scale-110
         ${onClick ? 'hover:shadow-xl' : ''}
+        opacity-0 animate-fade-in
       `}
       style={{
         width,
         height,
         zIndex: 1, // Base z-index for all photos
+        animationDelay: `${index * 20}ms`,
       }}
       onMouseEnter={e => {
         // Ensure hovered element is always on top
@@ -174,162 +172,166 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
           </div>
         </div>
       )}
-    </motion.div>
+    </div>
   );
 };
 
-const PhotoGrid: React.FC<PhotoGridProps> = ({
-  photos,
-  isLoading = false,
-  onPhotoClick,
-  columns,
-  gap = 8,
-  showMetadata = false,
-  className = '',
-}) => {
-  const parentRef = useRef<HTMLDivElement>(null);
-  const [containerWidth, setContainerWidth] = useState(0);
+const PhotoGrid: React.FC<PhotoGridProps> = memo(
+  ({
+    photos,
+    isLoading = false,
+    onPhotoClick,
+    columns,
+    gap = 8,
+    showMetadata = false,
+    className = '',
+  }) => {
+    const parentRef = useRef<HTMLDivElement>(null);
+    const [containerWidth, setContainerWidth] = useState(0);
 
-  // Auto-calculate columns based on container width - reduced for larger square photos
-  const getColumns = () => {
-    if (columns) return columns;
-    if (containerWidth < 640) return 1; // sm - single column on mobile
-    if (containerWidth < 1024) return 2; // md - two columns on tablet
-    if (containerWidth < 1280) return 3; // lg - three columns on desktop
-    if (containerWidth < 1536) return 4; // xl - four columns on large desktop
-    return 5; // 2xl - five columns on very large screens
-  };
-
-  const numColumns = getColumns();
-  const itemWidth = Math.max(
-    300, // Reduced from 400px to 300px
-    Math.floor((containerWidth - gap * (numColumns - 1)) / numColumns)
-  );
-  const itemHeight = itemWidth; // 1:1 aspect ratio (square)
-
-  // Update container width on resize
-  useEffect(() => {
-    const updateWidth = () => {
-      if (parentRef.current) {
-        setContainerWidth(parentRef.current.offsetWidth);
-      }
+    // Auto-calculate columns based on container width - reduced for larger square photos
+    const getColumns = () => {
+      if (columns) return columns;
+      if (containerWidth < 640) return 1; // sm - single column on mobile
+      if (containerWidth < 1024) return 2; // md - two columns on tablet
+      if (containerWidth < 1280) return 3; // lg - three columns on desktop
+      if (containerWidth < 1536) return 4; // xl - four columns on large desktop
+      return 5; // 2xl - five columns on very large screens
     };
 
-    updateWidth();
-    window.addEventListener('resize', updateWidth);
-    return () => window.removeEventListener('resize', updateWidth);
-  }, []);
+    const numColumns = getColumns();
+    const itemWidth = Math.max(
+      300, // Reduced from 400px to 300px
+      Math.floor((containerWidth - gap * (numColumns - 1)) / numColumns)
+    );
+    const itemHeight = itemWidth; // 1:1 aspect ratio (square)
 
-  // Calculate rows for virtualization - add extra height for hover effects
-  const rowCount = Math.ceil(photos.length / numColumns);
-  const rowHeight = itemHeight + gap + 32; // Extra 32px for padding and hover effects
+    // Update container width on resize
+    useEffect(() => {
+      const updateWidth = () => {
+        if (parentRef.current) {
+          setContainerWidth(parentRef.current.offsetWidth);
+        }
+      };
 
-  const virtualizer = useVirtualizer({
-    count: rowCount,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => rowHeight,
-    overscan: 5,
-  });
+      updateWidth();
+      window.addEventListener('resize', updateWidth);
+      return () => window.removeEventListener('resize', updateWidth);
+    }, []);
 
-  // Loading skeleton
-  if (isLoading) {
-    return (
-      <div className={`space-y-4 ${className}`} data-testid="loading-grid">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3 gap-2">
-          {Array.from({ length: 20 }).map((_, i) => (
-            <div
-              key={i}
-              data-testid="skeleton-item"
-              className="aspect-square bg-gray-200 rounded-lg animate-pulse"
+    // Calculate rows for virtualization - add extra height for hover effects
+    const rowCount = Math.ceil(photos.length / numColumns);
+    const rowHeight = itemHeight + gap + 32; // Extra 32px for padding and hover effects
+
+    const virtualizer = useVirtualizer({
+      count: rowCount,
+      getScrollElement: () => parentRef.current,
+      estimateSize: () => rowHeight,
+      overscan: 5,
+    });
+
+    // Loading skeleton
+    if (isLoading) {
+      return (
+        <div className={`space-y-4 ${className}`} data-testid="loading-grid">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3 gap-2">
+            {Array.from({ length: 20 }).map((_, i) => (
+              <div
+                key={i}
+                data-testid="skeleton-item"
+                className="aspect-square bg-gray-200 rounded-lg animate-pulse"
+              />
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // Empty state
+    if (!photos.length) {
+      return (
+        <div className={`text-center py-12 ${className}`}>
+          <svg
+            className="h-12 w-12 mx-auto text-gray-400 mb-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
             />
-          ))}
+          </svg>
+          <p className="text-gray-600 text-lg font-medium">No photos found</p>
+          <p className="text-gray-500 text-sm mt-1">Upload some photos to see them here</p>
+        </div>
+      );
+    }
+
+    return (
+      <div
+        ref={parentRef}
+        data-testid="photo-grid-container"
+        className={`h-full overflow-auto ${className}`}
+        style={{ height: '100%', width: '100%', padding: '24px' }}
+      >
+        <div
+          style={{
+            height: `${virtualizer.getTotalSize()}px`,
+            width: '100%',
+            position: 'relative',
+          }}
+        >
+          {virtualizer.getVirtualItems().map(virtualRow => {
+            const startIndex = virtualRow.index * numColumns;
+            const endIndex = Math.min(startIndex + numColumns, photos.length);
+            const rowPhotos = photos.slice(startIndex, endIndex);
+
+            return (
+              <div
+                key={virtualRow.key}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: `${rowHeight}px`,
+                  transform: `translateY(${virtualRow.start}px)`,
+                }}
+              >
+                <div className="flex overflow-visible" style={{ gap: `${gap}px`, padding: '16px' }}>
+                  {rowPhotos.map((photo, colIndex) => {
+                    const photoIndex = startIndex + colIndex;
+
+                    return (
+                      <PhotoCard
+                        key={photo.id}
+                        photo={photo}
+                        index={photoIndex}
+                        onClick={onPhotoClick}
+                        showMetadata={showMetadata}
+                        width={itemWidth}
+                        height={itemHeight}
+                      />
+                    );
+                  })}
+                  {/* Fill remaining columns if the last row is incomplete */}
+                  {rowPhotos.length < numColumns &&
+                    Array.from({ length: numColumns - rowPhotos.length }).map((_, i) => (
+                      <div key={`empty-${i}`} style={{ width: itemWidth, height: itemHeight }} />
+                    ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     );
   }
+);
 
-  // Empty state
-  if (!photos.length) {
-    return (
-      <div className={`text-center py-12 ${className}`}>
-        <svg
-          className="h-12 w-12 mx-auto text-gray-400 mb-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-          />
-        </svg>
-        <p className="text-gray-600 text-lg font-medium">No photos found</p>
-        <p className="text-gray-500 text-sm mt-1">Upload some photos to see them here</p>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      ref={parentRef}
-      data-testid="photo-grid-container"
-      className={`h-full overflow-auto ${className}`}
-      style={{ height: '100%', width: '100%', padding: '24px' }}
-    >
-      <div
-        style={{
-          height: `${virtualizer.getTotalSize()}px`,
-          width: '100%',
-          position: 'relative',
-        }}
-      >
-        {virtualizer.getVirtualItems().map(virtualRow => {
-          const startIndex = virtualRow.index * numColumns;
-          const endIndex = Math.min(startIndex + numColumns, photos.length);
-          const rowPhotos = photos.slice(startIndex, endIndex);
-
-          return (
-            <div
-              key={virtualRow.key}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: `${rowHeight}px`,
-                transform: `translateY(${virtualRow.start}px)`,
-              }}
-            >
-              <div className="flex overflow-visible" style={{ gap: `${gap}px`, padding: '16px' }}>
-                {rowPhotos.map((photo, colIndex) => {
-                  const photoIndex = startIndex + colIndex;
-
-                  return (
-                    <PhotoCard
-                      key={photo.id}
-                      photo={photo}
-                      index={photoIndex}
-                      onClick={onPhotoClick}
-                      showMetadata={showMetadata}
-                      width={itemWidth}
-                      height={itemHeight}
-                    />
-                  );
-                })}
-                {/* Fill remaining columns if the last row is incomplete */}
-                {rowPhotos.length < numColumns &&
-                  Array.from({ length: numColumns - rowPhotos.length }).map((_, i) => (
-                    <div key={`empty-${i}`} style={{ width: itemWidth, height: itemHeight }} />
-                  ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
+PhotoGrid.displayName = 'PhotoGrid';
 
 export default PhotoGrid;
