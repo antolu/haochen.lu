@@ -8,7 +8,31 @@ This is a modern, full-stack portfolio website built with **FastAPI (Python) bac
 
 ## Development Commands
 
-### Docker Deployment (Recommended)
+### Development Script (Recommended)
+The project includes a `dev.sh` script that simplifies common development tasks:
+
+- Start development environment: `./dev.sh start` or `./dev.sh dev`
+- Stop development environment: `./dev.sh stop`
+- Restart development environment: `./dev.sh restart`
+- View logs: `./dev.sh logs [service]`
+- Start production environment: `./dev.sh prod`
+- Stop production environment: `./dev.sh prod-stop`
+- Build frontend: `./dev.sh build`
+- Run tests: `./dev.sh test`
+- Show help: `./dev.sh help`
+
+**Development Environment Features:**
+- Source code mounting for live reload
+- Frontend with Vite HMR on development server
+- Backend with Uvicorn auto-reload
+- Nginx proxy handling routing
+
+**Access URLs (Development):**
+- Application: http://localhost (proxied through nginx)
+- Direct backend: http://localhost:8000 (for debugging)
+- API: http://localhost/api
+
+### Docker Deployment (Manual)
 - Start services: `docker compose up -d`
 - View logs: `docker compose logs -f backend/frontend`
 - Complete rebuild: `docker system prune -f && docker compose build --no-cache && docker compose up -d`
@@ -27,7 +51,7 @@ For local development (loads images locally):
 
 **Access URLs:**
 - Website: http://localhost
-- API Documentation: http://localhost/api/docs  
+- API Documentation: http://localhost/api/docs
 - Admin Login: admin/admin
 
 ### Local Development
@@ -311,7 +335,7 @@ Modern location management using OpenStreetMap Nominatim for geocoding and searc
 ### Docker Architecture
 - **frontend**: Nginx serving React build + reverse proxy to backend
 - **backend**: FastAPI app with health checks
-- **db**: PostgreSQL 15 with persistent volumes  
+- **db**: PostgreSQL 15 with persistent volumes
 - **redis**: Redis 7 for caching and sessions
 - **migrate**: One-time migration runner for database schema updates
 
