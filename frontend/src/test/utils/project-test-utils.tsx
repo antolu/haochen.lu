@@ -44,10 +44,15 @@ const AllProviders: React.FC<ProvidersProps> = ({
 
 interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
   queryClient?: QueryClient;
+  initialRoute?: string;
 }
 
 export const renderWithProviders = (ui: React.ReactElement, options: CustomRenderOptions = {}) => {
-  const { queryClient, ...renderOptions } = options;
+  const { queryClient, initialRoute, ...renderOptions } = options;
+
+  if (initialRoute) {
+    window.history.pushState({}, 'Test', initialRoute);
+  }
 
   const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <AllProviders queryClient={queryClient}>{children}</AllProviders>

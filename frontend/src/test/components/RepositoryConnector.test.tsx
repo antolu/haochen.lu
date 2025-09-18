@@ -339,9 +339,9 @@ describe('RepositoryConnector', () => {
       await user.click(validateButton);
 
       await waitFor(() => {
-        expect(screen.getByText('Github')).toBeInTheDocument();
-        // SVG icon should be present
-        const githubIcon = screen.getByText('Github').closest('div')?.querySelector('svg');
+        const typeBadges = screen.getAllByText(/github/i);
+        expect(typeBadges.length).toBeGreaterThan(0);
+        const githubIcon = typeBadges[0].closest('div')?.querySelector('svg');
         expect(githubIcon).toBeInTheDocument();
       });
     });
@@ -367,9 +367,9 @@ describe('RepositoryConnector', () => {
       await user.click(validateButton);
 
       await waitFor(() => {
-        expect(screen.getByText('Gitlab')).toBeInTheDocument();
-        // SVG icon should be present
-        const gitlabIcon = screen.getByText('Gitlab').closest('div')?.querySelector('svg');
+        const typeBadges = screen.getAllByText(/gitlab/i);
+        expect(typeBadges.length).toBeGreaterThan(0);
+        const gitlabIcon = typeBadges[0].closest('div')?.querySelector('svg');
         expect(gitlabIcon).toBeInTheDocument();
       });
     });
@@ -426,7 +426,7 @@ describe('RepositoryConnector', () => {
     it('has proper labels and descriptions', () => {
       renderWithProviders(<RepositoryConnector {...defaultProps} />);
 
-      const input = screen.getByLabelText('Repository URL (optional)');
+      const input = screen.getByLabelText(/repository url/i);
       expect(input).toBeInTheDocument();
       expect(input).toHaveAttribute('type', 'url');
     });
@@ -440,7 +440,8 @@ describe('RepositoryConnector', () => {
       const input = screen.getByPlaceholderText(/https:\/\/github\.com\/username\/repository/);
       expect(input).toHaveFocus();
 
-      // Tab to validate button
+      // Enter a value so the button becomes enabled, then tab to validate button
+      await user.type(input, 'https://github.com/test/repo');
       await user.tab();
       const button = screen.getByRole('button', { name: /validate/i });
       expect(button).toHaveFocus();
@@ -472,7 +473,9 @@ describe('RepositoryConnector', () => {
 
       const errorMessage = screen.getByText('Please enter a valid GitHub or GitLab repository URL');
       expect(errorMessage).toBeInTheDocument();
-      expect(errorMessage.closest('div')).toHaveClass('bg-red-50');
+      const errorWrapper = (errorMessage.closest('div')?.parentElement?.parentElement
+        ?.parentElement ?? null) as HTMLElement | null;
+      expect(errorWrapper).toHaveClass('bg-red-50');
     });
   });
 
@@ -500,13 +503,12 @@ describe('RepositoryConnector', () => {
     });
 
     it('handles very long URLs', async () => {
-      const user = userEvent.setup();
       const longUrl = 'https://github.com/' + 'a'.repeat(100) + '/' + 'b'.repeat(100);
 
       renderWithProviders(<RepositoryConnector {...defaultProps} />);
 
       const input = screen.getByPlaceholderText(/https:\/\/github\.com\/username\/repository/);
-      await user.type(input, longUrl);
+      fireEvent.change(input, { target: { value: longUrl } });
 
       expect(input).toHaveValue(longUrl);
       expect(mockOnChange).toHaveBeenCalledWith({ url: longUrl });

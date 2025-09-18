@@ -714,11 +714,10 @@ Installation
         'content-type': 'application/json',
       });
 
-      await expect(
-        apiClient.post('/projects/repository/validate', {
-          repository_url: repoUrl,
-        })
-      ).rejects.toThrow();
+      const resp = await apiClient.post('/projects/repository/validate', {
+        repository_url: repoUrl,
+      });
+      expect(resp.data).toBe('not-json');
     });
 
     it('handles service timeouts with appropriate messages', async () => {

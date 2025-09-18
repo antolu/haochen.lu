@@ -37,6 +37,24 @@ Object.defineProperty(window, 'scrollTo', {
   value: vi.fn(),
 });
 
+// Ensure window.location exists for React Router in JSDOM
+if (!window.location || !(window.location as any).href) {
+  Object.defineProperty(window, 'location', {
+    writable: true,
+    value: {
+      href: 'http://localhost:3000',
+      origin: 'http://localhost:3000',
+      pathname: '/',
+      search: '',
+      hash: '',
+      assign: vi.fn((url: string) => {
+        (window as any).location.href = url;
+      }),
+      replace: vi.fn(),
+    },
+  });
+}
+
 // Mock localStorage
 const localStorageMock = {
   getItem: vi.fn(),

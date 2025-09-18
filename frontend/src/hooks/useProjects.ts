@@ -365,10 +365,13 @@ export function parseRepositoryUrl(
 ): { type: 'github' | 'gitlab' | 'unknown'; owner: string; repo: string } | null {
   try {
     const urlObj = new URL(url);
+    if (!(urlObj.protocol === 'http:' || urlObj.protocol === 'https:')) {
+      return null;
+    }
     const pathname = urlObj.pathname.replace(/^\//, '').replace(/\/$/, '');
     const parts = pathname.split('/');
 
-    if (urlObj.hostname === 'github.com' && parts.length >= 2) {
+    if (urlObj.hostname === 'github.com' && parts.length >= 2 && parts[0] && parts[1]) {
       return {
         type: 'github',
         owner: parts[0],
@@ -376,7 +379,7 @@ export function parseRepositoryUrl(
       };
     }
 
-    if (urlObj.hostname.includes('gitlab') && parts.length >= 2) {
+    if (urlObj.hostname.includes('gitlab') && parts.length >= 2 && parts[0] && parts[1]) {
       return {
         type: 'gitlab',
         owner: parts[0],
@@ -384,11 +387,16 @@ export function parseRepositoryUrl(
       };
     }
 
-    return {
-      type: 'unknown',
-      owner: parts[0] || '',
-      repo: parts[1] || '',
-    };
+    // Unknown git servers: return owner/repo when present
+    if (parts.length >= 2 && parts[0] && parts[1]) {
+      return {
+        type: 'unknown',
+        owner: parts[0],
+        repo: parts[1],
+      };
+    }
+
+    return null;
   } catch {
     return null;
   }
@@ -403,5 +411,7 @@ export function generateSlug(title: string): string {
     .replace(/[^\w\s-]/g, '') // Remove special characters
     .replace(/\s+/g, '-') // Replace spaces with hyphens
     .replace(/-+/g, '-') // Replace multiple hyphens with single
-    .trim();
+    .trim()
+    .replace(/^-/g, '')
+    .replace(/-$/g, '');
 }

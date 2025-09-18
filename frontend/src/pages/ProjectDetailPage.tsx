@@ -7,7 +7,7 @@ import { formatDate } from '../utils/dateFormat';
 
 const ProjectDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
-  const { data: project, isLoading, error } = useProject(slug || '');
+  const { data: project, isLoading, error } = useProject(slug ?? '');
   const { data: readme } = useProjectReadme(
     project?.id || '',
     project?.use_readme ? project?.github_url : undefined

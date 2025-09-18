@@ -117,7 +117,7 @@ describe('useProjects Hook', () => {
       });
 
       expect(result.current.data).toEqual(mockProjectsListResponse);
-      expect(mockApiClient.get).toHaveBeenCalledWith('/api/projects?');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/projects?');
     });
 
     it('applies filters correctly', async () => {
@@ -135,7 +135,7 @@ describe('useProjects Hook', () => {
       });
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
-        '/api/projects?featured_only=true&status=active&search=test+project'
+        '/projects?featured_only=true&status=active&search=test+project'
       );
     });
 
@@ -147,7 +147,7 @@ describe('useProjects Hook', () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/api/projects?');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/projects?');
     });
 
     it('handles API errors gracefully', async () => {
@@ -200,7 +200,7 @@ describe('useProjects Hook', () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/api/projects?page=1&per_page=12');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/projects?page=1&per_page=12');
       expect(result.current.data?.pages).toHaveLength(1);
     });
 
@@ -247,7 +247,7 @@ describe('useProjects Hook', () => {
       });
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
-        '/api/projects?page=1&per_page=12&featured_only=true'
+        '/projects?page=1&per_page=12&featured_only=true'
       );
     });
   });
@@ -268,7 +268,7 @@ describe('useProjects Hook', () => {
       });
 
       expect(result.current.data).toEqual(mockProject);
-      expect(mockApiClient.get).toHaveBeenCalledWith('/api/projects/test-id');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/projects/test-id');
     });
 
     it('fetches single project by slug', async () => {
@@ -279,7 +279,7 @@ describe('useProjects Hook', () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/api/projects/test-slug');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/projects/test-slug');
     });
 
     it('is disabled when idOrSlug is empty', async () => {
@@ -322,7 +322,7 @@ describe('useProjects Hook', () => {
       });
 
       expect(result.current.data).toEqual(featuredProjects);
-      expect(mockApiClient.get).toHaveBeenCalledWith('/api/projects/featured');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/projects/featured');
     });
 
     it('uses longer stale time for featured projects', async () => {
@@ -361,7 +361,7 @@ describe('useProjects Hook', () => {
       });
 
       expect(result.current.data).toEqual(mockReadmeContent);
-      expect(mockApiClient.get).toHaveBeenCalledWith('/api/projects/project-1/readme');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/projects/project-1/readme');
     });
 
     it('falls back to fetching README when cached version fails', async () => {
@@ -378,7 +378,7 @@ describe('useProjects Hook', () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      expect(mockApiClient.post).toHaveBeenCalledWith('/api/projects/project-1/fetch-readme', {
+      expect(mockApiClient.post).toHaveBeenCalledWith('/projects/project-1/fetch-readme', {
         repo_url: 'https://github.com/test/repo',
       });
     });
@@ -420,7 +420,7 @@ describe('useProjects Hook', () => {
       });
 
       expect(result.current.data).toEqual(mockStats);
-      expect(mockApiClient.get).toHaveBeenCalledWith('/api/projects/stats/summary');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/projects/stats/summary');
     });
   });
 
@@ -446,7 +446,7 @@ describe('useProjects Hook', () => {
       const createdProject = await createProject(projectData);
 
       expect(createdProject).toEqual(mockProject);
-      expect(mockApiClient.post).toHaveBeenCalledWith('/api/projects', projectData);
+      expect(mockApiClient.post).toHaveBeenCalledWith('/projects', projectData);
     });
 
     it('handles create errors', async () => {
@@ -478,7 +478,7 @@ describe('useProjects Hook', () => {
       const updatedProject = await updateProject({ id: 'project-1', data: updateData });
 
       expect(updatedProject).toEqual(mockProject);
-      expect(mockApiClient.put).toHaveBeenCalledWith('/api/projects/project-1', updateData);
+      expect(mockApiClient.put).toHaveBeenCalledWith('/projects/project-1', updateData);
     });
 
     it('handles update errors', async () => {
@@ -506,7 +506,7 @@ describe('useProjects Hook', () => {
       const response = await deleteProject('project-1');
 
       expect(response).toEqual({ success: true });
-      expect(mockApiClient.delete).toHaveBeenCalledWith('/api/projects/project-1');
+      expect(mockApiClient.delete).toHaveBeenCalledWith('/projects/project-1');
     });
 
     it('handles delete errors', async () => {
@@ -536,7 +536,7 @@ describe('useProjects Hook', () => {
       const preview = await previewReadme('https://github.com/test/repo');
 
       expect(preview).toEqual(mockReadmePreview);
-      expect(mockApiClient.post).toHaveBeenCalledWith('/api/projects/preview-readme', {
+      expect(mockApiClient.post).toHaveBeenCalledWith('/projects/preview-readme', {
         repo_url: 'https://github.com/test/repo',
       });
     });
@@ -571,7 +571,7 @@ describe('useProjects Hook', () => {
       const response = await refreshReadme(refreshData);
 
       expect(response).toEqual({ success: true });
-      expect(mockApiClient.post).toHaveBeenCalledWith('/api/projects/project-1/refresh-readme', {
+      expect(mockApiClient.post).toHaveBeenCalledWith('/projects/project-1/refresh-readme', {
         repo_url: 'https://github.com/test/repo',
       });
     });
@@ -670,14 +670,10 @@ describe('useProjects Hook', () => {
         expect(result).toBeNull();
       });
 
-      it('handles URLs with insufficient path segments', () => {
+      it('returns null for URLs with insufficient path segments', () => {
         const url = 'https://github.com/onlyowner';
         const result = parseRepositoryUrl(url);
-        expect(result).toEqual({
-          type: 'github',
-          owner: 'onlyowner',
-          repo: '',
-        });
+        expect(result).toBeNull();
       });
     });
 

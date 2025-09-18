@@ -4,6 +4,7 @@
  * Tests to ensure proper authentication handling, token management,
  * and protection against authentication-related attacks.
  */
+import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import { renderWithProviders, mockUser, mockAdminUser, mockLocalStorage } from '../utils';
