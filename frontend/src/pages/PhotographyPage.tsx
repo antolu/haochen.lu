@@ -211,6 +211,7 @@ const PhotographyPage: React.FC = () => {
         initialIndex={photoSwipeIndex}
         onClose={handlePhotoSwipeClose}
         onOpened={() => setIsLGOpening(false)}
+        defaultShowInfo={!!location?.state?.photoId}
       />
     </div>
   );
