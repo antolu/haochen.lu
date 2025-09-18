@@ -261,6 +261,15 @@ def upgrade() -> None:
             "category": "social",
             "is_active": True,
         },
+        {
+            "id": uuid4(),
+            "key": "social.google_scholar_url",
+            "title": "Google Scholar Profile URL",
+            "content": "https://scholar.google.com/citations?user=YOUR_USER_ID",
+            "content_type": "text",
+            "category": "social",
+            "is_active": True,
+        },
     ]
 
     # Insert the initial content
