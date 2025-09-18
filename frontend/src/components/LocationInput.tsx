@@ -124,13 +124,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
     onLocationChange?.(result.latitude, result.longitude, result.location_name);
   };
 
-  const handleLocationNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const name = e.target.value;
-    setManualLocationName(name);
-    if (latitude && longitude) {
-      onLocationChange?.(latitude, longitude, name);
-    }
-  };
+  // Note: location name changes are handled via search input events
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     // Prevent form submission on Enter

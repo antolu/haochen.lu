@@ -97,11 +97,11 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
             style={{ zIndex: 2080 }}
             onClick={e => e.stopPropagation()}
           >
-            {process.env.NODE_ENV !== 'production' && (
+            {process.env.NODE_ENV !== 'production' ? (
               <div className="hidden" aria-hidden>
-                {console.log('[LG][Sidebar] render for photo', photo.id)}
+                {/* debug: sidebar render */}
               </div>
-            )}
+            ) : null}
             {/* Header */}
             <div className="sticky top-0 bg-gray-900 border-b border-gray-700 px-4 py-4">
               <div className="flex items-center justify-between">

@@ -57,7 +57,7 @@ const PhotographyPage: React.FC = () => {
     }
   }, [location?.state, allPhotos]);
 
-  const handlePhotoClick = (photo: Photo, index: number) => {
+  const handlePhotoClick = (_photo: Photo, index: number) => {
     setPhotoSwipeIndex(index);
     setIsLGOpening(true);
     setIsPhotoSwipeOpen(true);

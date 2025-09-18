@@ -76,7 +76,7 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
       }
       attempts += 1;
       if (attempts < 10) {
-        injectRetryTimer.current = window.setTimeout(tryInject, 50);
+        injectRetryTimer.current = window.setTimeout(tryInject, 50) as unknown as number;
       } else {
         injectRetryTimer.current = null;
       }
@@ -93,7 +93,7 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
       subHtml: `<h4>${photo.title || 'Untitled'}</h4>`,
     }));
 
-    galleryRef.current = lightGallery(containerRef.current, {
+    const lgOptions: any = {
       plugins: [lgThumbnail, lgZoom, lgFullscreen],
       licenseKey: '0000-0000-000-0000',
       dynamic: true,
@@ -112,7 +112,11 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
       closable: true,
       closeOnTap: false,
       escKey: true,
-    });
+    };
+    galleryRef.current = (lightGallery as any)(
+      containerRef.current as unknown as HTMLElement,
+      lgOptions as any
+    );
 
     const onBeforeSlide = (e: any) => setCurrentIndex(e.detail.index);
     const onAfterSlide = (e: any) => setCurrentIndex(e.detail.index);

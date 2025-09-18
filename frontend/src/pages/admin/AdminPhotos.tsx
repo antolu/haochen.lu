@@ -1,7 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import PhotoSwipe from 'photoswipe';
-import 'photoswipe/dist/photoswipe.css';
+// photoswipe not used in admin (editor replaces lightbox)
 
 import PhotoUpload from '../../components/PhotoUpload';
 import PhotoGrid from '../../components/PhotoGrid';
@@ -37,37 +36,9 @@ const AdminPhotos: React.FC = () => {
     setShowUpload(false);
   };
 
-  const lightboxRef = useRef<PhotoSwipe | null>(null);
+  // PhotoSwipe disabled in admin; use editor instead
 
-  const openPhotoSwipe = (index: number) => {
-    // Prepare data source for PhotoSwipe
-    const dataSource = photos.map(photo => ({
-      src: photo.variants?.xlarge?.path || photo.variants?.large?.path || photo.original_path,
-      width: photo.width || 1200,
-      height: photo.height || 800,
-      alt: photo.title || 'Photo',
-      caption: photo.title || '',
-    }));
-
-    // PhotoSwipe options
-    const options = {
-      dataSource,
-      index,
-      bgOpacity: 0.9,
-      showHideAnimationType: 'zoom' as const,
-      zoom: true,
-      close: true,
-      counter: true,
-      arrowPrev: true,
-      arrowNext: true,
-    };
-
-    // Initialize and open PhotoSwipe
-    lightboxRef.current = new PhotoSwipe(options);
-    lightboxRef.current.init();
-  };
-
-  const handlePhotoClick = (photo: Photo, index: number) => {
+  const handlePhotoClick = (photo: Photo, _index: number) => {
     // Open full-page editor instead of lightbox in admin
     setEditingPhoto(photo);
   };
