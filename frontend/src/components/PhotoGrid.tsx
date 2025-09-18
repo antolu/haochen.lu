@@ -64,6 +64,7 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
   return (
     <motion.div
       ref={ref}
+      data-testid={`photo-card-${index + 1}`}
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3, delay: index * 0.02 }}
@@ -89,7 +90,10 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
     >
       {/* Loading Skeleton */}
       {!isLoaded && !hasError && inView && (
-        <div className="absolute inset-0 bg-gray-200 animate-pulse" />
+        <div
+          className="absolute inset-0 bg-gray-200 animate-pulse"
+          data-testid="loading-skeleton"
+        />
       )}
 
       {/* Image */}
@@ -125,12 +129,17 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
 
           {/* Simplified Metadata Overlay */}
           {showMetadata && isLoaded && (
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div
+              className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              data-testid="metadata-overlay"
+            >
               <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
                 <h3 className="font-medium text-sm truncate mb-1">{photo.title || 'Untitled'}</h3>
 
                 {photo.location_name && (
-                  <p className="text-xs text-gray-300 truncate mb-1">📍 {photo.location_name}</p>
+                  <p className="text-xs text-gray-300 truncate mb-1" data-testid="location-text">
+                    📍 {photo.location_name}
+                  </p>
                 )}
 
                 {photo.date_taken && (
@@ -225,10 +234,14 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({
   // Loading skeleton
   if (isLoading) {
     return (
-      <div className={`space-y-4 ${className}`}>
+      <div className={`space-y-4 ${className}`} data-testid="loading-grid">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3 gap-2">
           {Array.from({ length: 20 }).map((_, i) => (
-            <div key={i} className="aspect-square bg-gray-200 rounded-lg animate-pulse" />
+            <div
+              key={i}
+              data-testid="skeleton-item"
+              className="aspect-square bg-gray-200 rounded-lg animate-pulse"
+            />
           ))}
         </div>
       </div>
@@ -261,6 +274,7 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({
   return (
     <div
       ref={parentRef}
+      data-testid="photo-grid-container"
       className={`h-full overflow-auto ${className}`}
       style={{ height: '100%', width: '100%', padding: '24px' }}
     >
