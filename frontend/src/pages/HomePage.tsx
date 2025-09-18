@@ -1,9 +1,10 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 
 import { photos, projects, content } from '../api/client';
+import type { Photo } from '../types';
 
 const HomePage: React.FC = () => {
   const { data: latestPhotos } = useQuery({
@@ -37,6 +38,30 @@ const HomePage: React.FC = () => {
       ]),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
+
+  const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSelectedPhoto(null);
+    };
+    if (selectedPhoto) window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [selectedPhoto]);
+
+  const formatDate = (date?: string) => {
+    if (!date) return undefined;
+    try {
+      return new Date(date).toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+    } catch {
+      return date;
+    }
+  };
 
   return (
     <div className="min-h-screen w-full m-0 p-0 mobile-safe">
@@ -235,36 +260,32 @@ const HomePage: React.FC = () => {
           {latestPhotos?.photos && latestPhotos.photos.length > 0 && (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-10">
               {latestPhotos.photos.slice(0, 6).map((photo, index) => (
-                <motion.div
+                <motion.button
                   key={photo.id}
+                  type="button"
+                  onClick={() => setSelectedPhoto(photo)}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
                   viewport={{ once: true }}
-                  className="group cursor-pointer"
+                  className="group cursor-pointer text-left"
                 >
-                  <Link
-                    to="/photography"
-                    state={{ photoId: photo.id }}
-                    aria-label={photo.title || 'Open photo'}
-                  >
-                    <div className="aspect-square rounded-lg overflow-hidden bg-gray-200">
-                      <img
-                        src={
-                          photo.variants?.small?.path ||
-                          photo.variants?.thumbnail?.path ||
-                          photo.variants?.medium?.path ||
-                          photo.webp_path ||
-                          photo.thumbnail_path ||
-                          photo.original_path
-                        }
-                        alt={photo.title || 'Photo'}
-                        className="w-full h-full object-cover group-hover:scale-102 md:group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
-                      />
-                    </div>
-                  </Link>
-                </motion.div>
+                  <div className="aspect-square rounded-lg overflow-hidden bg-gray-200">
+                    <img
+                      src={
+                        photo.variants?.small?.path ||
+                        photo.variants?.thumbnail?.path ||
+                        photo.variants?.medium?.path ||
+                        photo.webp_path ||
+                        photo.thumbnail_path ||
+                        photo.original_path
+                      }
+                      alt={photo.title || 'Photo'}
+                      className="w-full h-full object-cover group-hover:scale-102 md:group-hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                    />
+                  </div>
+                </motion.button>
               ))}
             </div>
           )}
@@ -449,6 +470,150 @@ const HomePage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Photo Metadata Modal */}
+      <AnimatePresence>
+        {selectedPhoto && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="absolute inset-0 bg-black/60"
+              onClick={() => setSelectedPhoto(null)}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            />
+
+            <motion.div
+              className="relative bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto"
+              role="dialog"
+              aria-modal="true"
+              initial={{ opacity: 0, scale: 0.98, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.98, y: 8 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="flex items-center justify-between p-4 border-b">
+                <h3 className="text-lg font-semibold truncate">{selectedPhoto.title || 'Photo'}</h3>
+                <button
+                  onClick={() => setSelectedPhoto(null)}
+                  className="text-gray-500 hover:text-gray-700"
+                  aria-label="Close"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="p-6 grid md:grid-cols-2 gap-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigate('/photography', { state: { photoId: selectedPhoto.id } });
+                    setSelectedPhoto(null);
+                  }}
+                  className="block text-left"
+                  aria-label="Open in album"
+                >
+                  <img
+                    src={
+                      selectedPhoto.variants?.large?.path ||
+                      selectedPhoto.variants?.medium?.path ||
+                      selectedPhoto.original_path
+                    }
+                    alt={selectedPhoto.title || 'Photo'}
+                    className="w-full h-80 object-cover rounded-lg"
+                  />
+                  <div className="mt-2 text-xs text-gray-500">Open in album →</div>
+                </button>
+
+                <div className="space-y-5 text-sm">
+                  {selectedPhoto.description && (
+                    <div>
+                      <div className="text-gray-900 font-medium mb-1">About</div>
+                      <p className="text-gray-700 leading-relaxed">{selectedPhoto.description}</p>
+                    </div>
+                  )}
+
+                  {selectedPhoto.date_taken && (
+                    <div>
+                      <div className="text-gray-500">Date taken</div>
+                      <div className="text-gray-800">{formatDate(selectedPhoto.date_taken)}</div>
+                    </div>
+                  )}
+
+                  {(selectedPhoto.camera_make ||
+                    selectedPhoto.camera_model ||
+                    selectedPhoto.lens) && (
+                    <div>
+                      <div className="text-gray-500">Equipment</div>
+                      <div className="text-gray-800">
+                        {(selectedPhoto.camera_make || selectedPhoto.camera_model) && (
+                          <div>
+                            Camera: {selectedPhoto.camera_make} {selectedPhoto.camera_model}
+                          </div>
+                        )}
+                        {selectedPhoto.lens && (
+                          <div className="mt-2">Lens: {selectedPhoto.lens}</div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {(selectedPhoto.aperture ||
+                    selectedPhoto.shutter_speed ||
+                    selectedPhoto.iso ||
+                    selectedPhoto.focal_length) && (
+                    <div>
+                      <div className="text-gray-500">Settings</div>
+                      <div className="text-gray-800">
+                        {selectedPhoto.aperture ? `f/${selectedPhoto.aperture}` : ''}
+                        {selectedPhoto.shutter_speed ? ` • ${selectedPhoto.shutter_speed}s` : ''}
+                        {selectedPhoto.iso ? ` • ISO ${selectedPhoto.iso}` : ''}
+                        {selectedPhoto.focal_length ? ` • ${selectedPhoto.focal_length}mm` : ''}
+                      </div>
+                    </div>
+                  )}
+
+                  {typeof selectedPhoto.location_lat === 'number' &&
+                    typeof selectedPhoto.location_lon === 'number' && (
+                      <div>
+                        <div className="text-gray-500">Location</div>
+                        <div className="text-gray-800">
+                          {selectedPhoto.location_name || 'Unknown'}
+                          <div className="text-xs text-gray-500">
+                            {selectedPhoto.location_lat.toFixed(6)},{' '}
+                            {selectedPhoto.location_lon.toFixed(6)}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                  {selectedPhoto.tags && (
+                    <div>
+                      <div className="text-gray-500">Tags</div>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {selectedPhoto.tags.split(',').map(tag => (
+                          <span
+                            key={tag}
+                            className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs"
+                          >
+                            {tag.trim()}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
