@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { photos, projects, content } from '../api/client';
 import type { Photo } from '../types';
+import { formatDate } from '../utils/dateFormat';
 
 const HomePage: React.FC = () => {
   const { data: latestPhotos } = useQuery({
@@ -49,19 +50,6 @@ const HomePage: React.FC = () => {
     if (selectedPhoto) window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [selectedPhoto]);
-
-  const formatDate = (date?: string) => {
-    if (!date) return undefined;
-    try {
-      return new Date(date).toLocaleDateString(undefined, {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      });
-    } catch {
-      return date;
-    }
-  };
 
   return (
     <div className="min-h-screen w-full m-0 p-0 mobile-safe">

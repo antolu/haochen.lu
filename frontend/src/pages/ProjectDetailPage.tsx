@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useProject, useProjectReadme, parseTechnologies } from '../hooks/useProjects';
 import MarkdownRenderer from '../components/MarkdownRenderer';
+import { formatDate } from '../utils/dateFormat';
 
 const ProjectDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -233,34 +234,16 @@ const ProjectDetailPage: React.FC = () => {
                   <dl className="space-y-2 text-sm">
                     <div>
                       <dt className="text-gray-500">Created</dt>
-                      <dd className="text-gray-900">
-                        {new Date(project.created_at).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                        })}
-                      </dd>
+                      <dd className="text-gray-900">{formatDate(project.created_at)}</dd>
                     </div>
                     <div>
                       <dt className="text-gray-500">Last Updated</dt>
-                      <dd className="text-gray-900">
-                        {new Date(project.updated_at).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                        })}
-                      </dd>
+                      <dd className="text-gray-900">{formatDate(project.updated_at)}</dd>
                     </div>
                     {readme?.last_updated && (
                       <div>
                         <dt className="text-gray-500">README Updated</dt>
-                        <dd className="text-gray-900">
-                          {new Date(readme.last_updated).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                          })}
-                        </dd>
+                        <dd className="text-gray-900">{formatDate(readme.last_updated)}</dd>
                       </div>
                     )}
                   </dl>
