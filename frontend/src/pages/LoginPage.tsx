@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
@@ -13,8 +13,11 @@ interface LoginFormData extends LoginRequest {
 
 const LoginPage: React.FC = () => {
   const location = useLocation();
-  const { login, isAuthenticated, error, clearError } = useAuthStore();
-  const [isLoading, setIsLoading] = useState(false);
+  const { login, isAuthenticated, error, clearError, isLoading: authLoading } = useAuthStore();
+  const [isLocalLoading, setIsLocalLoading] = useState(false);
+
+  // Use auth store loading state or local loading state
+  const isLoading = authLoading || isLocalLoading;
 
   const {
     register,
@@ -24,21 +27,39 @@ const LoginPage: React.FC = () => {
 
   const from = (location.state as any)?.from?.pathname || '/admin';
 
+  // Clear local loading state when authentication state changes
+  useEffect(() => {
+    if (isAuthenticated || error) {
+      setIsLocalLoading(false);
+    }
+  }, [isAuthenticated, error]);
+
   if (isAuthenticated) {
     return <Navigate to={from} replace />;
   }
 
   const onSubmit = async (data: LoginFormData) => {
-    setIsLoading(true);
+    setIsLocalLoading(true);
     clearError();
 
     try {
-      await login(data, data.rememberMe);
+      // Set a timeout to prevent hanging login attempts
+      const loginPromise = login(data, data.rememberMe);
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Login timeout')), 30000)
+      );
+
+      await Promise.race([loginPromise, timeoutPromise]);
       toast.success('Login successful!');
     } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Login failed');
+      const errorMessage =
+        error.message === 'Login timeout'
+          ? 'Login request timed out. Please try again.'
+          : error.response?.data?.detail || 'Login failed';
+      toast.error(errorMessage);
     } finally {
-      setIsLoading(false);
+      // Always reset loading state, even on errors or timeouts
+      setIsLocalLoading(false);
     }
   };
 
