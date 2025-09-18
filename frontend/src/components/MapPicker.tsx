@@ -118,7 +118,7 @@ const LocationSearch: React.FC<{
           onChange={handleInputChange}
           onFocus={() => setIsOpen(true)}
           placeholder="Search for a location..."
-          className="w-full px-3 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
         <svg
           className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"

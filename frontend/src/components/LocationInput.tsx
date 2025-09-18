@@ -1,4 +1,5 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import MapPicker from './MapPicker';
 
 interface LocationInputProps {
@@ -20,6 +21,41 @@ const LocationInput: React.FC<LocationInputProps> = ({
 }) => {
   const [showMap, setShowMap] = useState(false);
   const [manualLocationName, setManualLocationName] = useState(locationName || '');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+  const searchTimeout = useRef<NodeJS.Timeout | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const updateDropdownPosition = useCallback(() => {
+    if (searchInputRef.current) {
+      const rect = searchInputRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+      });
+    }
+  }, []);
+
+  // Update dropdown position on window resize/scroll
+  useEffect(() => {
+    const handleResize = () => {
+      if (showSearchResults) {
+        updateDropdownPosition();
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('scroll', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('scroll', handleResize);
+    };
+  }, [showSearchResults, updateDropdownPosition]);
 
   const handleLocationSelect = useCallback(
     async (lat: number, lng: number) => {
@@ -41,11 +77,76 @@ const LocationInput: React.FC<LocationInputProps> = ({
     [onLocationChange]
   );
 
+  const searchLocations = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const response = await fetch(`/api/locations/search?q=${encodeURIComponent(query)}&limit=5`);
+      if (response.ok) {
+        const data = await response.json();
+        setSearchResults(data);
+        updateDropdownPosition();
+        setShowSearchResults(true);
+      }
+    } catch (error) {
+      console.error('Error searching locations:', error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  }, []);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+    setManualLocationName(query);
+
+    // Debounce search
+    if (searchTimeout.current) {
+      clearTimeout(searchTimeout.current);
+    }
+
+    searchTimeout.current = setTimeout(() => {
+      searchLocations(query);
+    }, 300);
+  };
+
+  const handleSearchResultSelect = (result: any) => {
+    setSearchQuery(result.location_name);
+    setManualLocationName(result.location_name);
+    setShowSearchResults(false);
+    setSearchResults([]);
+    onLocationChange?.(result.latitude, result.longitude, result.location_name);
+  };
+
   const handleLocationNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.value;
     setManualLocationName(name);
     if (latitude && longitude) {
       onLocationChange?.(latitude, longitude, name);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Prevent form submission on Enter
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // If search results are showing and there's a first result, select it
+      if (showSearchResults && searchResults.length > 0) {
+        handleSearchResultSelect(searchResults[0]);
+      }
+    }
+
+    // Handle Escape to close search results
+    if (e.key === 'Escape') {
+      setShowSearchResults(false);
     }
   };
 
@@ -58,19 +159,48 @@ const LocationInput: React.FC<LocationInputProps> = ({
   return (
     <div className={className}>
       <div className="space-y-4">
-        {/* Location Name Input */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Location Name</label>
-          <input
-            type="text"
-            value={manualLocationName}
-            onChange={handleLocationNameChange}
-            placeholder="Enter location name or let it be auto-detected"
-            disabled={disabled}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50"
-          />
+        {/* Location Search Input */}
+        <div className="relative">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Search Location</label>
+          <div className="relative">
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchQuery || manualLocationName}
+              onChange={handleSearchChange}
+              onKeyDown={handleKeyDown}
+              onFocus={() => {
+                if (searchResults.length > 0) {
+                  updateDropdownPosition();
+                  setShowSearchResults(true);
+                }
+              }}
+              placeholder="Search for a location..."
+              disabled={disabled}
+              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50"
+            />
+            <svg
+              className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            {isSearching && (
+              <div className="absolute right-3 top-2.5">
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-500 border-t-transparent"></div>
+              </div>
+            )}
+          </div>
+
           <p className="text-xs text-gray-500 mt-1">
-            Override the auto-detected location name if needed
+            Type to search for locations and GPS coordinates will be set automatically
           </p>
         </div>
 
@@ -88,6 +218,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
                   handleLocationSelect(lat, longitude);
                 }
               }}
+              onKeyDown={handleKeyDown}
               placeholder="0.000000"
               disabled={disabled}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50"
@@ -105,6 +236,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
                   handleLocationSelect(latitude, lng);
                 }
               }}
+              onKeyDown={handleKeyDown}
               placeholder="0.000000"
               disabled={disabled}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50"
@@ -193,6 +325,48 @@ const LocationInput: React.FC<LocationInputProps> = ({
           </button>
         )}
       </div>
+
+      {/* Portal for Search Results Dropdown */}
+      {showSearchResults &&
+        (searchResults.length > 0 || isSearching) &&
+        createPortal(
+          <>
+            {/* Overlay to close dropdown */}
+            <div
+              className="fixed inset-0"
+              style={{ zIndex: 9998 }}
+              onClick={() => setShowSearchResults(false)}
+            />
+
+            {/* Search Results Dropdown */}
+            <div
+              className="absolute bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto"
+              style={{
+                top: dropdownPosition.top,
+                left: dropdownPosition.left,
+                width: dropdownPosition.width,
+                zIndex: 9999,
+              }}
+            >
+              {isSearching ? (
+                <div className="px-3 py-2 text-gray-500">Searching...</div>
+              ) : (
+                searchResults.map((result, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    className="w-full px-3 py-2 text-left hover:bg-gray-50 focus:bg-gray-50 focus:outline-none first:rounded-t-lg last:rounded-b-lg"
+                    onClick={() => handleSearchResultSelect(result)}
+                  >
+                    <div className="font-medium text-gray-900">{result.location_name}</div>
+                    <div className="text-sm text-gray-500 truncate">{result.location_address}</div>
+                  </button>
+                ))
+              )}
+            </div>
+          </>,
+          document.body
+        )}
     </div>
   );
 };
