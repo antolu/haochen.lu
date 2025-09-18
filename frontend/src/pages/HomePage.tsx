@@ -245,9 +245,17 @@ const HomePage: React.FC = () => {
                 >
                   <div className="aspect-square rounded-lg overflow-hidden bg-gray-200">
                     <img
-                      src={`/${photo.thumbnail_path || photo.webp_path}`}
-                      alt={photo.title}
+                      src={
+                        photo.variants?.small?.path ||
+                        photo.variants?.thumbnail?.path ||
+                        photo.variants?.medium?.path ||
+                        photo.webp_path ||
+                        photo.thumbnail_path ||
+                        photo.original_path
+                      }
+                      alt={photo.title || 'Photo'}
                       className="w-full h-full object-cover group-hover:scale-102 md:group-hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
                     />
                   </div>
                 </motion.div>
