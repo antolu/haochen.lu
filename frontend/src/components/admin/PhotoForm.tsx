@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import type { Photo } from '../../types';
 import { useUpdatePhoto, usePhotoTags } from '../../hooks/usePhotos';
 import TagMultiSelect from './TagMultiSelect';
+import { formatDateTime } from '../../utils/dateFormat';
 // Remove direct import of MapPicker and lazy-load it instead
 const LazyMapPicker = lazy(() => import('../MapPicker'));
 
@@ -165,7 +166,7 @@ const PhotoForm: React.FC<PhotoFormProps> = ({ photo, onSuccess, onCancel }) => 
                 {photo.date_taken && (
                   <div>
                     <span className="font-medium text-gray-700">Taken:</span>{' '}
-                    {new Date(photo.date_taken).toLocaleString()}
+                    {formatDateTime(photo.date_taken)}
                   </div>
                 )}
               </div>

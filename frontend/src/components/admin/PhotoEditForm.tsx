@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import LocationInput from '../LocationInput';
 import type { Photo } from '../../types';
+import { formatDateSimple } from '../../utils/dateFormat';
 
 interface PhotoEditFormProps {
   photo: Photo;
@@ -182,6 +183,14 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
     }
   };
 
+  // Handle form keydown to prevent Enter key from submitting form
+  const handleFormKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !(e.target instanceof HTMLTextAreaElement)) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
   const renderCustomField = (field: (typeof customFields)[0], index: number) => {
     switch (field.type) {
       case 'boolean':
@@ -299,9 +308,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
             <p className="text-sm text-gray-500">
               {photo.width} × {photo.height} • {(photo.file_size / 1024 / 1024).toFixed(1)} MB
             </p>
-            <p className="text-sm text-gray-500">
-              Uploaded {new Date(photo.created_at).toLocaleDateString()}
-            </p>
+            <p className="text-sm text-gray-500">Uploaded {formatDateSimple(photo.created_at)}</p>
           </div>
         </div>
       </div>
@@ -327,7 +334,12 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
       </div>
 
       {/* Form Content */}
-      <form id="photo-edit-form" onSubmit={handleSubmit(onSubmit)} className="p-6">
+      <form
+        id="photo-edit-form"
+        onSubmit={handleSubmit(onSubmit)}
+        onKeyDown={handleFormKeyDown}
+        className="p-6"
+      >
         <motion.div
           key={activeTab}
           initial={{ opacity: 0, x: 20 }}
