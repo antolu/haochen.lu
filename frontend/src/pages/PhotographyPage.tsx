@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 import { photos } from '../api/client';
 import PhotoGrid from '../components/PhotoGrid';
@@ -16,6 +16,7 @@ const PhotographyPage: React.FC = () => {
   const [isLGOpening, setIsLGOpening] = useState(false);
   const [photoSwipeIndex, setPhotoSwipeIndex] = useState(0);
   const photosPerPage = 24;
+  const location = useLocation() as { state?: { photoId?: string } };
 
   // Fetch photos from API
   const {
@@ -43,6 +44,18 @@ const PhotographyPage: React.FC = () => {
       setIsLoadingMore(false);
     }
   }, [photoData, currentPage]);
+
+  // If navigated with a specific photoId, open the lightbox at that index
+  useEffect(() => {
+    const targetId = location?.state?.photoId;
+    if (!targetId || allPhotos.length === 0) return;
+    const idx = allPhotos.findIndex(p => p.id === targetId);
+    if (idx >= 0) {
+      setPhotoSwipeIndex(idx);
+      setIsLGOpening(true);
+      setIsPhotoSwipeOpen(true);
+    }
+  }, [location?.state, allPhotos]);
 
   const handlePhotoClick = (photo: Photo, index: number) => {
     setPhotoSwipeIndex(index);
