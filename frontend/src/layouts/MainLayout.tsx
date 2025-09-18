@@ -4,7 +4,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 
-import { subapps } from '../api/client';
+import { subapps, content } from '../api/client';
 import { useAuthStore } from '../stores/authStore';
 
 const MainLayout: React.FC = () => {
@@ -31,6 +31,13 @@ const MainLayout: React.FC = () => {
   const { data: subAppsData } = useQuery({
     queryKey: ['subapps', isAuthenticated ? 'authenticated' : 'public'],
     queryFn: () => (isAuthenticated ? subapps.listAuthenticated() : subapps.list()),
+  });
+
+  // Fetch footer content
+  const { data: footerContent } = useQuery({
+    queryKey: ['content', 'footer'],
+    queryFn: () => content.getByKeys(['contact.cv_url']),
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   const navigation = [
@@ -275,8 +282,21 @@ const MainLayout: React.FC = () => {
             <div>
               <h4 className="text-lg font-semibold mb-4">Contact</h4>
               <ul className="space-y-2 text-gray-300">
-                <li>Email: hello@antonlu.com</li>
-                <li>Location: Your City, Country</li>
+                <li>Email: anton@haochen.lu</li>
+                <li>Location: Geneva, Switzerland</li>
+                {footerContent?.['contact.cv_url']?.content && (
+                  <li>
+                    CV:{' '}
+                    <a
+                      href={footerContent['contact.cv_url'].content}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-300 hover:text-white transition-colors duration-200 underline"
+                    >
+                      Download CV
+                    </a>
+                  </li>
+                )}
               </ul>
             </div>
           </div>
