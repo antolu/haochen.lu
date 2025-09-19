@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import MiniMap from './MiniMap';
+import MapModal from './MapModal';
 import type { Photo } from '../types';
 import { formatDate } from '../utils/dateFormat';
 
@@ -66,7 +67,7 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
   onClose,
   onSidebarClose,
 }) => {
-  // Debug logging to understand what data we're receiving
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
   const hasLocationData = photo.location_lat && photo.location_lon;
   const hasCameraData = photo.camera_make || photo.camera_model || photo.lens;
@@ -339,8 +340,10 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
                         latitude={photo.location_lat!}
                         longitude={photo.location_lon!}
                         zoom={13}
-                        size={240}
+                        responsive={true}
+                        aspectRatio="square"
                         className="w-full"
+                        onClick={() => setIsMapModalOpen(true)}
                       />
                     </div>
                   </div>
@@ -348,6 +351,18 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
               )}
             </div>
           </motion.div>
+
+          {/* Map Modal */}
+          {hasLocationData && (
+            <MapModal
+              isOpen={isMapModalOpen}
+              onClose={() => setIsMapModalOpen(false)}
+              latitude={photo.location_lat!}
+              longitude={photo.location_lon!}
+              locationName={photo.location_name || undefined}
+              zoom={15}
+            />
+          )}
         </>
       )}
     </AnimatePresence>

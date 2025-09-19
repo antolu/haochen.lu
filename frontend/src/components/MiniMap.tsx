@@ -7,6 +7,8 @@ interface MiniMapProps {
   longitude: number;
   zoom?: number;
   size?: number;
+  responsive?: boolean;
+  aspectRatio?: 'square' | 'wide';
   className?: string;
   onClick?: () => void;
 }
@@ -16,6 +18,8 @@ const MiniMap: React.FC<MiniMapProps> = ({
   longitude,
   zoom = 13,
   size = 120,
+  responsive = false,
+  aspectRatio = 'square',
   className = '',
   onClick,
 }) => {
@@ -33,12 +37,23 @@ const MiniMap: React.FC<MiniMapProps> = ({
     });
   }, []);
 
+  const getMapDimensions = () => {
+    if (responsive) {
+      return {
+        width: '100%',
+        height: aspectRatio === 'square' ? 'auto' : '200px',
+        aspectRatio: aspectRatio === 'square' ? '1' : undefined,
+      };
+    }
+    return { width: size, height: size };
+  };
+
   return (
     <div
       className={`relative overflow-hidden rounded border border-gray-200 ${
-        onClick ? 'cursor-pointer hover:border-blue-300' : ''
+        onClick ? 'cursor-pointer' : ''
       } ${className}`}
-      style={{ width: size, height: size }}
+      style={getMapDimensions()}
       onClick={onClick}
     >
       <MapContainer
@@ -57,8 +72,8 @@ const MiniMap: React.FC<MiniMapProps> = ({
       </MapContainer>
 
       {onClick && (
-        <div className="absolute inset-0 bg-transparent hover:bg-blue-500 hover:bg-opacity-10 flex items-center justify-center">
-          <div className="bg-white bg-opacity-90 rounded-full p-1 opacity-0 hover:opacity-100 transition-opacity">
+        <div className="absolute inset-0 bg-transparent flex items-center justify-center">
+          <div className="bg-white bg-opacity-90 rounded-full p-1 opacity-0 hover:opacity-100 transition-opacity duration-200">
             <svg
               className="h-4 w-4 text-blue-600"
               fill="none"
