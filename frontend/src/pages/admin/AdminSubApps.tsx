@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import SubAppForm from '../../components/SubAppForm';
@@ -136,23 +137,41 @@ const AdminSubApps: React.FC = () => {
             <h1 className="text-3xl font-bold text-gray-900">Sub-Applications</h1>
             <p className="mt-2 text-gray-600">Manage external and internal sub-applications</p>
           </div>
-          <button
-            onClick={handleCreateSubApp}
-            disabled={showForm}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
-          >
-            <span className="flex items-center">
-              <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-              Add Sub-App
-            </span>
-          </button>
+          <div className="flex gap-3">
+            <Link
+              to="/admin/subapps/integrate"
+              className="px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 rounded-lg transition-colors"
+            >
+              <span className="flex items-center">
+                <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"
+                  />
+                </svg>
+                Integrate Subapp
+              </span>
+            </Link>
+            <button
+              onClick={handleCreateSubApp}
+              disabled={showForm}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
+            >
+              <span className="flex items-center">
+                <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                Add Sub-App
+              </span>
+            </button>
+          </div>
         </div>
 
         {/* Stats Cards */}
