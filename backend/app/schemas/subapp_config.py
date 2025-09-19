@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class SubAppMeta(BaseModel):
@@ -9,8 +9,9 @@ class SubAppMeta(BaseModel):
     description: str = Field(..., description="Brief description of the subapp")
     version: str = Field(..., description="Version of the subapp")
 
-    @validator("slug")
-    def validate_slug(self, v):
+    @field_validator("slug")
+    @classmethod
+    def validate_slug(cls, v):
         if len(v) < 2 or len(v) > 50:
             msg = "Slug must be between 2 and 50 characters"
             raise ValueError(msg)
@@ -87,11 +88,12 @@ class SubAppConfig(BaseModel):
     routing: SubAppRouting
     database: SubAppDatabase | None = None
 
-    @validator("integration")
-    def validate_integration_paths(self, v, values):
+    @field_validator("integration")
+    @classmethod
+    def validate_integration_paths(cls, v, info):
         """Validate that paths are consistent with meta.slug"""
-        if "meta" in values:
-            slug = values["meta"].slug
+        if hasattr(info.data, "get") and info.data.get("meta"):
+            slug = info.data["meta"].slug
 
             # Check that paths include the slug
             if not v.frontend_path.startswith(f"/{slug}"):
@@ -104,11 +106,12 @@ class SubAppConfig(BaseModel):
 
         return v
 
-    @validator("routing")
-    def validate_routing_consistency(self, v, values):
+    @field_validator("routing")
+    @classmethod
+    def validate_routing_consistency(cls, v, info):
         """Validate that routing matches integration paths"""
-        if "integration" in values:
-            integration = values["integration"]
+        if hasattr(info.data, "get") and info.data.get("integration"):
+            integration = info.data["integration"]
 
             # Check frontend routing
             if not v.frontend.location.startswith(integration.frontend_path):
