@@ -103,7 +103,9 @@ async def validate_subapp_config_endpoint(
         return SubAppConfigValidationResponse(valid=False, errors=parse_errors)
 
     # Validate configuration schema
-    config, validation_errors, warnings = validate_subapp_config(data) if data else (None, [], [])
+    config, validation_errors, warnings = (
+        validate_subapp_config(data) if data else (None, [], [])
+    )
 
     # Check for slug conflicts in database
     if config and not validation_errors:
