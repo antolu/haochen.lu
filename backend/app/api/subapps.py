@@ -128,7 +128,7 @@ async def get_subapp_detail(
     return convert_to_response(subapp)
 
 
-@router.post("/")
+@router.post("")
 async def create_subapp_endpoint(
     subapp: SubAppCreate,
     db: AsyncSession = Depends(get_session),
