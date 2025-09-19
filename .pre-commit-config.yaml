@@ -46,6 +46,7 @@ repos:
         additional_dependencies:
           - 'pydantic'
           - 'sqlalchemy[mypy]'
+          - 'types-PyYAML'
 
   # Prettier for code formatting
   - repo: https://github.com/pre-commit/mirrors-prettier
