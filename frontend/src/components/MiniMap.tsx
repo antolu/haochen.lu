@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import L from 'leaflet';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
+import { getTileConfig, getOptimizedMarkerIcon } from '../utils/mapUtils';
 
 interface MiniMapProps {
   latitude: number;
@@ -23,18 +24,10 @@ const MiniMap: React.FC<MiniMapProps> = ({
   className = '',
   onClick,
 }) => {
+  const tileConfig = useMemo(() => getTileConfig(), []);
   const marker = useMemo(() => {
-    return L.icon({
-      iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-      iconRetinaUrl:
-        'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-      iconSize: [20, 32],
-      iconAnchor: [10, 32],
-      popupAnchor: [0, -32],
-      shadowSize: [32, 32],
-      shadowAnchor: [10, 32],
-    });
+    const iconConfig = getOptimizedMarkerIcon('small');
+    return L.icon(iconConfig);
   }, []);
 
   const getMapDimensions = () => {
@@ -67,7 +60,12 @@ const MiniMap: React.FC<MiniMapProps> = ({
         doubleClickZoom={false}
         attributionControl={false}
       >
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <TileLayer
+          url={tileConfig.url}
+          tileSize={tileConfig.tileSize}
+          zoomOffset={tileConfig.zoomOffset}
+          attribution={tileConfig.attribution}
+        />
         <Marker position={[latitude, longitude]} icon={marker} />
       </MapContainer>
 

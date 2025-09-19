@@ -3,6 +3,7 @@ import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import type { Photo } from '../types';
 import { formatDateSimple } from '../utils/dateFormat';
+import { getTileConfig } from '../utils/mapUtils';
 
 // Custom photo marker icon
 const createPhotoMarker = (photoUrl: string) => {
@@ -55,6 +56,8 @@ const PhotoMap: React.FC<PhotoMapProps> = ({
   zoom = 10,
   className = '',
 }) => {
+  const tileConfig = useMemo(() => getTileConfig(), []);
+
   // Filter photos that have location data
   const photosWithLocation = useMemo(() => {
     return photos.filter(photo => photo.location_lat && photo.location_lon);
@@ -120,8 +123,10 @@ const PhotoMap: React.FC<PhotoMapProps> = ({
         className="rounded-lg overflow-hidden"
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          url={tileConfig.url}
+          tileSize={tileConfig.tileSize}
+          zoomOffset={tileConfig.zoomOffset}
+          attribution={tileConfig.attribution}
         />
 
         <MapBounds photos={photosWithLocation} />

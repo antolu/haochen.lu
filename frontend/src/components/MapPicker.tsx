@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
+import { getTileConfig } from '../utils/mapUtils';
 
 // Fix for default markers in react-leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -171,6 +172,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
   showSearch = true,
   className = '',
 }) => {
+  const tileConfig = useMemo(() => getTileConfig(), []);
   const [currentLat, setCurrentLat] = useState(latitude);
   const [currentLng, setCurrentLng] = useState(longitude);
 
@@ -209,8 +211,10 @@ const MapPicker: React.FC<MapPickerProps> = ({
           className="rounded-lg overflow-hidden"
         >
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            url={tileConfig.url}
+            tileSize={tileConfig.tileSize}
+            zoomOffset={tileConfig.zoomOffset}
+            attribution={tileConfig.attribution}
           />
 
           <MapEvents onLocationSelect={handleLocationSelect} disabled={disabled} />

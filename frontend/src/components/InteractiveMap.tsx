@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import L from 'leaflet';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
+import { getTileConfig, getOptimizedMarkerIcon } from '../utils/mapUtils';
 
 interface InteractiveMapProps {
   latitude: number;
@@ -23,18 +24,10 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   minZoom = 3,
   maxZoom = 18,
 }) => {
+  const tileConfig = useMemo(() => getTileConfig(), []);
   const marker = useMemo(() => {
-    return L.icon({
-      iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-      iconRetinaUrl:
-        'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-      iconSize: [25, 41],
-      iconAnchor: [12, 41],
-      popupAnchor: [1, -34],
-      shadowSize: [41, 41],
-      shadowAnchor: [12, 41],
-    });
+    const iconConfig = getOptimizedMarkerIcon('large');
+    return L.icon(iconConfig);
   }, []);
 
   return (
@@ -56,8 +49,10 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
         attributionControl={true}
       >
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url={tileConfig.url}
+          tileSize={tileConfig.tileSize}
+          zoomOffset={tileConfig.zoomOffset}
+          attribution={tileConfig.attribution}
         />
         <Marker position={[latitude, longitude]} icon={marker} />
       </MapContainer>
