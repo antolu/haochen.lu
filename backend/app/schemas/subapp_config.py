@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
-
 from pydantic import BaseModel, Field, validator
 
 
@@ -11,10 +9,11 @@ class SubAppMeta(BaseModel):
     description: str = Field(..., description="Brief description of the subapp")
     version: str = Field(..., description="Version of the subapp")
 
-    @validator('slug')
-    def validate_slug(cls, v):
+    @validator("slug")
+    def validate_slug(self, v):
         if len(v) < 2 or len(v) > 50:
-            raise ValueError('Slug must be between 2 and 50 characters')
+            msg = "Slug must be between 2 and 50 characters"
+            raise ValueError(msg)
         return v
 
 
@@ -24,9 +23,13 @@ class SubAppUI(BaseModel):
 
 
 class SubAppIntegration(BaseModel):
-    frontend_path: str = Field(..., description="Frontend route path", pattern=r"^/[a-z0-9-/]*$")
-    api_path: str = Field(..., description="API route path", pattern=r"^/api/[a-z0-9-/]*$")
-    admin_path: Optional[str] = Field(None, description="Admin route path")
+    frontend_path: str = Field(
+        ..., description="Frontend route path", pattern=r"^/[a-z0-9-/]*$"
+    )
+    api_path: str = Field(
+        ..., description="API route path", pattern=r"^/api/[a-z0-9-/]*$"
+    )
+    admin_path: str | None = Field(None, description="Admin route path")
 
     requires_auth: bool = Field(default=True, description="Requires authentication")
     admin_only: bool = Field(default=False, description="Admin-only access")
@@ -39,19 +42,25 @@ class SubAppIntegration(BaseModel):
 
 
 class SubAppDockerEnvironment(BaseModel):
-    environment: List[str] = Field(default_factory=list, description="Environment variables")
-    volumes: List[str] = Field(default_factory=list, description="Volume mounts")
-    depends_on: List[str] = Field(default_factory=list, description="Service dependencies")
+    environment: list[str] = Field(
+        default_factory=list, description="Environment variables"
+    )
+    volumes: list[str] = Field(default_factory=list, description="Volume mounts")
+    depends_on: list[str] = Field(
+        default_factory=list, description="Service dependencies"
+    )
 
 
 class SubAppDocker(BaseModel):
     backend_image: str = Field(..., description="Docker image for backend")
     frontend_image: str = Field(..., description="Docker image for frontend")
-    backend_port: int = Field(default=8000, description="Backend port", ge=1000, le=65535)
+    backend_port: int = Field(
+        default=8000, description="Backend port", ge=1000, le=65535
+    )
     redis_db: int = Field(default=0, description="Redis database number", ge=0, le=15)
-    environment: List[str] = Field(default_factory=list)
-    volumes: List[str] = Field(default_factory=list)
-    depends_on: List[str] = Field(default_factory=list)
+    environment: list[str] = Field(default_factory=list)
+    volumes: list[str] = Field(default_factory=list)
+    depends_on: list[str] = Field(default_factory=list)
 
 
 class SubAppRouteConfig(BaseModel):
@@ -62,11 +71,11 @@ class SubAppRouteConfig(BaseModel):
 class SubAppRouting(BaseModel):
     frontend: SubAppRouteConfig
     api: SubAppRouteConfig
-    admin: Optional[SubAppRouteConfig] = None
+    admin: SubAppRouteConfig | None = None
 
 
 class SubAppDatabase(BaseModel):
-    schema: Optional[str] = Field(None, description="Database schema name")
+    db_schema: str | None = Field(None, description="Database schema name")
     migrations: bool = Field(default=False, description="Has migrations")
 
 
@@ -76,47 +85,53 @@ class SubAppConfig(BaseModel):
     integration: SubAppIntegration
     docker: SubAppDocker
     routing: SubAppRouting
-    database: Optional[SubAppDatabase] = None
+    database: SubAppDatabase | None = None
 
-    @validator('integration')
-    def validate_integration_paths(cls, v, values):
+    @validator("integration")
+    def validate_integration_paths(self, v, values):
         """Validate that paths are consistent with meta.slug"""
-        if 'meta' in values:
-            slug = values['meta'].slug
+        if "meta" in values:
+            slug = values["meta"].slug
 
             # Check that paths include the slug
             if not v.frontend_path.startswith(f"/{slug}"):
-                raise ValueError(f"frontend_path must start with /{slug}")
+                msg = f"frontend_path must start with /{slug}"
+                raise ValueError(msg)
 
             if not v.api_path.startswith(f"/api/{slug}"):
-                raise ValueError(f"api_path must start with /api/{slug}")
+                msg = f"api_path must start with /api/{slug}"
+                raise ValueError(msg)
 
         return v
 
-    @validator('routing')
-    def validate_routing_consistency(cls, v, values):
+    @validator("routing")
+    def validate_routing_consistency(self, v, values):
         """Validate that routing matches integration paths"""
-        if 'integration' in values:
-            integration = values['integration']
+        if "integration" in values:
+            integration = values["integration"]
 
             # Check frontend routing
             if not v.frontend.location.startswith(integration.frontend_path):
-                raise ValueError("Frontend routing location must match integration frontend_path")
+                msg = "Frontend routing location must match integration frontend_path"
+                raise ValueError(msg)
 
             # Check API routing
             if not v.api.location.startswith(integration.api_path):
-                raise ValueError("API routing location must match integration api_path")
+                msg = "API routing location must match integration api_path"
+                raise ValueError(msg)
 
         return v
 
 
 class SubAppConfigValidationResponse(BaseModel):
     valid: bool
-    errors: List[str] = Field(default_factory=list)
-    warnings: List[str] = Field(default_factory=list)
-    config: Optional[SubAppConfig] = None
+    errors: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    config: SubAppConfig | None = None
 
 
 class SubAppIntegrationRequest(BaseModel):
     yaml_content: str = Field(..., description="Raw YAML configuration")
-    validate_only: bool = Field(default=False, description="Only validate, don't integrate")
+    validate_only: bool = Field(
+        default=False, description="Only validate, don't integrate"
+    )

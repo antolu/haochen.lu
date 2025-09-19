@@ -88,7 +88,7 @@ const AdminSubAppIntegration: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
         },
         body: JSON.stringify({
           yaml_content: yamlContent,
@@ -217,16 +217,22 @@ const AdminSubAppIntegration: React.FC = () => {
                 <dl className="space-y-1 text-sm">
                   <div className="flex">
                     <dt className="w-20 text-gray-500">Frontend:</dt>
-                    <dd className="font-mono text-blue-600">{validationResult.config.integration.frontend_path}</dd>
+                    <dd className="font-mono text-blue-600">
+                      {validationResult.config.integration.frontend_path}
+                    </dd>
                   </div>
                   <div className="flex">
                     <dt className="w-20 text-gray-500">API:</dt>
-                    <dd className="font-mono text-blue-600">{validationResult.config.integration.api_path}</dd>
+                    <dd className="font-mono text-blue-600">
+                      {validationResult.config.integration.api_path}
+                    </dd>
                   </div>
                   {validationResult.config.integration.has_admin && (
                     <div className="flex">
                       <dt className="w-20 text-gray-500">Admin:</dt>
-                      <dd className="font-mono text-blue-600">/admin/subapps/{validationResult.config.meta.slug}</dd>
+                      <dd className="font-mono text-blue-600">
+                        /admin/subapps/{validationResult.config.meta.slug}
+                      </dd>
                     </div>
                   )}
                 </dl>
@@ -290,7 +296,9 @@ const AdminSubAppIntegration: React.FC = () => {
                 />
               </svg>
             )}
-            <h3 className={`text-lg font-medium ${integrationResult.success ? 'text-green-800' : 'text-red-800'}`}>
+            <h3
+              className={`text-lg font-medium ${integrationResult.success ? 'text-green-800' : 'text-red-800'}`}
+            >
               {integrationResult.success ? 'Integration Successful!' : 'Integration Failed'}
             </h3>
           </div>
