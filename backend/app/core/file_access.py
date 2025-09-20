@@ -4,7 +4,6 @@ import hashlib
 import hmac
 import time
 from pathlib import Path
-from typing import Any
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -41,31 +40,31 @@ class FileAccessController:
         photo = await get_photo(db, photo_id)
         if not photo:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Photo not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Photo not found"
             )
 
         # Get access level (default to public for existing photos)
-        access_level = getattr(photo, 'access_level', AccessLevel.PUBLIC)
+        access_level = getattr(photo, "access_level", AccessLevel.PUBLIC)
 
         # Check access permissions
         if access_level == AccessLevel.PRIVATE and not is_admin:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Admin access required"
+                status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required"
             )
 
         if access_level == AccessLevel.AUTHENTICATED and not user_id and not is_admin:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Authentication required"
+                detail="Authentication required",
             )
 
         # Additional restrictions for high-resolution files
-        if file_type in [FileType.LARGE, FileType.XLARGE, FileType.ORIGINAL] and not (user_id or is_admin):
+        if file_type in [FileType.LARGE, FileType.XLARGE, FileType.ORIGINAL] and not (
+            user_id or is_admin
+        ):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Authentication required for high-resolution files"
+                detail="Authentication required for high-resolution files",
             )
 
         return photo
@@ -79,14 +78,14 @@ class FileAccessController:
             if not photo.variants or not isinstance(photo.variants, dict):
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Variant '{file_type}' not available"
+                    detail=f"Variant '{file_type}' not available",
                 )
 
             variant_info = photo.variants.get(file_type.value)
             if not variant_info:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Variant '{file_type}' not found"
+                    detail=f"Variant '{file_type}' not found",
                 )
 
             file_path = self.compressed_dir / Path(variant_info["path"]).name
@@ -94,8 +93,7 @@ class FileAccessController:
         # Verify file exists
         if not file_path.exists():
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="File not found on disk"
+                status_code=status.HTTP_404_NOT_FOUND, detail="File not found on disk"
             )
 
         # Security: ensure file is within allowed directories
@@ -106,8 +104,7 @@ class FileAccessController:
                 file_path.resolve().relative_to(self.compressed_dir)
         except ValueError as e:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied"
+                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             ) from e
 
         return file_path
@@ -116,16 +113,16 @@ class FileAccessController:
         """Determine content type based on file extension."""
         suffix = file_path.suffix.lower()
         content_types = {
-            '.jpg': 'image/jpeg',
-            '.jpeg': 'image/jpeg',
-            '.png': 'image/png',
-            '.gif': 'image/gif',
-            '.webp': 'image/webp',
-            '.bmp': 'image/bmp',
-            '.tiff': 'image/tiff',
-            '.svg': 'image/svg+xml',
+            ".jpg": "image/jpeg",
+            ".jpeg": "image/jpeg",
+            ".png": "image/png",
+            ".gif": "image/gif",
+            ".webp": "image/webp",
+            ".bmp": "image/bmp",
+            ".tiff": "image/tiff",
+            ".svg": "image/svg+xml",
         }
-        return content_types.get(suffix, 'application/octet-stream')
+        return content_types.get(suffix, "application/octet-stream")
 
     def get_download_filename(self, photo, file_type: FileType) -> str:
         """Generate appropriate filename for downloads."""
@@ -133,23 +130,25 @@ class FileAccessController:
         base_name = photo.title or Path(photo.filename).stem
 
         # Clean filename for download
-        safe_name = "".join(c for c in base_name if c.isalnum() or c in (' ', '-', '_')).rstrip()
+        safe_name = "".join(
+            c for c in base_name if c.isalnum() or c in (" ", "-", "_")
+        ).rstrip()
 
         if file_type == FileType.ORIGINAL:
             extension = Path(photo.filename).suffix
         else:
             # Most variants are WebP
-            extension = '.webp'
+            extension = ".webp"
             if photo.variants and isinstance(photo.variants, dict):
                 variant_info = photo.variants.get(file_type.value, {})
-                if 'format' in variant_info:
+                if "format" in variant_info:
                     format_ext = {
-                        'JPEG': '.jpg',
-                        'PNG': '.png',
-                        'WEBP': '.webp',
-                        'GIF': '.gif'
+                        "JPEG": ".jpg",
+                        "PNG": ".png",
+                        "WEBP": ".webp",
+                        "GIF": ".gif",
                     }
-                    extension = format_ext.get(variant_info['format'].upper(), '.webp')
+                    extension = format_ext.get(variant_info["format"].upper(), ".webp")
 
         # Add variant suffix for non-original files
         if file_type != FileType.ORIGINAL:
@@ -161,25 +160,19 @@ class FileAccessController:
         self,
         photo_id: UUID,
         file_type: FileType,
-        expires_in: int = 3600  # 1 hour default
+        expires_in: int = 3600,  # 1 hour default
     ) -> str:
         """Generate a signed temporary URL for file access."""
         timestamp = int(time.time()) + expires_in
         message = f"{photo_id}:{file_type.value}:{timestamp}"
         signature = hmac.new(
-            settings.secret_key.encode(),
-            message.encode(),
-            hashlib.sha256
+            settings.secret_key.encode(), message.encode(), hashlib.sha256
         ).hexdigest()
 
         return f"/api/photos/{photo_id}/file/{file_type.value}?expires={timestamp}&signature={signature}"
 
     def validate_temporary_url(
-        self,
-        photo_id: UUID,
-        file_type: FileType,
-        expires: int,
-        signature: str
+        self, photo_id: UUID, file_type: FileType, expires: int, signature: str
     ) -> bool:
         """Validate a signed temporary URL."""
         # Check expiration
@@ -189,9 +182,7 @@ class FileAccessController:
         # Verify signature
         message = f"{photo_id}:{file_type.value}:{expires}"
         expected_signature = hmac.new(
-            settings.secret_key.encode(),
-            message.encode(),
-            hashlib.sha256
+            settings.secret_key.encode(), message.encode(), hashlib.sha256
         ).hexdigest()
 
         return hmac.compare_digest(signature, expected_signature)

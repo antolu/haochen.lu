@@ -1,17 +1,19 @@
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 
-class AccessLevel(str, Enum):
+class AccessLevel(StrEnum):
     """Photo access levels."""
-    PUBLIC = "public"          # Anyone can access
+
+    PUBLIC = "public"  # Anyone can access
     AUTHENTICATED = "authenticated"  # Requires login
-    PRIVATE = "private"        # Admin only
+    PRIVATE = "private"  # Admin only
 
 
-class FileType(str, Enum):
+class FileType(StrEnum):
     """File type categories."""
+
     ORIGINAL = "original"
     THUMBNAIL = "thumbnail"
     SMALL = "small"
