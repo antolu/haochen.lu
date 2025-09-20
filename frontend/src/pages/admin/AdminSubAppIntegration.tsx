@@ -106,7 +106,7 @@ const AdminSubAppIntegration: React.FC = () => {
     } catch (error) {
       setIntegrationResult({
         success: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
       });
     } finally {
       setIsIntegrating(false);

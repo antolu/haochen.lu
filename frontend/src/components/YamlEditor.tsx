@@ -1,12 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { debounce } from 'lodash';
 
-interface ValidationError {
-  line?: number;
-  column?: number;
-  message: string;
-}
-
 interface ValidationResult {
   valid: boolean;
   errors: string[];
@@ -38,9 +32,10 @@ const YamlEditor: React.FC<YamlEditorProps> = ({
   const debouncedValidate = useCallback(
     debounce(async (yamlContent: string) => {
       if (!yamlContent.trim()) {
-        setValidationResult(null);
+        const emptyResult: ValidationResult = { valid: true, errors: [], warnings: [] };
+        setValidationResult(emptyResult);
         setIsValidating(false);
-        onValidationChange?.(null);
+        onValidationChange?.(emptyResult);
         return;
       }
 
@@ -69,7 +64,9 @@ const YamlEditor: React.FC<YamlEditorProps> = ({
       } catch (error) {
         const errorResult: ValidationResult = {
           valid: false,
-          errors: [`Validation request failed: ${error.message}`],
+          errors: [
+            `Validation request failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          ],
           warnings: [],
         };
         setValidationResult(errorResult);
