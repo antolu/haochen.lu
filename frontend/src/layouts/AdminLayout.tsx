@@ -8,6 +8,7 @@ import {
   RectangleStackIcon,
   DocumentTextIcon,
   ArrowRightOnRectangleIcon,
+  CameraIcon,
 } from '@heroicons/react/24/outline';
 
 import { useAuthStore } from '../stores/authStore';
@@ -31,6 +32,8 @@ const AdminLayout: React.FC = () => {
     { name: 'Photos', href: '/admin/photos', icon: PhotoIcon },
     { name: 'Projects', href: '/admin/projects', icon: FolderIcon },
     { name: 'Blog', href: '/admin/blog', icon: PencilSquareIcon },
+    { name: 'Camera Aliases', href: '/admin/camera-aliases', icon: CameraIcon },
+    { name: 'Lens Aliases', href: '/admin/lens-aliases', icon: CameraIcon },
     { name: 'Content', href: '/admin/content', icon: DocumentTextIcon },
     { name: 'Sub-Apps', href: '/admin/subapps', icon: RectangleStackIcon },
   ];

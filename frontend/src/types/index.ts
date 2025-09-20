@@ -34,7 +34,9 @@ export interface Photo {
   timezone?: string;
   camera_make?: string;
   camera_model?: string;
+  camera_display_name?: string; // Display name from alias or fallback to original
   lens?: string;
+  lens_display_name?: string; // Display name from alias or fallback to original
   iso?: number;
   aperture?: number;
   shutter_speed?: string;

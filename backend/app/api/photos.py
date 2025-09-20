@@ -29,6 +29,7 @@ from app.schemas.photo import (
     PhotoResponse,
     PhotoUpdate,
 )
+from app.services.alias_service import AliasService
 
 router = APIRouter()
 
@@ -88,8 +89,26 @@ async def list_photos(
     )
     pages = math.ceil(total / per_page)
 
+    # Resolve display names for camera and lens aliases
+    alias_service = AliasService(db)
+
+    # Convert photos to response objects with display names
+    photo_responses = []
+    for photo in photos:
+        photo_dict = PhotoResponse.model_validate(photo).model_dump()
+
+        # Add display names
+        photo_dict["camera_display_name"] = await alias_service.get_camera_display_name(
+            getattr(photo, "camera_make", None), getattr(photo, "camera_model", None)
+        )
+        photo_dict["lens_display_name"] = await alias_service.get_lens_display_name(
+            getattr(photo, "lens", None)
+        )
+
+        photo_responses.append(PhotoResponse.model_validate(photo_dict))
+
     return PhotoListResponse(
-        photos=[PhotoResponse.model_validate(photo) for photo in photos],
+        photos=photo_responses,
         total=total,
         page=page,
         per_page=per_page,
@@ -103,7 +122,26 @@ async def list_featured_photos(
 ):
     """Get featured photos."""
     photos = await get_photos(db, limit=limit, featured=True)
-    return [PhotoResponse.model_validate(photo) for photo in photos]
+
+    # Resolve display names for camera and lens aliases
+    alias_service = AliasService(db)
+
+    # Convert photos to response objects with display names
+    photo_responses = []
+    for photo in photos:
+        photo_dict = PhotoResponse.model_validate(photo).model_dump()
+
+        # Add display names
+        photo_dict["camera_display_name"] = await alias_service.get_camera_display_name(
+            getattr(photo, "camera_make", None), getattr(photo, "camera_model", None)
+        )
+        photo_dict["lens_display_name"] = await alias_service.get_lens_display_name(
+            getattr(photo, "lens", None)
+        )
+
+        photo_responses.append(PhotoResponse.model_validate(photo_dict))
+
+    return photo_responses
 
 
 @router.get("/tags", response_model=list[str])
@@ -136,7 +174,19 @@ async def get_photo_detail(
         await increment_view_count(db, photo_id)
         await db.refresh(photo)
 
-    return PhotoResponse.model_validate(photo)
+    # Resolve display names for camera and lens aliases
+    alias_service = AliasService(db)
+    photo_dict = PhotoResponse.model_validate(photo).model_dump()
+
+    # Add display names
+    photo_dict["camera_display_name"] = await alias_service.get_camera_display_name(
+        getattr(photo, "camera_make", None), getattr(photo, "camera_model", None)
+    )
+    photo_dict["lens_display_name"] = await alias_service.get_lens_display_name(
+        getattr(photo, "lens", None)
+    )
+
+    return PhotoResponse.model_validate(photo_dict)
 
 
 @router.post("", response_model=PhotoResponse)

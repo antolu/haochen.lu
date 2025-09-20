@@ -21,6 +21,8 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminPhotos from './pages/admin/AdminPhotos';
 import AdminProjects from './pages/admin/AdminProjects';
 import AdminBlog from './pages/admin/AdminBlog';
+import AdminCameraAliases from './pages/admin/AdminCameraAliases';
+import AdminLensAliases from './pages/admin/AdminLensAliases';
 import AdminSubApps from './pages/admin/AdminSubApps';
 import AdminSubAppIntegration from './pages/admin/AdminSubAppIntegration';
 import AdminContent from './pages/admin/AdminContent';
@@ -67,6 +69,8 @@ function App() {
               <Route path="photos" element={<AdminPhotos />} />
               <Route path="projects" element={<AdminProjects />} />
               <Route path="blog" element={<AdminBlog />} />
+              <Route path="camera-aliases" element={<AdminCameraAliases />} />
+              <Route path="lens-aliases" element={<AdminLensAliases />} />
               <Route path="subapps" element={<AdminSubApps />} />
               <Route path="subapps/integrate" element={<AdminSubAppIntegration />} />
               <Route path="content" element={<AdminContent />} />

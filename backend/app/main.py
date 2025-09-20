@@ -10,7 +10,9 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from app.api import (
     auth,
     blog,
+    camera_aliases,
     content,
+    lens_aliases,
     locations,
     photos,
     projects,
@@ -68,6 +70,10 @@ app.include_router(subapps.router, prefix="/subapps", tags=["subapps"])
 app.include_router(
     subapp_integration.router, prefix="/subapp-integration", tags=["subapp-integration"]
 )
+app.include_router(
+    camera_aliases.router, prefix="/camera-aliases", tags=["camera-aliases"]
+)
+app.include_router(lens_aliases.router, prefix="/lens-aliases", tags=["lens-aliases"])
 app.include_router(content.router)
 app.include_router(locations.router, prefix="", tags=["locations"])
 

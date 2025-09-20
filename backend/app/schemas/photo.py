@@ -153,7 +153,13 @@ class PhotoResponse(PhotoBase):
     timezone: str | None
     camera_make: str | None
     camera_model: str | None
+    camera_display_name: str | None = (
+        None  # Display name from alias or fallback to original
+    )
     lens: str | None
+    lens_display_name: str | None = (
+        None  # Display name from alias or fallback to original
+    )
     iso: int | None
     aperture: float | None
     shutter_speed: str | None

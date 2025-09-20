@@ -70,7 +70,12 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
   const hasLocationData = photo.location_lat && photo.location_lon;
-  const hasCameraData = photo.camera_make || photo.camera_model || photo.lens;
+  const hasCameraData =
+    photo.camera_display_name ||
+    photo.lens_display_name ||
+    photo.camera_make ||
+    photo.camera_model ||
+    photo.lens;
   const hasTechnicalData = photo.aperture || photo.shutter_speed || photo.iso || photo.focal_length;
 
   return (
@@ -220,18 +225,19 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
                   }
                 >
                   <div className="space-y-2 text-sm">
-                    {(photo.camera_make || photo.camera_model) && (
+                    {(photo.camera_display_name || photo.camera_make || photo.camera_model) && (
                       <div>
                         <span className="text-gray-400">Camera:</span>
                         <p className="text-gray-300">
-                          {photo.camera_make} {photo.camera_model}
+                          {photo.camera_display_name ||
+                            `${photo.camera_make || ''} ${photo.camera_model || ''}`.trim()}
                         </p>
                       </div>
                     )}
-                    {photo.lens && (
+                    {(photo.lens_display_name || photo.lens) && (
                       <div>
                         <span className="text-gray-400">Lens:</span>
-                        <p className="text-gray-300">{photo.lens}</p>
+                        <p className="text-gray-300">{photo.lens_display_name || photo.lens}</p>
                       </div>
                     )}
                   </div>
