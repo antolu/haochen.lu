@@ -8,8 +8,10 @@ import 'lightgallery/css/lightgallery.css';
 import 'lightgallery/css/lg-zoom.css';
 import 'lightgallery/css/lg-thumbnail.css';
 import 'lightgallery/css/lg-fullscreen.css';
+import '../styles/lightgallery-captions.css';
 
 import PhotoSwipeMetadataSidebar from './PhotoSwipeMetadataSidebar';
+import { generateCaptionHtml, generateMobileCaptionHtml } from '../utils/captionUtils';
 import type { Photo } from '../types';
 
 interface PhotoLightboxProps {
@@ -37,6 +39,14 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   const injectRetryTimer = useRef<number | null>(null);
 
   const currentPhoto = photos[currentIndex];
+
+  // Helper to detect if we're on mobile
+  const isMobile = () => window.innerWidth <= 768;
+
+  // Helper to generate caption HTML based on screen size
+  const getCaptionHtml = (photo: Photo) => {
+    return isMobile() ? generateMobileCaptionHtml(photo) : generateCaptionHtml(photo);
+  };
 
   // Helper to inject the Info button into the global LG toolbar
   const injectToolbarButton = () => {
@@ -90,7 +100,7 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
     const dynamicElements = photos.map(photo => ({
       src: photo.variants?.xlarge?.path || photo.variants?.large?.path || photo.original_path,
       thumb: photo.variants?.thumbnail?.path || photo.variants?.small?.path || photo.original_path,
-      subHtml: `<h4>${photo.title || 'Untitled'}</h4>`,
+      subHtml: getCaptionHtml(photo),
     }));
 
     const lgOptions: any = {
@@ -112,6 +122,9 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
       closable: true,
       closeOnTap: false,
       escKey: true,
+      // Caption settings for better mobile experience
+      allowMediaOverlap: false, // Show captions below image on mobile
+      slideDelay: 400, // Delay for caption animations
     };
     galleryRef.current = (lightGallery as any)(
       containerRef.current as unknown as HTMLElement,
@@ -150,7 +163,7 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
         src: photo.variants?.xlarge?.path || photo.variants?.large?.path || photo.original_path,
         thumb:
           photo.variants?.thumbnail?.path || photo.variants?.small?.path || photo.original_path,
-        subHtml: `<h4>${photo.title || 'Untitled'}</h4>`,
+        subHtml: getCaptionHtml(photo),
       }));
 
       try {

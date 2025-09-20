@@ -1,0 +1,159 @@
+/* LightGallery Custom Caption Styles */
+
+/* Caption container */
+.lg-caption-container {
+  max-width: 100%;
+  padding: 16px;
+  background: linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0.6) 70%,
+    transparent 100%
+  );
+  color: white;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+}
+
+/* Title styling */
+.lg-caption-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: white;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* Description styling */
+.lg-caption-description {
+  font-size: 0.95rem;
+  margin: 0 0 12px 0;
+  color: rgba(255, 255, 255, 0.95);
+  line-height: 1.4;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Metadata section */
+.lg-caption-metadata {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 8px 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.lg-caption-metadata span {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  font-size: 0.8rem;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Comments section */
+.lg-caption-comments {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.lg-caption-comments p {
+  font-size: 0.9rem;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-style: italic;
+}
+
+/* Mobile-specific styles */
+.lg-caption-container--mobile {
+  padding: 12px;
+}
+
+.lg-caption-container--mobile .lg-caption-title {
+  font-size: 1.1rem;
+  margin-bottom: 4px;
+}
+
+.lg-caption-description--mobile {
+  font-size: 0.85rem;
+  margin-bottom: 0;
+}
+
+/* Responsive breakpoints */
+@media (max-width: 768px) {
+  .lg-caption-container {
+    padding: 12px;
+  }
+
+  .lg-caption-title {
+    font-size: 1.1rem;
+  }
+
+  .lg-caption-description {
+    font-size: 0.85rem;
+  }
+
+  .lg-caption-metadata {
+    gap: 8px;
+    font-size: 0.75rem;
+  }
+
+  .lg-caption-metadata span {
+    padding: 3px 6px;
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .lg-caption-metadata {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .lg-caption-metadata span {
+    align-self: flex-start;
+  }
+}
+
+/* LightGallery specific overrides */
+.lg-outer .lg-sub-html {
+  padding: 0;
+  background: transparent;
+}
+
+/* Ensure captions are positioned correctly */
+.lg-outer .lg-item .lg-sub-html {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1080;
+}
+
+/* Animation for caption appearance */
+.lg-outer .lg-sub-html {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+
+.lg-outer .lg-current .lg-sub-html {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Hide captions on very small screens if needed */
+@media (max-height: 480px) and (max-width: 768px) {
+  .lg-caption-description,
+  .lg-caption-metadata,
+  .lg-caption-comments {
+    display: none;
+  }
+}

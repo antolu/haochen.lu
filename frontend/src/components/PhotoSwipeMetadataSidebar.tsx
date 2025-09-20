@@ -141,7 +141,7 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
             <div className="divide-y divide-gray-700">
               {/* Basic Info - Always show this section */}
               <CollapsibleSection
-                title="Information"
+                title="File Details"
                 defaultOpen={true}
                 icon={
                   <svg
@@ -154,26 +154,12 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                     />
                   </svg>
                 }
               >
                 <div className="space-y-3 text-sm">
-                  <div>
-                    <h3 className="text-white font-medium mb-1">{photo.title || 'Untitled'}</h3>
-                    {photo.description && photo.description.trim() && (
-                      <p className="text-gray-300 leading-relaxed">{photo.description}</p>
-                    )}
-                  </div>
-
-                  {photo.date_taken && (
-                    <div>
-                      <span className="text-gray-400">Date taken:</span>
-                      <p className="text-gray-300">{formatDate(photo.date_taken)}</p>
-                    </div>
-                  )}
-
                   <div>
                     <span className="text-gray-400">Dimensions:</span>
                     <p className="text-gray-300">
@@ -200,7 +186,7 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
               {/* Camera Information */}
               {hasCameraData && (
                 <CollapsibleSection
-                  title="Camera"
+                  title="Equipment"
                   defaultOpen={true}
                   icon={
                     <svg
@@ -240,6 +226,12 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
                         <p className="text-gray-300">{photo.lens_display_name || photo.lens}</p>
                       </div>
                     )}
+                    {photo.date_taken && (
+                      <div>
+                        <span className="text-gray-400">Date taken:</span>
+                        <p className="text-gray-300">{formatDate(photo.date_taken)}</p>
+                      </div>
+                    )}
                   </div>
                 </CollapsibleSection>
               )}
@@ -247,7 +239,7 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
               {/* Technical Settings */}
               {hasTechnicalData && (
                 <CollapsibleSection
-                  title="Settings"
+                  title="Technical Settings"
                   defaultOpen={true}
                   icon={
                     <svg
