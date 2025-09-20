@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo } from 'react';
 import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import MarkerClusterGroup from 'react-leaflet-cluster';
 import type { Photo } from '../types';
 import { formatDateSimple } from '../utils/dateFormat';
 import { getTileConfig } from '../utils/mapUtils';
+import './PhotoMap.css';
 
 // Custom photo marker icon
 const createPhotoMarker = (photoUrl: string) => {
@@ -19,6 +21,46 @@ const createPhotoMarker = (photoUrl: string) => {
   });
 };
 
+// Custom cluster icon for grouped photos with thumbnail preview
+const createClusterIcon = (cluster: any) => {
+  const count = cluster.getChildCount();
+  const size = count < 10 ? 'small' : count < 100 ? 'medium' : 'large';
+
+  // Get first few photos for preview
+  const childMarkers = cluster.getAllChildMarkers();
+  const previewPhotos = childMarkers.slice(0, 4).map((marker: any) => {
+    const photo = marker.options.photo;
+    return photo.variants?.thumbnail?.path || photo.original_path;
+  });
+
+  // Create thumbnail grid for clusters with 4+ photos
+  const thumbnailGrid =
+    count >= 4
+      ? `
+    <div class="cluster-thumbnails">
+      ${previewPhotos.map(url => `<img src="${url}" class="cluster-thumb" />`).join('')}
+    </div>
+  `
+      : '';
+
+  return L.divIcon({
+    html: `
+      <div class="cluster-marker cluster-marker-${size}">
+        ${thumbnailGrid}
+        <div class="cluster-count">
+          <span>${count}</span>
+        </div>
+      </div>
+    `,
+    className: 'photo-cluster-marker',
+    iconSize: L.point(
+      count < 10 ? 40 : count < 100 ? 50 : 60,
+      count < 10 ? 40 : count < 100 ? 50 : 60,
+      true
+    ),
+  });
+};
+
 interface PhotoMapProps {
   photos: Photo[];
   onPhotoClick?: (photo: Photo) => void;
@@ -26,6 +68,71 @@ interface PhotoMapProps {
   zoom?: number;
   className?: string;
 }
+
+// Component to handle cluster events
+const ClusterEvents: React.FC<{ onPhotoClick?: (photo: Photo) => void }> = ({ onPhotoClick }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    map.on('cluster:click', (event: any) => {
+      const cluster = event.layer;
+      const childMarkers = cluster.getAllChildMarkers();
+
+      // Create popup content with all photos in cluster
+      const photos = childMarkers.map((marker: any) => marker.options.photo);
+
+      const popupContent = document.createElement('div');
+      popupContent.className = 'cluster-popup';
+      popupContent.innerHTML = `
+        <div class="cluster-popup-header">
+          <h3 class="font-semibold text-sm mb-2">${photos.length} photos at this location</h3>
+        </div>
+        <div class="cluster-popup-grid">
+          ${photos
+            .map((photo: Photo) => {
+              const thumbnailUrl = photo.variants?.thumbnail?.path || photo.original_path;
+              return `
+              <div class="cluster-popup-item" data-photo-id="${photo.id}">
+                <img src="${thumbnailUrl}" alt="${photo.title || 'Photo'}" class="cluster-popup-thumb" />
+                <div class="cluster-popup-info">
+                  <p class="font-medium text-xs truncate">${photo.title || 'Untitled'}</p>
+                  ${photo.date_taken ? `<p class="text-xs text-gray-500">${new Date(photo.date_taken).toLocaleDateString()}</p>` : ''}
+                </div>
+              </div>
+            `;
+            })
+            .join('')}
+        </div>
+      `;
+
+      // Add click handlers for individual photos
+      popupContent.querySelectorAll('.cluster-popup-item').forEach((item: any) => {
+        item.addEventListener('click', () => {
+          const photoId = item.dataset.photoId;
+          const photo = photos.find((p: Photo) => p.id === photoId);
+          if (photo && onPhotoClick) {
+            onPhotoClick(photo);
+          }
+        });
+      });
+
+      // Show popup at cluster location
+      const popup = L.popup({
+        maxWidth: 300,
+        className: 'cluster-popup-container',
+      })
+        .setLatLng(cluster.getLatLng())
+        .setContent(popupContent)
+        .openOn(map);
+    });
+
+    return () => {
+      map.off('cluster:click');
+    };
+  }, [map, onPhotoClick]);
+
+  return null;
+};
 
 // Component to fit map bounds to photos
 const MapBounds: React.FC<{ photos: Photo[] }> = ({ photos }) => {
@@ -130,48 +237,61 @@ const PhotoMap: React.FC<PhotoMapProps> = ({
         />
 
         <MapBounds photos={photosWithLocation} />
+        <ClusterEvents onPhotoClick={onPhotoClick} />
 
-        {photosWithLocation.map(photo => {
-          // Get thumbnail URL - using variants system or fallback
-          const thumbnailUrl = photo.variants?.thumbnail?.path || photo.original_path;
+        <MarkerClusterGroup
+          chunkedLoading
+          iconCreateFunction={createClusterIcon}
+          maxClusterRadius={50}
+          spiderfyOnMaxZoom={true}
+          showCoverageOnHover={false}
+          zoomToBoundsOnClick={true}
+        >
+          {photosWithLocation.map(photo => {
+            // Get thumbnail URL - using variants system or fallback
+            const thumbnailUrl = photo.variants?.thumbnail?.path || photo.original_path;
 
-          return (
-            <Marker
-              key={photo.id}
-              position={[photo.location_lat!, photo.location_lon!]}
-              icon={createPhotoMarker(thumbnailUrl)}
-              eventHandlers={{
-                click: () => onPhotoClick?.(photo),
-              }}
-            >
-              <Popup>
-                <div className="min-w-0 max-w-xs">
-                  <div className="aspect-video mb-2 rounded overflow-hidden">
-                    <img
-                      src={thumbnailUrl}
-                      alt={photo.title || 'Photo'}
-                      className="w-full h-full object-cover"
-                    />
+            return (
+              <Marker
+                key={photo.id}
+                position={[photo.location_lat!, photo.location_lon!]}
+                icon={createPhotoMarker(thumbnailUrl)}
+                photo={photo}
+                eventHandlers={{
+                  click: () => onPhotoClick?.(photo),
+                }}
+              >
+                <Popup>
+                  <div className="min-w-0 max-w-xs">
+                    <div className="aspect-video mb-2 rounded overflow-hidden">
+                      <img
+                        src={thumbnailUrl}
+                        alt={photo.title || 'Photo'}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <h3 className="font-semibold text-sm mb-1 truncate">
+                      {photo.title || 'Untitled'}
+                    </h3>
+                    {photo.location_name && (
+                      <p className="text-xs text-gray-600 mb-1">📍 {photo.location_name}</p>
+                    )}
+                    {photo.date_taken && (
+                      <p className="text-xs text-gray-500">
+                        📅 {formatDateSimple(photo.date_taken)}
+                      </p>
+                    )}
+                    {(photo.camera_make || photo.camera_model) && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        📷 {photo.camera_make} {photo.camera_model}
+                      </p>
+                    )}
                   </div>
-                  <h3 className="font-semibold text-sm mb-1 truncate">
-                    {photo.title || 'Untitled'}
-                  </h3>
-                  {photo.location_name && (
-                    <p className="text-xs text-gray-600 mb-1">📍 {photo.location_name}</p>
-                  )}
-                  {photo.date_taken && (
-                    <p className="text-xs text-gray-500">📅 {formatDateSimple(photo.date_taken)}</p>
-                  )}
-                  {(photo.camera_make || photo.camera_model) && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      📷 {photo.camera_make} {photo.camera_model}
-                    </p>
-                  )}
-                </div>
-              </Popup>
-            </Marker>
-          );
-        })}
+                </Popup>
+              </Marker>
+            );
+          })}
+        </MarkerClusterGroup>
       </MapContainer>
 
       <div className="mt-2 text-sm text-gray-500">

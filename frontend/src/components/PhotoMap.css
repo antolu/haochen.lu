@@ -1,0 +1,200 @@
+/* Photo Map clustering styles */
+.photo-cluster-marker {
+  background: transparent;
+  border: none;
+}
+
+.cluster-marker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.cluster-marker:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.cluster-marker-small {
+  width: 30px;
+  height: 30px;
+  font-size: 12px;
+}
+
+.cluster-marker-medium {
+  width: 40px;
+  height: 40px;
+  font-size: 14px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.cluster-marker-large {
+  width: 60px;
+  height: 60px;
+  font-size: 16px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+/* Cluster thumbnail grid */
+.cluster-thumbnails {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.cluster-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.7;
+}
+
+/* Count overlay */
+.cluster-count {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  z-index: 10;
+}
+
+.cluster-marker-small .cluster-count {
+  width: 16px;
+  height: 16px;
+  font-size: 10px;
+}
+
+.cluster-marker-large .cluster-count {
+  width: 24px;
+  height: 24px;
+  font-size: 14px;
+}
+
+/* Custom photo marker styles */
+.custom-photo-marker {
+  background: transparent;
+  border: none;
+}
+
+.custom-photo-marker div {
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.custom-photo-marker:hover div {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Fix for Leaflet marker cluster animation */
+.marker-cluster-small {
+  background-color: rgba(181, 226, 140, 0.6);
+}
+
+.marker-cluster-small div {
+  background-color: rgba(110, 204, 57, 0.6);
+}
+
+.marker-cluster-medium {
+  background-color: rgba(241, 211, 87, 0.6);
+}
+
+.marker-cluster-medium div {
+  background-color: rgba(240, 194, 12, 0.6);
+}
+
+.marker-cluster-large {
+  background-color: rgba(253, 156, 115, 0.6);
+}
+
+.marker-cluster-large div {
+  background-color: rgba(241, 128, 23, 0.6);
+}
+
+/* Cluster popup styles */
+.cluster-popup-container .leaflet-popup-content-wrapper {
+  border-radius: 8px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.cluster-popup {
+  padding: 8px;
+}
+
+.cluster-popup-header {
+  border-bottom: 1px solid #e5e5e5;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+
+.cluster-popup-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.cluster-popup-item {
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.cluster-popup-item:hover {
+  background-color: #f3f4f6;
+}
+
+.cluster-popup-thumb {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.cluster-popup-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.cluster-popup-info p {
+  margin: 0;
+}
+
+/* Single column for clusters with few photos */
+.cluster-popup-grid:has(.cluster-popup-item:nth-child(-n + 2)) {
+  grid-template-columns: 1fr;
+}
