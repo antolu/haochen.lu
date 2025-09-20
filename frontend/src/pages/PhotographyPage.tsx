@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Link, useLocation } from 'react-router-dom';
@@ -6,6 +6,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { photos } from '../api/client';
 import PhotoGrid from '../components/PhotoGrid';
 import PhotoLightbox from '../components/PhotoLightbox';
+import PhotoMap from '../components/PhotoMap';
 import type { Photo, PhotoListResponse } from '../types';
 
 const PhotographyPage: React.FC = () => {
@@ -15,6 +16,8 @@ const PhotographyPage: React.FC = () => {
   const [isPhotoSwipeOpen, setIsPhotoSwipeOpen] = useState(false);
   const [isLGOpening, setIsLGOpening] = useState(false);
   const [photoSwipeIndex, setPhotoSwipeIndex] = useState(0);
+  const [highlightedPhotoId, setHighlightedPhotoId] = useState<string | null>(null);
+  const photoGridRef = useRef<HTMLDivElement>(null);
   const photosPerPage = 24;
   const location = useLocation() as { state?: { photoId?: string } };
 
@@ -61,6 +64,47 @@ const PhotographyPage: React.FC = () => {
     setPhotoSwipeIndex(index);
     setIsLGOpening(true);
     setIsPhotoSwipeOpen(true);
+  };
+
+  const handleMapPhotoClick = (photo: Photo) => {
+    const index = allPhotos.findIndex(p => p.id === photo.id);
+    if (index >= 0) {
+      // Highlight the photo in the grid
+      setHighlightedPhotoId(photo.id);
+
+      // Scroll to the photo in the grid
+      if (photoGridRef.current) {
+        // Calculate approximate position in grid
+        const columns =
+          window.innerWidth < 640
+            ? 1
+            : window.innerWidth < 1024
+              ? 2
+              : window.innerWidth < 1280
+                ? 3
+                : window.innerWidth < 1536
+                  ? 4
+                  : 5;
+        const rowIndex = Math.floor(index / columns);
+        const itemHeight = 300 + 8 + 32; // item height + gap + padding
+        const scrollTop = rowIndex * itemHeight;
+
+        photoGridRef.current.scrollTo({
+          top: scrollTop,
+          behavior: 'smooth',
+        });
+      }
+
+      // Clear highlight after a delay
+      setTimeout(() => {
+        setHighlightedPhotoId(null);
+      }, 3000);
+
+      // Also open lightbox
+      setPhotoSwipeIndex(index);
+      setIsLGOpening(true);
+      setIsPhotoSwipeOpen(true);
+    }
   };
 
   const handlePhotoSwipeClose = () => {
@@ -134,6 +178,8 @@ const PhotographyPage: React.FC = () => {
             onPhotoClick={handlePhotoClick}
             showMetadata={true}
             className="min-h-[600px]"
+            ref={photoGridRef}
+            highlightedPhotoId={highlightedPhotoId}
           />
         </motion.div>
 
@@ -200,6 +246,32 @@ const PhotographyPage: React.FC = () => {
             className="text-center mt-8 text-gray-500 text-sm"
           >
             Showing {allPhotos.length} of {photoData.total} photos
+          </motion.div>
+        )}
+
+        {/* Photo Map */}
+        {allPhotos.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.8 }}
+            className="mt-16"
+          >
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-serif font-bold text-gray-900 mb-4">
+                Explore by Location
+              </h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Discover where these photos were captured. Click on markers to view photos from that
+                location.
+              </p>
+            </div>
+            <PhotoMap
+              photos={allPhotos}
+              onPhotoClick={handleMapPhotoClick}
+              height={500}
+              className="rounded-lg shadow-lg"
+            />
           </motion.div>
         )}
       </div>
