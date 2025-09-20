@@ -5,7 +5,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
-from sqlalchemy import select
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.image_processor import image_processor
@@ -25,6 +25,8 @@ from app.models.photo import Photo as PhotoModel
 from app.schemas.photo import (
     PhotoCreate,
     PhotoListResponse,
+    PhotoLocationResponse,
+    PhotoLocationsResponse,
     PhotoReorderRequest,
     PhotoResponse,
     PhotoUpdate,
@@ -157,6 +159,50 @@ async def list_distinct_tags(db: AsyncSession = Depends(get_session)):
             if cleaned:
                 tags_set.add(cleaned)
     return sorted(tags_set, key=lambda x: x.lower())
+
+
+@router.get("/locations", response_model=PhotoLocationsResponse)
+async def get_photo_locations(
+    db: AsyncSession = Depends(get_session),
+):
+    """Get all photos with valid location data for map display."""
+    # Query photos with valid coordinates
+    result = await db.execute(
+        select(PhotoModel)
+        .where(
+            and_(
+                PhotoModel.location_lat.is_not(None),
+                PhotoModel.location_lon.is_not(None),
+            )
+        )
+        .order_by(PhotoModel.created_at.desc())
+    )
+    photos = result.scalars().all()
+
+    # Convert to location response format
+    locations = []
+    for photo in photos:
+        # Get thumbnail URL from variants or fallback to original
+        thumbnail_url = None
+        if photo.variants and isinstance(photo.variants, dict):
+            if "thumbnail" in photo.variants:
+                thumbnail_url = photo.variants["thumbnail"].get("path")
+            elif "small" in photo.variants:
+                thumbnail_url = photo.variants["small"].get("path")
+
+        if not thumbnail_url:
+            thumbnail_url = photo.original_path
+
+        location = PhotoLocationResponse(
+            id=str(photo.id),
+            title=str(photo.title),
+            location_lat=float(photo.location_lat),
+            location_lon=float(photo.location_lon),
+            thumbnail_url=str(thumbnail_url) if thumbnail_url else None,
+        )
+        locations.append(location)
+
+    return PhotoLocationsResponse(locations=locations, total=len(locations))
 
 
 @router.get("/{photo_id}", response_model=PhotoResponse)

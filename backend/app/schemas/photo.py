@@ -205,3 +205,25 @@ class PhotoReorderItem(BaseModel):
 class PhotoReorderRequest(BaseModel):
     items: list[PhotoReorderItem]
     normalize: bool = False
+
+
+class PhotoLocationResponse(BaseModel):
+    """Minimal photo data for map display"""
+
+    id: str | UUID
+    title: str
+    location_lat: float
+    location_lon: float
+    thumbnail_url: str | None = None
+
+    @field_validator("id", mode="before")
+    @classmethod
+    def convert_uuid_to_string(cls, v: UUID | str) -> str:
+        return str(v) if isinstance(v, UUID) else v
+
+
+class PhotoLocationsResponse(BaseModel):
+    """Response for photo locations endpoint"""
+
+    locations: list[PhotoLocationResponse]
+    total: int
