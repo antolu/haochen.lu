@@ -547,19 +547,27 @@ const HomePage: React.FC = () => {
                     </div>
                   )}
 
-                  {(selectedPhoto.camera_make ||
+                  {(selectedPhoto.camera_display_name ||
+                    selectedPhoto.camera_make ||
                     selectedPhoto.camera_model ||
+                    selectedPhoto.lens_display_name ||
                     selectedPhoto.lens) && (
                     <div>
                       <div className="text-gray-500">Equipment</div>
                       <div className="text-gray-800">
-                        {(selectedPhoto.camera_make || selectedPhoto.camera_model) && (
+                        {(selectedPhoto.camera_display_name ||
+                          selectedPhoto.camera_make ||
+                          selectedPhoto.camera_model) && (
                           <div>
-                            Camera: {selectedPhoto.camera_make} {selectedPhoto.camera_model}
+                            Camera:{' '}
+                            {selectedPhoto.camera_display_name ||
+                              `${selectedPhoto.camera_make || ''} ${selectedPhoto.camera_model || ''}`.trim()}
                           </div>
                         )}
-                        {selectedPhoto.lens && (
-                          <div className="mt-2">Lens: {selectedPhoto.lens}</div>
+                        {(selectedPhoto.lens_display_name || selectedPhoto.lens) && (
+                          <div className="mt-2">
+                            Lens: {selectedPhoto.lens_display_name || selectedPhoto.lens}
+                          </div>
                         )}
                       </div>
                     </div>
