@@ -36,7 +36,7 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const infoBtnRef = useRef<HTMLButtonElement | null>(null);
-  const injectRetryTimer = useRef<number | null>(null);
+  const downloadBtnRef = useRef<HTMLButtonElement | null>(null);
 
   const currentPhoto = photos[currentIndex];
 
@@ -48,50 +48,76 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
     return isMobile() ? generateMobileCaptionHtml(photo) : generateCaptionHtml(photo);
   };
 
-  // Helper to inject the Info button into the global LG toolbar
-  const injectToolbarButton = () => {
-    const toolbar = document.querySelector('.lg-toolbar') as HTMLDivElement | null;
-    if (!toolbar) return false;
-    if (toolbar.querySelector('.lg-custom-info')) return true; // already exists
+  // Helper to handle photo download
+  const handleDownload = async (photo: Photo, variant?: string) => {
+    try {
+      const endpoint = variant
+        ? `/api/photos/${photo.id}/download/${variant}`
+        : `/api/photos/${photo.id}/download`;
 
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'lg-icon lg-custom-info';
-    btn.setAttribute('aria-label', 'Show info');
-    btn.title = 'Info';
-    btn.innerHTML = '<span style="font-weight:600;font-family:system-ui">i</span>';
-    btn.onclick = ev => {
+      const token = localStorage.getItem('token');
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      const response = await fetch(endpoint, { headers });
+      if (!response.ok) {
+        throw new Error(`Download failed: ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = variant ? `${photo.title}_${variant}.webp` : `${photo.title}_original.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download failed:', error);
+    }
+  };
+
+  // Helper to inject toolbar buttons using LightGallery event system
+  const injectToolbarButtons = (lgInstance: any) => {
+    const toolbar = lgInstance.outer.find('.lg-toolbar');
+    if (!toolbar || !toolbar[0]) return;
+
+    // Clear any existing custom buttons
+    toolbar.find('.lg-custom-info, .lg-custom-download').remove();
+
+    // Create Info button
+    const infoBtn = document.createElement('button');
+    infoBtn.type = 'button';
+    infoBtn.className = 'lg-icon lg-custom-info';
+    infoBtn.setAttribute('aria-label', 'Show info');
+    infoBtn.title = 'Info';
+    infoBtn.innerHTML = '<span style="font-weight:600;font-family:system-ui">i</span>';
+    infoBtn.onclick = ev => {
       ev.preventDefault();
       setSidebarOpen(prev => !prev);
     };
 
-    // Insert as the first child so it sits at the far left
-    if (toolbar.firstChild) {
-      toolbar.insertBefore(btn, toolbar.firstChild);
-    } else {
-      toolbar.appendChild(btn);
-    }
-
-    infoBtnRef.current = btn as HTMLButtonElement;
-    return true;
-  };
-
-  // Try to inject the toolbar button with a short retry loop to account for LG DOM render timing
-  const scheduleToolbarInjection = () => {
-    let attempts = 0;
-    const tryInject = () => {
-      if (injectToolbarButton()) {
-        injectRetryTimer.current = null;
-        return;
-      }
-      attempts += 1;
-      if (attempts < 10) {
-        injectRetryTimer.current = window.setTimeout(tryInject, 50) as unknown as number;
-      } else {
-        injectRetryTimer.current = null;
-      }
+    // Create Download button
+    const downloadBtn = document.createElement('button');
+    downloadBtn.type = 'button';
+    downloadBtn.className = 'lg-icon lg-custom-download';
+    downloadBtn.setAttribute('aria-label', 'Download photo');
+    downloadBtn.title = 'Download';
+    downloadBtn.innerHTML = '<span style="font-weight:600;font-family:system-ui">↓</span>';
+    downloadBtn.onclick = ev => {
+      ev.preventDefault();
+      handleDownload(currentPhoto);
     };
-    tryInject();
+
+    // Insert buttons at the beginning of the toolbar
+    toolbar[0].insertBefore(downloadBtn, toolbar[0].firstChild);
+    toolbar[0].insertBefore(infoBtn, toolbar[0].firstChild);
+
+    infoBtnRef.current = infoBtn;
+    downloadBtnRef.current = downloadBtn;
   };
 
   useEffect(() => {
@@ -131,6 +157,11 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
       lgOptions as any
     );
 
+    const onInit = (e: any) => {
+      const lgInstance = e.detail.instance;
+      injectToolbarButtons(lgInstance);
+    };
+
     const onBeforeSlide = (e: any) => setCurrentIndex(e.detail.index);
     const onAfterSlide = (e: any) => setCurrentIndex(e.detail.index);
     const onAfterClose = () => {
@@ -138,20 +169,22 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
       onClose();
     };
 
+    containerRef.current.addEventListener('lgInit', onInit as any);
     containerRef.current.addEventListener('lgBeforeSlide', onBeforeSlide as any);
     containerRef.current.addEventListener('lgAfterSlide', onAfterSlide as any);
     containerRef.current.addEventListener('lgAfterClose', onAfterClose as any);
 
     return () => {
       if (!containerRef.current) return;
+      containerRef.current.removeEventListener('lgInit', onInit as any);
       containerRef.current.removeEventListener('lgBeforeSlide', onBeforeSlide as any);
       containerRef.current.removeEventListener('lgAfterSlide', onAfterSlide as any);
       containerRef.current.removeEventListener('lgAfterClose', onAfterClose as any);
-      if (injectRetryTimer.current) window.clearTimeout(injectRetryTimer.current);
       if (galleryRef.current) {
         galleryRef.current.destroy();
       }
       infoBtnRef.current = null;
+      downloadBtnRef.current = null;
     };
   }, []);
 
@@ -183,8 +216,6 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
         setCurrentIndex(safeIndex);
         if (typeof galleryRef.current.openGallery === 'function') {
           galleryRef.current.openGallery(safeIndex);
-          // Inject toolbar button shortly after opening
-          scheduleToolbarInjection();
           if (defaultShowInfo) {
             setSidebarOpen(true);
           }
@@ -194,13 +225,13 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
     }
   }, [isOpen, initialIndex, photos, onOpened, defaultShowInfo]);
 
-  // Sync aria-pressed and label on the toolbar button
+  // Sync aria-pressed and label on the info toolbar button
   useEffect(() => {
-    const btn = infoBtnRef.current;
-    if (btn) {
-      btn.setAttribute('aria-pressed', sidebarOpen ? 'true' : 'false');
-      btn.setAttribute('aria-label', sidebarOpen ? 'Hide info' : 'Show info');
-      btn.classList.toggle('lg-custom-info--active', !!sidebarOpen);
+    const infoBtn = infoBtnRef.current;
+    if (infoBtn) {
+      infoBtn.setAttribute('aria-pressed', sidebarOpen ? 'true' : 'false');
+      infoBtn.setAttribute('aria-label', sidebarOpen ? 'Hide info' : 'Show info');
+      infoBtn.classList.toggle('lg-custom-info--active', !!sidebarOpen);
     }
   }, [sidebarOpen]);
 

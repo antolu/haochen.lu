@@ -157,3 +157,61 @@
     display: none;
   }
 }
+
+/* Custom toolbar button styles */
+.lg-custom-info,
+.lg-custom-download {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+
+.lg-custom-info:hover,
+.lg-custom-download:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.lg-custom-info:active,
+.lg-custom-download:active {
+  transform: translateY(0);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.lg-custom-info--active {
+  background: rgba(59, 130, 246, 0.3);
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.lg-custom-info span,
+.lg-custom-download span {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* Mobile adjustments for custom buttons */
+@media (max-width: 768px) {
+  .lg-custom-info,
+  .lg-custom-download {
+    width: 36px;
+    height: 36px;
+    margin-right: 6px;
+  }
+
+  .lg-custom-info span,
+  .lg-custom-download span {
+    font-size: 14px;
+  }
+}
