@@ -1,390 +1,293 @@
-# Modern Portfolio & Blog
+# Modern Portfolio & Photography Platform
 
-A comprehensive full-stack web application built with FastAPI (Python) backend and React (TypeScript) frontend, featuring portfolio management, blog system, project showcase, and authenticated sub-applications access.
+A comprehensive full-stack web application built with **FastAPI (Python) backend** and **React (TypeScript) frontend**, featuring advanced photo management with interactive location mapping, blog system, project showcase, and authenticated sub-applications access.
 
-## 🌟 Features
+## 🌟 Key Features
 
-### Core Functionality
-- **Advanced Photo Management**: Upload with automatic EXIF extraction, GPS data, and image optimization
-- **Blog System**: Full markdown blog with draft/publish workflow
-- **Project Portfolio**: Showcase with live demos and GitHub integration
+### Photography System
+- **Interactive Photo Map**: Location-based clustering with zoom-responsive separation
+- **Advanced Photo Management**: Upload with automatic EXIF extraction and GPS data processing
+- **Responsive Image Processing**: 5-tier WebP optimization (thumbnail to print quality)
+- **Gallery Experience**: Virtualized infinite scroll with lightbox integration
+- **Location Services**: OpenStreetMap integration with geocoding and search
+
+### Content Management
+- **Project Portfolio**: GitHub/GitLab integration with automatic README fetching
+- **Blog System**: Full markdown blog with draft/publish workflow and syntax highlighting
 - **Sub-Applications**: Authenticated access to internal tools and external services
-- **Admin Dashboard**: Comprehensive content management system
+- **Admin Dashboard**: Comprehensive content management with location editing
 
-### Technical Features
-- **Modern Stack**: FastAPI + React + TypeScript + PostgreSQL + Redis
-- **Image Processing**: WebP conversion, compression, thumbnails, auto-rotation
-- **Authentication**: JWT-based with role-based access control
-- **Real-time Updates**: React Query for optimistic UI updates
-- **Responsive Design**: Mobile-first with Tailwind CSS
-- **Docker Ready**: Complete containerization with health checks
+### Technical Excellence
+- **Modern Stack**: FastAPI + React 18 + TypeScript + PostgreSQL + Redis
+- **Real-time Updates**: TanStack Query with optimistic UI updates
+- **Location Clustering**: Interactive map with thumbnail previews and cluster navigation
+- **Security First**: JWT authentication with enforced environment variable validation
+- **Docker Ready**: Complete containerization with health checks and development tools
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 - Docker and Docker Compose
-- Node.js 18+ (for local development)
-- Python 3.11+ (for local development)
 - Git
 
-### Docker Deployment (Recommended)
-
-1. **Clone and setup**
-   ```bash
-   git clone <your-repo-url>
-   cd portfolio-app
-   
-   # Create .env file with required security variables
-   cat > .env << 'EOF'
-   SECRET_KEY=your_64_character_secret_key_minimum_32_chars
-   SESSION_SECRET_KEY=your_session_secret_key_minimum_32_chars
-   ADMIN_PASSWORD=your_secure_admin_password
-   POSTGRES_PASSWORD=your_secure_db_password
-   EOF
-   
-   # Generate secure keys (recommended)
-   python -c "import secrets; print('SECRET_KEY=' + secrets.token_urlsafe(32))"
-   python -c "import secrets; print('SESSION_SECRET_KEY=' + secrets.token_urlsafe(32))"
-   ```
-
-2. **Deploy with Docker**
-   ```bash
-   docker-compose up -d
-   ```
-
-3. **Run migrations**
-   ```bash
-   docker-compose run --rm migrate
-   ```
-
-4. **Access the application**
-   - Website: http://localhost
-   - Admin: http://localhost/admin (login with admin/your-password)
-   - API Docs: http://localhost/api/docs
-
-### Local Development
-
-#### Backend Setup
+### 1. Clone and Setup
 ```bash
-cd backend
-pip install -r requirements.txt
-# Set up PostgreSQL and Redis locally
-alembic upgrade head
-uvicorn app.main:app --reload
+git clone <your-repo-url>
+cd portfolio-app
+
+# Generate secure environment variables
+python -c "import secrets; print(f'SECRET_KEY={secrets.token_urlsafe(32)}')" >> .env
+python -c "import secrets; print(f'SESSION_SECRET_KEY={secrets.token_urlsafe(32)}')" >> .env
+echo "ADMIN_PASSWORD=your_secure_password" >> .env
 ```
 
-#### Frontend Setup
+### 2. Deploy with Development Script (Recommended)
 ```bash
-cd frontend
-npm install
-npm run dev
+# Start development environment with live reload
+./dev.sh start
+
+# View logs
+./dev.sh logs
+
+# Stop environment
+./dev.sh stop
 ```
+
+### 3. Access the Application
+- **Website**: http://localhost
+- **Admin**: http://localhost/admin (login with admin/your_password)
+- **API Docs**: http://localhost/api/docs
+- **Photography Map**: http://localhost/photography (with clustering demo data)
+
+## 🗺️ Interactive Photo Map
+
+Our standout feature provides an immersive way to explore photography by location:
+
+- **Smart Clustering**: Photos automatically group by proximity with visual thumbnail previews
+- **Zoom Navigation**: Clusters dynamically separate as you zoom in for detailed exploration
+- **Interactive Popups**: Click clusters to view all photos with metadata and navigation
+- **Grid Synchronization**: Map selections highlight and scroll to photos in the gallery
+- **Global Scale**: Handles worldwide photo collections with optimized performance
 
 ## 🛠 Tech Stack
 
-### Backend (FastAPI)
-- **FastAPI** - Modern async web framework
-- **SQLAlchemy 2.0** - ORM with async support
-- **Alembic** - Database migrations
-- **PostgreSQL** - Primary database
-- **Redis** - Caching and sessions
-- **Pillow** - Image processing
-- **ExifRead** - EXIF data extraction
-- **Celery** - Background tasks (optional)
+### Backend
+- **FastAPI** - Modern async web framework with automatic API documentation
+- **SQLAlchemy 2.0** - Async ORM with advanced relationship handling
+- **PostgreSQL 15** - Primary database with JSONB support for flexible metadata
+- **Redis 7** - Caching and session management
+- **OpenStreetMap Nominatim** - Location services and geocoding
 
-### Frontend (React)
-- **React 18** with TypeScript
-- **Vite** - Build tool and dev server
-- **React Router v6** - Client-side routing
-- **TanStack Query** - Server state management
-- **Zustand** - Client state management
-- **Tailwind CSS** - Utility-first styling
-- **Framer Motion** - Animations
-- **React Hook Form** - Form handling
-- **Headless UI** - Accessible components
+### Frontend
+- **React 18** - Latest React with concurrent features
+- **TypeScript** - Type safety with strict configuration
+- **Vite** - Lightning-fast build tool and dev server
+- **TanStack Query** - Server state management with optimistic updates
+- **Leaflet + react-leaflet-cluster** - Interactive maps with clustering
+- **Tailwind CSS v4** - Utility-first styling with modern features
+- **Framer Motion** - Smooth animations and transitions
 
 ### Infrastructure
-- **Docker & Docker Compose** - Containerization
-- **Nginx** - Reverse proxy (in frontend container)
-- **PostgreSQL 15** - Relational database
-- **Redis 7** - Cache and session store
+- **Docker Compose** - Multi-container orchestration
+- **Nginx** - Reverse proxy with optimized static serving
+- **Alembic** - Database migrations with version control
 
 ## 📁 Project Structure
 
 ```
-├── backend/                # FastAPI backend
+├── backend/                    # FastAPI backend
 │   ├── app/
-│   │   ├── api/           # API route handlers
-│   │   ├── core/          # Security, image processing
-│   │   ├── crud/          # Database operations
-│   │   ├── models/        # SQLAlchemy models
-│   │   └── schemas/       # Pydantic schemas
-│   ├── alembic/           # Database migrations
+│   │   ├── api/               # API route handlers
+│   │   │   ├── photos.py      # Photo CRUD + locations endpoint
+│   │   │   ├── projects.py    # Project management
+│   │   │   ├── blog.py        # Blog system
+│   │   │   └── locations.py   # Geocoding services
+│   │   ├── core/              # Security, image processing
+│   │   ├── crud/              # Database operations
+│   │   ├── models/            # SQLAlchemy models
+│   │   └── schemas/           # Pydantic schemas
+│   ├── alembic/               # Database migrations
 │   └── requirements.txt
-├── frontend/               # React frontend
+├── frontend/                   # React frontend
 │   ├── src/
-│   │   ├── api/           # API client
-│   │   ├── components/    # Reusable UI components
-│   │   ├── layouts/       # Page layouts
-│   │   ├── pages/         # Route components
-│   │   ├── stores/        # Zustand stores
-│   │   └── types/         # TypeScript definitions
-│   ├── public/
+│   │   ├── components/        # Reusable UI components
+│   │   │   ├── PhotoMap.tsx   # Interactive clustering map
+│   │   │   ├── PhotoGrid.tsx  # Virtualized photo gallery
+│   │   │   ├── MapPicker.tsx  # Location selection
+│   │   │   └── admin/         # Admin interface
+│   │   ├── pages/             # Route components
+│   │   │   ├── PhotographyPage.tsx  # Gallery + map integration
+│   │   │   └── admin/         # Admin pages
+│   │   ├── api/               # API client with types
+│   │   └── types/             # TypeScript definitions
 │   └── package.json
-├── uploads/                # Original image uploads
-├── compressed/             # Processed images
-├── docker-compose.yml      # Container orchestration
-└── .env.example           # Environment template
+├── uploads/                    # Original image uploads
+├── compressed/                 # Processed WebP variants
+├── dev.sh                     # Development utility script
+├── docker-compose.yml         # Container orchestration
+├── CLAUDE.md                  # Comprehensive development guide
+├── TRUENAS_DEPLOYMENT.md      # TrueNAS Scale deployment
+└── .env.example              # Environment template
 ```
 
-## 🔧 API Architecture
+## 🔧 API Overview
 
-### Authentication Endpoints
-- `POST /api/auth/login` - Admin authentication
-- `GET /api/auth/me` - Current user info
-- `POST /api/auth/logout` - Logout
-
-### Photo Management
-- `GET /api/photos` - List photos with pagination/filtering
-- `GET /api/photos/featured` - Featured photos
+### Photo System
+- `GET /api/photos` - Paginated photos with filtering
+- `GET /api/photos/locations` - **Optimized location data for map clustering**
 - `POST /api/photos` - Upload with EXIF extraction (admin)
-- `PUT /api/photos/{id}` - Update metadata (admin)
-- `DELETE /api/photos/{id}` - Delete photo and files (admin)
+- `PUT /api/photos/{id}` - Update metadata with location editing (admin)
 
-### Project Management
-- `GET /api/projects` - List projects
-- `GET /api/projects/featured` - Featured projects
-- `POST /api/projects` - Create project (admin)
-- `PUT /api/projects/{id}` - Update project (admin)
-- `DELETE /api/projects/{id}` - Delete project (admin)
+### Location Services
+- `GET /api/locations/search` - Location search with autocomplete
+- `POST /api/locations/geocode` - Address to coordinates
+- `POST /api/locations/reverse` - Coordinates to address
 
-### Blog System
-- `GET /api/blog` - Published posts with pagination
-- `GET /api/blog/admin` - All posts including drafts (admin)
-- `POST /api/blog` - Create post (admin)
-- `PUT /api/blog/{id}` - Update post (admin)
-- `DELETE /api/blog/{id}` - Delete post (admin)
-
-### Sub-Applications
-- `GET /api/subapps` - Public sub-apps
-- `GET /api/subapps/authenticated` - Auth-required sub-apps
-- `POST /api/subapps` - Create sub-app (admin)
-- `PUT /api/subapps/{id}` - Update sub-app (admin)
+### Content Management
+- `GET /api/projects` - Project portfolio with repository integration
+- `GET /api/blog` - Blog posts with markdown rendering
+- `GET /api/subapps` - Sub-applications with authentication
 
 ## 📸 Image Processing Pipeline
 
-1. **Upload**: Multi-part form upload with metadata
-2. **EXIF Extraction**: Camera settings, GPS coordinates, timestamps
-3. **Processing**: 
-   - Auto-rotation based on EXIF orientation
-   - WebP conversion with configurable quality
-   - Thumbnail generation (400px)
-   - Progressive loading support
-4. **Storage**: Original and processed versions saved
-5. **Database**: Metadata stored in PostgreSQL
+1. **Upload**: Multi-part form with metadata extraction
+2. **EXIF Processing**: Camera settings, GPS coordinates, timestamps using ExifRead
+3. **Responsive Generation**: 5 WebP variants (400px-2400px) with quality optimization
+4. **Location Enhancement**: Automatic geocoding for GPS coordinates
+5. **Database Storage**: Structured metadata with JSONB variants column
+6. **Map Integration**: Real-time location data for clustering display
 
-## 🎨 Frontend Features
+## 🔒 Security & Configuration
 
-### Modern UI/UX
-- **Responsive Design**: Mobile-first approach
-- **Dark Mode Ready**: CSS custom properties
-- **Smooth Animations**: Framer Motion integration
-- **Loading States**: Skeleton screens and spinners
-- **Error Handling**: User-friendly error messages
-- **Optimistic Updates**: Immediate UI feedback
+### Required Environment Variables
+The application enforces strict security and **will not start** without:
 
-### Photo Gallery
-- **Masonry Layout**: Pinterest-style grid
-- **Lightbox**: Full-screen photo viewing
-- **Lazy Loading**: Performance optimization
-- **EXIF Display**: Camera settings overlay
-- **Search & Filter**: By category, tags, featured status
+```env
+SECRET_KEY=your_jwt_signing_key_minimum_32_characters
+SESSION_SECRET_KEY=your_session_encryption_key_minimum_32_characters
+ADMIN_PASSWORD=your_secure_admin_password_minimum_8_characters
+```
 
-### Admin Interface
-- **Dashboard**: Statistics and quick actions
-- **File Upload**: Drag & drop with progress
-- **CRUD Operations**: Full content management
-- **Real-time Preview**: Markdown editor with preview
-- **Bulk Operations**: Multi-select actions
-
-## 🔒 Security Features
-
-- **JWT Authentication**: Secure token-based auth
-- **Role-based Access**: Admin vs regular user permissions
-- **Rate Limiting**: API endpoint protection
-- **Input Validation**: Pydantic schema validation
-- **SQL Injection Prevention**: SQLAlchemy ORM
-- **XSS Protection**: Content Security Policy
-- **File Upload Security**: Type and size validation
-
-## 🚢 Deployment Options
-
-### Docker Production
+### Generate Secure Keys
 ```bash
-# Create production .env file with required security variables
-cat > .env << 'EOF'
-ENVIRONMENT=production
-SECRET_KEY=your_production_secret_key_minimum_32_chars
-SESSION_SECRET_KEY=your_production_session_key_minimum_32_chars
-ADMIN_PASSWORD=your_secure_admin_password
-POSTGRES_PASSWORD=your_secure_db_password
-COOKIE_SECURE=true
-CORS_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
-EOF
-
-# Generate secure keys
 python -c "import secrets; print('SECRET_KEY=' + secrets.token_urlsafe(32))"
 python -c "import secrets; print('SESSION_SECRET_KEY=' + secrets.token_urlsafe(32))"
+```
+
+### Production Deployment
+```bash
+# Set production environment
+echo "ENVIRONMENT=production" >> .env
+echo "COOKIE_SECURE=true" >> .env
+echo "CORS_ORIGINS=https://yourdomain.com" >> .env
 
 # Deploy
 docker-compose up -d
 ```
 
-### 🔐 **Production Security Requirements**
-- ✅ **Application will not start** without valid SECRET_KEY, SESSION_SECRET_KEY, and ADMIN_PASSWORD
-- ✅ **Set ENVIRONMENT=production** for enhanced security validation
-- ✅ **Enable COOKIE_SECURE=true** for HTTPS deployments
-- ✅ **Use strong, unique passwords** for all services
+## 📚 Documentation
 
-### TrueNAS Scale
-1. Create datasets for persistent data
-2. Configure environment variables
-3. Deploy with docker-compose
-4. Set up reverse proxy if needed
+### Development & Architecture
+- **[CLAUDE.md](./CLAUDE.md)** - Comprehensive development guide, architecture details, and troubleshooting
+  - Complete tech stack documentation
+  - Component architecture and design patterns
+  - Interactive photo map implementation details
+  - Testing strategies and deployment notes
+  - Common development issues and solutions
 
-### Cloud Deployment
-- **AWS**: ECS/Fargate + RDS + ElastiCache
-- **GCP**: Cloud Run + Cloud SQL + Memorystore
-- **Azure**: Container Instances + Database + Redis Cache
-- **DigitalOcean**: App Platform + Managed Database
+### Deployment
+- **[TRUENAS_DEPLOYMENT.md](./TRUENAS_DEPLOYMENT.md)** - Step-by-step TrueNAS Scale deployment guide
+  - Container service configuration
+  - Dataset setup and persistent storage
+  - Network and security configuration
 
-## ⚡ Performance Optimizations
+### Development Tools
+- **[dev.sh](./dev.sh)** - Comprehensive development utility script
+  - `./dev.sh start` - Development environment with live reload
+  - `./dev.sh test` - Run test suites
+  - `./dev.sh build` - Production build
+  - `./dev.sh help` - Full command reference
 
-### Backend
-- **Async Operations**: FastAPI async/await
-- **Database Indexing**: Optimized queries
-- **Redis Caching**: Frequent data caching
-- **Image Processing**: Background tasks with Celery
-- **Connection Pooling**: Efficient database connections
+## 🔧 Development Workflow
 
-### Frontend
-- **Code Splitting**: Route-based lazy loading
-- **Image Optimization**: WebP format with fallbacks
-- **Bundle Optimization**: Tree shaking and compression
-- **CDN Ready**: Static assets optimized for CDN
-- **Service Worker**: Offline support (optional)
+### Local Development
+```bash
+# Start development environment
+./dev.sh start
 
-## 🔧 Configuration
+# View real-time logs
+./dev.sh logs [service]
 
-### Environment Variables (.env)
-```env
-# Required Security Variables (Application will not start without these)
-SECRET_KEY=your_64_character_secret_key_minimum_32_chars
-SESSION_SECRET_KEY=your_session_secret_key_minimum_32_chars
-ADMIN_PASSWORD=your_admin_password_minimum_8_chars
+# Run tests
+./dev.sh test
 
-# Database
-POSTGRES_PASSWORD=your_secure_password
-
-# Optional customization
-WEBP_QUALITY=85
-THUMBNAIL_SIZE=400
-MAX_FILE_SIZE=52428800
+# Build production assets
+./dev.sh build
 ```
 
-### 🔐 **Security Requirements**
-
-**Critical:** The application enforces strict security requirements and **will not start** without proper environment variables:
-
-- `SECRET_KEY` - JWT signing key (minimum 32 characters)
-- `SESSION_SECRET_KEY` - Session encryption key (minimum 32 characters)
-- `ADMIN_PASSWORD` - Admin user password (minimum 8 characters)
-
-**Generate secure keys:**
+### Database Management
 ```bash
-python -c "import secrets; print('SECRET_KEY=' + secrets.token_urlsafe(32))"
-python -c "import secrets; print('SESSION_SECRET_KEY=' + secrets.token_urlsafe(32))"
-```
-
-### Database Migrations
-```bash
-# Create new migration
-docker-compose exec backend alembic revision --autogenerate -m "description"
+# Create migration
+docker compose exec backend alembic revision --autogenerate -m "description"
 
 # Apply migrations
-docker-compose exec backend alembic upgrade head
+docker compose exec backend alembic upgrade head
 
-# Rollback
-docker-compose exec backend alembic downgrade -1
+# View migration history
+docker compose exec backend alembic history
 ```
 
-## 📊 Monitoring & Maintenance
-
-### Health Checks
-All containers include health checks:
-- Frontend: HTTP response check
-- Backend: FastAPI health endpoint
-- Database: PostgreSQL ready check
-- Redis: Ping response
-
-### Logging
+### Testing
 ```bash
-# View logs
-docker-compose logs -f backend
-docker-compose logs -f frontend
+# Frontend tests
+cd frontend && npm run test           # Unit tests with Vitest
+cd frontend && npm run test:e2e       # E2E tests with Playwright
+cd frontend && npm run test:components # Component tests
 
-# Database logs
-docker-compose logs -f db
+# Backend tests
+docker compose exec backend pytest tests/     # All tests
+docker compose exec backend pytest tests/unit/ # Unit tests only
 ```
 
-### Backup & Restore
-```bash
-# Database backup
-docker-compose exec db pg_dump -U postgres portfolio > backup.sql
+## ⚡ Performance Features
 
-# Restore
-docker-compose exec -T db psql -U postgres portfolio < backup.sql
+### Backend Optimizations
+- **Async Operations**: Full async/await architecture with FastAPI
+- **Database Indexing**: Optimized queries for location data and photo metadata
+- **Redis Caching**: Intelligent caching for frequently accessed data
+- **Image Processing**: Efficient WebP conversion with quality optimization
 
-# File backup
-tar -czf backup.tar.gz uploads/ compressed/
-```
+### Frontend Optimizations
+- **Virtualized Scrolling**: Handle large photo collections efficiently
+- **Clustering Algorithms**: Optimized map rendering for thousands of photos
+- **Code Splitting**: Route-based lazy loading for optimal bundle sizes
+- **Image Variants**: Responsive loading with appropriate quality for context
+
+### Map Performance
+- **Chunked Loading**: Efficient marker rendering for large photo collections
+- **Cluster Optimization**: Configurable radius and zoom thresholds
+- **Thumbnail Caching**: Compressed variants for fast marker rendering
+- **Event Debouncing**: Smooth interactions without performance degradation
 
 ## 🛡 Troubleshooting
 
 ### Common Issues
-
-**Database connection failed**
-- Check PostgreSQL container status
-- Verify environment variables
-- Ensure migrations are applied
-
-**Image upload fails**
-- Check file size limits
-- Verify upload directory permissions
-- Check backend logs for processing errors
-
-**Frontend build fails**
-- Clear node_modules and reinstall
-- Check Node.js version compatibility
-- Verify environment variables
-
-**Authentication issues**
-- Check JWT secret key
-- Verify admin password configuration
-- Clear browser localStorage
+- **Map not loading**: Check OpenStreetMap service availability and network connectivity
+- **Clusters not forming**: Verify photo location data exists and clustering radius configuration
+- **Image upload fails**: Check file size limits (50MB default) and upload directory permissions
+- **Authentication issues**: Verify JWT secret keys and admin password configuration
 
 ### Development Commands
 ```bash
-# Reset database
-docker-compose down -v
-docker-compose up -d db
-docker-compose run --rm migrate
-
-# Rebuild containers
-docker-compose build --no-cache
+# Reset development environment
+./dev.sh stop && docker system prune -f && ./dev.sh start
 
 # Check API documentation
-open http://localhost:8000/docs
+open http://localhost/api/docs
+
+# View container logs
+./dev.sh logs backend
+./dev.sh logs frontend
 ```
 
 ## 📄 License
@@ -394,18 +297,20 @@ MIT License - see LICENSE file for details.
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Follow code style guidelines
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Follow the code style guidelines in [CLAUDE.md](./CLAUDE.md)
 4. Add tests for new features
-5. Submit a pull request
+5. Commit your changes (`git commit -m 'Add amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
 
 ## 🆘 Support
 
-- **Documentation**: Check API docs at `/docs` endpoint
-- **Issues**: Open GitHub issues for bugs
-- **Discussions**: GitHub discussions for questions
-- **Security**: Report vulnerabilities privately
+- **Development Guide**: See [CLAUDE.md](./CLAUDE.md) for comprehensive documentation
+- **API Documentation**: Visit `/api/docs` endpoint when running
+- **Issues**: Open GitHub issues for bugs and feature requests
+- **Security**: Report vulnerabilities privately via GitHub Security tab
 
 ---
 
-Built with modern tools and best practices for creators and developers who demand excellence in both form and function.
+Built with modern tools and best practices for creators and developers who demand excellence in both form and function. Features an innovative interactive photo map that transforms how users explore and discover content by location.
