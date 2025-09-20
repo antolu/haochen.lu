@@ -4,7 +4,6 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.api import (
@@ -20,6 +19,7 @@ from app.api import (
     subapps,
 )
 from app.config import settings
+from app.core.rate_limiter import RateLimitMiddleware
 from app.core.redis import close_redis, init_redis
 
 
@@ -49,6 +49,9 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Rate limiting middleware for file access
+app.add_middleware(RateLimitMiddleware)
+
 # No cache middleware for API endpoints
 app.add_middleware(NoCacheMiddleware)
 
@@ -77,11 +80,8 @@ app.include_router(lens_aliases.router, prefix="/lens-aliases", tags=["lens-alia
 app.include_router(content.router)
 app.include_router(locations.router, prefix="", tags=["locations"])
 
-# Static files
-app.mount("/uploads", StaticFiles(directory=settings.upload_dir), name="uploads")
-app.mount(
-    "/compressed", StaticFiles(directory=settings.compressed_dir), name="compressed"
-)
+# Static files removed - now served through API with access control
+# Files are now accessed via /api/photos/{photo_id}/file/{variant} endpoints
 
 
 @app.get("/")

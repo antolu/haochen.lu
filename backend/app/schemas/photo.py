@@ -5,6 +5,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, field_validator
 
+from app.types.access_control import AccessLevel
+
 
 class PhotoBase(BaseModel):
     title: str
@@ -13,6 +15,7 @@ class PhotoBase(BaseModel):
     tags: str | None = None
     comments: str | None = None
     featured: bool = False
+    access_level: AccessLevel = AccessLevel.PUBLIC
 
 
 class PhotoCreate(PhotoBase):
@@ -26,6 +29,7 @@ class PhotoUpdate(BaseModel):
     tags: str | None = None
     comments: str | None = None
     featured: bool | None = None
+    access_level: AccessLevel | None = None
 
     # Location updates
     location_lat: float | None = None
@@ -134,12 +138,15 @@ class ImageVariant(BaseModel):
     height: int
     size_bytes: int
     format: str
+    url: str | None = None  # Secure API URL for accessing the variant
 
 
 class PhotoResponse(PhotoBase):
     id: str | UUID
     filename: str
     original_path: str
+    original_url: str | None = None  # Secure API URL for original file
+    download_url: str | None = None  # Download URL for original file
 
     # Responsive image variants
     variants: dict[str, ImageVariant]
@@ -168,6 +175,9 @@ class PhotoResponse(PhotoBase):
 
     # Flexible metadata
     custom_metadata: dict | None
+
+    # Access control
+    access_level: AccessLevel
 
     # Metadata
     file_size: int

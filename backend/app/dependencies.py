@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -35,6 +35,31 @@ async def get_current_user(
         raise credentials_exception
 
     return user
+
+
+async def get_current_user_optional(
+    request: Request,
+    db: AsyncSession = Depends(get_session),
+) -> User | None:
+    """Get current user if authenticated, otherwise return None."""
+    # Try to get authorization header
+    auth_header = request.headers.get("authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return None
+
+    try:
+        token = auth_header.split(" ")[1]
+        payload = decode_token(token)
+        if payload is None:
+            return None
+
+        username: str | None = payload.get("sub")
+        if username is None:
+            return None
+
+        return await get_user_by_username(db, username=username)
+    except Exception:
+        return None
 
 
 def get_current_admin_user(

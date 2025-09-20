@@ -1,14 +1,28 @@
 from __future__ import annotations
 
 import math
-from typing import Annotated
+import time
+from typing import Annotated, Any
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    Request,
+    UploadFile,
+    status,
+)
+from fastapi.responses import FileResponse
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.file_access import file_access_controller
 from app.core.image_processor import image_processor
+from app.core.rate_limiter import FileAccessRateLimiter
 from app.crud.photo import (
     bulk_reorder_photos,
     create_photo,
@@ -20,7 +34,7 @@ from app.crud.photo import (
     update_photo,
 )
 from app.database import get_session
-from app.dependencies import get_current_admin_user
+from app.dependencies import get_current_admin_user, get_current_user_optional
 from app.models.photo import Photo as PhotoModel
 from app.schemas.photo import (
     PhotoCreate,
@@ -32,8 +46,23 @@ from app.schemas.photo import (
     PhotoUpdate,
 )
 from app.services.alias_service import AliasService
+from app.types.access_control import FileType
 
 router = APIRouter()
+
+
+def populate_photo_urls(photo_dict: dict, photo_id: str) -> dict:
+    """Add secure API URLs to photo response."""
+    # Add original file URL
+    photo_dict["original_url"] = f"/api/photos/{photo_id}/file"
+    photo_dict["download_url"] = f"/api/photos/{photo_id}/download"
+
+    # Add variant URLs
+    if photo_dict.get("variants"):
+        for variant_name, variant_data in photo_dict["variants"].items():
+            variant_data["url"] = f"/api/photos/{photo_id}/file/{variant_name}"
+
+    return photo_dict
 
 
 @router.get("", response_model=PhotoListResponse)
@@ -94,7 +123,7 @@ async def list_photos(
     # Resolve display names for camera and lens aliases
     alias_service = AliasService(db)
 
-    # Convert photos to response objects with display names
+    # Convert photos to response objects with display names and URLs
     photo_responses = []
     for photo in photos:
         photo_dict = PhotoResponse.model_validate(photo).model_dump()
@@ -106,6 +135,9 @@ async def list_photos(
         photo_dict["lens_display_name"] = await alias_service.get_lens_display_name(
             getattr(photo, "lens", None)
         )
+
+        # Add secure URLs
+        photo_dict = populate_photo_urls(photo_dict, str(photo.id))
 
         photo_responses.append(PhotoResponse.model_validate(photo_dict))
 
@@ -128,7 +160,7 @@ async def list_featured_photos(
     # Resolve display names for camera and lens aliases
     alias_service = AliasService(db)
 
-    # Convert photos to response objects with display names
+    # Convert photos to response objects with display names and URLs
     photo_responses = []
     for photo in photos:
         photo_dict = PhotoResponse.model_validate(photo).model_dump()
@@ -140,6 +172,9 @@ async def list_featured_photos(
         photo_dict["lens_display_name"] = await alias_service.get_lens_display_name(
             getattr(photo, "lens", None)
         )
+
+        # Add secure URLs
+        photo_dict = populate_photo_urls(photo_dict, str(photo.id))
 
         photo_responses.append(PhotoResponse.model_validate(photo_dict))
 
@@ -182,16 +217,16 @@ async def get_photo_locations(
     # Convert to location response format
     locations = []
     for photo in photos:
-        # Get thumbnail URL from variants or fallback to original
+        # Use secure API URLs for thumbnail
         thumbnail_url = None
         if photo.variants and isinstance(photo.variants, dict):
             if "thumbnail" in photo.variants:
-                thumbnail_url = photo.variants["thumbnail"].get("path")
+                thumbnail_url = f"/api/photos/{photo.id}/file/thumbnail"
             elif "small" in photo.variants:
-                thumbnail_url = photo.variants["small"].get("path")
+                thumbnail_url = f"/api/photos/{photo.id}/file/small"
 
         if not thumbnail_url:
-            thumbnail_url = photo.original_path
+            thumbnail_url = f"/api/photos/{photo.id}/file"
 
         location = PhotoLocationResponse(
             id=str(photo.id),
@@ -231,6 +266,9 @@ async def get_photo_detail(
     photo_dict["lens_display_name"] = await alias_service.get_lens_display_name(
         getattr(photo, "lens", None)
     )
+
+    # Add secure URLs
+    photo_dict = populate_photo_urls(photo_dict, str(photo.id))
 
     return PhotoResponse.model_validate(photo_dict)
 
@@ -276,7 +314,12 @@ async def upload_photo(
         )
 
         photo = await create_photo(db, photo_data, **processed_data)
-        return PhotoResponse.model_validate(photo)
+
+        # Add secure URLs to response
+        photo_dict = PhotoResponse.model_validate(photo).model_dump()
+        photo_dict = populate_photo_urls(photo_dict, str(photo.id))
+
+        return PhotoResponse.model_validate(photo_dict)
 
     except Exception as e:
         raise HTTPException(
@@ -296,7 +339,11 @@ async def update_photo_endpoint(
     if not photo:
         raise HTTPException(status_code=404, detail="Photo not found")
 
-    return PhotoResponse.model_validate(photo)
+    # Add secure URLs to response
+    photo_dict = PhotoResponse.model_validate(photo).model_dump()
+    photo_dict = populate_photo_urls(photo_dict, str(photo.id))
+
+    return PhotoResponse.model_validate(photo_dict)
 
 
 @router.delete("/{photo_id}")
@@ -351,4 +398,275 @@ async def get_photo_stats(
         "total_photos": total_photos,
         "featured_photos": featured_photos,
         "categories": {},  # Can be implemented later
+    }
+
+
+@router.get("/{photo_id}/file")
+async def serve_photo_original(
+    photo_id: UUID,
+    request: Request,
+    db: AsyncSession = Depends(get_session),
+    current_user: Any | None = Depends(get_current_user_optional),
+    expires: int | None = Query(None, description="Temporary URL expiration timestamp"),
+    signature: str | None = Query(None, description="Temporary URL signature"),
+):
+    """Serve original photo file with access control."""
+    # Check if using temporary URL
+    if expires and signature:
+        if not file_access_controller.validate_temporary_url(
+            photo_id, FileType.ORIGINAL, expires, signature
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Invalid or expired temporary URL",
+            )
+    else:
+        # Regular access control
+        photo = await file_access_controller.validate_photo_access(
+            db,
+            photo_id,
+            FileType.ORIGINAL,
+            user_id=str(current_user.id) if current_user else None,
+            is_admin=current_user.is_admin if current_user else False,
+        )
+
+    # Get client ID for rate limiting
+    client_id = (
+        f"user:{current_user.id}" if current_user else f"ip:{request.client.host}"
+    )
+
+    # Check rate limits
+    if not await FileAccessRateLimiter.check_download_limit(client_id):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Download rate limit exceeded",
+        )
+
+    # Get photo and file path
+    if not (expires and signature):
+        photo = await get_photo(db, photo_id)
+    file_path = file_access_controller.get_file_path(photo, FileType.ORIGINAL)
+
+    # Record access
+    # Return file
+    content_type = file_access_controller.get_content_type(file_path)
+    return FileResponse(
+        path=str(file_path),
+        media_type=content_type,
+        headers={"Cache-Control": "private, max-age=3600"},
+    )
+
+
+@router.get("/{photo_id}/file/{variant}")
+async def serve_photo_variant(
+    photo_id: UUID,
+    variant: str,
+    request: Request,
+    db: AsyncSession = Depends(get_session),
+    current_user: Any | None = Depends(get_current_user_optional),
+    expires: int | None = Query(None, description="Temporary URL expiration timestamp"),
+    signature: str | None = Query(None, description="Temporary URL signature"),
+):
+    """Serve photo variant with access control."""
+    # Validate variant
+    try:
+        file_type = FileType(variant)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid variant '{variant}'",
+        ) from e
+
+    # Check if using temporary URL
+    if expires and signature:
+        if not file_access_controller.validate_temporary_url(
+            photo_id, file_type, expires, signature
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Invalid or expired temporary URL",
+            )
+    else:
+        # Regular access control
+        photo = await file_access_controller.validate_photo_access(
+            db,
+            photo_id,
+            file_type,
+            user_id=str(current_user.id) if current_user else None,
+            is_admin=current_user.is_admin if current_user else False,
+        )
+
+    # Get client ID for rate limiting
+
+    # Get photo and file path
+    if not (expires and signature):
+        photo = await get_photo(db, photo_id)
+    file_path = file_access_controller.get_file_path(photo, file_type)
+
+    # Record access
+    # Return file
+    content_type = file_access_controller.get_content_type(file_path)
+    cache_control = (
+        "public, max-age=86400"
+        if file_type in [FileType.THUMBNAIL, FileType.SMALL]
+        else "private, max-age=3600"
+    )
+
+    return FileResponse(
+        path=str(file_path),
+        media_type=content_type,
+        headers={"Cache-Control": cache_control},
+    )
+
+
+@router.get("/{photo_id}/download")
+async def download_photo_original(
+    photo_id: UUID,
+    request: Request,
+    db: AsyncSession = Depends(get_session),
+    current_user: Any | None = Depends(get_current_user_optional),
+):
+    """Download original photo file (forces download with proper filename)."""
+    # Validate access
+    photo = await file_access_controller.validate_photo_access(
+        db,
+        photo_id,
+        FileType.ORIGINAL,
+        user_id=str(current_user.id) if current_user else None,
+        is_admin=current_user.is_admin if current_user else False,
+    )
+
+    # Get client ID for rate limiting
+    client_id = (
+        f"user:{current_user.id}" if current_user else f"ip:{request.client.host}"
+    )
+
+    # Check download rate limits (stricter for downloads)
+    if not await FileAccessRateLimiter.check_download_limit(
+        client_id, limit=5, period=300
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Download rate limit exceeded. Max 5 downloads per 5 minutes.",
+        )
+
+    # Get file path
+    file_path = file_access_controller.get_file_path(photo, FileType.ORIGINAL)
+
+    # Get download filename
+    download_filename = file_access_controller.get_download_filename(
+        photo, FileType.ORIGINAL
+    )
+
+    # Record access
+    # Return file with download headers
+    content_type = file_access_controller.get_content_type(file_path)
+    return FileResponse(
+        path=str(file_path),
+        media_type=content_type,
+        filename=download_filename,
+        headers={
+            "Content-Disposition": f'attachment; filename="{download_filename}"',
+            "Cache-Control": "no-cache",
+        },
+    )
+
+
+@router.get("/{photo_id}/download/{variant}")
+async def download_photo_variant(
+    photo_id: UUID,
+    variant: str,
+    request: Request,
+    db: AsyncSession = Depends(get_session),
+    current_user: Any | None = Depends(get_current_user_optional),
+):
+    """Download photo variant (forces download with proper filename)."""
+    # Validate variant
+    try:
+        file_type = FileType(variant)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid variant '{variant}'",
+        ) from e
+
+    # Validate access
+    photo = await file_access_controller.validate_photo_access(
+        db,
+        photo_id,
+        file_type,
+        user_id=str(current_user.id) if current_user else None,
+        is_admin=current_user.is_admin if current_user else False,
+    )
+
+    # Get client ID for rate limiting
+    client_id = (
+        f"user:{current_user.id}" if current_user else f"ip:{request.client.host}"
+    )
+
+    # Check download rate limits
+    if not await FileAccessRateLimiter.check_download_limit(
+        client_id, limit=10, period=300
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Download rate limit exceeded. Max 10 downloads per 5 minutes.",
+        )
+
+    # Get file path
+    file_path = file_access_controller.get_file_path(photo, file_type)
+
+    # Get download filename
+    download_filename = file_access_controller.get_download_filename(photo, file_type)
+
+    # Record access
+    # Return file with download headers
+    content_type = file_access_controller.get_content_type(file_path)
+    return FileResponse(
+        path=str(file_path),
+        media_type=content_type,
+        filename=download_filename,
+        headers={
+            "Content-Disposition": f'attachment; filename="{download_filename}"',
+            "Cache-Control": "no-cache",
+        },
+    )
+
+
+@router.get("/{photo_id}/temporary-url/{variant}")
+async def generate_temporary_url(
+    photo_id: UUID,
+    variant: str,
+    expires_in: int = Query(
+        3600, ge=60, le=86400, description="URL expires in seconds"
+    ),
+    db: AsyncSession = Depends(get_session),
+    current_user=Depends(get_current_admin_user),  # Only admins can generate temp URLs
+):
+    """Generate temporary signed URL for photo access."""
+    # Validate variant
+    try:
+        file_type = FileType(variant)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid variant '{variant}'",
+        ) from e
+
+    # Validate photo exists
+    photo = await get_photo(db, photo_id)
+    if not photo:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Photo not found"
+        )
+
+    # Generate temporary URL
+    temp_url = file_access_controller.generate_temporary_url(
+        photo_id, file_type, expires_in
+    )
+
+    return {
+        "url": temp_url,
+        "expires_in": expires_in,
+        "expires_at": int(time.time()) + expires_in,
     }

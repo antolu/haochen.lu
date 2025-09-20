@@ -99,21 +99,8 @@ http {
             proxy_set_header Access-Control-Allow-Headers "Origin, X-Requested-With, Content-Type, Accept, Authorization";
         }
 
-        # Serve static uploads
-        location /uploads/ {
-            alias /var/www/uploads/;
-            expires 1y;
-            add_header Cache-Control "public, immutable";
-            add_header X-Content-Type-Options "nosniff";
-        }
-
-        # Serve compressed images
-        location /compressed/ {
-            alias /var/www/compressed/;
-            expires 1y;
-            add_header Cache-Control "public, immutable";
-            add_header X-Content-Type-Options "nosniff";
-        }
+        # File access now controlled through API endpoints
+        # Direct file access removed for security - use /api/photos/{photo_id}/file/{variant}
 
         # Handle Vite HMR WebSocket connections
         location /vite-hmr {

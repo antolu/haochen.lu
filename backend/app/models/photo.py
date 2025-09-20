@@ -4,7 +4,8 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import Boolean, Column, DateTime, Float, Integer, String, Text
-from sqlalchemy.dialects.postgresql import JSON, UUID
+from sqlalchemy.dialects.postgresql import ENUM, JSON, UUID
+from sqlalchemy.orm import Mapped
 
 from app.database import Base
 
@@ -44,6 +45,15 @@ class Photo(Base):
 
     # Flexible metadata storage
     custom_metadata = Column(JSON)  # Additional custom metadata fields
+
+    # Access control
+    access_level: Mapped[str] = Column(
+        ENUM(
+            "public", "authenticated", "private", name="accesslevel", create_type=False
+        ),
+        default="public",
+        nullable=False,
+    )  # type: ignore[assignment]
 
     # Metadata
     file_size = Column(Integer)
