@@ -100,6 +100,7 @@ For local development (loads images locally):
 ### Tech Stack
 - **Backend**: FastAPI, SQLAlchemy 2.0, PostgreSQL, Redis, Alembic
 - **Frontend**: React 18, TypeScript, Vite, TanStack Query, Zustand, Tailwind CSS v4
+- **Maps & Clustering**: Leaflet, react-leaflet, react-leaflet-cluster, OpenStreetMap
 - **Infrastructure**: Docker Compose, Nginx (in frontend container)
 
 ### Project Structure
@@ -110,9 +111,10 @@ For local development (loads images locally):
 
 ### Key Components
 - **API routes**: Authentication, photos, projects, blog management, location services
+- **Photo locations API**: `/api/photos/locations` endpoint for map clustering data
 - **Image processing**: EXIF extraction, responsive variants generation
 - **Repository integration**: GitHub/GitLab URL validation and README fetching
-- **Photo system**: Upload, processing, gallery with lightbox
+- **Photo system**: Upload, processing, gallery with lightbox and interactive map
 - **Project management**: CRUD operations with repository integration
 - **Location services**: Geocoding, reverse geocoding, location search using OpenStreetMap Nominatim
 - **Admin interface**: Full management dashboard with location editing
@@ -309,7 +311,9 @@ Modern location management using OpenStreetMap Nominatim for geocoding and searc
 - **LocationInput**: Comprehensive location input with coordinates, name override, and current location
 - **MapPicker**: Interactive Leaflet map with click-to-select and search functionality
 - **MiniMap**: Compact map display for showing photo locations
-- **PhotoMap**: Full map view showing all photos with location data
+- **PhotoMap**: Interactive photo map with clustering, custom markers, and popup integration
+- **InteractiveMap**: Base interactive map component for photo editing
+- **MapModal**: Modal component for map-based photo selection
 
 **Frontend Integration:**
 - **Interactive Maps**: Leaflet-based maps with OpenStreetMap tiles
@@ -321,6 +325,38 @@ Modern location management using OpenStreetMap Nominatim for geocoding and searc
 - **PhotoEditForm**: Full location editing with map picker and coordinate input
 - **Location Override**: Manual location name override capability
 - **GPS Data Enhancement**: Automatic location name resolution from EXIF GPS coordinates
+
+### Interactive Photo Map with Clustering
+
+Advanced photo gallery map integration with intelligent location clustering and interactive navigation.
+
+**Core Features:**
+- **Location Clustering**: Automatically groups nearby photos using react-leaflet-cluster
+- **Zoom-based Separation**: Clusters dynamically separate as users zoom in for granular exploration
+- **Custom Photo Markers**: Photo thumbnail previews embedded in map markers
+- **Interactive Cluster Popups**: Click clusters to see all photos with thumbnail grid and metadata
+- **Grid Synchronization**: Map clicks highlight and scroll to corresponding photos in the gallery
+- **Global Distribution**: Handles worldwide photo locations with responsive clustering algorithms
+
+**Technical Implementation:**
+- **API Endpoint**: `/api/photos/locations` provides optimized location data for map rendering
+- **PhotoMap Component**: React-leaflet integration with MarkerClusterGroup for clustering
+- **Custom Cluster Icons**: Dynamic cluster sizing with thumbnail preview grid (4+ photos)
+- **Event Handling**: Custom cluster click events with popup generation and photo navigation
+- **CSS Styling**: Comprehensive styling for cluster markers, popups, and animations
+
+**User Experience:**
+- **Photography Page Integration**: Map positioned at bottom of gallery for location exploration
+- **Real-time Highlighting**: Photos highlighted in grid when selected from map
+- **Smooth Scrolling**: Automatic scroll to photo position in virtualized grid
+- **Mobile Responsive**: Touch-optimized interactions with appropriate clustering thresholds
+- **Visual Feedback**: Hover effects, transitions, and loading states for professional UX
+
+**Performance Optimizations:**
+- **Chunked Loading**: Efficient marker rendering for large photo collections
+- **Optimized Clustering**: Configurable cluster radius and zoom thresholds
+- **Thumbnail Variants**: Uses compressed thumbnail images for fast marker rendering
+- **Event Debouncing**: Smooth interaction handling without performance degradation
 
 ### Frontend State Management
 - **TanStack Query**: Server state, caching, optimistic updates
@@ -339,7 +375,7 @@ Modern location management using OpenStreetMap Nominatim for geocoding and searc
 - **redis**: Redis 7 for caching and sessions
 - **migrate**: One-time migration runner for database schema updates
 
-**Container Naming:** All containers use `portfolio-` prefix (frontend, backend, db, redis, migrate)
+**Container Naming:** Containers use `haochenlu-` prefix in development, `portfolio-` in production (frontend, backend, db, redis, migrate)
 **Database:** Default name is `portfolio`
 
 ## Common Development Issues
@@ -442,11 +478,14 @@ Automatic quality checks on commit ensure:
 
 **Component Testing Coverage:**
 - ProjectCard, ProjectGrid, ProjectForm, RepositoryConnector, MarkdownRenderer
-- LocationInput, MapPicker, MiniMap, PhotoMap components
+- LocationInput, MapPicker, MiniMap, PhotoMap components with clustering functionality
 - PhotoEditForm with location editing functionality
+- InteractiveMap and MapModal components for photo management
 - Hook testing for useProjects, infinite scroll, repository validation
 - E2E flows for project creation, management, repository integration, location services
-- Map interaction testing for location selection and search
+- Map interaction testing for location selection, clustering, and photo navigation
+- Photo map clustering behavior testing with zoom-based separation
+- Grid synchronization testing for map-to-grid photo highlighting
 - Accessibility compliance (WCAG 2.1 AA), keyboard navigation, screen reader support
 
 ## Deployment Notes
@@ -492,12 +531,12 @@ Automatic quality checks on commit ensure:
 - Srcset generation for optimal loading across devices
 - Fallback handling for legacy image paths
 
-### Database Migration
-The `002_enhance_photo_metadata.py` migration adds the variants JSONB column to store responsive image metadata and enhances location support. Key changes:
+### Database Schema
+The initial schema in `001_initial_schema.py` includes comprehensive photo metadata support:
 - **Variants Column**: JSONB storage for all responsive image variants with metadata
-- **Enhanced Location**: Additional location fields for comprehensive geocoding support
+- **Enhanced Location**: Location fields for comprehensive geocoding support (lat/lon, name, address, altitude, timezone)
 - **Custom Metadata**: JSONB column for flexible custom field storage
-- **Legacy Cleanup**: Removal of deprecated `webp_path` and `thumbnail_path` columns
+- **Technical Metadata**: Camera, lens, and EXIF data fields
 
 ### Location Data Structure
 Enhanced photo location storage includes:
