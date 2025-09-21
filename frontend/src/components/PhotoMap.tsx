@@ -249,7 +249,8 @@ const PhotoMap: React.FC<PhotoMapProps> = ({
         >
           {photosWithLocation.map(photo => {
             // Get thumbnail URL - using variants system or fallback
-            const thumbnailUrl = photo.variants?.thumbnail?.url || photo.original_url;
+            const thumbnailUrl =
+              photo.variants?.thumbnail?.url || photo.original_url || `/uploads/${photo.filename}`;
 
             return (
               <Marker
