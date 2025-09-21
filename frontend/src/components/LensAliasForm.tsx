@@ -95,16 +95,19 @@ const LensAliasForm: React.FC<LensAliasFormProps> = ({ alias, onSuccess, onCance
       }
 
       onSuccess();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to save lens alias:', error);
 
       // Handle validation errors from the server
-      if (error.response?.data?.detail) {
-        if (typeof error.response.data.detail === 'string') {
-          setErrors({ submit: error.response.data.detail });
-        } else if (Array.isArray(error.response.data.detail)) {
+      const errorResponse = error as {
+        response?: { data?: { detail?: string | Array<{ loc?: string[]; msg?: string }> } };
+      };
+      if (errorResponse.response?.data?.detail) {
+        if (typeof errorResponse.response.data.detail === 'string') {
+          setErrors({ submit: errorResponse.response.data.detail });
+        } else if (Array.isArray(errorResponse.response.data.detail)) {
           const newErrors: Record<string, string> = {};
-          error.response.data.detail.forEach((err: any) => {
+          errorResponse.response.data.detail.forEach(err => {
             if (err.loc && err.msg) {
               const field = err.loc[err.loc.length - 1];
               newErrors[field] = err.msg;

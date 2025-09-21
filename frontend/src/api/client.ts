@@ -24,10 +24,10 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 let isRefreshing = false;
 let failedQueue: Array<{
   resolve: (value?: unknown) => void;
-  reject: (reason?: any) => void;
+  reject: (reason?: unknown) => void;
 }> = [];
 
-const processQueue = (error?: any, token?: string) => {
+const processQueue = (error?: unknown, token?: string) => {
   failedQueue.forEach(({ resolve, reject }) => {
     if (error) {
       reject(error);
@@ -50,7 +50,19 @@ const apiClient = axios.create({
 // Request interceptor to add auth token from store
 apiClient.interceptors.request.use(config => {
   // Get token from store dynamically
-  const authStore = (window as any).__authStore?.getState?.();
+  const authStore = (
+    window as unknown as {
+      __authStore?: {
+        getState?: () => {
+          isAuthenticated?: boolean;
+          token?: string;
+          accessToken?: string;
+          refreshToken?: string;
+          clearAuth?: () => void;
+        };
+      };
+    }
+  ).__authStore?.getState?.();
   const token = authStore?.accessToken;
 
   if (token) {
@@ -84,9 +96,16 @@ apiClient.interceptors.response.use(
 
       try {
         // Try to refresh using the auth store
-        const authStore = (window as any).__authStore?.getState?.();
-        if (authStore?.refreshToken) {
-          const success = await authStore.refreshToken();
+        const authStoreInstance = (
+          window as unknown as {
+            __authStore?: {
+              getState?: () => { isAuthenticated?: boolean; token?: string; accessToken?: string };
+              refreshToken?: () => Promise<boolean>;
+            };
+          }
+        ).__authStore;
+        if (authStoreInstance?.refreshToken) {
+          const success = await authStoreInstance.refreshToken();
           if (success) {
             processQueue();
             isRefreshing = false;
@@ -101,9 +120,11 @@ apiClient.interceptors.response.use(
         isRefreshing = false;
 
         // Clear auth state and redirect to login
-        const authStore = (window as any).__authStore?.getState?.();
-        if (authStore?.clearAuth) {
-          authStore.clearAuth();
+        const authStoreInstance = (
+          window as unknown as { __authStore?: { clearAuth?: () => void } }
+        ).__authStore;
+        if (authStoreInstance?.clearAuth) {
+          authStoreInstance.clearAuth();
         }
 
         // Only redirect if not already on login page and if this was an authenticated request

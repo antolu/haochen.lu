@@ -75,7 +75,7 @@ export const mockIntersectionObserver = () => {
 
 // Helper to trigger intersection observer
 export const triggerIntersectionObserver = (isIntersecting: boolean = true) => {
-  const mockObserver = window.IntersectionObserver as any;
+  const mockObserver = window.IntersectionObserver as jest.MockedClass<typeof IntersectionObserver>;
   const callback = mockObserver.mock.calls[mockObserver.mock.calls.length - 1]?.[0];
   if (callback) {
     callback([{ isIntersecting }]);

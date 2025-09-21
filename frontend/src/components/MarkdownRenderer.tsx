@@ -27,13 +27,16 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
     }
   };
 
-  const extractTextFromChildren = (children: any): string => {
+  const extractTextFromChildren = (children: unknown): string => {
     if (typeof children === 'string') return children;
     if (Array.isArray(children)) {
       return children.map(extractTextFromChildren).join('');
     }
-    if (children?.props?.children) {
-      return extractTextFromChildren(children.props.children);
+    if (typeof children === 'object' && children !== null && 'props' in children) {
+      const childElement = children as { props?: { children?: unknown } };
+      if (childElement.props?.children) {
+        return extractTextFromChildren(childElement.props.children);
+      }
     }
     return '';
   };

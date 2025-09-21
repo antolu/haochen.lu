@@ -193,7 +193,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
   );
 
   const handleSearchLocationSelect = useCallback(
-    (lat: number, lng: number, _name: string) => {
+    (lat: number, lng: number) => {
       handleLocationSelect(lat, lng);
     },
     [handleLocationSelect]

@@ -55,7 +55,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('scroll', handleResize);
     };
-  }, [showSearchResults, updateDropdownPosition]);
+  }, [showSearchResults]);
 
   const handleLocationSelect = useCallback(
     async (lat: number, lng: number) => {
