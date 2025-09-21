@@ -56,11 +56,25 @@ export const useAuthStore = create<AuthState>()(
             error: null,
           });
         } catch (error: any) {
+          let errorMessage = 'Login failed';
+
+          if (error.response?.data?.detail) {
+            errorMessage = error.response.data.detail;
+          } else if (error.response?.status === 401) {
+            errorMessage = 'Invalid username or password';
+          } else if (error.response?.status === 403) {
+            errorMessage = 'Access denied';
+          } else if (error.response?.status >= 500) {
+            errorMessage = 'Server error. Please try again later.';
+          } else if (error.code === 'NETWORK_ERROR' || !error.response) {
+            errorMessage = 'Network error. Please check your connection.';
+          }
+
           set({
             user: null,
             isAuthenticated: false,
             isLoading: false,
-            error: error.response?.data?.detail || 'Login failed',
+            error: errorMessage,
             accessToken: null,
             tokenExpiry: null,
           });

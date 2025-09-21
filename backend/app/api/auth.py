@@ -25,12 +25,12 @@ async def login(
     # Later, this can be extended for multiple users
     if login_request.username != "admin":
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Username not found"
         )
 
     if login_request.password != settings.admin_password:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect password"
         )
 
     # Check if admin user exists in database, create if not

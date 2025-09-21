@@ -52,10 +52,21 @@ const LoginPage: React.FC = () => {
       await Promise.race([loginPromise, timeoutPromise]);
       toast.success('Login successful!');
     } catch (error: any) {
-      const errorMessage =
-        error.message === 'Login timeout'
-          ? 'Login request timed out. Please try again.'
-          : error.response?.data?.detail || 'Login failed';
+      let errorMessage = 'Login failed';
+
+      if (error.message === 'Login timeout') {
+        errorMessage = 'Login request timed out. Please try again.';
+      } else if (error.response?.data?.detail) {
+        // Use specific error message from backend
+        errorMessage = error.response.data.detail;
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Invalid username or password';
+      } else if (error.response?.status === 403) {
+        errorMessage = 'Access denied';
+      } else if (error.response?.status >= 500) {
+        errorMessage = 'Server error. Please try again later.';
+      }
+
       toast.error(errorMessage);
     } finally {
       // Always reset loading state, even on errors or timeouts

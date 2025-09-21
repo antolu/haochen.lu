@@ -16,23 +16,31 @@ async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: AsyncSession = Depends(get_session),
 ) -> User:
-    credentials_exception = HTTPException(
+    invalid_token_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
+        detail="Invalid or expired token",
         headers={"WWW-Authenticate": "Bearer"},
     )
 
     payload = decode_token(credentials.credentials)
     if payload is None:
-        raise credentials_exception
+        raise invalid_token_exception
 
     username: str | None = payload.get("sub")
     if username is None:
-        raise credentials_exception
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token format",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     user = await get_user_by_username(db, username=username)
     if user is None:
-        raise credentials_exception
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User no longer exists",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     return user
 
@@ -67,6 +75,7 @@ def get_current_admin_user(
 ) -> User:
     if not current_user.is_admin:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Administrator privileges required",
         )
     return current_user
