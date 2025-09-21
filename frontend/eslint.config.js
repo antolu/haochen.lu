@@ -20,4 +20,22 @@ export default tseslint.config([
       globals: globals.browser,
     },
   },
+  {
+    // Utility files and non-React files
+    files: ['src/utils/**/*.ts', 'src/api/**/*.ts', 'src/types/**/*.ts'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
+  {
+    // Third-party library integration files
+    files: [
+      'src/components/PhotoLightbox.tsx',
+      'src/components/MapPicker.tsx',
+      'src/components/LocationInput.tsx',
+    ],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off', // Allow any for third-party library integration
+    },
+  },
 ]);
