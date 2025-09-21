@@ -93,7 +93,7 @@ const PhotoListTable: React.FC<PhotoListTableProps> = ({ photos, isLoading = fal
               <td className="px-4 py-2 text-sm text-gray-500 cursor-move">☰</td>
               <td className="px-4 py-2">
                 <img
-                  src={p.variants?.thumbnail?.path || p.variants?.small?.path || p.original_path}
+                  src={p.variants?.thumbnail?.url || p.variants?.small?.url || p.original_url}
                   alt={p.title}
                   className="h-12 w-12 object-cover rounded"
                 />

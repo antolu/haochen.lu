@@ -262,12 +262,12 @@ const HomePage: React.FC = () => {
                   <div className="aspect-square rounded-lg overflow-hidden bg-gray-200">
                     <img
                       src={
-                        photo.variants?.small?.path ||
-                        photo.variants?.thumbnail?.path ||
-                        photo.variants?.medium?.path ||
+                        photo.variants?.small?.url ||
+                        photo.variants?.thumbnail?.url ||
+                        photo.variants?.medium?.url ||
                         photo.webp_path ||
                         photo.thumbnail_path ||
-                        photo.original_path
+                        photo.original_url
                       }
                       alt={photo.title || 'Photo'}
                       className="w-full h-full object-cover group-hover:scale-102 md:group-hover:scale-105 transition-transform duration-300"
@@ -522,9 +522,9 @@ const HomePage: React.FC = () => {
                 >
                   <img
                     src={
-                      selectedPhoto.variants?.large?.path ||
-                      selectedPhoto.variants?.medium?.path ||
-                      selectedPhoto.original_path
+                      selectedPhoto.variants?.large?.url ||
+                      selectedPhoto.variants?.medium?.url ||
+                      selectedPhoto.original_url
                     }
                     alt={selectedPhoto.title || 'Photo'}
                     className="w-full h-80 object-cover rounded-lg"

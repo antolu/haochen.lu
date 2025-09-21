@@ -135,9 +135,7 @@ const PhotoForm: React.FC<PhotoFormProps> = ({ photo, onSuccess, onCancel }) => 
                 {/* Prefer a medium/large variant, fallback to original */}
                 <img
                   src={
-                    photo.variants?.large?.path ||
-                    photo.variants?.medium?.path ||
-                    photo.original_path
+                    photo.variants?.large?.url || photo.variants?.medium?.url || photo.original_url
                   }
                   alt={photo.title || 'Photo preview'}
                   className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
@@ -145,9 +143,7 @@ const PhotoForm: React.FC<PhotoFormProps> = ({ photo, onSuccess, onCancel }) => 
                 {/* Click to open full image in new tab */}
                 <a
                   href={
-                    photo.variants?.xlarge?.path ||
-                    photo.variants?.large?.path ||
-                    photo.original_path
+                    photo.variants?.xlarge?.url || photo.variants?.large?.url || photo.original_url
                   }
                   target="_blank"
                   rel="noreferrer"

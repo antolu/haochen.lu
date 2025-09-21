@@ -298,7 +298,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
         <div className="flex items-center space-x-4">
           <div className="w-20 h-20 rounded-lg overflow-hidden bg-gray-200">
             <img
-              src={photo.variants?.thumbnail?.path || photo.thumbnail_path || photo.webp_path}
+              src={photo.variants?.thumbnail?.url || photo.thumbnail_path || photo.webp_path}
               alt={photo.title}
               className="w-full h-full object-cover"
             />

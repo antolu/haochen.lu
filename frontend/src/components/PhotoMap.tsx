@@ -30,7 +30,7 @@ const createClusterIcon = (cluster: any) => {
   const childMarkers = cluster.getAllChildMarkers();
   const previewPhotos = childMarkers.slice(0, 4).map((marker: any) => {
     const photo = marker.options.photo;
-    return photo.variants?.thumbnail?.path || photo.original_path;
+    return photo.variants?.thumbnail?.url || photo.original_url;
   });
 
   // Create thumbnail grid for clusters with 4+ photos
@@ -90,7 +90,7 @@ const ClusterEvents: React.FC<{ onPhotoClick?: (photo: Photo) => void }> = ({ on
         <div class="cluster-popup-grid">
           ${photos
             .map((photo: Photo) => {
-              const thumbnailUrl = photo.variants?.thumbnail?.path || photo.original_path;
+              const thumbnailUrl = photo.variants?.thumbnail?.url || photo.original_url;
               return `
               <div class="cluster-popup-item" data-photo-id="${photo.id}">
                 <img src="${thumbnailUrl}" alt="${photo.title || 'Photo'}" class="cluster-popup-thumb" />
@@ -249,7 +249,7 @@ const PhotoMap: React.FC<PhotoMapProps> = ({
         >
           {photosWithLocation.map(photo => {
             // Get thumbnail URL - using variants system or fallback
-            const thumbnailUrl = photo.variants?.thumbnail?.path || photo.original_path;
+            const thumbnailUrl = photo.variants?.thumbnail?.url || photo.original_url;
 
             return (
               <Marker

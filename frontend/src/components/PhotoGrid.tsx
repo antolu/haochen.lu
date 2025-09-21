@@ -60,8 +60,7 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
   };
 
   // Determine image source - prefer small variant for better quality, fallback to thumbnail, then original
-  const imageUrl =
-    photo.variants?.small?.path || photo.variants?.medium?.path || photo.original_path;
+  const imageUrl = photo.variants?.small?.url || photo.variants?.medium?.url || photo.original_url;
 
   return (
     <div

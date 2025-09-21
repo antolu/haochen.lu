@@ -124,8 +124,8 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
     if (!containerRef.current) return;
 
     const dynamicElements = photos.map(photo => ({
-      src: photo.variants?.xlarge?.path || photo.variants?.large?.path || photo.original_path,
-      thumb: photo.variants?.thumbnail?.path || photo.variants?.small?.path || photo.original_path,
+      src: photo.variants?.xlarge?.url || photo.variants?.large?.url || photo.original_url,
+      thumb: photo.variants?.thumbnail?.url || photo.variants?.small?.url || photo.original_url,
       subHtml: getCaptionHtml(photo),
     }));
 
@@ -193,9 +193,8 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
 
     if (isOpen) {
       const dynamicElements = photos.map(photo => ({
-        src: photo.variants?.xlarge?.path || photo.variants?.large?.path || photo.original_path,
-        thumb:
-          photo.variants?.thumbnail?.path || photo.variants?.small?.path || photo.original_path,
+        src: photo.variants?.xlarge?.url || photo.variants?.large?.url || photo.original_url,
+        thumb: photo.variants?.thumbnail?.url || photo.variants?.small?.url || photo.original_url,
         subHtml: getCaptionHtml(photo),
       }));
 

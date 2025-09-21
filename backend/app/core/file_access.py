@@ -58,9 +58,11 @@ class FileAccessController:
                 detail="Authentication required",
             )
 
-        # Additional restrictions for high-resolution files
-        if file_type in [FileType.LARGE, FileType.XLARGE, FileType.ORIGINAL] and not (
-            user_id or is_admin
+        # Additional restrictions for high-resolution files (only for non-public photos)
+        if (
+            file_type in [FileType.LARGE, FileType.XLARGE, FileType.ORIGINAL]
+            and access_level != AccessLevel.PUBLIC
+            and not (user_id or is_admin)
         ):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
