@@ -4,6 +4,7 @@ import type { Photo } from '../../types';
 import { useUpdatePhoto, usePhotoTags } from '../../hooks/usePhotos';
 import TagMultiSelect from './TagMultiSelect';
 import { formatDateTime } from '../../utils/dateFormat';
+import { selectOptimalImage, ImageUseCase } from '../../utils/imageUtils';
 // Remove direct import of MapPicker and lazy-load it instead
 const LazyMapPicker = lazy(() => import('../MapPicker'));
 
@@ -133,13 +134,16 @@ const PhotoForm: React.FC<PhotoFormProps> = ({ photo, onSuccess, onCancel }) => 
             <div className="bg-white p-3 rounded-lg border border-gray-200 sticky top-6">
               <div className="aspect-square w-full overflow-hidden rounded-md bg-gray-100 group cursor-zoom-in relative">
                 {/* Prefer a medium/large variant, fallback to original */}
-                <img
-                  src={
-                    photo.variants?.large?.url || photo.variants?.medium?.url || photo.original_url
-                  }
-                  alt={photo.title || 'Photo preview'}
-                  className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
-                />
+                {(() => {
+                  const optimalImage = selectOptimalImage(photo, ImageUseCase.ADMIN);
+                  return (
+                    <img
+                      src={optimalImage.url}
+                      alt={photo.title || 'Photo preview'}
+                      className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+                    />
+                  );
+                })()}
                 {/* Click to open full image in new tab */}
                 <a
                   href={

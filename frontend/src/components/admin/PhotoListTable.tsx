@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import type { Photo } from '../../types';
 import { useReorderPhotos, useDeletePhoto, useTogglePhotoFeatured } from '../../hooks/usePhotos';
+import { selectOptimalImage, ImageUseCase } from '../../utils/imageUtils';
 
 interface PhotoListTableProps {
   photos: Photo[];
@@ -92,11 +93,16 @@ const PhotoListTable: React.FC<PhotoListTableProps> = ({ photos, isLoading = fal
             >
               <td className="px-4 py-2 text-sm text-gray-500 cursor-move">☰</td>
               <td className="px-4 py-2">
-                <img
-                  src={p.variants?.thumbnail?.url || p.variants?.small?.url || p.original_url}
-                  alt={p.title}
-                  className="h-12 w-12 object-cover rounded"
-                />
+                {(() => {
+                  const optimalImage = selectOptimalImage(p, ImageUseCase.ADMIN);
+                  return (
+                    <img
+                      src={optimalImage.url}
+                      alt={p.title}
+                      className="h-12 w-12 object-cover rounded"
+                    />
+                  );
+                })()}
               </td>
               <td className="px-4 py-2">
                 <div className="text-sm text-gray-900 truncate max-w-xs" title={p.title}>

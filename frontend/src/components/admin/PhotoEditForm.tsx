@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import LocationInput from '../LocationInput';
 import type { Photo } from '../../types';
 import { formatDateSimple } from '../../utils/dateFormat';
+import { selectOptimalImage, ImageUseCase } from '../../utils/imageUtils';
 
 interface PhotoEditFormProps {
   photo: Photo;
@@ -297,11 +298,16 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
       <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
         <div className="flex items-center space-x-4">
           <div className="w-20 h-20 rounded-lg overflow-hidden bg-gray-200">
-            <img
-              src={photo.variants?.thumbnail?.url || photo.thumbnail_path || photo.webp_path}
-              alt={photo.title}
-              className="w-full h-full object-cover"
-            />
+            {(() => {
+              const optimalImage = selectOptimalImage(photo, ImageUseCase.ADMIN);
+              return (
+                <img
+                  src={optimalImage.url}
+                  alt={photo.title}
+                  className="w-full h-full object-cover"
+                />
+              );
+            })()}
           </div>
           <div>
             <h3 className="font-medium text-gray-900">{photo.title || 'Untitled'}</h3>
