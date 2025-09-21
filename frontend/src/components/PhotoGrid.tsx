@@ -3,6 +3,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { useInView } from 'react-intersection-observer';
 import type { Photo } from '../types';
 import { formatDateSimple } from '../utils/dateFormat';
+import { selectOptimalImage, ImageUseCase } from '../utils/imageUtils';
 
 interface PhotoGridProps {
   photos: Photo[];
@@ -59,8 +60,11 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
     }
   };
 
-  // Determine image source - prefer small variant for better quality, fallback to thumbnail, then original
-  const imageUrl = photo.variants?.small?.url || photo.variants?.medium?.url || photo.original_url;
+  // Use DPI-aware image selection for optimal quality based on device and viewport
+  const optimalImage = selectOptimalImage(photo, ImageUseCase.GALLERY, { width, height });
+  const imageUrl = optimalImage.url;
+  const srcSet = optimalImage.srcset;
+  const sizes = optimalImage.sizes;
 
   return (
     <div
@@ -102,6 +106,8 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
         <>
           <img
             src={imageUrl}
+            srcSet={srcSet}
+            sizes={sizes}
             alt={photo.title || 'Photo'}
             className={`
               w-full h-full object-cover transition-opacity duration-300

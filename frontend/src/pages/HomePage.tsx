@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { photos, projects, content } from '../api/client';
 import type { Photo } from '../types';
 import { formatDate } from '../utils/dateFormat';
+import { selectOptimalImage, ImageUseCase } from '../utils/imageUtils';
 
 const HomePage: React.FC = () => {
   const { data: latestPhotos } = useQuery({
@@ -260,19 +261,20 @@ const HomePage: React.FC = () => {
                   className="group cursor-pointer text-left"
                 >
                   <div className="aspect-square rounded-lg overflow-hidden bg-gray-200">
-                    <img
-                      src={
-                        photo.variants?.small?.url ||
-                        photo.variants?.thumbnail?.url ||
-                        photo.variants?.medium?.url ||
-                        photo.webp_path ||
-                        photo.thumbnail_path ||
-                        photo.original_url
-                      }
-                      alt={photo.title || 'Photo'}
-                      className="w-full h-full object-cover group-hover:scale-102 md:group-hover:scale-105 transition-transform duration-300"
-                      loading="lazy"
-                    />
+                    {(() => {
+                      // Use DPI-aware selection for hero/gallery display
+                      const optimalImage = selectOptimalImage(photo, ImageUseCase.HERO);
+                      return (
+                        <img
+                          src={optimalImage.url}
+                          srcSet={optimalImage.srcset}
+                          sizes={optimalImage.sizes}
+                          alt={photo.title || 'Photo'}
+                          className="w-full h-full object-cover group-hover:scale-102 md:group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                        />
+                      );
+                    })()}
                   </div>
                 </motion.button>
               ))}
@@ -520,15 +522,19 @@ const HomePage: React.FC = () => {
                   className="block text-left"
                   aria-label="Open in album"
                 >
-                  <img
-                    src={
-                      selectedPhoto.variants?.large?.url ||
-                      selectedPhoto.variants?.medium?.url ||
-                      selectedPhoto.original_url
-                    }
-                    alt={selectedPhoto.title || 'Photo'}
-                    className="w-full h-80 object-cover rounded-lg"
-                  />
+                  {(() => {
+                    // Use DPI-aware selection for modal display
+                    const optimalImage = selectOptimalImage(selectedPhoto, ImageUseCase.LIGHTBOX);
+                    return (
+                      <img
+                        src={optimalImage.url}
+                        srcSet={optimalImage.srcset}
+                        sizes={optimalImage.sizes}
+                        alt={selectedPhoto.title || 'Photo'}
+                        className="w-full h-80 object-cover rounded-lg"
+                      />
+                    );
+                  })()}
                   <div className="mt-2 text-xs text-gray-500">Open in album →</div>
                 </button>
 

@@ -12,6 +12,7 @@ import '../styles/lightgallery-captions.css';
 
 import PhotoSwipeMetadataSidebar from './PhotoSwipeMetadataSidebar';
 import { generateCaptionHtml, generateMobileCaptionHtml } from '../utils/captionUtils';
+import { selectOptimalImage, ImageUseCase } from '../utils/imageUtils';
 import type { Photo } from '../types';
 
 interface PhotoLightboxProps {
@@ -123,11 +124,17 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const dynamicElements = photos.map(photo => ({
-      src: photo.variants?.xlarge?.url || photo.variants?.large?.url || photo.original_url,
-      thumb: photo.variants?.thumbnail?.url || photo.variants?.small?.url || photo.original_url,
-      subHtml: getCaptionHtml(photo),
-    }));
+    const dynamicElements = photos.map(photo => {
+      // Use DPI-aware selection for lightbox viewing (high quality)
+      const lightboxImage = selectOptimalImage(photo, ImageUseCase.LIGHTBOX);
+      const thumbnailImage = selectOptimalImage(photo, ImageUseCase.THUMBNAIL);
+
+      return {
+        src: lightboxImage.url,
+        thumb: thumbnailImage.url,
+        subHtml: getCaptionHtml(photo),
+      };
+    });
 
     const lgOptions: any = {
       plugins: [lgThumbnail, lgZoom, lgFullscreen],
@@ -192,11 +199,17 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
     if (!galleryRef.current) return;
 
     if (isOpen) {
-      const dynamicElements = photos.map(photo => ({
-        src: photo.variants?.xlarge?.url || photo.variants?.large?.url || photo.original_url,
-        thumb: photo.variants?.thumbnail?.url || photo.variants?.small?.url || photo.original_url,
-        subHtml: getCaptionHtml(photo),
-      }));
+      const dynamicElements = photos.map(photo => {
+        // Use DPI-aware selection for lightbox viewing (high quality)
+        const lightboxImage = selectOptimalImage(photo, ImageUseCase.LIGHTBOX);
+        const thumbnailImage = selectOptimalImage(photo, ImageUseCase.THUMBNAIL);
+
+        return {
+          src: lightboxImage.url,
+          thumb: thumbnailImage.url,
+          subHtml: getCaptionHtml(photo),
+        };
+      });
 
       try {
         if (dynamicElements.length === 0) {
