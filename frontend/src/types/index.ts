@@ -7,8 +7,10 @@ export interface Photo {
   comments?: string;
   filename: string;
   original_path: string;
+  original_url?: string; // Secure API URL for original file
+  download_url?: string; // Download URL for original file
 
-  // Image paths
+  // Image paths (legacy)
   thumbnail_path?: string;
   webp_path?: string;
 
@@ -22,6 +24,7 @@ export interface Photo {
       height: number;
       size_bytes: number;
       format: string;
+      url?: string; // Secure API URL for accessing the variant
     }
   >;
 
@@ -44,7 +47,7 @@ export interface Photo {
   date_taken?: string;
 
   // Flexible metadata
-  custom_metadata?: Record<string, any>;
+  custom_metadata?: Record<string, unknown>;
 
   // Metadata
   file_size: number;
