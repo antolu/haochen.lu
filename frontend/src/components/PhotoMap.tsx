@@ -38,7 +38,7 @@ const createClusterIcon = (cluster: any) => {
     count >= 4
       ? `
     <div class="cluster-thumbnails">
-      ${previewPhotos.map(url => `<img src="${url}" class="cluster-thumb" />`).join('')}
+      ${previewPhotos.map((url: string) => `<img src="${url}" class="cluster-thumb" />`).join('')}
     </div>
   `
       : '';
@@ -117,7 +117,7 @@ const ClusterEvents: React.FC<{ onPhotoClick?: (photo: Photo) => void }> = ({ on
       });
 
       // Show popup at cluster location
-      const popup = L.popup({
+      L.popup({
         maxWidth: 300,
         className: 'cluster-popup-container',
       })
@@ -256,7 +256,6 @@ const PhotoMap: React.FC<PhotoMapProps> = ({
                 key={photo.id}
                 position={[photo.location_lat!, photo.location_lon!]}
                 icon={createPhotoMarker(thumbnailUrl)}
-                photo={photo}
                 eventHandlers={{
                   click: () => onPhotoClick?.(photo),
                 }}
