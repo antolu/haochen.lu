@@ -134,11 +134,13 @@ export const mockApiResponse = <T,>(data: T, delay = 0) => {
   });
 };
 
+type ApiErrorWithResponse = Error & { response: { status: number; data: { detail: string } } };
 export const mockApiError = (message: string, status = 400, delay = 0) => {
-  return new Promise((_, reject) => {
+  return new Promise<never>((_, reject) => {
     setTimeout(() => {
-      const error = new Error(message) as any;
-      error.response = { status, data: { detail: message } };
+      const error: ApiErrorWithResponse = Object.assign(new Error(message), {
+        response: { status, data: { detail: message } },
+      });
       reject(error);
     }, delay);
   });
@@ -241,28 +243,30 @@ export const mockLocalStorage = () => {
 };
 
 // Form test utilities
-export const fillForm = async (getByLabelText: any, formData: Record<string, string>) => {
+export const fillForm = async (
+  getByLabelText: (matcher: RegExp) => HTMLElement,
+  formData: Record<string, string>
+) => {
   const { userEvent } = await import('@testing-library/user-event');
   const user = userEvent.setup();
 
   for (const [label, value] of Object.entries(formData)) {
     const field = getByLabelText(new RegExp(label, 'i'));
-    await user.clear(field);
-    await user.type(field, value);
+    await user.clear(field as Element);
+    await user.type(field as Element, value);
   }
 };
 
 // Network request mocking
-export const mockFetch = (response: any, ok = true, status = 200) => {
-  return vi.fn(() =>
-    Promise.resolve({
-      ok,
-      status,
-      json: () => Promise.resolve(response),
-      text: () => Promise.resolve(JSON.stringify(response)),
-      headers: new Headers(),
-      statusText: ok ? 'OK' : 'Error',
-    } as Response)
+export const mockFetch = <T,>(response: T, ok = true, status = 200) => {
+  return vi.fn<[input: RequestInfo | URL, init?: RequestInit], Promise<Response>>(() =>
+    Promise.resolve(
+      new Response(JSON.stringify(response), {
+        status,
+        statusText: ok ? 'OK' : 'Error',
+        headers: { 'Content-Type': 'application/json' },
+      })
+    )
   );
 };
 
@@ -275,7 +279,7 @@ export const mockIntersectionObserver = (isIntersecting = true) => {
   const mockIntersectionObserver = vi.fn().mockImplementation(callback => {
     // Call callback immediately with mock entry
     setTimeout(() => {
-      callback([
+      (callback as (entries: IntersectionObserverEntry[]) => void)([
         {
           isIntersecting,
           target: document.createElement('div'),
@@ -320,15 +324,17 @@ export const waitFor = (callback: () => void | Promise<void>, timeout = 1000) =>
       try {
         await callback();
         resolve();
-      } catch (error) {
+      } catch (error: unknown) {
         if (Date.now() - startTime > timeout) {
-          reject(error);
+          reject(new Error(String(error)));
         } else {
-          setTimeout(check, 10);
+          void setTimeout(() => {
+            void check();
+          }, 10);
         }
       }
     };
 
-    check();
+    void check();
   });
 };

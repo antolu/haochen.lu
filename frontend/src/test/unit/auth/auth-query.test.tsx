@@ -27,12 +27,20 @@ vi.mock('@/stores/authStore', () => {
     isTokenExpired: vi.fn(),
     clearAuth: vi.fn(),
   };
-  const useAuthStore: any = Object.assign(() => state, {
-    getState: vi.fn(() => state),
-    setState: vi.fn((partial: any) =>
-      Object.assign(state, typeof partial === 'function' ? partial(state) : partial)
-    ),
-    subscribe: vi.fn(),
+  const mockStoreFunction = (): typeof state => state;
+  const mockGetState = vi.fn((): typeof state => state);
+  const mockSetState = vi.fn((partial: unknown): typeof state => {
+    if (typeof partial === 'function') {
+      return (partial as (state: typeof state) => typeof state)(state);
+    }
+    return Object.assign({}, state, partial as Partial<typeof state>);
+  });
+  const mockSubscribe = vi.fn();
+
+  const useAuthStore = Object.assign(mockStoreFunction, {
+    getState: mockGetState,
+    setState: mockSetState,
+    subscribe: mockSubscribe,
   });
   return { useAuthStore };
 });
@@ -58,7 +66,7 @@ describe('Auth Query Hooks', () => {
       },
     });
     // Align with current store API: use global auth store if needed
-    (window as any).__authStore = { getState: () => mockAuthState } as any;
+    (window as unknown as { __authStore: unknown }).__authStore = { getState: () => mockAuthState };
     vi.clearAllMocks();
   });
 
@@ -86,7 +94,7 @@ describe('Auth Query Hooks', () => {
       if (typeof retryFunction === 'function') {
         // Simulate 401 error
         const error = { response: { status: 401 } };
-        const shouldRetry = retryFunction(0, error as any);
+        const shouldRetry = retryFunction(0, error as Error);
         expect(shouldRetry).toBe(false);
       }
     });
@@ -99,10 +107,10 @@ describe('Auth Query Hooks', () => {
         // Simulate 500 error
         const error = { response: { status: 500 } };
 
-        expect(retryFunction(0, error as any)).toBe(true); // First retry
-        expect(retryFunction(1, error as any)).toBe(true); // Second retry
-        expect(retryFunction(2, error as any)).toBe(true); // Third retry
-        expect(retryFunction(3, error as any)).toBe(false); // No fourth retry
+        expect(retryFunction(0, error as Error)).toBe(true); // First retry
+        expect(retryFunction(1, error as Error)).toBe(true); // Second retry
+        expect(retryFunction(2, error as Error)).toBe(true); // Third retry
+        expect(retryFunction(3, error as Error)).toBe(false); // No fourth retry
       }
     });
 
@@ -112,7 +120,7 @@ describe('Auth Query Hooks', () => {
 
       if (typeof retryFunction === 'function') {
         const error = { response: { status: 401 } };
-        const shouldRetry = retryFunction(0, error as any);
+        const shouldRetry = retryFunction(0, error as Error);
         expect(shouldRetry).toBe(false);
       }
     });
@@ -121,7 +129,9 @@ describe('Auth Query Hooks', () => {
   describe('authAwareRetry', () => {
     it('should refresh token and retry on first 401 error', async () => {
       const mockRefreshToken = vi.fn().mockResolvedValue(true);
-      (useAuthStore as any).getState.mockReturnValue({
+      (
+        useAuthStore as { getState: { mockReturnValue: (value: unknown) => void } }
+      ).getState.mockReturnValue({
         ...mockAuthState,
         refreshToken: mockRefreshToken,
         isRefreshing: false,
@@ -136,7 +146,9 @@ describe('Auth Query Hooks', () => {
 
     it('should not retry on second 401 error', async () => {
       const mockRefreshToken = vi.fn().mockResolvedValue(true);
-      (useAuthStore as any).getState.mockReturnValue({
+      (
+        useAuthStore as { getState: { mockReturnValue: (value: unknown) => void } }
+      ).getState.mockReturnValue({
         ...mockAuthState,
         refreshToken: mockRefreshToken,
         isRefreshing: false,
@@ -151,7 +163,9 @@ describe('Auth Query Hooks', () => {
 
     it('should not retry if already refreshing', async () => {
       const mockRefreshToken = vi.fn().mockResolvedValue(true);
-      (useAuthStore as any).getState.mockReturnValue({
+      (
+        useAuthStore as { getState: { mockReturnValue: (value: unknown) => void } }
+      ).getState.mockReturnValue({
         ...mockAuthState,
         refreshToken: mockRefreshToken,
         isRefreshing: true, // Already refreshing
@@ -166,7 +180,9 @@ describe('Auth Query Hooks', () => {
 
     it('should not retry if refresh fails', async () => {
       const mockRefreshToken = vi.fn().mockResolvedValue(false);
-      (useAuthStore as any).getState.mockReturnValue({
+      (
+        useAuthStore as { getState: { mockReturnValue: (value: unknown) => void } }
+      ).getState.mockReturnValue({
         ...mockAuthState,
         refreshToken: mockRefreshToken,
         isRefreshing: false,
@@ -216,7 +232,9 @@ describe('Auth Query Hooks', () => {
       const mockRefreshToken = vi.fn().mockResolvedValue(true);
       const mockIsTokenExpired = vi.fn().mockReturnValue(true);
 
-      (useAuthStore as any).getState.mockReturnValue({
+      (
+        useAuthStore as { getState: { mockReturnValue: (value: unknown) => void } }
+      ).getState.mockReturnValue({
         ...mockAuthState,
         refreshToken: mockRefreshToken,
         isTokenExpired: mockIsTokenExpired,
@@ -240,7 +258,9 @@ describe('Auth Query Hooks', () => {
       const mockRefreshToken = vi.fn().mockResolvedValue(false);
       const mockIsTokenExpired = vi.fn().mockReturnValue(true);
 
-      (useAuthStore as any).getState.mockReturnValue({
+      (
+        useAuthStore as { getState: { mockReturnValue: (value: unknown) => void } }
+      ).getState.mockReturnValue({
         ...mockAuthState,
         refreshToken: mockRefreshToken,
         isTokenExpired: mockIsTokenExpired,
@@ -266,7 +286,9 @@ describe('Auth Query Hooks', () => {
       const mockRefreshToken = vi.fn().mockResolvedValue(true);
       const mockIsTokenExpired = vi.fn().mockReturnValue(false);
 
-      (useAuthStore as any).getState.mockReturnValue({
+      (
+        useAuthStore as { getState: { mockReturnValue: (value: unknown) => void } }
+      ).getState.mockReturnValue({
         ...mockAuthState,
         refreshToken: mockRefreshToken,
         isTokenExpired: mockIsTokenExpired,
@@ -280,7 +302,7 @@ describe('Auth Query Hooks', () => {
         if (callCount === 1) {
           // First call fails with 401
           const error = new Error('Unauthorized');
-          (error as any).response = { status: 401 };
+          (error as { response: { status: number } }).response = { status: 401 };
           throw error;
         }
         return 'success'; // Second call succeeds
@@ -299,7 +321,9 @@ describe('Auth Query Hooks', () => {
       const mockRefreshToken = vi.fn().mockResolvedValue(true);
       const mockIsTokenExpired = vi.fn().mockReturnValue(false);
 
-      (useAuthStore as any).getState.mockReturnValue({
+      (
+        useAuthStore as { getState: { mockReturnValue: (value: unknown) => void } }
+      ).getState.mockReturnValue({
         ...mockAuthState,
         refreshToken: mockRefreshToken,
         isTokenExpired: mockIsTokenExpired,
@@ -308,7 +332,7 @@ describe('Auth Query Hooks', () => {
       const { result } = renderHook(() => useAuthMutation(), { wrapper });
 
       const apiError = new Error('Still unauthorized');
-      (apiError as any).response = { status: 401 };
+      (apiError as { response: { status: number } }).response = { status: 401 };
       const mockApiCall = vi.fn().mockRejectedValue(apiError);
 
       await act(async () => {
@@ -327,7 +351,9 @@ describe('Auth Query Hooks', () => {
       const mockRefreshToken = vi.fn();
       const mockIsTokenExpired = vi.fn().mockReturnValue(false);
 
-      (useAuthStore as any).getState.mockReturnValue({
+      (
+        useAuthStore as { getState: { mockReturnValue: (value: unknown) => void } }
+      ).getState.mockReturnValue({
         ...mockAuthState,
         refreshToken: mockRefreshToken,
         isTokenExpired: mockIsTokenExpired,
@@ -336,7 +362,7 @@ describe('Auth Query Hooks', () => {
       const { result } = renderHook(() => useAuthMutation(), { wrapper });
 
       const apiError = new Error('Server error');
-      (apiError as any).response = { status: 500 };
+      (apiError as { response: { status: number } }).response = { status: 500 };
       const mockApiCall = vi.fn().mockRejectedValue(apiError);
 
       await act(async () => {
@@ -358,7 +384,9 @@ describe('Auth Query Hooks', () => {
       const mockRefreshToken = vi.fn().mockResolvedValue(true);
       const mockIsTokenExpired = vi.fn().mockReturnValue(true);
 
-      (useAuthStore as any).getState.mockReturnValue({
+      (
+        useAuthStore as { getState: { mockReturnValue: (value: unknown) => void } }
+      ).getState.mockReturnValue({
         ...mockAuthState,
         isAuthenticated: true,
         refreshToken: mockRefreshToken,
@@ -379,7 +407,9 @@ describe('Auth Query Hooks', () => {
       const mockRefreshToken = vi.fn();
       const mockIsTokenExpired = vi.fn().mockReturnValue(false);
 
-      (useAuthStore as any).getState.mockReturnValue({
+      (
+        useAuthStore as { getState: { mockReturnValue: (value: unknown) => void } }
+      ).getState.mockReturnValue({
         ...mockAuthState,
         isAuthenticated: true,
         refreshToken: mockRefreshToken,
@@ -400,7 +430,9 @@ describe('Auth Query Hooks', () => {
       const mockRefreshToken = vi.fn();
       const mockIsTokenExpired = vi.fn().mockReturnValue(true);
 
-      (useAuthStore as any).getState.mockReturnValue({
+      (
+        useAuthStore as { getState: { mockReturnValue: (value: unknown) => void } }
+      ).getState.mockReturnValue({
         ...mockAuthState,
         isAuthenticated: false, // Not authenticated
         refreshToken: mockRefreshToken,
@@ -445,7 +477,9 @@ describe('Auth Query Hooks', () => {
       const mockRefreshToken = vi.fn().mockResolvedValue(true);
       const mockIsTokenExpired = vi.fn().mockReturnValue(true);
 
-      (useAuthStore as any).getState.mockReturnValue({
+      (
+        useAuthStore as { getState: { mockReturnValue: (value: unknown) => void } }
+      ).getState.mockReturnValue({
         ...mockAuthState,
         isAuthenticated: true,
         refreshToken: mockRefreshToken,
@@ -468,7 +502,9 @@ describe('Auth Query Hooks', () => {
       const mockRefreshToken = vi.fn().mockRejectedValue(new Error('Network error'));
       const mockIsTokenExpired = vi.fn().mockReturnValue(true);
 
-      (useAuthStore as any).getState.mockReturnValue({
+      (
+        useAuthStore as { getState: { mockReturnValue: (value: unknown) => void } }
+      ).getState.mockReturnValue({
         ...mockAuthState,
         isAuthenticated: true,
         refreshToken: mockRefreshToken,

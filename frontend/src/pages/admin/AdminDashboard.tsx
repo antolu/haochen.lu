@@ -9,19 +9,20 @@ import {
 } from '@heroicons/react/24/outline';
 
 import { photos, projects, blog } from '../../api/client';
+import type { PhotoStatsSummary, ProjectStatsSummary } from '../../types';
 
 const AdminDashboard: React.FC = () => {
-  const { data: photoStats } = useQuery({
+  const { data: photoStats } = useQuery<PhotoStatsSummary>({
     queryKey: ['admin', 'photo-stats'],
     queryFn: photos.getStats,
   });
 
-  const { data: projectStats } = useQuery({
+  const { data: projectStats } = useQuery<ProjectStatsSummary>({
     queryKey: ['admin', 'project-stats'],
     queryFn: projects.getStats,
   });
 
-  const { data: blogStats } = useQuery({
+  const { data: blogStats } = useQuery<{ total_posts: number }>({
     queryKey: ['admin', 'blog-stats'],
     queryFn: blog.getStats,
   });
@@ -29,25 +30,25 @@ const AdminDashboard: React.FC = () => {
   const stats = [
     {
       name: 'Total Photos',
-      stat: photoStats?.total_photos || 0,
+      stat: photoStats?.total_photos ?? 0,
       icon: PhotoIcon,
       color: 'bg-blue-500',
     },
     {
       name: 'Featured Photos',
-      stat: photoStats?.featured_photos || 0,
+      stat: photoStats?.featured_photos ?? 0,
       icon: EyeIcon,
       color: 'bg-green-500',
     },
     {
       name: 'Projects',
-      stat: projectStats?.total_projects || 0,
+      stat: projectStats?.total_projects ?? 0,
       icon: FolderIcon,
       color: 'bg-purple-500',
     },
     {
       name: 'Blog Posts',
-      stat: blogStats?.total_posts || 0,
+      stat: blogStats?.total_posts ?? 0,
       icon: PencilSquareIcon,
       color: 'bg-orange-500',
     },

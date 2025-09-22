@@ -20,12 +20,22 @@ const LocationInput: React.FC<LocationInputProps> = ({
   className = '',
 }) => {
   const [showMap, setShowMap] = useState(false);
-  const [manualLocationName, setManualLocationName] = useState(locationName || '');
+  const [manualLocationName, setManualLocationName] = useState(locationName ?? '');
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  type SearchResult = {
+    location_name: string;
+    location_address?: string;
+    latitude: number;
+    longitude: number;
+  };
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+  const [dropdownPosition, setDropdownPosition] = useState({
+    top: 0,
+    left: 0,
+    width: 0,
+  });
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -55,16 +65,16 @@ const LocationInput: React.FC<LocationInputProps> = ({
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('scroll', handleResize);
     };
-  }, [showSearchResults]);
+  }, [showSearchResults, updateDropdownPosition]);
 
   const handleLocationSelect = useCallback(
-    async (lat: number, lng: number) => {
+    async (lat: number, lng: number): Promise<void> => {
       // Try to get location name from coordinates
       try {
         const response = await fetch(`/api/locations/reverse?lat=${lat}&lng=${lng}`);
         if (response.ok) {
-          const data = await response.json();
-          setManualLocationName(data.location_name || '');
+          const data = (await response.json()) as { location_name?: string };
+          setManualLocationName(data.location_name ?? '');
           onLocationChange?.(lat, lng, data.location_name);
         } else {
           onLocationChange?.(lat, lng);
@@ -77,31 +87,36 @@ const LocationInput: React.FC<LocationInputProps> = ({
     [onLocationChange]
   );
 
-  const searchLocations = useCallback(async (query: string) => {
-    if (!query.trim()) {
-      setSearchResults([]);
-      setShowSearchResults(false);
-      return;
-    }
-
-    setIsSearching(true);
-    try {
-      const response = await fetch(`/api/locations/search?q=${encodeURIComponent(query)}&limit=5`);
-      if (response.ok) {
-        const data = await response.json();
-        setSearchResults(data);
-        updateDropdownPosition();
-        setShowSearchResults(true);
+  const searchLocations = useCallback(
+    async (query: string) => {
+      if (!query.trim()) {
+        setSearchResults([]);
+        setShowSearchResults(false);
+        return;
       }
-    } catch (error) {
-      console.error('Error searching locations:', error);
-      setSearchResults([]);
-    } finally {
-      setIsSearching(false);
-    }
-  }, []);
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setIsSearching(true);
+      try {
+        const response = await fetch(
+          `/api/locations/search?q=${encodeURIComponent(query)}&limit=5`
+        );
+        if (response.ok) {
+          const data = (await response.json()) as SearchResult[];
+          setSearchResults(data);
+          updateDropdownPosition();
+          setShowSearchResults(true);
+        }
+      } catch (error) {
+        console.error('Error searching locations:', error);
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    },
+    [updateDropdownPosition]
+  );
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const query = e.target.value;
     setSearchQuery(query);
     setManualLocationName(query);
@@ -112,11 +127,16 @@ const LocationInput: React.FC<LocationInputProps> = ({
     }
 
     searchTimeout.current = setTimeout(() => {
-      searchLocations(query);
+      void searchLocations(query);
     }, 300);
   };
 
-  const handleSearchResultSelect = (result: any) => {
+  const handleSearchResultSelect = (result: {
+    location_name: string;
+    location_address?: string;
+    latitude: number;
+    longitude: number;
+  }): void => {
     setSearchQuery(result.location_name);
     setManualLocationName(result.location_name);
     setShowSearchResults(false);
@@ -126,7 +146,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
 
   // Note: location name changes are handled via search input events
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent): void => {
     // Prevent form submission on Enter
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -205,11 +225,11 @@ const LocationInput: React.FC<LocationInputProps> = ({
             <input
               type="number"
               step="any"
-              value={latitude || ''}
+              value={latitude ?? ''}
               onChange={e => {
                 const lat = parseFloat(e.target.value);
                 if (!isNaN(lat) && longitude !== undefined) {
-                  handleLocationSelect(lat, longitude);
+                  void handleLocationSelect(lat, longitude);
                 }
               }}
               onKeyDown={handleKeyDown}
@@ -223,11 +243,11 @@ const LocationInput: React.FC<LocationInputProps> = ({
             <input
               type="number"
               step="any"
-              value={longitude || ''}
+              value={longitude ?? ''}
               onChange={e => {
                 const lng = parseFloat(e.target.value);
                 if (!isNaN(lng) && latitude !== undefined) {
-                  handleLocationSelect(latitude, lng);
+                  void handleLocationSelect(latitude, lng);
                 }
               }}
               onKeyDown={handleKeyDown}
@@ -242,7 +262,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
         <div className="flex justify-between items-center">
           <button
             type="button"
-            onClick={handleMapToggle}
+            onClick={() => handleMapToggle()}
             disabled={disabled}
             className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -276,7 +296,9 @@ const LocationInput: React.FC<LocationInputProps> = ({
             <MapPicker
               latitude={latitude}
               longitude={longitude}
-              onLocationSelect={handleLocationSelect}
+              onLocationSelect={(lat, lng) => {
+                void handleLocationSelect(lat, lng);
+              }}
               disabled={disabled}
               showSearch={true}
               height={350}
@@ -292,7 +314,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
               if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                   position => {
-                    handleLocationSelect(position.coords.latitude, position.coords.longitude);
+                    void handleLocationSelect(position.coords.latitude, position.coords.longitude);
                   },
                   error => {
                     console.error('Error getting current location:', error);

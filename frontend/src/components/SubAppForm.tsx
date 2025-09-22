@@ -39,11 +39,11 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
     formState: { errors },
   } = useForm<SubAppFormData>({
     defaultValues: {
-      name: subapp?.name || '',
-      url: subapp?.url || '',
-      description: subapp?.description || '',
-      icon: subapp?.icon || '',
-      color: subapp?.color || '#3B82F6',
+      name: subapp?.name ?? '',
+      url: subapp?.url ?? '',
+      description: subapp?.description ?? '',
+      icon: subapp?.icon ?? '',
+      color: subapp?.color ?? '#3B82F6',
       is_external: subapp?.is_external ?? true,
       requires_auth: subapp?.requires_auth ?? false,
       admin_only: subapp?.admin_only ?? false,
@@ -80,7 +80,12 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.2 }}
     >
-      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
+      <form
+        onSubmit={e => {
+          void handleSubmit(handleFormSubmit)(e);
+        }}
+        className="space-y-6"
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Name Field */}
           <div className="md:col-span-2">
@@ -96,7 +101,10 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
               placeholder="My Awesome App"
               {...register('name', {
                 required: 'App name is required',
-                minLength: { value: 2, message: 'Name must be at least 2 characters' },
+                minLength: {
+                  value: 2,
+                  message: 'Name must be at least 2 characters',
+                },
               })}
             />
             {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>}

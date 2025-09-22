@@ -3,7 +3,7 @@
  * Tests complete user journeys including session persistence across browser
  * restarts, multi-tab behavior, and real-world scenarios.
  */
-import { test, expect, type Page, type BrowserContext } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 // Test data
 const testUser = {
@@ -31,7 +31,7 @@ async function setupApiMocks(page: Page) {
   // Mock login endpoint
   await page.route('**/api/auth/login', async route => {
     const request = route.request();
-    const body = request.postDataJSON();
+    const body = request.postDataJSON() as { username: string; password: string };
 
     if (body.username === testUser.username && body.password === testUser.password) {
       await route.fulfill({
@@ -345,10 +345,10 @@ test.describe('Session Persistence E2E Tests', () => {
       });
 
       // Make a request that will trigger token refresh
-      const response = await page.evaluate(async () => {
+      const response = await page.evaluate(async (): Promise<{ data: string }> => {
         return fetch('/api/protected-resource', {
           credentials: 'include',
-        }).then(r => r.json());
+        }).then(r => r.json()) as Promise<{ data: string }>;
       });
 
       expect(response.data).toBe('protected data');
@@ -379,7 +379,7 @@ test.describe('Session Persistence E2E Tests', () => {
       await page.evaluate(async () => {
         try {
           await fetch('/api/protected-resource', { credentials: 'include' });
-        } catch (error) {
+        } catch {
           // Expected to fail
         }
       });

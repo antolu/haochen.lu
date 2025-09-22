@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { type AxiosError, type AxiosRequestConfig } from 'axios';
 import type {
   Photo,
   PhotoListResponse,
@@ -8,6 +8,9 @@ import type {
   BlogPostListResponse,
   SubApp,
   SubAppListResponse,
+  PhotoStatsSummary,
+  ProjectStatsSummary,
+  SubAppStatsSummary,
   User,
   LoginRequest,
   TokenResponse,
@@ -18,7 +21,7 @@ import type {
   ContentKeyValue,
 } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const API_BASE_URL: string = (import.meta.env.VITE_API_URL as string | undefined) ?? '/api';
 
 // Flag to track if we're already refreshing to prevent multiple refresh attempts
 let isRefreshing = false;
@@ -74,8 +77,8 @@ apiClient.interceptors.request.use(config => {
 // Response interceptor for automatic token refresh
 apiClient.interceptors.response.use(
   response => response,
-  async error => {
-    const originalRequest = error.config;
+  async (error: AxiosError) => {
+    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
@@ -86,7 +89,7 @@ apiClient.interceptors.response.use(
           .then(() => {
             return apiClient(originalRequest);
           })
-          .catch(err => {
+          .catch((err: Error) => {
             return Promise.reject(err);
           });
       }
@@ -99,7 +102,11 @@ apiClient.interceptors.response.use(
         const authStoreInstance = (
           window as unknown as {
             __authStore?: {
-              getState?: () => { isAuthenticated?: boolean; token?: string; accessToken?: string };
+              getState?: () => {
+                isAuthenticated?: boolean;
+                token?: string;
+                accessToken?: string;
+              };
               refreshToken?: () => Promise<boolean>;
             };
           }
@@ -132,13 +139,13 @@ apiClient.interceptors.response.use(
         const isPublicPage = ['/', '/photography', '/projects', '/blog'].some(
           path => window.location.pathname === path || window.location.pathname.startsWith(path)
         );
-        const isAuthRefresh = originalRequest.url?.includes('/auth/refresh');
+        const isAuthRefresh = originalRequest?.url?.includes('/auth/refresh') ?? false;
 
         if (window.location.pathname !== '/login' && !isPublicPage && !isAuthRefresh) {
           window.location.href = '/login';
         }
 
-        return Promise.reject(refreshError);
+        return Promise.reject(new Error('Refresh failed'));
       }
     }
 
@@ -183,18 +190,17 @@ export const photos = {
       order_by?: string;
     } = {}
   ): Promise<PhotoListResponse> => {
-    const response = await apiClient.get<PhotoListResponse>('/photos', { params });
+    const response = await apiClient.get<PhotoListResponse>('/photos', {
+      params,
+    });
     return response.data;
   },
 
   getFeatured: async (limit = 10): Promise<Photo[]> => {
     try {
-      console.log('Fetching featured photos from:', `/photos/featured?limit=${limit}`);
       const response = await apiClient.get<Photo[]>(`/photos/featured?limit=${limit}`);
-      console.log('Featured photos response:', response.data);
       return response.data;
-    } catch (error) {
-      console.error('Error fetching featured photos:', error);
+    } catch {
       // Return empty array as fallback
       return [];
     }
@@ -269,8 +275,8 @@ export const photos = {
     await apiClient.delete(`/photos/${id}`);
   },
 
-  getStats: async () => {
-    const response = await apiClient.get('/photos/stats/summary');
+  getStats: async (): Promise<PhotoStatsSummary> => {
+    const response = await apiClient.get<PhotoStatsSummary>('/photos/stats/summary');
     return response.data;
   },
 };
@@ -283,18 +289,17 @@ export const projects = {
       status?: string;
     } = {}
   ): Promise<ProjectListResponse> => {
-    const response = await apiClient.get<ProjectListResponse>('/projects', { params });
+    const response = await apiClient.get<ProjectListResponse>('/projects', {
+      params,
+    });
     return response.data;
   },
 
   getFeatured: async (): Promise<Project[]> => {
     try {
-      console.log('Fetching featured projects from:', '/projects/featured');
       const response = await apiClient.get<Project[]>('/projects/featured');
-      console.log('Featured projects response:', response.data);
       return response.data;
-    } catch (error) {
-      console.error('Error fetching featured projects:', error);
+    } catch {
       // Return empty array as fallback
       return [];
     }
@@ -321,8 +326,8 @@ export const projects = {
     await apiClient.delete(`/projects/${id}`);
   },
 
-  getStats: async () => {
-    const response = await apiClient.get('/projects/stats/summary');
+  getStats: async (): Promise<ProjectStatsSummary> => {
+    const response = await apiClient.get<ProjectStatsSummary>('/projects/stats/summary');
     return response.data;
   },
 
@@ -341,7 +346,9 @@ export const blog = {
       published_only?: boolean;
     } = {}
   ): Promise<BlogPostListResponse> => {
-    const response = await apiClient.get<BlogPostListResponse>('/blog', { params });
+    const response = await apiClient.get<BlogPostListResponse>('/blog', {
+      params,
+    });
     return response.data;
   },
 
@@ -351,7 +358,9 @@ export const blog = {
       per_page?: number;
     } = {}
   ): Promise<BlogPostListResponse> => {
-    const response = await apiClient.get<BlogPostListResponse>('/blog/admin', { params });
+    const response = await apiClient.get<BlogPostListResponse>('/blog/admin', {
+      params,
+    });
     return response.data;
   },
 
@@ -378,8 +387,8 @@ export const blog = {
     await apiClient.delete(`/blog/${id}`);
   },
 
-  getStats: async () => {
-    const response = await apiClient.get('/blog/stats/summary');
+  getStats: async (): Promise<{ total_posts: number }> => {
+    const response = await apiClient.get<{ total_posts: number }>('/blog/stats/summary');
     return response.data;
   },
 };
@@ -388,14 +397,11 @@ export const blog = {
 export const subapps = {
   list: async (menuOnly = true): Promise<SubAppListResponse> => {
     try {
-      console.log('Fetching subapps from:', '/subapps', { params: { menu_only: menuOnly } });
       const response = await apiClient.get<SubAppListResponse>('/subapps', {
         params: { menu_only: menuOnly },
       });
-      console.log('Subapps response:', response.data);
       return response.data;
-    } catch (error) {
-      console.error('Error fetching subapps:', error);
+    } catch {
       // Return empty response as fallback
       return { subapps: [], total: 0 };
     }
@@ -403,14 +409,11 @@ export const subapps = {
 
   listAuthenticated: async (menuOnly = true): Promise<SubAppListResponse> => {
     try {
-      console.log('Fetching authenticated subapps from:', '/subapps/authenticated');
       const response = await apiClient.get<SubAppListResponse>('/subapps/authenticated', {
         params: { menu_only: menuOnly },
       });
-      console.log('Authenticated subapps response:', response.data);
       return response.data;
-    } catch (error) {
-      console.error('Error fetching authenticated subapps:', error);
+    } catch {
       // Return empty response as fallback
       return { subapps: [], total: 0 };
     }
@@ -442,8 +445,8 @@ export const subapps = {
     await apiClient.delete(`/subapps/${id}`);
   },
 
-  getStats: async () => {
-    const response = await apiClient.get('/subapps/stats/summary');
+  getStats: async (): Promise<SubAppStatsSummary> => {
+    const response = await apiClient.get<SubAppStatsSummary>('/subapps/stats/summary');
     return response.data;
   },
 };
@@ -480,7 +483,9 @@ export const content = {
       per_page?: number;
     } = {}
   ): Promise<ContentListResponse> => {
-    const response = await apiClient.get<ContentListResponse>('/content', { params });
+    const response = await apiClient.get<ContentListResponse>('/content', {
+      params,
+    });
     return response.data;
   },
 

@@ -74,7 +74,7 @@ export const cameraAliasKeys = {
 // Hooks
 
 export function useCameraAliases(filters: CameraAliasFilters = {}) {
-  return useQuery({
+  return useQuery<CameraAliasListResponse>({
     queryKey: cameraAliasKeys.list(filters),
     queryFn: async (): Promise<CameraAliasListResponse> => {
       const params = new URLSearchParams();
@@ -85,17 +85,19 @@ export function useCameraAliases(filters: CameraAliasFilters = {}) {
       if (filters.brand) params.append('brand', filters.brand);
       if (filters.is_active !== undefined) params.append('is_active', filters.is_active.toString());
 
-      const response = await apiClient.get(`/camera-aliases?${params.toString()}`);
+      const response = await apiClient.get<CameraAliasListResponse>(
+        `/camera-aliases?${params.toString()}`
+      );
       return response.data;
     },
   });
 }
 
 export function useCameraAlias(id: string) {
-  return useQuery({
+  return useQuery<CameraAlias>({
     queryKey: cameraAliasKeys.detail(id),
     queryFn: async (): Promise<CameraAlias> => {
-      const response = await apiClient.get(`/camera-aliases/${id}`);
+      const response = await apiClient.get<CameraAlias>(`/camera-aliases/${id}`);
       return response.data;
     },
     enabled: !!id,
@@ -103,10 +105,12 @@ export function useCameraAlias(id: string) {
 }
 
 export function useCameraDiscovery() {
-  return useQuery({
+  return useQuery<CameraDiscoveryResponse>({
     queryKey: cameraAliasKeys.discovery(),
     queryFn: async (): Promise<CameraDiscoveryResponse> => {
-      const response = await apiClient.get('/camera-aliases/discover/cameras');
+      const response = await apiClient.get<CameraDiscoveryResponse>(
+        '/camera-aliases/discover/cameras'
+      );
       return response.data;
     },
   });
@@ -117,12 +121,12 @@ export function useCreateCameraAlias() {
 
   return useMutation({
     mutationFn: async (data: CameraAliasCreate): Promise<CameraAlias> => {
-      const response = await apiClient.post('/camera-aliases', data);
+      const response = await apiClient.post<CameraAlias>('/camera-aliases', data);
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: cameraAliasKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: cameraAliasKeys.discovery() });
+      void queryClient.invalidateQueries({ queryKey: cameraAliasKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: cameraAliasKeys.discovery() });
     },
   });
 }
@@ -138,13 +142,13 @@ export function useUpdateCameraAlias() {
       id: string;
       data: CameraAliasUpdate;
     }): Promise<CameraAlias> => {
-      const response = await apiClient.put(`/camera-aliases/${id}`, data);
+      const response = await apiClient.put<CameraAlias>(`/camera-aliases/${id}`, data);
       return response.data;
     },
     onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: cameraAliasKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: cameraAliasKeys.detail(id) });
-      queryClient.invalidateQueries({ queryKey: cameraAliasKeys.discovery() });
+      void queryClient.invalidateQueries({ queryKey: cameraAliasKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: cameraAliasKeys.detail(id) });
+      void queryClient.invalidateQueries({ queryKey: cameraAliasKeys.discovery() });
     },
   });
 }
@@ -157,8 +161,8 @@ export function useDeleteCameraAlias() {
       await apiClient.delete(`/camera-aliases/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: cameraAliasKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: cameraAliasKeys.discovery() });
+      void queryClient.invalidateQueries({ queryKey: cameraAliasKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: cameraAliasKeys.discovery() });
     },
   });
 }

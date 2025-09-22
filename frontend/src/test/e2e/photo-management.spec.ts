@@ -262,16 +262,18 @@ test.describe('Photo Management', () => {
     await expect(page.getByTestId('file-upload-container')).toBeVisible();
 
     // Simulate file selection
-    const fileInput = page.getByTestId('file-input');
+    page.getByTestId('file-input');
 
     // Create a test image file
-    const filePath = path.join(__dirname, '../fixtures/test-image.jpg');
+    path.join(__dirname, '../fixtures/test-image.jpg');
 
     // In a real test, you'd have actual image files
     // For this example, we'll simulate the upload
     await page.evaluate(() => {
       const fileInput = document.querySelector('[data-testid="file-input"]') as HTMLInputElement;
-      const mockFile = new File(['mock image data'], 'test-image.jpg', { type: 'image/jpeg' });
+      const mockFile = new File(['mock image data'], 'test-image.jpg', {
+        type: 'image/jpeg',
+      });
       const dataTransfer = new DataTransfer();
       dataTransfer.items.add(mockFile);
       fileInput.files = dataTransfer.files;
@@ -299,12 +301,14 @@ test.describe('Photo Management', () => {
   test('should handle drag and drop upload', async ({ page }) => {
     await page.goto('/admin/upload');
 
-    const dropZone = page.getByTestId('drop-zone');
+    page.getByTestId('drop-zone');
 
     // Simulate drag and drop
     await page.evaluate(() => {
       const dropZone = document.querySelector('[data-testid="drop-zone"]') as HTMLElement;
-      const mockFile = new File(['mock image data'], 'dropped-image.jpg', { type: 'image/jpeg' });
+      const mockFile = new File(['mock image data'], 'dropped-image.jpg', {
+        type: 'image/jpeg',
+      });
 
       const dragEvent = new DragEvent('drop', {
         bubbles: true,
@@ -338,7 +342,9 @@ test.describe('Photo Management', () => {
     // Try to upload invalid file type
     await page.evaluate(() => {
       const fileInput = document.querySelector('[data-testid="file-input"]') as HTMLInputElement;
-      const mockFile = new File(['mock document'], 'document.pdf', { type: 'application/pdf' });
+      const mockFile = new File(['mock document'], 'document.pdf', {
+        type: 'application/pdf',
+      });
       const dataTransfer = new DataTransfer();
       dataTransfer.items.add(mockFile);
       fileInput.files = dataTransfer.files;
@@ -458,8 +464,8 @@ test.describe('Photo Management', () => {
     // Mock large photo list
     await page.route('**/api/photos', async route => {
       const url = new URL(route.request().url());
-      const page_num = parseInt(url.searchParams.get('page') || '1');
-      const limit = parseInt(url.searchParams.get('limit') || '12');
+      const page_num = parseInt(url.searchParams.get('page') ?? '1');
+      const limit = parseInt(url.searchParams.get('limit') ?? '12');
 
       const photos = Array.from({ length: limit }, (_, i) => ({
         id: `photo-${page_num}-${i + 1}`,
@@ -772,7 +778,9 @@ test.describe('Photo Upload with Empty Fields', () => {
 
     await page.evaluate(() => {
       const fileInput = document.querySelector('[data-testid="file-input"]') as HTMLInputElement;
-      const mockFile = new File(['mock image data'], 'empty-tags-test.jpg', { type: 'image/jpeg' });
+      const mockFile = new File(['mock image data'], 'empty-tags-test.jpg', {
+        type: 'image/jpeg',
+      });
       const dataTransfer = new DataTransfer();
       dataTransfer.items.add(mockFile);
       fileInput.files = dataTransfer.files;
@@ -823,7 +831,9 @@ test.describe('Photo Upload with Empty Fields', () => {
 
     await page.evaluate(() => {
       const fileInput = document.querySelector('[data-testid="file-input"]') as HTMLInputElement;
-      const mockFile = new File(['mock image data'], 'whitespace-test.jpg', { type: 'image/jpeg' });
+      const mockFile = new File(['mock image data'], 'whitespace-test.jpg', {
+        type: 'image/jpeg',
+      });
       const dataTransfer = new DataTransfer();
       dataTransfer.items.add(mockFile);
       fileInput.files = dataTransfer.files;
@@ -874,7 +884,9 @@ test.describe('Photo Upload with Empty Fields', () => {
 
     await page.evaluate(() => {
       const fileInput = document.querySelector('[data-testid="file-input"]') as HTMLInputElement;
-      const mockFile = new File(['mock image data'], 'all-empty-test.jpg', { type: 'image/jpeg' });
+      const mockFile = new File(['mock image data'], 'all-empty-test.jpg', {
+        type: 'image/jpeg',
+      });
       const dataTransfer = new DataTransfer();
       dataTransfer.items.add(mockFile);
       fileInput.files = dataTransfer.files;

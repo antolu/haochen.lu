@@ -18,12 +18,15 @@ const PhotoListTable: React.FC<PhotoListTableProps> = ({ photos, isLoading = fal
   const reorderMutation = useReorderPhotos();
 
   const sorted = useMemo(() => {
-    const arr = [...photos].map(p => ({ ...p, order: localOrder[p.id] ?? p.order }));
+    const arr = [...photos].map(p => ({
+      ...p,
+      order: localOrder[p.id] ?? p.order,
+    }));
     arr.sort((a, b) =>
       a.order !== b.order
         ? a.order - b.order
-        : new Date(b.date_taken || b.created_at).getTime() -
-          new Date(a.date_taken || a.created_at).getTime()
+        : new Date(b.date_taken ?? b.created_at).getTime() -
+          new Date(a.date_taken ?? a.created_at).getTime()
     );
     return arr;
   }, [photos, localOrder]);
@@ -106,7 +109,7 @@ const PhotoListTable: React.FC<PhotoListTableProps> = ({ photos, isLoading = fal
               </td>
               <td className="px-4 py-2">
                 <div className="text-sm text-gray-900 truncate max-w-xs" title={p.title}>
-                  {p.title || 'Untitled'}
+                  {p.title ?? 'Untitled'}
                 </div>
                 {p.description && (
                   <div className="text-xs text-gray-500 truncate max-w-sm" title={p.description}>
@@ -114,16 +117,21 @@ const PhotoListTable: React.FC<PhotoListTableProps> = ({ photos, isLoading = fal
                   </div>
                 )}
               </td>
-              <td className="px-4 py-2 text-sm text-gray-700">{p.category || '-'}</td>
+              <td className="px-4 py-2 text-sm text-gray-700">{p.category ?? '-'}</td>
               <td
                 className="px-4 py-2 text-sm text-gray-700 truncate max-w-xs"
-                title={p.tags || ''}
+                title={p.tags ?? ''}
               >
-                {p.tags || '-'}
+                {p.tags ?? '-'}
               </td>
               <td className="px-4 py-2">
                 <button
-                  onClick={() => toggleFeaturedMutation.mutate({ id: p.id, featured: !p.featured })}
+                  onClick={() =>
+                    toggleFeaturedMutation.mutate({
+                      id: p.id,
+                      featured: !p.featured,
+                    })
+                  }
                   className={`px-2 py-1 text-xs rounded border ${p.featured ? 'bg-yellow-100 border-yellow-300 text-yellow-700' : 'bg-gray-100 border-gray-300 text-gray-700'}`}
                 >
                   {p.featured ? 'Featured' : 'Normal'}

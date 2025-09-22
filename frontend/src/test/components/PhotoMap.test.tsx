@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import PhotoMap from '../../components/PhotoMap';
 import type { Photo } from '../../types';
@@ -11,10 +11,10 @@ vi.mock('leaflet', () => {
     isValid: () => true,
   }));
 
-  const mockDivIcon = vi.fn(config => ({
+  const mockDivIcon = vi.fn((config: { className?: string; html?: string }) => ({
     options: config,
-    _className: config.className || '',
-    _html: config.html || '',
+    _className: config.className ?? '',
+    _html: config.html ?? '',
   }));
 
   return {
@@ -34,8 +34,22 @@ vi.mock('react-leaflet', () => ({
     </div>
   ),
   TileLayer: (props: any) => <div data-testid="photo-tile-layer" {...props} />,
-  Marker: ({ children, eventHandlers, ...props }: any) => (
-    <div data-testid="photo-marker" onClick={() => eventHandlers?.click?.()} {...props}>
+  Marker: ({
+    children,
+    eventHandlers,
+    ...props
+  }: {
+    children?: React.ReactNode;
+    eventHandlers?: { click?: () => void };
+    [key: string]: unknown;
+  }) => (
+    <div
+      data-testid="photo-marker"
+      onClick={() => {
+        void eventHandlers?.click?.();
+      }}
+      {...props}
+    >
       {children}
     </div>
   ),
@@ -214,7 +228,7 @@ describe('PhotoMap', () => {
   });
 
   it('uses thumbnail variant for photo markers', () => {
-    const { divIcon } = vi.hoisted(() => ({
+    vi.hoisted(() => ({
       divIcon: vi.fn(),
     }));
 

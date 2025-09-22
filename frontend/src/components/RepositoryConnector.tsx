@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
+import type { AxiosError } from 'axios';
 import { api } from '../api/client';
 
 interface RepositoryInfo {
@@ -55,9 +56,9 @@ const RepositoryConnector: React.FC<RepositoryConnectorProps> = ({
         name: data.name,
       });
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError<{ detail?: string }>) => {
       setRepoInfo(null);
-      const errorMessage = error.response?.data?.detail || 'Failed to validate repository';
+      const errorMessage = error.response?.data?.detail ?? 'Failed to validate repository';
       setError(errorMessage);
       onValidationChange?.(false);
     },
@@ -75,8 +76,9 @@ const RepositoryConnector: React.FC<RepositoryConnectorProps> = ({
     }
 
     // Basic URL pattern validation
-    const isValidPattern =
-      /^https?:\/\/(github\.com|gitlab\.com|[^\/]+\.[^\/]+)\/[^\/]+\/[^\/]+/.test(newUrl);
+    const isValidPattern = /^https?:\/\/(github\.com|gitlab\.com|[^/]+\.[^/]+)\/[^/]+\/[^/]+/.test(
+      newUrl
+    );
     if (!isValidPattern) {
       setError('Please enter a valid GitHub or GitLab repository URL');
       onValidationChange?.(false);

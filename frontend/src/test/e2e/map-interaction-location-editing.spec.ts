@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 test.describe('Map Interaction and Location Editing', () => {
   // Test data setup
@@ -235,8 +235,8 @@ test.describe('Map Interaction and Location Editing', () => {
     test('handles current location request', async ({ page }) => {
       // Mock geolocation API
       await page.addInitScript(() => {
-        navigator.geolocation = {
-          getCurrentPosition: success => {
+        (navigator as unknown as { geolocation: Geolocation }).geolocation = {
+          getCurrentPosition: (success: (position: GeolocationPosition) => void) => {
             success({
               coords: {
                 latitude: 37.7749,
@@ -244,7 +244,7 @@ test.describe('Map Interaction and Location Editing', () => {
               },
             });
           },
-        } as any;
+        } as Geolocation;
       });
 
       await page.goto('/admin/photos');
@@ -467,11 +467,14 @@ test.describe('Map Interaction and Location Editing', () => {
     test('handles geolocation permission denied', async ({ page }) => {
       // Mock geolocation to fail
       await page.addInitScript(() => {
-        navigator.geolocation = {
-          getCurrentPosition: (success, error) => {
-            error({ code: 1, message: 'Permission denied' });
+        (navigator as unknown as { geolocation: Geolocation }).geolocation = {
+          getCurrentPosition: (
+            success: (position: GeolocationPosition) => void,
+            error?: (error: GeolocationPositionError) => void
+          ) => {
+            error?.({ code: 1, message: 'Permission denied' } as GeolocationPositionError);
           },
-        } as any;
+        } as Geolocation;
       });
 
       await page.goto('/admin/photos');

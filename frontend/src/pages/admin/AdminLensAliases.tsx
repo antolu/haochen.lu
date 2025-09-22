@@ -30,9 +30,9 @@ const AdminLensAliases: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   const filters: LensAliasFilters = {
-    search: searchQuery || undefined,
-    brand: brandFilter || undefined,
-    mount_type: mountFilter || undefined,
+    search: searchQuery.trim() === '' ? undefined : searchQuery,
+    brand: brandFilter.trim() === '' ? undefined : brandFilter,
+    mount_type: mountFilter.trim() === '' ? undefined : mountFilter,
     is_active: activeFilter,
     page: currentPage,
     per_page: 20,
@@ -42,8 +42,8 @@ const AdminLensAliases: React.FC = () => {
   const { data: discoveryData } = useLensDiscovery();
   const deleteMutation = useDeleteLensAlias();
 
-  const aliases = aliasesData?.aliases || [];
-  const totalPages = aliasesData?.pages || 0;
+  const aliases = aliasesData?.aliases ?? [];
+  const totalPages = aliasesData?.pages ?? 0;
 
   const handleCreateAlias = () => {
     setEditingAlias(null);
@@ -131,14 +131,14 @@ const AdminLensAliases: React.FC = () => {
           <div className="mb-6">
             <h3 className="text-lg font-medium text-gray-900 mb-2">Discovery Statistics</h3>
             <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
-              <div>Total unique lenses: {discoveryData?.total_unique_lenses || 0}</div>
-              <div>Total photos: {discoveryData?.total_photos || 0}</div>
+              <div>Total unique lenses: {discoveryData?.total_unique_lenses ?? 0}</div>
+              <div>Total photos: {discoveryData?.total_photos ?? 0}</div>
             </div>
           </div>
 
           <div className="space-y-3">
             <h4 className="text-md font-medium text-gray-900">Lenses found in photos:</h4>
-            {discoveryData?.lenses.map((lens, index) => (
+            {discoveryData?.lenses?.map((lens, index) => (
               <div
                 key={index}
                 className={`flex items-center justify-between p-3 rounded-lg border ${
@@ -339,13 +339,13 @@ const AdminLensAliases: React.FC = () => {
                         {alias.display_name}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {alias.brand || '-'}
+                        {alias.brand ?? '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {alias.focal_length || '-'}
+                        {alias.focal_length ?? '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {alias.mount_type || '-'}
+                        {alias.mount_type ?? '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
@@ -378,7 +378,9 @@ const AdminLensAliases: React.FC = () => {
                             <PencilIcon className="h-4 w-4" />
                           </button>
                           <button
-                            onClick={() => handleDeleteAlias(alias)}
+                            onClick={() => {
+                              void handleDeleteAlias(alias);
+                            }}
                             className="text-red-600 hover:text-red-900 p-1"
                             title="Delete alias"
                           >

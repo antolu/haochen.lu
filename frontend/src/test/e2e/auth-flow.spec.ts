@@ -14,7 +14,7 @@ test.describe('Authentication Flow', () => {
     // Mock API responses for authentication
     await page.route('**/api/auth/login', async route => {
       const request = route.request();
-      const data = request.postDataJSON();
+      const data = request.postDataJSON() as { username?: string; password?: string };
 
       if (data.username === 'admin' && data.password === 'password123') {
         await route.fulfill({
@@ -267,7 +267,10 @@ test.describe('Authentication Security', () => {
     // Check localStorage doesn't contain credentials
     const localStorage = await page.evaluate(() => {
       const keys = Object.keys(window.localStorage);
-      const values = keys.map(key => ({ key, value: window.localStorage.getItem(key) }));
+      const values = keys.map(key => ({
+        key,
+        value: window.localStorage.getItem(key),
+      }));
       return values;
     });
 
@@ -276,7 +279,7 @@ test.describe('Authentication Security', () => {
       item =>
         item.key.includes('password') ||
         item.key.includes('credential') ||
-        (item.value && item.value.includes('password123'))
+        item.value?.includes('password123')
     );
 
     expect(credentialKeys).toHaveLength(0);
@@ -320,7 +323,7 @@ test.describe('Authentication Security', () => {
     const alerts = [];
     page.on('dialog', dialog => {
       alerts.push(dialog.message());
-      dialog.dismiss();
+      void dialog.dismiss();
     });
 
     // Wait a bit to see if any alert fires

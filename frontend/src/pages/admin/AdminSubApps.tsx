@@ -42,8 +42,12 @@ const AdminSubApps: React.FC = () => {
   const deleteMutation = useDeleteSubApp();
   const toggleEnabledMutation = useToggleSubAppEnabled();
 
-  const subapps = subappsData?.subapps || [];
-  const stats = statsData || { total_subapps: 0, enabled_subapps: 0, disabled_subapps: 0 };
+  const subapps = subappsData?.subapps ?? [];
+  const stats = statsData ?? {
+    total_subapps: 0,
+    enabled_subapps: 0,
+    disabled_subapps: 0,
+  };
 
   const handleCreateSubApp = () => {
     setEditingSubApp(null);
@@ -155,7 +159,7 @@ const AdminSubApps: React.FC = () => {
               </span>
             </Link>
             <button
-              onClick={handleCreateSubApp}
+              onClick={() => handleCreateSubApp()}
               disabled={showForm}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
             >
@@ -300,9 +304,11 @@ const AdminSubApps: React.FC = () => {
                 </div>
 
                 <SubAppForm
-                  subapp={editingSubApp || undefined}
-                  onSubmit={handleFormSubmit}
-                  onCancel={handleFormCancel}
+                  subapp={editingSubApp ?? undefined}
+                  onSubmit={async data => {
+                    await handleFormSubmit(data);
+                  }}
+                  onCancel={() => handleFormCancel()}
                   isLoading={isFormLoading}
                 />
               </div>
@@ -320,8 +326,12 @@ const AdminSubApps: React.FC = () => {
         <SubAppList
           subapps={subapps}
           onEdit={handleEditSubApp}
-          onDelete={handleDeleteSubApp}
-          onToggleEnabled={handleToggleEnabled}
+          onDelete={id => {
+            void handleDeleteSubApp(id);
+          }}
+          onToggleEnabled={(id, enabled) => {
+            void handleToggleEnabled(id, enabled);
+          }}
           isLoading={isLoadingSubApps}
         />
       </div>

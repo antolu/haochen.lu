@@ -31,7 +31,7 @@ import {
   parseRepositoryUrl,
   generateSlug,
   projectKeys,
-  Project,
+  // Project,  // Unused in current tests
   ProjectFilters,
   ProjectCreate,
   ProjectUpdate,
@@ -41,10 +41,10 @@ import { createMockProject, mockProjectsListResponse } from '../fixtures/project
 // Mock API client
 vi.mock('../../api/client', () => ({
   apiClient: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
+    get: vi.fn(() => Promise.resolve({ data: {} })),
+    post: vi.fn(() => Promise.resolve({ data: {} })),
+    put: vi.fn(() => Promise.resolve({ data: {} })),
+    delete: vi.fn(() => Promise.resolve({ data: {} })),
   },
 }));
 
@@ -78,7 +78,7 @@ const createWrapper = () => {
 describe('useProjects Hook', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockApiClient.get.mockResolvedValue({ data: mockProjectsListResponse });
+    vi.mocked(mockApiClient.get).mockResolvedValue({ data: mockProjectsListResponse });
   });
 
   afterEach(() => {
@@ -117,7 +117,7 @@ describe('useProjects Hook', () => {
       });
 
       expect(result.current.data).toEqual(mockProjectsListResponse);
-      expect(mockApiClient.get).toHaveBeenCalledWith('/projects?');
+      expect(vi.mocked(mockApiClient.get)).toHaveBeenCalledWith('/projects?');
     });
 
     it('applies filters correctly', async () => {
@@ -134,7 +134,7 @@ describe('useProjects Hook', () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      expect(mockApiClient.get).toHaveBeenCalledWith(
+      expect(vi.mocked(mockApiClient.get)).toHaveBeenCalledWith(
         '/projects?featured_only=true&status=active&search=test+project'
       );
     });
@@ -147,11 +147,11 @@ describe('useProjects Hook', () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/projects?');
+      expect(vi.mocked(mockApiClient.get)).toHaveBeenCalledWith('/projects?');
     });
 
     it('handles API errors gracefully', async () => {
-      mockApiClient.get.mockRejectedValue(new Error('API Error'));
+      vi.mocked(mockApiClient.get).mockRejectedValue(new Error('API Error'));
 
       const wrapper = createWrapper();
       const { result } = renderHook(() => useProjects(), { wrapper });
@@ -179,7 +179,7 @@ describe('useProjects Hook', () => {
 
   describe('useInfiniteProjects', () => {
     beforeEach(() => {
-      mockApiClient.get.mockResolvedValue({
+      vi.mocked(mockApiClient.get).mockResolvedValue({
         data: {
           projects: Array(12)
             .fill(null)
@@ -200,7 +200,7 @@ describe('useProjects Hook', () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/projects?page=1&per_page=12');
+      expect(vi.mocked(mockApiClient.get)).toHaveBeenCalledWith('/projects?page=1&per_page=12');
       expect(result.current.data?.pages).toHaveLength(1);
     });
 
@@ -217,7 +217,7 @@ describe('useProjects Hook', () => {
     });
 
     it('detects no more pages when less than 12 projects returned', async () => {
-      mockApiClient.get.mockResolvedValue({
+      vi.mocked(mockApiClient.get).mockResolvedValue({
         data: {
           projects: Array(8)
             .fill(null)
@@ -240,13 +240,15 @@ describe('useProjects Hook', () => {
       const wrapper = createWrapper();
       const filters: ProjectFilters = { featured: true };
 
-      const { result } = renderHook(() => useInfiniteProjects(filters), { wrapper });
+      const { result } = renderHook(() => useInfiniteProjects(filters), {
+        wrapper,
+      });
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      expect(mockApiClient.get).toHaveBeenCalledWith(
+      expect(vi.mocked(mockApiClient.get)).toHaveBeenCalledWith(
         '/projects?page=1&per_page=12&featured_only=true'
       );
     });
@@ -256,7 +258,7 @@ describe('useProjects Hook', () => {
     const mockProject = createMockProject();
 
     beforeEach(() => {
-      mockApiClient.get.mockResolvedValue({ data: mockProject });
+      vi.mocked(mockApiClient.get).mockResolvedValue({ data: mockProject });
     });
 
     it('fetches single project by ID', async () => {
@@ -268,7 +270,7 @@ describe('useProjects Hook', () => {
       });
 
       expect(result.current.data).toEqual(mockProject);
-      expect(mockApiClient.get).toHaveBeenCalledWith('/projects/test-id');
+      expect(vi.mocked(mockApiClient.get)).toHaveBeenCalledWith('/projects/test-id');
     });
 
     it('fetches single project by slug', async () => {
@@ -279,23 +281,25 @@ describe('useProjects Hook', () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/projects/test-slug');
+      expect(vi.mocked(mockApiClient.get)).toHaveBeenCalledWith('/projects/test-slug');
     });
 
-    it('is disabled when idOrSlug is empty', async () => {
+    it('is disabled when idOrSlug is empty', () => {
       const wrapper = createWrapper();
       const { result } = renderHook(() => useProject(''), { wrapper });
 
       // Should not make API call
-      expect(mockApiClient.get).not.toHaveBeenCalled();
+      expect(vi.mocked(mockApiClient.get)).not.toHaveBeenCalled();
       expect(result.current.data).toBeUndefined();
     });
 
     it('handles project not found error', async () => {
-      mockApiClient.get.mockRejectedValue({ response: { status: 404 } });
+      vi.mocked(mockApiClient.get).mockRejectedValue({ response: { status: 404 } });
 
       const wrapper = createWrapper();
-      const { result } = renderHook(() => useProject('nonexistent'), { wrapper });
+      const { result } = renderHook(() => useProject('nonexistent'), {
+        wrapper,
+      });
 
       await waitFor(() => {
         expect(result.current.isError).toBe(true);
@@ -310,7 +314,7 @@ describe('useProjects Hook', () => {
     ];
 
     beforeEach(() => {
-      mockApiClient.get.mockResolvedValue({ data: featuredProjects });
+      vi.mocked(mockApiClient.get).mockResolvedValue({ data: featuredProjects });
     });
 
     it('fetches featured projects', async () => {
@@ -322,7 +326,7 @@ describe('useProjects Hook', () => {
       });
 
       expect(result.current.data).toEqual(featuredProjects);
-      expect(mockApiClient.get).toHaveBeenCalledWith('/projects/featured');
+      expect(vi.mocked(mockApiClient.get)).toHaveBeenCalledWith('/projects/featured');
     });
 
     it('uses longer stale time for featured projects', async () => {
@@ -346,7 +350,7 @@ describe('useProjects Hook', () => {
     };
 
     beforeEach(() => {
-      mockApiClient.get.mockResolvedValue({ data: mockReadmeContent });
+      vi.mocked(mockApiClient.get).mockResolvedValue({ data: mockReadmeContent });
     });
 
     it('fetches cached README content', async () => {
@@ -361,12 +365,12 @@ describe('useProjects Hook', () => {
       });
 
       expect(result.current.data).toEqual(mockReadmeContent);
-      expect(mockApiClient.get).toHaveBeenCalledWith('/projects/project-1/readme');
+      expect(vi.mocked(mockApiClient.get)).toHaveBeenCalledWith('/projects/project-1/readme');
     });
 
     it('falls back to fetching README when cached version fails', async () => {
-      mockApiClient.get.mockRejectedValueOnce({ response: { status: 404 } });
-      mockApiClient.post.mockResolvedValue({ data: mockReadmeContent });
+      vi.mocked(mockApiClient.get).mockRejectedValueOnce({ response: { status: 404 } });
+      vi.mocked(mockApiClient.post).mockResolvedValue({ data: mockReadmeContent });
 
       const wrapper = createWrapper();
       const { result } = renderHook(
@@ -378,9 +382,12 @@ describe('useProjects Hook', () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      expect(mockApiClient.post).toHaveBeenCalledWith('/projects/project-1/fetch-readme', {
-        repo_url: 'https://github.com/test/repo',
-      });
+      expect(vi.mocked(mockApiClient.post)).toHaveBeenCalledWith(
+        '/projects/project-1/fetch-readme',
+        {
+          repo_url: 'https://github.com/test/repo',
+        }
+      );
     });
 
     it('is disabled when projectId or repoUrl is missing', () => {
@@ -392,7 +399,7 @@ describe('useProjects Hook', () => {
       );
       const { result: result2 } = renderHook(() => useProjectReadme('project-1', ''), { wrapper });
 
-      expect(mockApiClient.get).not.toHaveBeenCalled();
+      expect(vi.mocked(mockApiClient.get)).not.toHaveBeenCalled();
       expect(result1.current.data).toBeUndefined();
       expect(result2.current.data).toBeUndefined();
     });
@@ -408,7 +415,7 @@ describe('useProjects Hook', () => {
     };
 
     beforeEach(() => {
-      mockApiClient.get.mockResolvedValue({ data: mockStats });
+      vi.mocked(mockApiClient.get).mockResolvedValue({ data: mockStats });
     });
 
     it('fetches project statistics', async () => {
@@ -420,7 +427,7 @@ describe('useProjects Hook', () => {
       });
 
       expect(result.current.data).toEqual(mockStats);
-      expect(mockApiClient.get).toHaveBeenCalledWith('/projects/stats/summary');
+      expect(vi.mocked(mockApiClient.get)).toHaveBeenCalledWith('/projects/stats/summary');
     });
   });
 
@@ -435,7 +442,7 @@ describe('useProjects Hook', () => {
     };
 
     beforeEach(() => {
-      mockApiClient.post.mockResolvedValue({ data: mockProject });
+      vi.mocked(mockApiClient.post).mockResolvedValue({ data: mockProject });
     });
 
     it('creates project successfully', async () => {
@@ -446,11 +453,11 @@ describe('useProjects Hook', () => {
       const createdProject = await createProject(projectData);
 
       expect(createdProject).toEqual(mockProject);
-      expect(mockApiClient.post).toHaveBeenCalledWith('/projects', projectData);
+      expect(vi.mocked(mockApiClient.post)).toHaveBeenCalledWith('/projects', projectData);
     });
 
     it('handles create errors', async () => {
-      mockApiClient.post.mockRejectedValue(new Error('Validation error'));
+      vi.mocked(mockApiClient.post).mockRejectedValue(new Error('Validation error'));
 
       const wrapper = createWrapper();
       const { result } = renderHook(() => useCreateProject(), { wrapper });
@@ -467,7 +474,7 @@ describe('useProjects Hook', () => {
     };
 
     beforeEach(() => {
-      mockApiClient.put.mockResolvedValue({ data: mockProject });
+      vi.mocked(mockApiClient.put).mockResolvedValue({ data: mockProject });
     });
 
     it('updates project successfully', async () => {
@@ -475,14 +482,17 @@ describe('useProjects Hook', () => {
       const { result } = renderHook(() => useUpdateProject(), { wrapper });
 
       const updateProject = result.current.mutateAsync;
-      const updatedProject = await updateProject({ id: 'project-1', data: updateData });
+      const updatedProject = await updateProject({
+        id: 'project-1',
+        data: updateData,
+      });
 
       expect(updatedProject).toEqual(mockProject);
-      expect(mockApiClient.put).toHaveBeenCalledWith('/projects/project-1', updateData);
+      expect(vi.mocked(mockApiClient.put)).toHaveBeenCalledWith('/projects/project-1', updateData);
     });
 
     it('handles update errors', async () => {
-      mockApiClient.put.mockRejectedValue(new Error('Not found'));
+      vi.mocked(mockApiClient.put).mockRejectedValue(new Error('Not found'));
 
       const wrapper = createWrapper();
       const { result } = renderHook(() => useUpdateProject(), { wrapper });
@@ -495,7 +505,7 @@ describe('useProjects Hook', () => {
 
   describe('useDeleteProject', () => {
     beforeEach(() => {
-      mockApiClient.delete.mockResolvedValue({ data: { success: true } });
+      vi.mocked(mockApiClient.delete).mockResolvedValue({ data: { success: true } });
     });
 
     it('deletes project successfully', async () => {
@@ -506,11 +516,11 @@ describe('useProjects Hook', () => {
       const response = await deleteProject('project-1');
 
       expect(response).toEqual({ success: true });
-      expect(mockApiClient.delete).toHaveBeenCalledWith('/projects/project-1');
+      expect(vi.mocked(mockApiClient.delete)).toHaveBeenCalledWith('/projects/project-1');
     });
 
     it('handles delete errors', async () => {
-      mockApiClient.delete.mockRejectedValue(new Error('Not found'));
+      vi.mocked(mockApiClient.delete).mockRejectedValue(new Error('Not found'));
 
       const wrapper = createWrapper();
       const { result } = renderHook(() => useDeleteProject(), { wrapper });
@@ -525,7 +535,7 @@ describe('useProjects Hook', () => {
     };
 
     beforeEach(() => {
-      mockApiClient.post.mockResolvedValue({ data: mockReadmePreview });
+      vi.mocked(mockApiClient.post).mockResolvedValue({ data: mockReadmePreview });
     });
 
     it('previews README successfully', async () => {
@@ -536,13 +546,13 @@ describe('useProjects Hook', () => {
       const preview = await previewReadme('https://github.com/test/repo');
 
       expect(preview).toEqual(mockReadmePreview);
-      expect(mockApiClient.post).toHaveBeenCalledWith('/projects/preview-readme', {
+      expect(vi.mocked(mockApiClient.post)).toHaveBeenCalledWith('/projects/preview-readme', {
         repo_url: 'https://github.com/test/repo',
       });
     });
 
     it('handles preview errors', async () => {
-      mockApiClient.post.mockRejectedValue(new Error('Repository not accessible'));
+      vi.mocked(mockApiClient.post).mockRejectedValue(new Error('Repository not accessible'));
 
       const wrapper = createWrapper();
       const { result } = renderHook(() => usePreviewReadme(), { wrapper });
@@ -560,7 +570,7 @@ describe('useProjects Hook', () => {
     };
 
     beforeEach(() => {
-      mockApiClient.post.mockResolvedValue({ data: { success: true } });
+      vi.mocked(mockApiClient.post).mockResolvedValue({ data: { success: true } });
     });
 
     it('refreshes README successfully', async () => {
@@ -571,9 +581,12 @@ describe('useProjects Hook', () => {
       const response = await refreshReadme(refreshData);
 
       expect(response).toEqual({ success: true });
-      expect(mockApiClient.post).toHaveBeenCalledWith('/projects/project-1/refresh-readme', {
-        repo_url: 'https://github.com/test/repo',
-      });
+      expect(vi.mocked(mockApiClient.post)).toHaveBeenCalledWith(
+        '/projects/project-1/refresh-readme',
+        {
+          repo_url: 'https://github.com/test/repo',
+        }
+      );
     });
   });
 
@@ -723,7 +736,7 @@ describe('useProjects Hook', () => {
 
   describe('Error Handling', () => {
     it('handles network errors in queries', async () => {
-      mockApiClient.get.mockRejectedValue(new Error('Network error'));
+      vi.mocked(mockApiClient.get).mockRejectedValue(new Error('Network error'));
 
       const wrapper = createWrapper();
       const { result } = renderHook(() => useProjects(), { wrapper });
@@ -736,7 +749,7 @@ describe('useProjects Hook', () => {
     });
 
     it('handles API validation errors in mutations', async () => {
-      mockApiClient.post.mockRejectedValue({
+      vi.mocked(mockApiClient.post).mockRejectedValue({
         response: {
           status: 422,
           data: { detail: 'Title is required' },
@@ -747,7 +760,10 @@ describe('useProjects Hook', () => {
       const { result } = renderHook(() => useCreateProject(), { wrapper });
 
       await expect(
-        result.current.mutateAsync({ title: '', description: '' } as ProjectCreate)
+        result.current.mutateAsync({
+          title: '',
+          description: '',
+        } as ProjectCreate)
       ).rejects.toEqual({
         response: {
           status: 422,
@@ -757,7 +773,7 @@ describe('useProjects Hook', () => {
     });
 
     it('handles unauthorized access', async () => {
-      mockApiClient.get.mockRejectedValue({
+      vi.mocked(mockApiClient.get).mockRejectedValue({
         response: { status: 401, data: { detail: 'Unauthorized' } },
       });
 

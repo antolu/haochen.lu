@@ -71,12 +71,12 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
 
   const hasLocationData = photo.location_lat && photo.location_lon;
   const hasCameraData =
-    photo.camera_display_name ||
-    photo.lens_display_name ||
-    photo.camera_make ||
-    photo.camera_model ||
+    photo.camera_display_name ??
+    photo.lens_display_name ??
+    photo.camera_make ??
+    photo.camera_model ??
     photo.lens;
-  const hasTechnicalData = photo.aperture || photo.shutter_speed || photo.iso || photo.focal_length;
+  const hasTechnicalData = photo.aperture ?? photo.shutter_speed ?? photo.iso ?? photo.focal_length;
 
   return (
     <AnimatePresence>
@@ -90,7 +90,7 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
             transition={{ duration: 0.2 }}
             className="fixed inset-0 bg-black bg-opacity-50 lg:hidden"
             style={{ zIndex: 2050 }}
-            onClick={onSidebarClose || onClose}
+            onClick={onSidebarClose ?? onClose}
           />
 
           {/* Sidebar */}
@@ -116,7 +116,7 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
                   onClick={e => {
                     e.preventDefault();
                     e.stopPropagation();
-                    (onSidebarClose || onClose)?.();
+                    (onSidebarClose ?? onClose)?.();
                   }}
                   className="p-2 rounded-full hover:bg-gray-800 transition-colors"
                 >
@@ -174,7 +174,7 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
                     </p>
                   </div>
 
-                  {photo.tags && photo.tags.trim() && (
+                  {photo.tags?.trim() && (
                     <div>
                       <span className="text-gray-400">Tags:</span>
                       <p className="text-gray-300">{photo.tags}</p>
@@ -211,19 +211,19 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
                   }
                 >
                   <div className="space-y-2 text-sm">
-                    {(photo.camera_display_name || photo.camera_make || photo.camera_model) && (
+                    {(photo.camera_display_name ?? photo.camera_make ?? photo.camera_model) && (
                       <div>
                         <span className="text-gray-400">Camera:</span>
                         <p className="text-gray-300">
-                          {photo.camera_display_name ||
-                            `${photo.camera_make || ''} ${photo.camera_model || ''}`.trim()}
+                          {photo.camera_display_name ??
+                            `${photo.camera_make ?? ''} ${photo.camera_model ?? ''}`.trim()}
                         </p>
                       </div>
                     )}
-                    {(photo.lens_display_name || photo.lens) && (
+                    {(photo.lens_display_name ?? photo.lens) && (
                       <div>
                         <span className="text-gray-400">Lens:</span>
-                        <p className="text-gray-300">{photo.lens_display_name || photo.lens}</p>
+                        <p className="text-gray-300">{photo.lens_display_name ?? photo.lens}</p>
                       </div>
                     )}
                     {photo.date_taken && (
@@ -335,8 +335,8 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
 
                     <div className="border border-gray-700 rounded-lg overflow-hidden mt-2">
                       <MiniMap
-                        latitude={photo.location_lat!}
-                        longitude={photo.location_lon!}
+                        latitude={photo.location_lat ?? 0}
+                        longitude={photo.location_lon ?? 0}
                         zoom={13}
                         responsive={true}
                         aspectRatio="square"
@@ -355,9 +355,9 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
             <MapModal
               isOpen={isMapModalOpen}
               onClose={() => setIsMapModalOpen(false)}
-              latitude={photo.location_lat!}
-              longitude={photo.location_lon!}
-              locationName={photo.location_name || undefined}
+              latitude={photo.location_lat ?? 0}
+              longitude={photo.location_lon ?? 0}
+              locationName={photo.location_name ?? undefined}
               zoom={15}
             />
           )}

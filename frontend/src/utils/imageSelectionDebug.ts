@@ -77,16 +77,66 @@ interface DeviceTest {
 }
 
 const testDevices: DeviceTest[] = [
-  { name: 'Desktop Standard', devicePixelRatio: 1, viewportWidth: 1920, viewportHeight: 1080 },
-  { name: 'Desktop High-DPI', devicePixelRatio: 2, viewportWidth: 1920, viewportHeight: 1080 },
-  { name: 'MacBook Pro 13"', devicePixelRatio: 2, viewportWidth: 1440, viewportHeight: 900 },
-  { name: 'MacBook Pro 16"', devicePixelRatio: 2, viewportWidth: 1728, viewportHeight: 1117 },
-  { name: 'iPad Pro', devicePixelRatio: 2, viewportWidth: 1024, viewportHeight: 1366 },
-  { name: 'iPad', devicePixelRatio: 2, viewportWidth: 768, viewportHeight: 1024 },
-  { name: 'iPhone 15 Pro', devicePixelRatio: 3, viewportWidth: 393, viewportHeight: 852 },
-  { name: 'iPhone SE', devicePixelRatio: 3, viewportWidth: 375, viewportHeight: 667 },
-  { name: 'Android Phone', devicePixelRatio: 2.75, viewportWidth: 412, viewportHeight: 915 },
-  { name: 'Surface Pro', devicePixelRatio: 1.5, viewportWidth: 1368, viewportHeight: 912 },
+  {
+    name: 'Desktop Standard',
+    devicePixelRatio: 1,
+    viewportWidth: 1920,
+    viewportHeight: 1080,
+  },
+  {
+    name: 'Desktop High-DPI',
+    devicePixelRatio: 2,
+    viewportWidth: 1920,
+    viewportHeight: 1080,
+  },
+  {
+    name: 'MacBook Pro 13"',
+    devicePixelRatio: 2,
+    viewportWidth: 1440,
+    viewportHeight: 900,
+  },
+  {
+    name: 'MacBook Pro 16"',
+    devicePixelRatio: 2,
+    viewportWidth: 1728,
+    viewportHeight: 1117,
+  },
+  {
+    name: 'iPad Pro',
+    devicePixelRatio: 2,
+    viewportWidth: 1024,
+    viewportHeight: 1366,
+  },
+  {
+    name: 'iPad',
+    devicePixelRatio: 2,
+    viewportWidth: 768,
+    viewportHeight: 1024,
+  },
+  {
+    name: 'iPhone 15 Pro',
+    devicePixelRatio: 3,
+    viewportWidth: 393,
+    viewportHeight: 852,
+  },
+  {
+    name: 'iPhone SE',
+    devicePixelRatio: 3,
+    viewportWidth: 375,
+    viewportHeight: 667,
+  },
+  {
+    name: 'Android Phone',
+    devicePixelRatio: 2.75,
+    viewportWidth: 412,
+    viewportHeight: 915,
+  },
+  {
+    name: 'Surface Pro',
+    devicePixelRatio: 1.5,
+    viewportWidth: 1368,
+    viewportHeight: 912,
+  },
 ];
 
 /**
@@ -122,12 +172,15 @@ export const testImageSelectionAcrossDevices = () => {
     fileSize?: number;
   }[] = [];
 
+  if (process.env.NODE_ENV !== 'development') return results;
+  // eslint-disable-next-line no-console
   console.group('🖼️  DPI-Aware Image Selection Test Results');
 
   testDevices.forEach(device => {
     // Mock the device
     mockDevice(device);
 
+    // eslint-disable-next-line no-console
     console.group(
       `📱 ${device.name} (${device.devicePixelRatio}x DPI, ${device.viewportWidth}×${device.viewportHeight})`
     );
@@ -143,11 +196,12 @@ export const testImageSelectionAcrossDevices = () => {
       };
       const selection = selectOptimalImage(testPhoto, useCase);
 
+      // eslint-disable-next-line no-console
       console.log(`${useCase}:`, {
         selectedVariant: selection.selectedVariant,
         targetSize: debug.targetSize,
-        actualSize: testPhoto.variants?.[selection.selectedVariant]?.width || 'N/A',
-        fileSize: `${Math.round((testPhoto.variants?.[selection.selectedVariant]?.size_bytes || 0) / 1024)}KB`,
+        actualSize: testPhoto.variants?.[selection.selectedVariant]?.width ?? 'N/A',
+        fileSize: `${Math.round((testPhoto.variants?.[selection.selectedVariant]?.size_bytes ?? 0) / 1024)}KB`,
         url: selection.url,
       });
 
@@ -163,9 +217,11 @@ export const testImageSelectionAcrossDevices = () => {
       });
     });
 
+    // eslint-disable-next-line no-console
     console.groupEnd();
   });
 
+  // eslint-disable-next-line no-console
   console.groupEnd();
 
   return results;
@@ -175,6 +231,10 @@ export const testImageSelectionAcrossDevices = () => {
  * Test bandwidth efficiency compared to static selection
  */
 export const testBandwidthEfficiency = () => {
+  if (process.env.NODE_ENV !== 'development') {
+    return { staticBytes: 0, dynamicBytes: 0, savings: 0, percentSavings: 0 };
+  }
+  // eslint-disable-next-line no-console
   console.group('📊 Bandwidth Efficiency Analysis');
 
   // Static selection (what we used before)
@@ -193,11 +253,11 @@ export const testBandwidthEfficiency = () => {
     mockDevice(device);
 
     Object.values(ImageUseCase).forEach(useCase => {
-      const staticVariant = staticSelection[useCase as keyof typeof staticSelection];
-      const staticBytes = testPhoto.variants?.[staticVariant]?.size_bytes || 0;
+      const staticVariant = staticSelection[useCase];
+      const staticBytes = testPhoto.variants?.[staticVariant]?.size_bytes ?? 0;
 
       const dynamicSelection = selectOptimalImage(testPhoto, useCase);
-      const dynamicBytes = testPhoto.variants?.[dynamicSelection.selectedVariant]?.size_bytes || 0;
+      const dynamicBytes = testPhoto.variants?.[dynamicSelection.selectedVariant]?.size_bytes ?? 0;
 
       totalStaticBytes += staticBytes;
       totalDynamicBytes += dynamicBytes;
@@ -207,12 +267,14 @@ export const testBandwidthEfficiency = () => {
   const savings = totalStaticBytes - totalDynamicBytes;
   const percentSavings = ((savings / totalStaticBytes) * 100).toFixed(1);
 
+  // eslint-disable-next-line no-console
   console.log('Total bandwidth comparison:', {
     staticApproach: `${Math.round(totalStaticBytes / 1024 / 1024)}MB`,
     dynamicApproach: `${Math.round(totalDynamicBytes / 1024 / 1024)}MB`,
     savings: `${Math.round(savings / 1024 / 1024)}MB (${percentSavings}%)`,
   });
 
+  // eslint-disable-next-line no-console
   console.groupEnd();
 
   return {
@@ -227,6 +289,8 @@ export const testBandwidthEfficiency = () => {
  * Test quality improvements for high-DPI displays
  */
 export const testHighDPIQuality = () => {
+  if (process.env.NODE_ENV !== 'development') return;
+  // eslint-disable-next-line no-console
   console.group('✨ High-DPI Quality Analysis');
 
   const standardDevice = {
@@ -251,6 +315,7 @@ export const testHighDPIQuality = () => {
   [standardDevice, retinaDevice, ultraDevice].forEach(device => {
     mockDevice(device);
 
+    // eslint-disable-next-line no-console
     console.group(`🖥️  ${device.name} (${device.devicePixelRatio}x)`);
 
     Object.values(ImageUseCase).forEach(useCase => {
@@ -261,6 +326,7 @@ export const testHighDPIQuality = () => {
         const pixelDensity = variant.width / device.viewportWidth;
         const qualityScore = Math.min(pixelDensity * device.devicePixelRatio, 3);
 
+        // eslint-disable-next-line no-console
         console.log(`${useCase}:`, {
           variant: selection.selectedVariant,
           resolution: `${variant.width}×${variant.height}`,
@@ -272,9 +338,11 @@ export const testHighDPIQuality = () => {
       }
     });
 
+    // eslint-disable-next-line no-console
     console.groupEnd();
   });
 
+  // eslint-disable-next-line no-console
   console.groupEnd();
 };
 

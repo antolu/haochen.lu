@@ -15,20 +15,35 @@ import userEvent from '@testing-library/user-event';
 import ProjectsPage from '../../pages/ProjectsPage';
 import { mockProjects, mockProjectsListResponse } from '../fixtures/projects';
 import { renderWithProviders } from '../utils/project-test-utils';
-import * as useProjectsModule from '../../hooks/useProjects';
+// import * as useProjectsModule from '../../hooks/useProjects';  // Unused but kept for future test enhancements
 
 // Mock the useInfiniteProjects hook
-const mockUseInfiniteProjects = vi.fn();
-vi.mock('../../hooks/useProjects', () => ({
-  ...vi.importActual('../../hooks/useProjects'),
-  useInfiniteProjects: (...args: any[]) => mockUseInfiniteProjects(...args),
-}));
+const mockUseInfiniteProjects = vi.fn(() => ({}));
+vi.mock('../../hooks/useProjects', async () => {
+  const actual = await vi.importActual('../../hooks/useProjects');
+  return {
+    ...actual,
+    useInfiniteProjects: (...args: unknown[]) => mockUseInfiniteProjects(...args),
+  };
+});
 
 // Mock ProjectGrid component
 vi.mock('../../components/ProjectGrid', () => ({
-  default: ({ projects, onLoadMore, hasMore, isLoading, isLoadingMore }: any) => (
+  default: ({
+    projects,
+    onLoadMore,
+    hasMore,
+    isLoading,
+    isLoadingMore,
+  }: {
+    projects: { id: string; title: string }[];
+    onLoadMore?: () => void;
+    hasMore?: boolean;
+    isLoading?: boolean;
+    isLoadingMore?: boolean;
+  }) => (
     <div data-testid="project-grid">
-      <div data-testid="project-count">{projects.length}</div>
+      <div data-testid="project-count">{projects?.length ?? 0}</div>
       <div data-testid="loading-state">{isLoading ? 'loading' : 'loaded'}</div>
       <div data-testid="loading-more-state">
         {isLoadingMore ? 'loading-more' : 'not-loading-more'}
@@ -39,7 +54,7 @@ vi.mock('../../components/ProjectGrid', () => ({
           Load More
         </button>
       )}
-      {projects.map((project: any) => (
+      {projects?.map((project: { id: string; title: string }) => (
         <div key={project.id} data-testid={`project-${project.id}`}>
           {project.title}
         </div>
@@ -321,7 +336,9 @@ describe('ProjectsPage', () => {
       const user = userEvent.setup();
       renderWithProviders(<ProjectsPage />);
 
-      const inProgressButton = screen.getByRole('button', { name: 'In Progress' });
+      const inProgressButton = screen.getByRole('button', {
+        name: 'In Progress',
+      });
       await user.click(inProgressButton);
 
       expect(mockUseInfiniteProjects).toHaveBeenCalledWith({
@@ -399,7 +416,10 @@ describe('ProjectsPage', () => {
         data: {
           pages: [
             mockProjectsListResponse,
-            { projects: secondPageProjects, total: mockProjectsListResponse.total + 5 },
+            {
+              projects: secondPageProjects,
+              total: mockProjectsListResponse.total + 5,
+            },
           ],
         },
       });
@@ -504,7 +524,7 @@ describe('ProjectsPage', () => {
 
       const filterButtons = screen.getAllByRole('button');
       const namedButtons = filterButtons.filter(button =>
-        ['All', 'Featured', 'Active', 'In Progress'].includes(button.textContent || '')
+        ['All', 'Featured', 'Active', 'In Progress'].includes(button.textContent ?? '')
       );
 
       expect(namedButtons).toHaveLength(4);

@@ -129,7 +129,7 @@ const MainLayout: React.FC = () => {
                           {app.icon && (
                             <span
                               className="mr-3 text-lg"
-                              style={{ color: app.color || undefined }}
+                              style={{ color: app.color ?? undefined }}
                             >
                               {app.icon}
                             </span>
@@ -230,7 +230,7 @@ const MainLayout: React.FC = () => {
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         {app.icon && (
-                          <span className="mr-3" style={{ color: app.color || undefined }}>
+                          <span className="mr-3" style={{ color: app.color ?? undefined }}>
                             {app.icon}
                           </span>
                         )}

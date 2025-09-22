@@ -6,7 +6,7 @@
  */
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { renderWithProviders, mockUser, mockAdminUser } from '../utils';
 
 // Mock navigation components
@@ -17,7 +17,7 @@ const MockNavigation = ({
   currentPath = '/',
   isMobile = false,
 }: {
-  user?: any;
+  user?: { is_admin?: boolean };
   onLogin?: () => void;
   onLogout?: () => void;
   currentPath?: string;
@@ -75,7 +75,7 @@ const MockNavigation = ({
                 {user ? (
                   <div className="flex items-center space-x-4">
                     <span data-testid="user-greeting" className="text-sm text-gray-700">
-                      Hello, {user.full_name || user.username}
+                      Hello, {user.full_name ?? user.username}
                     </span>
                     {user.is_admin && (
                       <span
@@ -163,7 +163,7 @@ const MockNavigation = ({
                 {user ? (
                   <div className="space-y-2">
                     <div className="px-3 py-2 text-sm text-gray-700">
-                      Hello, {user.full_name || user.username}
+                      Hello, {user.full_name ?? user.username}
                       {user.is_admin && (
                         <span className="ml-2 px-2 py-1 bg-red-100 text-red-800 text-xs rounded">
                           Admin

@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { motion, AnimatePresence } from 'framer-motion';
+import type { AxiosError } from 'axios';
 import { useForm } from 'react-hook-form';
 import { useUploadPhoto } from '../hooks/usePhotos';
 
@@ -55,7 +56,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
 
     // Only trigger completion if we have files, all are completed, and none are currently uploading
     if (allCompleted && !hasErrors && !hasUploading && onComplete) {
-      console.log('All uploads completed successfully - closing dialog');
+      // All uploads completed successfully - closing dialog
       setTimeout(onComplete, 500); // Small delay to show completion state
     }
   }, [uploadFiles, onComplete]);
@@ -65,7 +66,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
     (acceptedFiles: File[]) => {
       try {
         if (!acceptedFiles || acceptedFiles.length === 0) {
-          console.log('No files provided to onDrop');
+          // No files provided to onDrop
           return;
         }
 
@@ -129,7 +130,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
           };
         });
 
-        console.log(`Added ${newFiles.length} files to upload queue`);
+        // Added files to upload queue
         setUploadFiles(prev => [...prev, ...newFiles]);
       } catch (error) {
         console.error('Error processing dropped files:', error);
@@ -177,7 +178,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
       }
 
       const updated = prev.filter(f => f.id !== fileId);
-      console.log(`Removed file ${fileId} from upload queue`);
+      // Removed file from upload queue
       return updated;
     });
   };
@@ -205,12 +206,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
       throw new Error('Upload file.file is not a valid File object');
     }
 
-    console.log('Starting upload for file:', {
-      id: uploadFile.id,
-      fileName: uploadFile.file?.name || 'unknown',
-      fileSize: uploadFile.file?.size || 0,
-      fileType: uploadFile.file?.type || 'unknown',
-    });
+    // Starting upload for file
 
     setCurrentUpload(uploadFile.id);
 
@@ -249,12 +245,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
         },
       };
 
-      console.log('Uploading photo with data:', {
-        fileName: uploadFile.file?.name || 'unknown',
-        fileSize: uploadFile.file?.size || 0,
-        fileType: uploadFile.file?.type || 'unknown',
-        metadata: uploadData.metadata,
-      });
+      // Uploading photo with data
 
       await uploadMutation.mutateAsync(uploadData);
 
@@ -278,7 +269,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
 
       // Handle network/HTTP errors
       if (typeof error === 'object' && error !== null && 'response' in error) {
-        const axiosError = error as any;
+        const axiosError = error as AxiosError<{ detail?: string }>;
 
         if (axiosError.response) {
           const status = axiosError.response.status;
@@ -287,7 +278,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
           // Categorize by HTTP status
           if (status === 422) {
             errorCategory = 'validation';
-            errorMessage = detail || 'File validation failed. Please check file type and size.';
+            errorMessage = detail ?? 'File validation failed. Please check file type and size.';
           } else if (status === 413) {
             errorCategory = 'file-too-large';
             errorMessage = 'File is too large. Maximum size is 50MB.';
@@ -300,10 +291,10 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
           } else {
             errorCategory = 'http-error';
             errorMessage =
-              detail || `HTTP ${status}: ${axiosError.response.statusText || 'Unknown error'}`;
+              detail ?? `HTTP ${status}: ${axiosError.response.statusText ?? 'Unknown error'}`;
           }
 
-          console.error('Upload HTTP error details:', {
+          console.warn('Upload HTTP error details:', {
             status,
             statusText: axiosError.response.statusText,
             detail,
@@ -312,13 +303,13 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
         } else if (axiosError.request) {
           errorCategory = 'network';
           errorMessage = 'Network error. Please check your connection and try again.';
-          console.error('Upload network error:', axiosError.request);
+          console.warn('Upload network error:', axiosError.request);
         }
       }
 
-      console.error('Upload error summary:', {
-        fileName: uploadFile.file?.name || 'unknown',
-        fileSize: uploadFile.file?.size || 0,
+      console.warn('Upload error summary:', {
+        fileName: uploadFile.file?.name ?? 'unknown',
+        fileSize: uploadFile.file?.size ?? 0,
         category: errorCategory,
         message: errorMessage,
       });
@@ -346,7 +337,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
     const pendingFiles = uploadFiles.filter(f => {
       // Only include files with valid structure
       const isValidStatus = f.status === 'pending' || f.status === 'error';
-      const hasValidFile = f && f.file && f.file instanceof File;
+      const hasValidFile = f?.file instanceof File;
 
       if (isValidStatus && !hasValidFile) {
         console.warn('Skipping invalid file in upload queue:', f);
@@ -354,7 +345,11 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
         setUploadFiles(prev =>
           prev.map(file =>
             file.id === f.id
-              ? { ...file, status: 'error' as const, error: 'Invalid file object' }
+              ? {
+                  ...file,
+                  status: 'error' as const,
+                  error: 'Invalid file object',
+                }
               : file
           )
         );
@@ -363,7 +358,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
       return isValidStatus && hasValidFile;
     });
 
-    console.log(`Starting batch upload of ${pendingFiles.length} files`);
+    // Starting batch upload
 
     for (const uploadFile of pendingFiles) {
       try {
@@ -375,7 +370,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
       }
     }
 
-    console.log('Batch upload process completed');
+    // Batch upload process completed
     // Note: Completion check is now handled by useEffect watching uploadFiles state
   };
 
@@ -385,18 +380,12 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
       title: (data?.title || '').trim(),
       description: (data?.description || '').trim(),
       category: (data?.category || '').trim(),
-      tags: (data?.tags || '').trim(),
-      comments: (data?.comments || '').trim(),
+      tags: (data?.tags ?? '').trim(),
+      comments: (data?.comments ?? '').trim(),
       featured: Boolean(data?.featured),
     };
 
     // Log form submission for debugging
-    console.log('Form submitted with data:', {
-      original: data,
-      sanitized: safeData,
-      filesCount: uploadFiles.length,
-      pendingFiles: uploadFiles.filter(f => f.status === 'pending').length,
-    });
 
     // Validate that we have retryable files to upload
     const retryableFiles = uploadFiles.filter(f => f.status === 'pending' || f.status === 'error');
@@ -412,7 +401,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
       )
     );
 
-    uploadAllFiles(safeData);
+    void uploadAllFiles(safeData);
   };
 
   // Cleanup preview URLs on unmount
@@ -421,14 +410,14 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
       // Safely cleanup all preview URLs
       uploadFiles.forEach(file => {
         try {
-          if (file && file.preview && typeof file.preview === 'string') {
+          if (file?.preview && typeof file.preview === 'string') {
             URL.revokeObjectURL(file.preview);
           }
         } catch (error) {
           console.warn('Failed to cleanup preview URL:', error);
         }
       });
-      console.log('Cleaned up preview URLs for PhotoUpload component');
+      // Cleaned up preview URLs for PhotoUpload component
     };
   }, [uploadFiles]); // Include uploadFiles in dependencies to ensure cleanup
 
@@ -588,7 +577,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
                     </p>
                     <p className="text-xs text-gray-500">
                       {file.file?.size && typeof file.file.size === 'number'
-                        ? (file.file.size / 1024 / 1024).toFixed(1) + ' MB'
+                        ? `${(file.file.size / 1024 / 1024).toFixed(1)} MB`
                         : 'Unknown size'}
                     </p>
                     {file.error && <p className="text-xs text-red-600">{file.error}</p>}
@@ -611,7 +600,12 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
             </div>
 
             {/* Metadata Form */}
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-4 bg-gray-50 rounded-lg">
+            <form
+              onSubmit={e => {
+                void handleSubmit(onSubmit)(e);
+              }}
+              className="space-y-4 p-4 bg-gray-50 rounded-lg"
+            >
               <h3 className="text-lg font-medium text-gray-900">Photo Details (Applied to All)</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

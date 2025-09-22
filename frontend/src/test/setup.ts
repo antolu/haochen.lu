@@ -21,7 +21,7 @@ Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi.fn().mockImplementation(query => ({
     matches: false,
-    media: query,
+    media: query as string,
     onchange: null,
     addListener: vi.fn(), // deprecated
     removeListener: vi.fn(), // deprecated
@@ -38,7 +38,7 @@ Object.defineProperty(window, 'scrollTo', {
 });
 
 // Ensure window.location exists for React Router in JSDOM
-if (!window.location || !(window.location as any).href) {
+if (!window.location || !(window.location as unknown as { href?: string }).href) {
   Object.defineProperty(window, 'location', {
     writable: true,
     value: {
@@ -48,7 +48,7 @@ if (!window.location || !(window.location as any).href) {
       search: '',
       hash: '',
       assign: vi.fn((url: string) => {
-        (window as any).location.href = url;
+        (window as unknown as { location: { href: string } }).location.href = url;
       }),
       replace: vi.fn(),
     },
@@ -89,7 +89,7 @@ Object.defineProperty(window.URL, 'revokeObjectURL', {
 });
 
 // Mock Image constructor for image loading tests
-global.Image = class {
+(global as unknown as { Image: unknown }).Image = class {
   constructor() {
     setTimeout(() => {
       this.onload?.();
@@ -104,11 +104,19 @@ global.Image = class {
 } as any;
 
 // Mock File constructor
-global.File = class File {
-  constructor(chunks: any[], filename: string, options?: any) {
+(global as unknown as { File: unknown }).File = class File {
+  constructor(
+    chunks: (string | ArrayBuffer | ArrayBufferView | Blob)[],
+    filename: string,
+    options?: { type?: string }
+  ) {
     this.name = filename;
-    this.size = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
-    this.type = options?.type || '';
+    this.size = chunks.reduce(
+      (acc: number, chunk: string | ArrayBuffer | ArrayBufferView | Blob) =>
+        acc + (chunk as { length: number }).length,
+      0
+    );
+    this.type = options?.type ?? '';
     this.lastModified = Date.now();
   }
   name: string;
@@ -130,7 +138,7 @@ global.File = class File {
 } as any;
 
 // Mock FileReader
-global.FileReader = class FileReader {
+(global as unknown as { FileReader: unknown }).FileReader = class FileReader {
   readAsDataURL() {
     setTimeout(() => {
       this.onload?.({

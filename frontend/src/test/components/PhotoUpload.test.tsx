@@ -5,7 +5,7 @@
  * error handling, and edge cases.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderWithProviders } from '../utils';
@@ -29,26 +29,42 @@ vi.mock('react-hot-toast', () => ({
 
 // Mock react-dropzone to make testing easier
 vi.mock('react-dropzone', () => ({
-  useDropzone: vi.fn(({ onDrop, accept, maxSize, multiple, disabled }) => ({
-    getRootProps: () => ({
-      'data-testid': 'drop-zone',
-      onClick: () => {
-        // Simulate file selection
-        const mockFile = new File(['test content'], 'test.jpg', { type: 'image/jpeg' });
-        onDrop([mockFile]);
-      },
-    }),
-    getInputProps: () => ({
-      'data-testid': 'file-input',
-      type: 'file',
-      onChange: (e: any) => {
-        if (e.target.files) {
-          onDrop(Array.from(e.target.files));
-        }
-      },
-    }),
-    isDragActive: false,
-  })),
+  useDropzone: vi.fn(
+    ({
+      onDrop,
+      accept: _accept,
+      maxSize: _maxSize,
+      multiple: _multiple,
+      disabled: _disabled,
+    }: {
+      onDrop?: (files: File[]) => void;
+      accept?: string;
+      maxSize?: number;
+      multiple?: boolean;
+      disabled?: boolean;
+    }) => ({
+      getRootProps: () => ({
+        'data-testid': 'drop-zone',
+        onClick: () => {
+          // Simulate file selection
+          const mockFile = new File(['test content'], 'test.jpg', {
+            type: 'image/jpeg',
+          });
+          onDrop?.([mockFile]);
+        },
+      }),
+      getInputProps: () => ({
+        'data-testid': 'file-input',
+        type: 'file',
+        onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+          if (e.target.files) {
+            onDrop?.(Array.from(e.target.files));
+          }
+        },
+      }),
+      isDragActive: false,
+    })
+  ),
 }));
 
 const createTestFile = (
@@ -131,7 +147,7 @@ describe('PhotoUpload Component Tests', () => {
     it('should accept valid image files', async () => {
       renderPhotoUpload();
 
-      const file = createTestFile('valid.jpg', 1024, 'image/jpeg');
+      createTestFile('valid.jpg', 1024, 'image/jpeg');
       const dropzone = screen.getByTestId('drop-zone');
 
       fireEvent.click(dropzone);
@@ -141,10 +157,10 @@ describe('PhotoUpload Component Tests', () => {
       });
     });
 
-    it('should reject files that are too large', async () => {
+    it('should reject files that are too large', () => {
       renderPhotoUpload();
 
-      const largeFile = createTestFile('large.jpg', 60 * 1024 * 1024, 'image/jpeg'); // 60MB
+      createTestFile('large.jpg', 60 * 1024 * 1024, 'image/jpeg'); // 60MB
 
       // Mock the onDrop to simulate large file rejection
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -162,10 +178,10 @@ describe('PhotoUpload Component Tests', () => {
       consoleSpy.mockRestore();
     });
 
-    it('should reject empty files', async () => {
+    it('should reject empty files', () => {
       renderPhotoUpload();
 
-      const emptyFile = createTestFile('empty.jpg', 0, 'image/jpeg');
+      createTestFile('empty.jpg', 0, 'image/jpeg');
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       const dropzone = screen.getByTestId('drop-zone');
@@ -179,10 +195,10 @@ describe('PhotoUpload Component Tests', () => {
       consoleSpy.mockRestore();
     });
 
-    it('should reject files without names', async () => {
+    it('should reject files without names', () => {
       renderPhotoUpload();
 
-      const fileWithoutName = createTestFile('', 1024, 'image/jpeg');
+      createTestFile('', 1024, 'image/jpeg');
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       const dropzone = screen.getByTestId('drop-zone');
@@ -201,7 +217,7 @@ describe('PhotoUpload Component Tests', () => {
       renderPhotoUpload();
 
       // Add a file
-      const file = createTestFile('test.jpg');
+      createTestFile('test.jpg');
       const dropzone = screen.getByTestId('drop-zone');
       fireEvent.click(dropzone);
 
@@ -458,14 +474,17 @@ describe('PhotoUpload Component Tests', () => {
       ];
 
       // Mock multiple files
-      vi.mocked(require('react-dropzone').useDropzone).mockImplementation(({ onDrop }) => ({
-        getRootProps: () => ({
-          'data-testid': 'drop-zone',
-          onClick: () => onDrop(files),
-        }),
-        getInputProps: () => ({ 'data-testid': 'file-input' }),
-        isDragActive: false,
-      }));
+      const { useDropzone } = await import('react-dropzone');
+      vi.mocked(useDropzone).mockImplementation(
+        ({ onDrop }: { onDrop?: (files: File[]) => void }) => ({
+          getRootProps: () => ({
+            'data-testid': 'drop-zone',
+            onClick: () => onDrop?.(files),
+          }),
+          getInputProps: () => ({ 'data-testid': 'file-input' }),
+          isDragActive: false,
+        })
+      );
 
       renderPhotoUpload();
 
@@ -608,14 +627,17 @@ describe('PhotoUpload Component Tests', () => {
       renderPhotoUpload();
 
       // Simulate corrupted file list
-      vi.mocked(require('react-dropzone').useDropzone).mockImplementation(({ onDrop }) => ({
-        getRootProps: () => ({
-          'data-testid': 'drop-zone',
-          onClick: () => onDrop([undefined, null] as any),
-        }),
-        getInputProps: () => ({ 'data-testid': 'file-input' }),
-        isDragActive: false,
-      }));
+      const { useDropzone } = await import('react-dropzone');
+      vi.mocked(useDropzone).mockImplementation(
+        ({ onDrop }: { onDrop?: (files: (File | null | undefined)[]) => void }) => ({
+          getRootProps: () => ({
+            'data-testid': 'drop-zone',
+            onClick: () => onDrop?.([undefined, null]),
+          }),
+          getInputProps: () => ({ 'data-testid': 'file-input' }),
+          isDragActive: false,
+        })
+      );
 
       renderPhotoUpload();
 
@@ -632,17 +654,20 @@ describe('PhotoUpload Component Tests', () => {
     it('should handle very long filenames', async () => {
       renderPhotoUpload();
 
-      const longFilename = 'a'.repeat(255) + '.jpg';
+      const longFilename = `${'a'.repeat(255)}.jpg`;
       const longFile = createTestFile(longFilename);
 
-      vi.mocked(require('react-dropzone').useDropzone).mockImplementation(({ onDrop }) => ({
-        getRootProps: () => ({
-          'data-testid': 'drop-zone',
-          onClick: () => onDrop([longFile]),
-        }),
-        getInputProps: () => ({ 'data-testid': 'file-input' }),
-        isDragActive: false,
-      }));
+      const { useDropzone } = await import('react-dropzone');
+      vi.mocked(useDropzone).mockImplementation(
+        ({ onDrop }: { onDrop?: (files: File[]) => void }) => ({
+          getRootProps: () => ({
+            'data-testid': 'drop-zone',
+            onClick: () => onDrop?.([longFile]),
+          }),
+          getInputProps: () => ({ 'data-testid': 'file-input' }),
+          isDragActive: false,
+        })
+      );
 
       renderPhotoUpload();
 
@@ -684,14 +709,17 @@ describe('PhotoUpload Component Tests', () => {
         createTestFile('file3.jpg'), // Should be rejected
       ];
 
-      vi.mocked(require('react-dropzone').useDropzone).mockImplementation(({ onDrop }) => ({
-        getRootProps: () => ({
-          'data-testid': 'drop-zone',
-          onClick: () => onDrop(files),
-        }),
-        getInputProps: () => ({ 'data-testid': 'file-input' }),
-        isDragActive: false,
-      }));
+      const { useDropzone } = await import('react-dropzone');
+      vi.mocked(useDropzone).mockImplementation(
+        ({ onDrop }: { onDrop?: (files: File[]) => void }) => ({
+          getRootProps: () => ({
+            'data-testid': 'drop-zone',
+            onClick: () => onDrop?.(files),
+          }),
+          getInputProps: () => ({ 'data-testid': 'file-input' }),
+          isDragActive: false,
+        })
+      );
 
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 

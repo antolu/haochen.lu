@@ -261,7 +261,7 @@ export const selectOptimalImage = (
   containerSize?: { width: number; height: number }
 ): OptimalImageSelection => {
   const context = getDeviceContext();
-  const variants = photo.variants || {};
+  const variants = photo.variants ?? {};
 
   // Calculate target size based on context and use case
   const targetSize = calculateTargetSize(useCase, context, containerSize);
@@ -271,11 +271,11 @@ export const selectOptimalImage = (
 
   // Get URLs with proper fallbacks
   const selectedUrl =
-    variants[selectedVariant]?.url || photo.original_url || `/uploads/${photo.filename}`;
+    variants[selectedVariant]?.url ?? photo.original_url ?? `/uploads/${photo.filename}`;
   const fallbackUrl =
-    variants.small?.url ||
-    variants.thumbnail?.url ||
-    photo.original_url ||
+    variants.small?.url ??
+    variants.thumbnail?.url ??
+    photo.original_url ??
     `/uploads/${photo.filename}`;
 
   // Generate responsive attributes
@@ -332,7 +332,7 @@ export const debugImageSelection = (
     useCase,
     targetSize,
     selection,
-    availableVariants: Object.keys(photo.variants || {}),
+    availableVariants: Object.keys(photo.variants ?? {}),
     deviceInfo: {
       dpiCategory: getDPICategory(context.devicePixelRatio),
       screenSize: getScreenSize(context.viewportWidth),

@@ -22,7 +22,7 @@ import {
 
 // Mock ProjectCard component to simplify testing
 vi.mock('../../components/ProjectCard', () => ({
-  default: ({ project }: { project: any }) => (
+  default: ({ project }: { project: { id: string; title: string; short_description: string } }) => (
     <div data-testid={`project-card-${project.id}`}>
       <h3>{project.title}</h3>
       <p>{project.short_description}</p>
@@ -179,7 +179,7 @@ describe('ProjectGrid', () => {
       });
     });
 
-    it('does not call onLoadMore when no onLoadMore prop provided', async () => {
+    it('does not call onLoadMore when no onLoadMore prop provided', () => {
       renderWithProviders(<ProjectGrid projects={mockProjects} hasMore={true} isLoading={false} />);
 
       // Should not throw error when triggering intersection observer
@@ -314,7 +314,7 @@ describe('ProjectGrid', () => {
       expect(renderSpy).toHaveBeenCalledTimes(2);
     });
 
-    it('handles rapid state changes gracefully', async () => {
+    it('handles rapid state changes gracefully', () => {
       const { rerender } = renderWithProviders(<ProjectGrid projects={[]} isLoading={true} />);
 
       // Rapidly change states
@@ -345,11 +345,11 @@ describe('ProjectGrid', () => {
 
     it('handles null/undefined projects array gracefully', () => {
       expect(() => {
-        renderWithProviders(<ProjectGrid projects={null as any} isLoading={false} />);
+        renderWithProviders(<ProjectGrid projects={null as never} isLoading={false} />);
       }).not.toThrow();
 
       expect(() => {
-        renderWithProviders(<ProjectGrid projects={undefined as any} isLoading={false} />);
+        renderWithProviders(<ProjectGrid projects={undefined as never} isLoading={false} />);
       }).not.toThrow();
     });
   });

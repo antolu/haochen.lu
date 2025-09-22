@@ -29,8 +29,8 @@ const AdminCameraAliases: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   const filters: CameraAliasFilters = {
-    search: searchQuery || undefined,
-    brand: brandFilter || undefined,
+    search: searchQuery.trim() === '' ? undefined : searchQuery,
+    brand: brandFilter.trim() === '' ? undefined : brandFilter,
     is_active: activeFilter,
     page: currentPage,
     per_page: 20,
@@ -40,8 +40,8 @@ const AdminCameraAliases: React.FC = () => {
   const { data: discoveryData } = useCameraDiscovery();
   const deleteMutation = useDeleteCameraAlias();
 
-  const aliases = aliasesData?.aliases || [];
-  const totalPages = aliasesData?.pages || 0;
+  const aliases = aliasesData?.aliases ?? [];
+  const totalPages = aliasesData?.pages ?? 0;
 
   const handleCreateAlias = () => {
     setEditingAlias(null);
@@ -128,8 +128,8 @@ const AdminCameraAliases: React.FC = () => {
           <div className="mb-6">
             <h3 className="text-lg font-medium text-gray-900 mb-2">Discovery Statistics</h3>
             <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
-              <div>Total unique cameras: {discoveryData?.total_unique_cameras || 0}</div>
-              <div>Total photos: {discoveryData?.total_photos || 0}</div>
+              <div>Total unique cameras: {discoveryData?.total_unique_cameras ?? 0}</div>
+              <div>Total photos: {discoveryData?.total_photos ?? 0}</div>
             </div>
           </div>
 
@@ -147,7 +147,8 @@ const AdminCameraAliases: React.FC = () => {
                 <div className="flex-1">
                   <div className="font-medium text-gray-900">{camera.original_name}</div>
                   <div className="text-sm text-gray-500">
-                    {camera.photo_count} photo{camera.photo_count !== 1 ? 's' : ''}
+                    {camera.photo_count} photo
+                    {camera.photo_count !== 1 ? 's' : ''}
                     {camera.camera_make && camera.camera_model && (
                       <span className="ml-2">
                         ({camera.camera_make} {camera.camera_model})
@@ -167,8 +168,8 @@ const AdminCameraAliases: React.FC = () => {
                           id: '',
                           original_name: camera.original_name,
                           display_name: camera.original_name,
-                          brand: camera.camera_make || '',
-                          model: camera.camera_model || '',
+                          brand: camera.camera_make ?? '',
+                          model: camera.camera_model ?? '',
                           is_active: true,
                           created_at: '',
                           updated_at: '',
@@ -328,10 +329,10 @@ const AdminCameraAliases: React.FC = () => {
                         {alias.display_name}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {alias.brand || '-'}
+                        {alias.brand ?? '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {alias.model || '-'}
+                        {alias.model ?? '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
@@ -364,7 +365,9 @@ const AdminCameraAliases: React.FC = () => {
                             <PencilIcon className="h-4 w-4" />
                           </button>
                           <button
-                            onClick={() => handleDeleteAlias(alias)}
+                            onClick={() => {
+                              void handleDeleteAlias(alias);
+                            }}
                             className="text-red-600 hover:text-red-900 p-1"
                             title="Delete alias"
                           >

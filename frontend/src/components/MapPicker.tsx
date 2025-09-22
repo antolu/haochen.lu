@@ -4,7 +4,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-lea
 import { getTileConfig } from '../utils/mapUtils';
 
 // Fix for default markers in react-leaflet
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+delete (L.Icon.Default.prototype as Record<string, unknown>)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
@@ -28,6 +28,13 @@ interface MapEventsProps {
   disabled?: boolean;
 }
 
+interface SearchResult {
+  location_name: string;
+  location_address?: string;
+  latitude: number;
+  longitude: number;
+}
+
 // Component to handle map click events
 const MapEvents: React.FC<MapEventsProps> = ({ onLocationSelect, disabled }) => {
   useMapEvents({
@@ -41,11 +48,11 @@ const MapEvents: React.FC<MapEventsProps> = ({ onLocationSelect, disabled }) => 
 };
 
 // Component to update map view when coordinates change
-const MapController: React.FC<{ latitude: number; longitude: number; zoom: number }> = ({
-  latitude,
-  longitude,
-  zoom,
-}) => {
+const MapController: React.FC<{
+  latitude: number;
+  longitude: number;
+  zoom: number;
+}> = ({ latitude, longitude, zoom }) => {
   const map = useMap();
 
   useEffect(() => {
@@ -60,7 +67,7 @@ const LocationSearch: React.FC<{
   onLocationSelect: (lat: number, lng: number, name: string) => void;
 }> = ({ onLocationSelect }) => {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -77,7 +84,7 @@ const LocationSearch: React.FC<{
         `/api/locations/search?q=${encodeURIComponent(searchQuery)}&limit=5`
       );
       if (response.ok) {
-        const data = await response.json();
+        const data = (await response.json()) as SearchResult[];
         setResults(data);
       }
     } catch (error) {
@@ -99,11 +106,11 @@ const LocationSearch: React.FC<{
     }
 
     searchTimeout.current = setTimeout(() => {
-      searchLocations(value);
+      void searchLocations(value);
     }, 300);
   };
 
-  const handleResultClick = (result: any) => {
+  const handleResultClick = (result: SearchResult) => {
     setQuery(result.location_name);
     setIsOpen(false);
     setResults([]);

@@ -10,11 +10,10 @@
  * - Form validation and error handling
  * - Responsive behavior across devices
  */
-import { test, expect, Page, BrowserContext } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 
 // Test configuration
-const BASE_URL = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000';
-const API_BASE_URL = process.env.VITE_API_URL || 'http://localhost:8000';
+const BASE_URL = process.env.PLAYWRIGHT_TEST_BASE_URL ?? 'http://localhost:3000';
 
 // Mock data for testing
 const testProject = {
@@ -159,7 +158,7 @@ test.describe('Project Management E2E Tests', () => {
       await page.waitForSelector('h1:text("Project Management")');
 
       // Verify project appears in list
-      await expect(page.locator('text=' + testProject.title)).toBeVisible();
+      await expect(page.locator(`text=${testProject.title}`)).toBeVisible();
 
       // Verify project details
       const projectRow = page.locator(`tr:has-text("${testProject.title}")`);
@@ -250,7 +249,7 @@ test.describe('Project Management E2E Tests', () => {
       await page.waitForSelector('h1:text("Project Management")');
 
       // Verify changes
-      await expect(page.locator('text=' + updatedProject.title)).toBeVisible();
+      await expect(page.locator(`text=${updatedProject.title}`)).toBeVisible();
       const updatedRow = page.locator(`tr:has-text("${updatedProject.title}")`);
       await expect(updatedRow.locator('text=In Progress')).toBeVisible();
       await expect(updatedRow.locator('text=Featured')).not.toBeVisible();
@@ -276,7 +275,7 @@ test.describe('Project Management E2E Tests', () => {
 
       // Verify we're back to list and changes weren't saved
       await page.waitForSelector('h1:text("Project Management")');
-      await expect(page.locator('text=' + testProject.title)).toBeVisible();
+      await expect(page.locator(`text=${testProject.title}`)).toBeVisible();
       await expect(page.locator('text=Should Not Be Saved')).not.toBeVisible();
     });
   });
@@ -296,7 +295,7 @@ test.describe('Project Management E2E Tests', () => {
       // Setup dialog handler before clicking delete
       page.on('dialog', dialog => {
         expect(dialog.message()).toContain(testProject.title);
-        dialog.accept();
+        void dialog.accept();
       });
 
       await projectRow.locator('button:text("Delete")').click();
@@ -305,7 +304,7 @@ test.describe('Project Management E2E Tests', () => {
       await page.waitForTimeout(2000);
 
       // Verify project is removed from list
-      await expect(page.locator('text=' + testProject.title)).not.toBeVisible();
+      await expect(page.locator(`text=${testProject.title}`)).not.toBeVisible();
     });
 
     test('should cancel deletion when user rejects confirmation', async ({ page }) => {
@@ -321,13 +320,13 @@ test.describe('Project Management E2E Tests', () => {
 
       // Setup dialog handler to cancel
       page.on('dialog', dialog => {
-        dialog.dismiss();
+        void dialog.dismiss();
       });
 
       await projectRow.locator('button:text("Delete")').click();
 
       // Verify project is still in list
-      await expect(page.locator('text=' + testProject.title)).toBeVisible();
+      await expect(page.locator(`text=${testProject.title}`)).toBeVisible();
     });
   });
 
@@ -344,7 +343,10 @@ test.describe('Project Management E2E Tests', () => {
 
       // Create second project
       await page.click('button:text("Create New Project")');
-      await fillProjectForm(page, { ...testProject, title: 'Another Test Project' });
+      await fillProjectForm(page, {
+        ...testProject,
+        title: 'Another Test Project',
+      });
       await page.click('button:text("Create Project")');
       await page.waitForSelector('h1:text("Project Management")');
 
@@ -355,7 +357,7 @@ test.describe('Project Management E2E Tests', () => {
       await page.waitForTimeout(1000);
 
       // Should show only the matching project
-      await expect(page.locator('text=' + testProject.title)).toBeVisible();
+      await expect(page.locator(`text=${testProject.title}`)).toBeVisible();
       await expect(page.locator('text=Another Test Project')).not.toBeVisible();
 
       // Clear search
@@ -363,7 +365,7 @@ test.describe('Project Management E2E Tests', () => {
       await page.waitForTimeout(1000);
 
       // Should show all projects again
-      await expect(page.locator('text=' + testProject.title)).toBeVisible();
+      await expect(page.locator(`text=${testProject.title}`)).toBeVisible();
       await expect(page.locator('text=Another Test Project')).toBeVisible();
     });
 
@@ -384,7 +386,7 @@ test.describe('Project Management E2E Tests', () => {
 
       // If no projects exist, should show empty state
       const noProjectsText = page.locator('text=No projects found');
-      const createProjectText = page.locator('text=Create your first project');
+      page.locator('text=Create your first project');
 
       // Check if either projects exist or empty state is shown
       const hasProjects = (await page.locator('tbody tr').count()) > 0;
@@ -410,8 +412,8 @@ test.describe('Project Management E2E Tests', () => {
       await page.waitForSelector('h1:text("Projects & Work")');
 
       // Should show the project in the grid
-      await expect(page.locator('text=' + testProject.title)).toBeVisible();
-      await expect(page.locator('text=' + testProject.short_description)).toBeVisible();
+      await expect(page.locator(`text=${testProject.title}`)).toBeVisible();
+      await expect(page.locator(`text=${testProject.short_description}`)).toBeVisible();
     });
 
     test('should navigate to project detail page', async ({ page }) => {
@@ -433,8 +435,8 @@ test.describe('Project Management E2E Tests', () => {
       await page.waitForURL(`${BASE_URL}/projects/${testProject.slug}`);
 
       // Should show project details
-      await expect(page.locator('h1:text("' + testProject.title + '")')).toBeVisible();
-      await expect(page.locator('text=' + testProject.short_description)).toBeVisible();
+      await expect(page.locator(`h1:text("${testProject.title}")`)).toBeVisible();
+      await expect(page.locator(`text=${testProject.short_description}`)).toBeVisible();
       await expect(page.locator('text=Active')).toBeVisible();
       await expect(page.locator('text=⭐ Featured')).toBeVisible();
 
@@ -538,7 +540,7 @@ test.describe('Project Management E2E Tests', () => {
 
       // Intercept API calls to return errors
       await page.route('**/api/projects', route => {
-        route.fulfill({
+        void route.fulfill({
           status: 422,
           contentType: 'application/json',
           body: JSON.stringify({ detail: 'Validation error' }),

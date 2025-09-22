@@ -46,7 +46,9 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 
     return (
       <button
-        onClick={() => copyToClipboard(text)}
+        onClick={() => {
+          void copyToClipboard(text);
+        }}
         className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-gray-800 hover:bg-gray-700 text-white p-1.5 rounded text-xs flex items-center gap-1"
         title={isCopied ? 'Copied!' : 'Copy code'}
       >

@@ -11,23 +11,28 @@
  * - Responsive layout and accessibility
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ProjectDetailPage from '../../pages/ProjectDetailPage';
 import { createMockProject, mockReadmeResponse } from '../fixtures/projects';
 import { renderWithProviders } from '../utils/project-test-utils';
-import * as useProjectsModule from '../../hooks/useProjects';
+// import * as useProjectsModule from '../../hooks/useProjects';  // Unused but kept for future test enhancements
 
 // Mock the hooks
-const mockUseProject = vi.fn();
-const mockUseProjectReadme = vi.fn();
+const mockUseProject = vi.fn(() => ({}));
+const mockUseProjectReadme = vi.fn(() => ({}));
 
-vi.mock('../../hooks/useProjects', () => ({
-  ...vi.importActual('../../hooks/useProjects'),
-  useProject: (...args: any[]) => mockUseProject(...args),
-  useProjectReadme: (...args: any[]) => mockUseProjectReadme(...args),
-  parseTechnologies: vi.fn((tech: string) => (tech ? tech.split(',').map(t => t.trim()) : [])),
-}));
+vi.mock('../../hooks/useProjects', async () => {
+  const actual = await vi.importActual('../../hooks/useProjects');
+  return {
+    ...actual,
+    useProject: (...args: unknown[]) => mockUseProject(...args),
+    useProjectReadme: (...args: unknown[]) => mockUseProjectReadme(...args),
+    parseTechnologies: vi.fn((tech: string) =>
+      tech ? tech.split(',').map((t: string) => t.trim()) : []
+    ),
+  };
+});
 
 // Mock MarkdownRenderer
 vi.mock('../../components/MarkdownRenderer', () => ({
@@ -50,7 +55,7 @@ const renderWithRouter = (
 ) => {
   window.history.pushState({}, 'Test', initialEntries[0]);
   // Ensure react-router reads the correct slug by updating window.location
-  (window as any).location.pathname = initialEntries[0];
+  (window as unknown as { location: { pathname: string } }).location.pathname = initialEntries[0];
   return renderWithProviders(component, { initialRoute: initialEntries[0] });
 };
 
@@ -186,7 +191,7 @@ describe('ProjectDetailPage', () => {
 
     it('handles unknown status gracefully', () => {
       mockUseProject.mockReturnValue({
-        data: { ...mockProject, status: 'unknown' as any },
+        data: { ...mockProject, status: 'unknown' as 'active' | 'archived' | 'in_progress' },
         isLoading: false,
         error: null,
       });
@@ -211,7 +216,9 @@ describe('ProjectDetailPage', () => {
     it('renders GitHub link when github_url is provided', () => {
       renderWithRouter(<ProjectDetailPage />);
 
-      const githubLink = screen.getByRole('link', { name: /view source code/i });
+      const githubLink = screen.getByRole('link', {
+        name: /view source code/i,
+      });
       expect(githubLink).toHaveAttribute('href', 'https://github.com/test/project');
       expect(githubLink).toHaveAttribute('target', '_blank');
       expect(githubLink).toHaveAttribute('rel', 'noopener noreferrer');
@@ -245,7 +252,9 @@ describe('ProjectDetailPage', () => {
       renderWithRouter(<ProjectDetailPage />);
 
       const demoLink = screen.getByRole('link', { name: /view live demo/i });
-      const githubLink = screen.getByRole('link', { name: /view source code/i });
+      const githubLink = screen.getByRole('link', {
+        name: /view source code/i,
+      });
 
       expect(demoLink.querySelector('svg')).toBeInTheDocument();
       expect(githubLink.querySelector('svg')).toBeInTheDocument();

@@ -33,15 +33,15 @@ const LensAliasForm: React.FC<LensAliasFormProps> = ({ alias, onSuccess, onCance
   useEffect(() => {
     if (alias) {
       setFormData({
-        original_name: alias.original_name || '',
-        display_name: alias.display_name || '',
-        brand: alias.brand || '',
-        model: alias.model || '',
-        mount_type: alias.mount_type || '',
-        focal_length: alias.focal_length || '',
-        max_aperture: alias.max_aperture || '',
-        lens_type: alias.lens_type || '',
-        notes: alias.notes || '',
+        original_name: alias.original_name ?? '',
+        display_name: alias.display_name ?? '',
+        brand: alias.brand ?? '',
+        model: alias.model ?? '',
+        mount_type: alias.mount_type ?? '',
+        focal_length: alias.focal_length ?? '',
+        max_aperture: alias.max_aperture ?? '',
+        lens_type: alias.lens_type ?? '',
+        notes: alias.notes ?? '',
         is_active: alias.is_active ?? true,
       });
     }
@@ -100,7 +100,9 @@ const LensAliasForm: React.FC<LensAliasFormProps> = ({ alias, onSuccess, onCance
 
       // Handle validation errors from the server
       const errorResponse = error as {
-        response?: { data?: { detail?: string | Array<{ loc?: string[]; msg?: string }> } };
+        response?: {
+          data?: { detail?: string | Array<{ loc?: string[]; msg?: string }> };
+        };
       };
       if (errorResponse.response?.data?.detail) {
         if (typeof errorResponse.response.data.detail === 'string') {
@@ -116,7 +118,9 @@ const LensAliasForm: React.FC<LensAliasFormProps> = ({ alias, onSuccess, onCance
           setErrors(newErrors);
         }
       } else {
-        setErrors({ submit: 'An unexpected error occurred. Please try again.' });
+        setErrors({
+          submit: 'An unexpected error occurred. Please try again.',
+        });
       }
     } finally {
       setIsSubmitting(false);
@@ -134,7 +138,7 @@ const LensAliasForm: React.FC<LensAliasFormProps> = ({ alias, onSuccess, onCance
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="p-6">
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={e => void handleSubmit(e)} className="space-y-6">
         {/* Error display */}
         {errors.submit && (
           <div className="bg-red-50 border border-red-200 rounded-md p-4">

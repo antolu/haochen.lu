@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import PhotoEditForm from '../../components/admin/PhotoEditForm';
 import type { Photo } from '../../types';
@@ -8,7 +8,7 @@ import type { Photo } from '../../types';
 vi.mock('react-hook-form', () => ({
   useForm: () => ({
     register: () => ({}),
-    handleSubmit: (fn: Function) => (e: Event) => {
+    handleSubmit: (fn: (data: unknown) => void) => (e: Event) => {
       e.preventDefault();
       fn({});
     },
@@ -17,7 +17,14 @@ vi.mock('react-hook-form', () => ({
     watch: () => ({}),
     formState: { errors: {} },
   }),
-  Controller: ({ render: renderProp }: any) => renderProp({ field: {}, fieldState: {} }),
+  Controller: ({
+    render: renderProp,
+  }: {
+    render: (props: {
+      field: Record<string, unknown>;
+      fieldState: Record<string, unknown>;
+    }) => unknown;
+  }) => renderProp({ field: {}, fieldState: {} }),
 }));
 
 vi.mock('framer-motion', () => ({
@@ -35,23 +42,39 @@ vi.mock('react-hot-toast', () => ({
 }));
 
 vi.mock('../../components/LocationInput', () => ({
-  default: ({ latitude, longitude, locationName, onLocationChange, disabled }: any) => (
+  default: ({
+    latitude,
+    longitude,
+    locationName,
+    onLocationChange,
+    disabled,
+  }: {
+    latitude?: number;
+    longitude?: number;
+    locationName?: string;
+    onLocationChange?: (lat: number, lng: number, name?: string) => void;
+    disabled?: boolean;
+  }) => (
     <div data-testid="location-input">
       <input
         data-testid="location-lat"
-        value={latitude || ''}
-        onChange={e => onLocationChange?.(parseFloat(e.target.value), longitude, locationName)}
+        value={latitude ?? ''}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          onLocationChange?.(parseFloat(e.target.value), longitude, locationName)
+        }
         disabled={disabled}
       />
       <input
         data-testid="location-lng"
-        value={longitude || ''}
-        onChange={e => onLocationChange?.(latitude, parseFloat(e.target.value), locationName)}
+        value={longitude ?? ''}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          onLocationChange?.(latitude, parseFloat(e.target.value), locationName)
+        }
         disabled={disabled}
       />
       <input
         data-testid="location-name"
-        value={locationName || ''}
+        value={locationName ?? ''}
         onChange={e => onLocationChange?.(latitude, longitude, e.target.value)}
         disabled={disabled}
       />
@@ -200,7 +223,7 @@ describe('Enhanced PhotoEditForm', () => {
     it('shows featured checkbox checked for featured photos', () => {
       render(<PhotoEditForm {...defaultProps} />);
 
-      const featuredCheckbox = screen.getByLabelText(/featured/i) as HTMLInputElement;
+      const featuredCheckbox = screen.getByLabelText(/featured/i);
       expect(featuredCheckbox.checked).toBe(true);
     });
 
@@ -208,7 +231,7 @@ describe('Enhanced PhotoEditForm', () => {
       const nonFeaturedPhoto = { ...mockPhoto, featured: false };
       render(<PhotoEditForm {...defaultProps} photo={nonFeaturedPhoto} />);
 
-      const featuredCheckbox = screen.getByLabelText(/featured/i) as HTMLInputElement;
+      const featuredCheckbox = screen.getByLabelText(/featured/i);
       expect(featuredCheckbox.checked).toBe(false);
     });
 
@@ -251,9 +274,10 @@ describe('Enhanced PhotoEditForm', () => {
       const user = userEvent.setup();
       const setValue = vi.fn();
 
-      vi.mocked(require('react-hook-form').useForm).mockReturnValue({
+      const { useForm } = await import('react-hook-form');
+      vi.mocked(useForm).mockReturnValue({
         register: () => ({}),
-        handleSubmit: (fn: Function) => (e: Event) => {
+        handleSubmit: (fn: (data: unknown) => void) => (e: Event) => {
           e.preventDefault();
           fn({});
         },
@@ -514,7 +538,7 @@ describe('Enhanced PhotoEditForm', () => {
     it('shows validation errors', async () => {
       const formWithErrors = vi.fn().mockReturnValue({
         register: () => ({}),
-        handleSubmit: (fn: Function) => (e: Event) => {
+        handleSubmit: (fn: (data: unknown) => void) => (e: Event) => {
           e.preventDefault();
           fn({});
         },
@@ -529,7 +553,8 @@ describe('Enhanced PhotoEditForm', () => {
         },
       });
 
-      vi.mocked(require('react-hook-form').useForm).mockImplementation(formWithErrors);
+      const { useForm } = await import('react-hook-form');
+      vi.mocked(useForm).mockImplementation(formWithErrors);
 
       render(<PhotoEditForm {...defaultProps} />);
 
@@ -607,7 +632,7 @@ describe('Enhanced PhotoEditForm', () => {
       render(<PhotoEditForm {...defaultProps} />);
 
       // Should not lose any data during editing
-      expect(screen.getByDisplayValue(mockPhoto.title!)).toBeInTheDocument();
+      expect(screen.getByDisplayValue(mockPhoto.title)).toBeInTheDocument();
       expect(screen.getByDisplayValue(mockPhoto.description!)).toBeInTheDocument();
     });
 

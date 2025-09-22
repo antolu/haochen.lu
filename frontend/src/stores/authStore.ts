@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { auth } from '../api/client';
+import type { AxiosError } from 'axios';
 import type { User, LoginRequest } from '../types';
 
 interface AuthState {
@@ -40,7 +41,10 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
 
         try {
-          const tokenResponse = await auth.login({ ...credentials, remember_me: rememberMe });
+          const tokenResponse = await auth.login({
+            ...credentials,
+            remember_me: rememberMe,
+          });
 
           set({
             accessToken: tokenResponse.access_token,
@@ -55,18 +59,21 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
           });
-        } catch (error: any) {
+        } catch (error: unknown) {
           let errorMessage = 'Login failed';
 
-          if (error.response?.data?.detail) {
-            errorMessage = error.response.data.detail;
-          } else if (error.response?.status === 401) {
+          const axiosErr = error as Partial<AxiosError<{ detail?: string }>>;
+          const status = axiosErr.response?.status;
+          const detail = axiosErr.response?.data?.detail;
+          if (detail) {
+            errorMessage = detail;
+          } else if (status === 401) {
             errorMessage = 'Invalid username or password';
-          } else if (error.response?.status === 403) {
+          } else if (status === 403) {
             errorMessage = 'Access denied';
-          } else if (error.response?.status >= 500) {
+          } else if ((status ?? 0) >= 500) {
             errorMessage = 'Server error. Please try again later.';
-          } else if (error.code === 'NETWORK_ERROR' || !error.response) {
+          } else if (!axiosErr.response) {
             errorMessage = 'Network error. Please check your connection.';
           }
 
@@ -85,8 +92,8 @@ export const useAuthStore = create<AuthState>()(
       logout: async () => {
         try {
           await auth.logout();
-        } catch (error) {
-          console.warn('Logout request failed:', error);
+        } catch (_error) {
+          console.warn('Logout request failed:', _error);
         } finally {
           get().clearAuth();
         }
@@ -95,8 +102,8 @@ export const useAuthStore = create<AuthState>()(
       logoutEverywhere: async () => {
         try {
           await auth.revokeAllSessions();
-        } catch (error) {
-          console.warn('Logout everywhere request failed:', error);
+        } catch (_error) {
+          console.warn('Logout everywhere request failed:', _error);
         } finally {
           get().clearAuth();
         }
@@ -126,8 +133,8 @@ export const useAuthStore = create<AuthState>()(
           });
 
           return true;
-        } catch (error) {
-          console.warn('Token refresh failed:', error);
+        } catch (_error) {
+          console.warn('Token refresh failed:', _error);
           get().clearAuth();
           return false;
         } finally {
@@ -187,7 +194,7 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
           });
-        } catch (error) {
+        } catch {
           // If /me fails, try to refresh and retry once
           const refreshSuccess = await get().refreshToken();
           if (refreshSuccess) {
@@ -226,4 +233,10 @@ export const useAuthStore = create<AuthState>()(
 );
 
 // Make auth store available globally for API client
-(window as any).__authStore = useAuthStore;
+declare global {
+  interface Window {
+    __authStore?: typeof useAuthStore;
+  }
+}
+window.__authStore = useAuthStore;
+export default useAuthStore;

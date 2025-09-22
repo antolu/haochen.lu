@@ -4,13 +4,19 @@
  */
 import { QueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
+import type { AxiosError } from 'axios';
+
+interface AuthState {
+  isAuthenticated: boolean;
+  // Add other properties as needed
+}
 
 // Create a custom query client with auth-aware error handling
 export const createAuthQueryClient = () => {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        retry: (failureCount, error: any) => {
+        retry: (failureCount, error: AxiosError) => {
           // Don't retry on authentication errors
           if (error?.response?.status === 401) {
             return false;
@@ -22,7 +28,7 @@ export const createAuthQueryClient = () => {
         gcTime: 10 * 60 * 1000, // 10 minutes (renamed from cacheTime in v5)
       },
       mutations: {
-        retry: (failureCount, error: any) => {
+        retry: (failureCount, error: AxiosError) => {
           // Don't retry authentication errors
           if (error?.response?.status === 401) {
             return false;
@@ -36,7 +42,7 @@ export const createAuthQueryClient = () => {
 };
 
 // Auth-aware query retry function
-export const authAwareRetry = async (failureCount: number, error: any) => {
+export const authAwareRetry = async (failureCount: number, error: AxiosError) => {
   const authStore = useAuthStore.getState();
 
   // If it's a 401 error, try to refresh the token
@@ -72,9 +78,9 @@ export const useAuthMutation = () => {
 
     try {
       return await fn();
-    } catch (error: any) {
+    } catch (error: unknown) {
       // If request fails with 401, try refreshing token once
-      if (error?.response?.status === 401) {
+      if ((error as AxiosError)?.response?.status === 401) {
         const refreshSuccess = await refreshToken();
         if (refreshSuccess) {
           // Retry the original request
@@ -91,7 +97,7 @@ export const useAuthMutation = () => {
 // Auth state sync helper
 export const syncAuthState = (queryClient: QueryClient) => {
   // Listen for auth state changes
-  useAuthStore.subscribe((state: any, prevState: any) => {
+  useAuthStore.subscribe((state: AuthState, prevState: AuthState) => {
     // If user logged out, clear all queries
     if (prevState.isAuthenticated && !state.isAuthenticated) {
       queryClient.clear();
@@ -100,7 +106,7 @@ export const syncAuthState = (queryClient: QueryClient) => {
 
     // If user logged in, invalidate auth-dependent queries
     if (!prevState.isAuthenticated && state.isAuthenticated) {
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         predicate: query => {
           // Invalidate queries that might need authentication
           const queryKey = query.queryKey[0] as string;

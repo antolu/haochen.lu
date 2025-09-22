@@ -13,7 +13,7 @@
 import { test, expect, Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-const BASE_URL = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000';
+const BASE_URL = process.env.PLAYWRIGHT_TEST_BASE_URL ?? 'http://localhost:3000';
 
 // Helper function for consistent screenshot setup
 async function setupScreenshot(
@@ -281,7 +281,7 @@ test.describe('Accessibility Compliance Tests', () => {
     for (let i = 0; i < inputCount; i++) {
       const input = inputs.nth(i);
       const id = await input.getAttribute('id');
-      const name = await input.getAttribute('name');
+      await input.getAttribute('name');
       const ariaLabel = await input.getAttribute('aria-label');
       const ariaLabelledby = await input.getAttribute('aria-labelledby');
 
@@ -384,7 +384,7 @@ test.describe('Keyboard Navigation Tests', () => {
 
     // Test form field navigation
     await page.keyboard.press('Tab');
-    let focusedElement = page.locator(':focus');
+    const focusedElement = page.locator(':focus');
 
     // Should focus on first form field
     const isInput = await focusedElement.evaluate(

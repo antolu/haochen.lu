@@ -10,7 +10,7 @@ import { screen, waitFor } from '@testing-library/react';
 import { renderWithProviders, mockUser, mockAdminUser, mockLocalStorage } from '../utils';
 
 // Mock authentication hook
-const mockUseAuth = vi.fn();
+const mockUseAuth = vi.fn(() => ({}));
 vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => mockUseAuth(),
 }));
@@ -26,7 +26,10 @@ vi.mock('@/services/api', () => mockApiService);
 
 // Mock components for testing
 const MockLoginForm = () => {
-  const [credentials, setCredentials] = React.useState({ username: '', password: '' });
+  const [credentials, setCredentials] = React.useState({
+    username: '',
+    password: '',
+  });
   const [isLoading, setIsLoading] = React.useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,7 +46,12 @@ const MockLoginForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} data-testid="login-form">
+    <form
+      onSubmit={e => {
+        void handleSubmit(e);
+      }}
+      data-testid="login-form"
+    >
       <input
         type="text"
         placeholder="Username"
@@ -66,7 +74,7 @@ const MockLoginForm = () => {
 };
 
 const MockProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const auth = mockUseAuth();
+  const auth = mockUseAuth() as { isAuthenticated: boolean };
 
   if (!auth.isAuthenticated) {
     return <div data-testid="login-required">Please log in to access this content</div>;
@@ -76,7 +84,7 @@ const MockProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const MockAdminRoute = ({ children }: { children: React.ReactNode }) => {
-  const auth = mockUseAuth();
+  const auth = mockUseAuth() as { isAuthenticated: boolean; user?: { is_admin?: boolean } };
 
   if (!auth.isAuthenticated) {
     return <div data-testid="login-required">Please log in</div>;
@@ -241,7 +249,7 @@ describe('Authentication Security Tests', () => {
       // Simulate token refresh logic
       const refreshAuthToken = async () => {
         try {
-          const result = await mockApiService.refreshToken();
+          const result = (await mockApiService.refreshToken()) as { token: string };
           localStorage.setItem('auth_token', result.token);
           return result;
         } catch (error) {
@@ -254,7 +262,7 @@ describe('Authentication Security Tests', () => {
         await refreshAuthToken();
         // Should fail first time, succeed second time
         expect(mockApiService.refreshToken).toHaveBeenCalledTimes(1);
-      } catch (error) {
+      } catch {
         expect(localStorage.removeItem).toHaveBeenCalledWith('auth_token');
       }
     });
@@ -372,7 +380,7 @@ describe('Authentication Security Tests', () => {
       });
 
       // Simulate client-side role escalation attempt
-      const maliciousUser = { ...regularUser, is_admin: true };
+      // const maliciousUser = { ...regularUser, is_admin: true };
 
       // The component should rely on server-side validation, not client-side flags
       renderWithProviders(
@@ -458,7 +466,7 @@ describe('Authentication Security Tests', () => {
 
   describe('CSRF Protection', () => {
     it('should include CSRF tokens in sensitive requests', async () => {
-      const csrfToken = 'csrf-token-123';
+      // const csrfToken = 'csrf-token-123';
 
       // Mock CSRF token generation
       const generateCSRFToken = () => {
@@ -491,8 +499,8 @@ describe('Authentication Security Tests', () => {
         '/api/protected-endpoint',
         expect.objectContaining({
           headers: expect.objectContaining({
-            'X-CSRF-Token': expect.any(String),
-          }),
+            'X-CSRF-Token': expect.any(String) as string,
+          }) as Record<string, string>,
         })
       );
     });
@@ -528,16 +536,23 @@ describe('Authentication Security Tests', () => {
         const handleLogin = async () => {
           try {
             await mockApiService.login({ username: 'user', password: 'pass' });
-          } catch (err: any) {
+          } catch (err) {
             // Sanitize error message to prevent information disclosure
-            const safeError = err.response?.data?.detail || 'Login failed. Please try again.';
+            const safeError =
+              (err as { response?: { data?: { detail?: string } } }).response?.data?.detail ??
+              'Login failed. Please try again.';
             setError(safeError);
           }
         };
 
         return (
           <div>
-            <button onClick={handleLogin} data-testid="login-btn">
+            <button
+              onClick={() => {
+                void handleLogin();
+              }}
+              data-testid="login-btn"
+            >
               Login
             </button>
             {error && <div data-testid="error-message">{error}</div>}
@@ -566,7 +581,7 @@ describe('Authentication Security Tests', () => {
 
       // Mock component that handles tokens
       const TokenHandler = () => {
-        const [token] = React.useState(sensitiveToken);
+        React.useState(sensitiveToken);
 
         // Good practice - don't log tokens
         // console.log('Token:', token); // ❌ DON'T DO THIS

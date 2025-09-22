@@ -33,11 +33,11 @@ const CameraAliasForm: React.FC<CameraAliasFormProps> = ({ alias, onSuccess, onC
   useEffect(() => {
     if (alias) {
       setFormData({
-        original_name: alias.original_name || '',
-        display_name: alias.display_name || '',
-        brand: alias.brand || '',
-        model: alias.model || '',
-        notes: alias.notes || '',
+        original_name: alias.original_name ?? '',
+        display_name: alias.display_name ?? '',
+        brand: alias.brand ?? '',
+        model: alias.model ?? '',
+        notes: alias.notes ?? '',
         is_active: alias.is_active ?? true,
       });
     }
@@ -92,7 +92,9 @@ const CameraAliasForm: React.FC<CameraAliasFormProps> = ({ alias, onSuccess, onC
 
       // Handle validation errors from the server
       const errorResponse = error as {
-        response?: { data?: { detail?: string | Array<{ loc?: string[]; msg?: string }> } };
+        response?: {
+          data?: { detail?: string | Array<{ loc?: string[]; msg?: string }> };
+        };
       };
       if (errorResponse.response?.data?.detail) {
         if (typeof errorResponse.response.data.detail === 'string') {
@@ -108,7 +110,9 @@ const CameraAliasForm: React.FC<CameraAliasFormProps> = ({ alias, onSuccess, onC
           setErrors(newErrors);
         }
       } else {
-        setErrors({ submit: 'An unexpected error occurred. Please try again.' });
+        setErrors({
+          submit: 'An unexpected error occurred. Please try again.',
+        });
       }
     } finally {
       setIsSubmitting(false);
@@ -126,7 +130,7 @@ const CameraAliasForm: React.FC<CameraAliasFormProps> = ({ alias, onSuccess, onC
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="p-6">
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={e => void handleSubmit(e)} className="space-y-6">
         {/* Error display */}
         {errors.submit && (
           <div className="bg-red-50 border border-red-200 rounded-md p-4">

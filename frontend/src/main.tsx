@@ -5,7 +5,10 @@ import './colors.css';
 import 'leaflet/dist/leaflet.css';
 import App from './App.tsx';
 
-const rootEl = document.getElementById('root')!;
+const rootEl = document.getElementById('root');
+if (!rootEl) {
+  throw new Error('Root element not found');
+}
 
 if (import.meta.env.DEV) {
   // Disable StrictMode in development to avoid double mount/unmount that breaks LG

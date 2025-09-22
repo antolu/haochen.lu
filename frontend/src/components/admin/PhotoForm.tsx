@@ -8,6 +8,19 @@ import { selectOptimalImage, ImageUseCase } from '../../utils/imageUtils';
 // Remove direct import of MapPicker and lazy-load it instead
 const LazyMapPicker = lazy(() => import('../MapPicker'));
 
+interface PhotoFormData {
+  title: string;
+  description: string;
+  category: string;
+  tags: string;
+  comments: string;
+  featured: boolean;
+  location_lat?: number;
+  location_lon?: number;
+  location_name: string;
+  location_address: string;
+}
+
 interface PhotoFormProps {
   photo: Photo;
   onSuccess?: (updated: Photo) => void;
@@ -18,32 +31,32 @@ const PhotoForm: React.FC<PhotoFormProps> = ({ photo, onSuccess, onCancel }) => 
   const updateMutation = useUpdatePhoto();
   const { data: distinctTags = [] } = usePhotoTags();
 
-  const [form, setForm] = useState({
-    title: photo.title || '',
-    description: photo.description || '',
-    category: photo.category || '',
-    tags: photo.tags || '',
-    comments: photo.comments || '',
+  const [form, setForm] = useState<PhotoFormData>({
+    title: photo.title ?? '',
+    description: photo.description ?? '',
+    category: photo.category ?? '',
+    tags: photo.tags ?? '',
+    comments: photo.comments ?? '',
     featured: !!photo.featured,
     // Location
     location_lat: typeof photo.location_lat === 'number' ? photo.location_lat : undefined,
     location_lon: typeof photo.location_lon === 'number' ? photo.location_lon : undefined,
-    location_name: photo.location_name || '',
-    location_address: photo.location_address || '',
+    location_name: photo.location_name ?? '',
+    location_address: photo.location_address ?? '',
   });
 
   useEffect(() => {
     setForm({
-      title: photo.title || '',
-      description: photo.description || '',
-      category: photo.category || '',
-      tags: photo.tags || '',
-      comments: photo.comments || '',
+      title: photo.title ?? '',
+      description: photo.description ?? '',
+      category: photo.category ?? '',
+      tags: photo.tags ?? '',
+      comments: photo.comments ?? '',
       featured: !!photo.featured,
       location_lat: typeof photo.location_lat === 'number' ? photo.location_lat : undefined,
       location_lon: typeof photo.location_lon === 'number' ? photo.location_lon : undefined,
-      location_name: photo.location_name || '',
-      location_address: photo.location_address || '',
+      location_name: photo.location_name ?? '',
+      location_address: photo.location_address ?? '',
     });
   }, [photo]);
 
@@ -51,8 +64,11 @@ const PhotoForm: React.FC<PhotoFormProps> = ({ photo, onSuccess, onCancel }) => 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const updated = await updateMutation.mutateAsync({ id: photo.id, data: form as any });
-    onSuccess?.(updated as Photo);
+    const updated = await updateMutation.mutateAsync({
+      id: photo.id,
+      data: form,
+    });
+    onSuccess?.(updated);
   };
 
   // Reverse geocode when coordinates change (debounced)
@@ -63,11 +79,11 @@ const PhotoForm: React.FC<PhotoFormProps> = ({ photo, onSuccess, onCancel }) => 
         `/api/locations/reverse?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}`
       );
       if (!resp.ok) return;
-      const data = await resp.json();
+      const data = (await resp.json()) as { location_name?: string; location_address?: string };
       setForm(f => ({
         ...f,
-        location_name: data.location_name || '',
-        location_address: data.location_address || '',
+        location_name: data.location_name ?? '',
+        location_address: data.location_address ?? '',
       }));
     } catch {
       // ignore; keep coordinates
@@ -77,10 +93,9 @@ const PhotoForm: React.FC<PhotoFormProps> = ({ photo, onSuccess, onCancel }) => 
   useEffect(() => {
     if (typeof form.location_lat !== 'number' || typeof form.location_lon !== 'number') return;
     if (reverseTimer.current) clearTimeout(reverseTimer.current);
-    reverseTimer.current = setTimeout(
-      () => doReverseGeocode(form.location_lat as number, form.location_lon as number),
-      400
-    );
+    reverseTimer.current = setTimeout(() => {
+      void doReverseGeocode(form.location_lat as number, form.location_lon as number);
+    }, 400);
     return () => {
       if (reverseTimer.current) clearTimeout(reverseTimer.current);
     };
@@ -102,7 +117,12 @@ const PhotoForm: React.FC<PhotoFormProps> = ({ photo, onSuccess, onCancel }) => 
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form
+        onSubmit={e => {
+          void handleSubmit(e);
+        }}
+        className="space-y-6"
+      >
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Edit Photo</h2>
@@ -139,7 +159,7 @@ const PhotoForm: React.FC<PhotoFormProps> = ({ photo, onSuccess, onCancel }) => 
                   return (
                     <img
                       src={optimalImage.url}
-                      alt={photo.title || 'Photo preview'}
+                      alt={photo.title ?? 'Photo preview'}
                       className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
                     />
                   );
@@ -147,7 +167,7 @@ const PhotoForm: React.FC<PhotoFormProps> = ({ photo, onSuccess, onCancel }) => 
                 {/* Click to open full image in new tab */}
                 <a
                   href={
-                    photo.variants?.xlarge?.url || photo.variants?.large?.url || photo.original_url
+                    photo.variants?.xlarge?.url ?? photo.variants?.large?.url ?? photo.original_url
                   }
                   target="_blank"
                   rel="noreferrer"
@@ -217,7 +237,7 @@ const PhotoForm: React.FC<PhotoFormProps> = ({ photo, onSuccess, onCancel }) => 
               <div>
                 <label className="block text-sm font-medium text-gray-700">Tags</label>
                 <TagMultiSelect
-                  value={(form.tags || '')
+                  value={(form.tags ?? '')
                     .split(',')
                     .map(t => t.trim())
                     .filter(Boolean)}
@@ -339,7 +359,12 @@ const PhotoForm: React.FC<PhotoFormProps> = ({ photo, onSuccess, onCancel }) => 
                       <input
                         className="mt-1 w-full border border-gray-300 rounded px-3 py-2"
                         value={form.location_name}
-                        onChange={e => setForm(f => ({ ...f, location_name: e.target.value }))}
+                        onChange={e =>
+                          setForm(f => ({
+                            ...f,
+                            location_name: e.target.value,
+                          }))
+                        }
                         placeholder="City, State, Country"
                       />
                     </div>
@@ -348,7 +373,12 @@ const PhotoForm: React.FC<PhotoFormProps> = ({ photo, onSuccess, onCancel }) => 
                       <input
                         className="mt-1 w-full border border-gray-300 rounded px-3 py-2"
                         value={form.location_address}
-                        onChange={e => setForm(f => ({ ...f, location_address: e.target.value }))}
+                        onChange={e =>
+                          setForm(f => ({
+                            ...f,
+                            location_address: e.target.value,
+                          }))
+                        }
                         placeholder="Full address"
                       />
                     </div>

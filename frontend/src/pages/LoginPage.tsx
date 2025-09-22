@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import type { AxiosError } from 'axios';
 import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -25,7 +26,10 @@ const LoginPage: React.FC = () => {
     formState: { errors },
   } = useForm<LoginFormData>();
 
-  const from = (location.state as any)?.from?.pathname || '/admin';
+  const from =
+    (location.state && typeof location.state === 'object' && 'from' in location.state
+      ? (location.state as { from?: { pathname?: string } }).from?.pathname
+      : undefined) ?? '/admin';
 
   // Clear local loading state when authentication state changes
   useEffect(() => {
@@ -38,7 +42,7 @@ const LoginPage: React.FC = () => {
     return <Navigate to={from} replace />;
   }
 
-  const onSubmit = async (data: LoginFormData) => {
+  const onSubmit = async (data: LoginFormData): Promise<void> => {
     setIsLocalLoading(true);
     clearError();
 
@@ -51,19 +55,21 @@ const LoginPage: React.FC = () => {
 
       await Promise.race([loginPromise, timeoutPromise]);
       toast.success('Login successful!');
-    } catch (error: any) {
+    } catch (error: unknown) {
       let errorMessage = 'Login failed';
 
-      if (error.message === 'Login timeout') {
+      const axiosError = error as AxiosError<{ detail?: string }>;
+      const message = (error as Error).message;
+
+      if (message === 'Login timeout') {
         errorMessage = 'Login request timed out. Please try again.';
-      } else if (error.response?.data?.detail) {
-        // Use specific error message from backend
-        errorMessage = error.response.data.detail;
-      } else if (error.response?.status === 401) {
+      } else if (axiosError?.response?.data?.detail) {
+        errorMessage = axiosError.response.data.detail ?? errorMessage;
+      } else if (axiosError?.response?.status === 401) {
         errorMessage = 'Invalid username or password';
-      } else if (error.response?.status === 403) {
+      } else if (axiosError?.response?.status === 403) {
         errorMessage = 'Access denied';
-      } else if (error.response?.status >= 500) {
+      } else if ((axiosError?.response?.status ?? 0) >= 500) {
         errorMessage = 'Server error. Please try again later.';
       }
 
@@ -91,7 +97,12 @@ const LoginPage: React.FC = () => {
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+        <form
+          className="mt-8 space-y-6"
+          onSubmit={e => {
+            void handleSubmit(d => onSubmit(d))(e);
+          }}
+        >
           <div className="rounded-md shadow-sm space-y-4">
             <div>
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">

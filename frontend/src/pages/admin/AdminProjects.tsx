@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import type { Project } from '../../hooks/useProjects';
 import {
   useProjects,
   useDeleteProject,
   useProjectStats,
   parseTechnologies,
+  type Project,
 } from '../../hooks/useProjects';
 import ProjectForm from '../../components/ProjectForm';
 
@@ -23,13 +23,23 @@ const AdminProjects: React.FC = () => {
     isLoading,
     error,
   } = useProjects({
-    search: searchQuery || undefined,
-    status: (statusFilter as any) || undefined,
+    search: searchQuery.trim() === '' ? undefined : searchQuery,
+    status: ((): 'active' | 'archived' | 'in_progress' | undefined => {
+      if (statusFilter === '' || statusFilter === undefined) return undefined;
+      if (
+        statusFilter === 'active' ||
+        statusFilter === 'archived' ||
+        statusFilter === 'in_progress'
+      ) {
+        return statusFilter;
+      }
+      return undefined;
+    })(),
   });
   const { data: stats } = useProjectStats();
   const deleteMutation = useDeleteProject();
 
-  const projects = projectsData?.projects || [];
+  const projects = projectsData?.projects ?? [];
 
   const handleCreateProject = () => {
     setEditingProject(null);
@@ -69,7 +79,7 @@ const AdminProjects: React.FC = () => {
     return (
       <div className="max-w-7xl mx-auto">
         <ProjectForm
-          project={editingProject || undefined}
+          project={editingProject ?? undefined}
           onSuccess={handleFormSuccess}
           onCancel={handleFormCancel}
         />
@@ -284,7 +294,9 @@ const AdminProjects: React.FC = () => {
                   key={project.id}
                   project={project}
                   onEdit={() => handleEditProject(project)}
-                  onDelete={() => handleDeleteProject(project)}
+                  onDelete={() => {
+                    void handleDeleteProject(project);
+                  }}
                   isDeleting={deleteMutation.isPending}
                 />
               ))}

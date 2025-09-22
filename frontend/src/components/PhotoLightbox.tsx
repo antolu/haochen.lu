@@ -1,8 +1,20 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import lightGallery from 'lightgallery';
 import lgThumbnail from 'lightgallery/plugins/thumbnail';
 import lgZoom from 'lightgallery/plugins/zoom';
 import lgFullscreen from 'lightgallery/plugins/fullscreen';
+
+// LightGallery type definitions
+interface LightGalleryInstance {
+  outer: Element[];
+  find(selector: string): { remove(): void; length: number };
+  addEventListener(event: string, handler: EventListenerOrEventListenerObject): void;
+  removeEventListener(event: string, handler: EventListenerOrEventListenerObject): void;
+}
+
+interface LightGalleryEvent {
+  detail: { index: number };
+}
 
 import 'lightgallery/css/lightgallery.css';
 import 'lightgallery/css/lg-zoom.css';
@@ -33,7 +45,7 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   defaultShowInfo = false,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const galleryRef = useRef<any>(null);
+  const galleryRef = useRef<LightGalleryInstance | null>(null);
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const infoBtnRef = useRef<HTMLButtonElement | null>(null);
@@ -45,9 +57,9 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   const isMobile = () => window.innerWidth <= 768;
 
   // Helper to generate caption HTML based on screen size
-  const getCaptionHtml = (photo: Photo) => {
+  const getCaptionHtml = useCallback((photo: Photo) => {
     return isMobile() ? generateMobileCaptionHtml(photo) : generateCaptionHtml(photo);
-  };
+  }, []);
 
   // Helper to handle photo download
   const handleDownload = async (photo: Photo, variant?: string) => {
@@ -82,47 +94,51 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   };
 
   // Helper to inject toolbar buttons using LightGallery event system
-  const injectToolbarButtons = (lgInstance: any) => {
-    const toolbar = lgInstance.outer.find('.lg-toolbar');
-    if (!toolbar || !toolbar[0]) return;
+  const injectToolbarButtons = useCallback(
+    (lgInstance: LightGalleryInstance) => {
+      const toolbar = lgInstance.outer[0]?.querySelector('.lg-toolbar');
+      if (!toolbar) return;
 
-    // Clear any existing custom buttons
-    toolbar.find('.lg-custom-info, .lg-custom-download').remove();
+      // Clear any existing custom buttons
+      toolbar.querySelectorAll('.lg-custom-info, .lg-custom-download').forEach(el => el.remove());
 
-    // Create Info button
-    const infoBtn = document.createElement('button');
-    infoBtn.type = 'button';
-    infoBtn.className = 'lg-icon lg-custom-info';
-    infoBtn.setAttribute('aria-label', 'Show info');
-    infoBtn.title = 'Info';
-    infoBtn.innerHTML = '<span style="font-weight:600;font-family:system-ui">i</span>';
-    infoBtn.onclick = ev => {
-      ev.preventDefault();
-      setSidebarOpen(prev => !prev);
-    };
+      // Create Info button
+      const infoBtn = document.createElement('button');
+      infoBtn.type = 'button';
+      infoBtn.className = 'lg-icon lg-custom-info';
+      infoBtn.setAttribute('aria-label', 'Show info');
+      infoBtn.title = 'Info';
+      infoBtn.innerHTML = '<span style="font-weight:600;font-family:system-ui">i</span>';
+      infoBtn.onclick = ev => {
+        ev.preventDefault();
+        setSidebarOpen(prev => !prev);
+      };
 
-    // Create Download button
-    const downloadBtn = document.createElement('button');
-    downloadBtn.type = 'button';
-    downloadBtn.className = 'lg-icon lg-custom-download';
-    downloadBtn.setAttribute('aria-label', 'Download photo');
-    downloadBtn.title = 'Download';
-    downloadBtn.innerHTML = '<span style="font-weight:600;font-family:system-ui">↓</span>';
-    downloadBtn.onclick = ev => {
-      ev.preventDefault();
-      handleDownload(currentPhoto);
-    };
+      // Create Download button
+      const downloadBtn = document.createElement('button');
+      downloadBtn.type = 'button';
+      downloadBtn.className = 'lg-icon lg-custom-download';
+      downloadBtn.setAttribute('aria-label', 'Download photo');
+      downloadBtn.title = 'Download';
+      downloadBtn.innerHTML = '<span style="font-weight:600;font-family:system-ui">↓</span>';
+      downloadBtn.onclick = ev => {
+        ev.preventDefault();
+        void handleDownload(currentPhoto);
+      };
 
-    // Insert buttons at the beginning of the toolbar
-    toolbar[0].insertBefore(downloadBtn, toolbar[0].firstChild);
-    toolbar[0].insertBefore(infoBtn, toolbar[0].firstChild);
+      // Insert buttons at the beginning of the toolbar
+      toolbar.insertBefore(downloadBtn, toolbar.firstChild);
+      toolbar.insertBefore(infoBtn, toolbar.firstChild);
 
-    infoBtnRef.current = infoBtn;
-    downloadBtnRef.current = downloadBtn;
-  };
+      infoBtnRef.current = infoBtn;
+      downloadBtnRef.current = downloadBtn;
+    },
+    [currentPhoto]
+  );
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    const container = containerRef.current;
+    if (!container) return;
 
     const dynamicElements = photos.map(photo => {
       // Use DPI-aware selection for lightbox viewing (high quality)
@@ -136,7 +152,7 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
       };
     });
 
-    const lgOptions: any = {
+    const lgOptions = {
       plugins: [lgThumbnail, lgZoom, lgFullscreen],
       licenseKey: '0000-0000-000-0000',
       dynamic: true,
@@ -159,41 +175,42 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
       allowMediaOverlap: false, // Show captions below image on mobile
       slideDelay: 400, // Delay for caption animations
     };
-    galleryRef.current = (lightGallery as any)(
-      containerRef.current as unknown as HTMLElement,
-      lgOptions as any
-    );
+    galleryRef.current = lightGallery(
+      container as HTMLElement,
+      lgOptions as Parameters<typeof lightGallery>[1]
+    ) as LightGalleryInstance;
 
-    const onInit = (e: any) => {
-      const lgInstance = e.detail.instance;
+    const onInit = (e: Event) => {
+      const lgInstance = (e as LightGalleryEvent & { detail: { instance: LightGalleryInstance } })
+        .detail.instance;
       injectToolbarButtons(lgInstance);
     };
 
-    const onBeforeSlide = (e: any) => setCurrentIndex(e.detail.index);
-    const onAfterSlide = (e: any) => setCurrentIndex(e.detail.index);
+    const onBeforeSlide = (e: Event) => setCurrentIndex((e as LightGalleryEvent).detail.index);
+    const onAfterSlide = (e: Event) => setCurrentIndex((e as LightGalleryEvent).detail.index);
     const onAfterClose = () => {
       setSidebarOpen(false);
       onClose();
     };
 
-    containerRef.current.addEventListener('lgInit', onInit as any);
-    containerRef.current.addEventListener('lgBeforeSlide', onBeforeSlide as any);
-    containerRef.current.addEventListener('lgAfterSlide', onAfterSlide as any);
-    containerRef.current.addEventListener('lgAfterClose', onAfterClose as any);
+    container.addEventListener('lgInit', onInit);
+    container.addEventListener('lgBeforeSlide', onBeforeSlide);
+    container.addEventListener('lgAfterSlide', onAfterSlide);
+    container.addEventListener('lgAfterClose', onAfterClose);
 
     return () => {
-      if (!containerRef.current) return;
-      containerRef.current.removeEventListener('lgInit', onInit as any);
-      containerRef.current.removeEventListener('lgBeforeSlide', onBeforeSlide as any);
-      containerRef.current.removeEventListener('lgAfterSlide', onAfterSlide as any);
-      containerRef.current.removeEventListener('lgAfterClose', onAfterClose as any);
-      if (galleryRef.current) {
-        galleryRef.current.destroy();
+      if (!container) return;
+      container.removeEventListener('lgInit', onInit);
+      container.removeEventListener('lgBeforeSlide', onBeforeSlide);
+      container.removeEventListener('lgAfterSlide', onAfterSlide);
+      container.removeEventListener('lgAfterClose', onAfterClose);
+      if (galleryRef.current && 'destroy' in galleryRef.current) {
+        (galleryRef.current as unknown as { destroy(): void }).destroy();
       }
       infoBtnRef.current = null;
       downloadBtnRef.current = null;
     };
-  }, []);
+  }, [photos, getCaptionHtml, injectToolbarButtons, onClose]);
 
   useEffect(() => {
     if (!galleryRef.current) return;
@@ -216,26 +233,35 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
           return;
         }
         const safeIndex = Math.max(0, Math.min(initialIndex, dynamicElements.length - 1));
-        if (typeof galleryRef.current.refresh === 'function') {
-          galleryRef.current.refresh(dynamicElements);
-        } else if (typeof galleryRef.current.updateSlides === 'function') {
-          galleryRef.current.updateSlides(dynamicElements, safeIndex);
+        const gallery = galleryRef.current as unknown as {
+          refresh?: (elements: unknown[]) => void;
+          updateSlides?: (elements: unknown[], index: number) => void;
+          galleryItems?: unknown[];
+          openGallery?: (index: number) => void;
+        };
+
+        if (typeof gallery.refresh === 'function') {
+          gallery.refresh(dynamicElements);
+        } else if (typeof gallery.updateSlides === 'function') {
+          gallery.updateSlides(dynamicElements, safeIndex);
         }
-        const items = galleryRef.current.galleryItems || [];
+        const items = gallery.galleryItems ?? [];
         if (!items.length) {
           return;
         }
         setCurrentIndex(safeIndex);
-        if (typeof galleryRef.current.openGallery === 'function') {
-          galleryRef.current.openGallery(safeIndex);
+        if (typeof gallery.openGallery === 'function') {
+          gallery.openGallery(safeIndex);
           if (defaultShowInfo) {
             setSidebarOpen(true);
           }
           onOpened?.();
         }
-      } catch (error) {}
+      } catch (error) {
+        console.error('Failed to open gallery:', error);
+      }
     }
-  }, [isOpen, initialIndex, photos, onOpened, defaultShowInfo]);
+  }, [isOpen, initialIndex, photos, onOpened, defaultShowInfo, getCaptionHtml]);
 
   // Sync aria-pressed and label on the info toolbar button
   useEffect(() => {

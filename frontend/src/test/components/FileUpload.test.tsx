@@ -6,6 +6,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, waitFor, fireEvent } from '@testing-library/react';
+import React, { useCallback, useState, useRef, useEffect } from 'react';
 import {
   renderWithProviders,
   createMockFile,
@@ -33,11 +34,11 @@ const MockFileUpload = ({
   onUploadError?: (error: string) => void;
   disabled?: boolean;
 }) => {
-  const [dragActive, setDragActive] = React.useState(false);
-  const [uploadProgress, setUploadProgress] = React.useState(0);
-  const [uploading, setUploading] = React.useState(false);
-  const [selectedFiles, setSelectedFiles] = React.useState<File[]>([]);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [dragActive, setDragActive] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploading, setUploading] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const validateFile = (file: File): string | null => {
     if (file.size > maxSize) {
@@ -63,9 +64,9 @@ const MockFileUpload = ({
     const errors: string[] = [];
 
     fileArray.forEach(file => {
-      const error = validateFile(file);
-      if (error) {
-        errors.push(`${file.name}: ${error}`);
+      const validationError = validateFile(file);
+      if (validationError) {
+        errors.push(`${file.name}: ${validationError}`);
       } else {
         validFiles.push(file);
       }
@@ -85,32 +86,36 @@ const MockFileUpload = ({
     onFilesSelected?.(validFiles);
   };
 
-  const simulateUpload = async (files: File[]) => {
-    setUploading(true);
-    setUploadProgress(0);
-
-    try {
-      for (let i = 0; i <= 100; i += 10) {
-        await new Promise(resolve => setTimeout(resolve, 50));
-        setUploadProgress(i);
-        onUploadProgress?.(i);
-      }
-
-      const results = files.map(file => ({
-        id: `uploaded-${Date.now()}-${Math.random()}`,
-        filename: file.name,
-        size: file.size,
-        url: `https://example.com/uploads/${file.name}`,
-      }));
-
-      onUploadComplete?.(results);
-    } catch (error) {
-      onUploadError?.('Upload failed');
-    } finally {
-      setUploading(false);
+  const simulateUpload = useCallback(
+    async (files: File[]) => {
+      setUploading(true);
       setUploadProgress(0);
-    }
-  };
+
+      try {
+        for (let i = 0; i <= 100; i += 10) {
+          await new Promise(resolve => setTimeout(resolve, 50));
+          setUploadProgress(i);
+          onUploadProgress?.(i);
+        }
+
+        const results = files.map(file => ({
+          id: `uploaded-${Date.now()}-${Math.random()}`,
+          filename: file.name,
+          size: file.size,
+          url: `https://example.com/uploads/${file.name}`,
+        }));
+
+        onUploadComplete?.(results);
+      } catch (error: unknown) {
+        console.error('Upload failed:', error);
+        onUploadError?.('Upload failed');
+      } finally {
+        setUploading(false);
+        setUploadProgress(0);
+      }
+    },
+    [onUploadComplete, onUploadError, onUploadProgress]
+  );
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -145,11 +150,11 @@ const MockFileUpload = ({
     }
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (selectedFiles.length > 0) {
-      simulateUpload(selectedFiles);
+      void simulateUpload(selectedFiles);
     }
-  }, [selectedFiles]);
+  }, [selectedFiles, simulateUpload]);
 
   return (
     <div data-testid="file-upload-container">
@@ -217,7 +222,7 @@ const MockFileUpload = ({
 const MockFilePreview = ({ files }: { files: File[] }) => {
   const [previews, setPreviews] = React.useState<Record<string, string>>({});
 
-  React.useEffect(() => {
+  useEffect(() => {
     files.forEach(file => {
       if (file.type.startsWith('image/')) {
         const reader = new FileReader();
@@ -294,7 +299,7 @@ describe('FileUpload Component Tests', () => {
       renderWithProviders(<MockFileUpload />);
 
       const dropZone = screen.getByTestId('drop-zone');
-      const fileInput = screen.getByTestId('file-input') as HTMLInputElement;
+      const fileInput = screen.getByTestId('file-input');
 
       const clickSpy = vi.spyOn(fileInput, 'click');
 
@@ -309,9 +314,9 @@ describe('FileUpload Component Tests', () => {
 
       renderWithProviders(<MockFileUpload onFilesSelected={onFilesSelected} />);
 
-      const fileInput = screen.getByTestId('file-input') as HTMLInputElement;
+      const fileInput = screen.getByTestId('file-input');
 
-      await fireEvent.change(fileInput, {
+      fireEvent.change(fileInput, {
         target: { files: [testFile] },
       });
 
@@ -326,9 +331,9 @@ describe('FileUpload Component Tests', () => {
 
       renderWithProviders(<MockFileUpload multiple={true} onFilesSelected={onFilesSelected} />);
 
-      const fileInput = screen.getByTestId('file-input') as HTMLInputElement;
+      const fileInput = screen.getByTestId('file-input');
 
-      await fireEvent.change(fileInput, {
+      fireEvent.change(fileInput, {
         target: { files: testFiles },
       });
 
@@ -339,7 +344,7 @@ describe('FileUpload Component Tests', () => {
   });
 
   describe('Drag and Drop Functionality', () => {
-    it('should handle drag over events', async () => {
+    it('should handle drag over events', () => {
       renderWithProviders(<MockFileUpload />);
 
       const dropZone = screen.getByTestId('drop-zone');
@@ -349,7 +354,7 @@ describe('FileUpload Component Tests', () => {
       expect(dropZone).toHaveClass('border-blue-500', 'bg-blue-50');
     });
 
-    it('should handle drag leave events', async () => {
+    it('should handle drag leave events', () => {
       renderWithProviders(<MockFileUpload />);
 
       const dropZone = screen.getByTestId('drop-zone');
@@ -402,9 +407,9 @@ describe('FileUpload Component Tests', () => {
 
       renderWithProviders(<MockFileUpload maxSize={maxSize} onUploadError={onUploadError} />);
 
-      const fileInput = screen.getByTestId('file-input') as HTMLInputElement;
+      const fileInput = screen.getByTestId('file-input');
 
-      await fireEvent.change(fileInput, {
+      fireEvent.change(fileInput, {
         target: { files: [largeFile] },
       });
 
@@ -419,9 +424,9 @@ describe('FileUpload Component Tests', () => {
 
       renderWithProviders(<MockFileUpload accept="image/*" onUploadError={onUploadError} />);
 
-      const fileInput = screen.getByTestId('file-input') as HTMLInputElement;
+      const fileInput = screen.getByTestId('file-input');
 
-      await fireEvent.change(fileInput, {
+      fireEvent.change(fileInput, {
         target: { files: [invalidFile] },
       });
 
@@ -438,9 +443,9 @@ describe('FileUpload Component Tests', () => {
 
       renderWithProviders(<MockFileUpload multiple={false} onUploadError={onUploadError} />);
 
-      const fileInput = screen.getByTestId('file-input') as HTMLInputElement;
+      const fileInput = screen.getByTestId('file-input');
 
-      await fireEvent.change(fileInput, {
+      fireEvent.change(fileInput, {
         target: { files: testFiles },
       });
 
@@ -455,9 +460,9 @@ describe('FileUpload Component Tests', () => {
 
       renderWithProviders(<MockFileUpload accept="image/*" onFilesSelected={onFilesSelected} />);
 
-      const fileInput = screen.getByTestId('file-input') as HTMLInputElement;
+      const fileInput = screen.getByTestId('file-input');
 
-      await fireEvent.change(fileInput, {
+      fireEvent.change(fileInput, {
         target: { files: [validFile] },
       });
 
@@ -473,9 +478,9 @@ describe('FileUpload Component Tests', () => {
 
       renderWithProviders(<MockFileUpload />);
 
-      const fileInput = screen.getByTestId('file-input') as HTMLInputElement;
+      const fileInput = screen.getByTestId('file-input');
 
-      await fireEvent.change(fileInput, {
+      fireEvent.change(fileInput, {
         target: { files: [testFile] },
       });
 
@@ -494,9 +499,9 @@ describe('FileUpload Component Tests', () => {
 
       renderWithProviders(<MockFileUpload onUploadProgress={onUploadProgress} />);
 
-      const fileInput = screen.getByTestId('file-input') as HTMLInputElement;
+      const fileInput = screen.getByTestId('file-input');
 
-      await fireEvent.change(fileInput, {
+      fireEvent.change(fileInput, {
         target: { files: [testFile] },
       });
 
@@ -517,9 +522,9 @@ describe('FileUpload Component Tests', () => {
 
       renderWithProviders(<MockFileUpload onUploadComplete={onUploadComplete} />);
 
-      const fileInput = screen.getByTestId('file-input') as HTMLInputElement;
+      const fileInput = screen.getByTestId('file-input');
 
-      await fireEvent.change(fileInput, {
+      fireEvent.change(fileInput, {
         target: { files: [testFile] },
       });
 
@@ -528,8 +533,8 @@ describe('FileUpload Component Tests', () => {
           expect(onUploadComplete).toHaveBeenCalledWith([
             expect.objectContaining({
               filename: 'test.jpg',
-              size: expect.any(Number),
-              url: expect.stringContaining('uploads/test.jpg'),
+              size: expect.any(Number) as number,
+              url: expect.stringContaining('uploads/test.jpg') as string,
             }),
           ]);
         },
@@ -543,7 +548,7 @@ describe('FileUpload Component Tests', () => {
       renderWithProviders(<MockFileUpload disabled={true} />);
 
       const dropZone = screen.getByTestId('drop-zone');
-      const fileInput = screen.getByTestId('file-input') as HTMLInputElement;
+      const fileInput = screen.getByTestId('file-input');
 
       expect(dropZone).toHaveClass('opacity-50', 'cursor-not-allowed');
       expect(fileInput).toBeDisabled();
@@ -565,7 +570,7 @@ describe('FileUpload Component Tests', () => {
       renderWithProviders(<MockFileUpload disabled={true} />);
 
       const dropZone = screen.getByTestId('drop-zone');
-      const fileInput = screen.getByTestId('file-input') as HTMLInputElement;
+      const fileInput = screen.getByTestId('file-input');
 
       const clickSpy = vi.spyOn(fileInput, 'click');
 
@@ -576,7 +581,7 @@ describe('FileUpload Component Tests', () => {
   });
 
   describe('File Preview', () => {
-    it('should render file preview for selected files', async () => {
+    it('should render file preview for selected files', () => {
       const testFiles = [createMockImageFile('preview1.jpg'), createMockImageFile('preview2.png')];
 
       renderWithProviders(<MockFilePreview files={testFiles} />);
@@ -598,7 +603,7 @@ describe('FileUpload Component Tests', () => {
         expect(screen.getByTestId('preview-image-0')).toBeInTheDocument();
       });
 
-      const previewImage = screen.getByTestId('preview-image-0') as HTMLImageElement;
+      const previewImage = screen.getByTestId('preview-image-0');
       expect(previewImage).toHaveAttribute('alt', 'image.jpg');
     });
   });
@@ -606,7 +611,9 @@ describe('FileUpload Component Tests', () => {
   describe('Error Handling', () => {
     it('should handle FileReader errors gracefully', () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      const corruptedFile = new File(['corrupted'], 'corrupted.jpg', { type: 'image/jpeg' });
+      const corruptedFile = new File(['corrupted'], 'corrupted.jpg', {
+        type: 'image/jpeg',
+      });
 
       // Mock FileReader to throw error
       const mockFileReader = {
@@ -617,7 +624,7 @@ describe('FileUpload Component Tests', () => {
         onload: vi.fn(),
       };
 
-      global.FileReader = vi.fn(() => mockFileReader) as any;
+      global.FileReader = vi.fn(() => mockFileReader) as unknown as typeof FileReader;
 
       expect(() => {
         renderWithProviders(<MockFilePreview files={[corruptedFile]} />);
@@ -631,9 +638,9 @@ describe('FileUpload Component Tests', () => {
 
       renderWithProviders(<MockFileUpload />);
 
-      const fileInput = screen.getByTestId('file-input') as HTMLInputElement;
+      const fileInput = screen.getByTestId('file-input');
 
-      await fireEvent.change(fileInput, {
+      fireEvent.change(fileInput, {
         target: { files: [testFile] },
       });
 

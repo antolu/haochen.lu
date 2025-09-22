@@ -25,7 +25,7 @@ const SubAppList: React.FC<SubAppListProps> = ({
     subapp =>
       subapp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       subapp.url.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (subapp.description && subapp.description.toLowerCase().includes(searchTerm.toLowerCase()))
+      subapp.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleDeleteClick = (subappId: string) => {
@@ -111,7 +111,7 @@ const SubAppList: React.FC<SubAppListProps> = ({
   if (isLoading) {
     return (
       <div className="space-y-4">
-        {[...Array(3)].map((_, index) => (
+        {Array.from({ length: 3 }).map((_, index) => (
           <div key={index} className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="animate-pulse">
               <div className="flex items-center space-x-4">

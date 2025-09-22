@@ -2,11 +2,25 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import YamlEditor from '../../components/YamlEditor';
 
+interface IntegrationMeta {
+  name: string;
+  slug: string;
+  version: string;
+}
+interface IntegrationSection {
+  frontend_path: string;
+  api_path: string;
+  admin_path?: string;
+  has_admin?: boolean;
+}
 interface ValidationResult {
   valid: boolean;
   errors: string[];
   warnings: string[];
-  config?: any;
+  config?: {
+    meta: IntegrationMeta;
+    integration: IntegrationSection;
+  };
 }
 
 const EXAMPLE_CONFIG = `# Example Cookbook Subapp Configuration
@@ -68,7 +82,13 @@ const AdminSubAppIntegration: React.FC = () => {
   const [yamlContent, setYamlContent] = useState('');
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [isIntegrating, setIsIntegrating] = useState(false);
-  const [integrationResult, setIntegrationResult] = useState<any>(null);
+  const [integrationResult, setIntegrationResult] = useState<null | {
+    success: boolean;
+    message?: string;
+    frontend_url?: string;
+    admin_url?: string;
+    error?: string;
+  }>(null);
   const [showExample, setShowExample] = useState(false);
 
   const handleValidationChange = (result: ValidationResult | null) => {
@@ -97,11 +117,16 @@ const AdminSubAppIntegration: React.FC = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail?.message || 'Integration failed');
+        const errorData = (await response.json()) as { detail?: { message?: string } };
+        throw new Error(errorData.detail?.message ?? 'Integration failed');
       }
 
-      const result = await response.json();
+      const result = (await response.json()) as {
+        success: boolean;
+        message?: string;
+        frontend_url?: string;
+        admin_url?: string;
+      };
       setIntegrationResult(result);
     } catch (error) {
       setIntegrationResult({
@@ -241,7 +266,9 @@ const AdminSubAppIntegration: React.FC = () => {
           )}
 
           <button
-            onClick={handleIntegrate}
+            onClick={() => {
+              void handleIntegrate();
+            }}
             disabled={isIntegrating}
             className={`
               px-6 py-3 font-medium rounded-lg transition-colors

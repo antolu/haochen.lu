@@ -41,7 +41,7 @@ interface FormData {
   timezone?: string;
 
   // Custom metadata
-  custom_metadata?: Record<string, any>;
+  custom_metadata?: Record<string, unknown>;
 }
 
 // Define available custom field types
@@ -64,7 +64,13 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
     'basic'
   );
   const [customFields, setCustomFields] = useState<
-    Array<{ key: string; type: string; label: string; value: any; options?: string[] }>
+    Array<{
+      key: string;
+      type: string;
+      label: string;
+      value: unknown;
+      options?: string[];
+    }>
   >([]);
   const [newFieldKey, setNewFieldKey] = useState('');
   const [newFieldType, setNewFieldType] = useState('text');
@@ -78,27 +84,27 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
     formState: { errors },
   } = useForm<FormData>({
     defaultValues: {
-      title: photo.title || '',
-      description: photo.description || '',
-      category: photo.category || '',
-      tags: photo.tags || '',
-      comments: photo.comments || '',
-      featured: photo.featured || false,
+      title: photo.title ?? '',
+      description: photo.description ?? '',
+      category: photo.category ?? '',
+      tags: photo.tags ?? '',
+      comments: photo.comments ?? '',
+      featured: photo.featured ?? false,
       location_lat: photo.location_lat,
       location_lon: photo.location_lon,
-      location_name: photo.location_name || '',
-      location_address: photo.location_address || '',
+      location_name: photo.location_name ?? '',
+      location_address: photo.location_address ?? '',
       altitude: photo.altitude,
-      camera_make: photo.camera_make || '',
-      camera_model: photo.camera_model || '',
-      lens: photo.lens || '',
+      camera_make: photo.camera_make ?? '',
+      camera_model: photo.camera_model ?? '',
+      lens: photo.lens ?? '',
       iso: photo.iso,
       aperture: photo.aperture,
-      shutter_speed: photo.shutter_speed || '',
+      shutter_speed: photo.shutter_speed ?? '',
       focal_length: photo.focal_length,
       date_taken: photo.date_taken ? new Date(photo.date_taken).toISOString().slice(0, 16) : '',
-      timezone: photo.timezone || '',
-      custom_metadata: photo.custom_metadata || {},
+      timezone: photo.timezone ?? '',
+      custom_metadata: photo.custom_metadata ?? {},
     },
   });
 
@@ -148,7 +154,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
     setNewFieldType('text');
   };
 
-  const updateCustomField = (index: number, value: any) => {
+  const updateCustomField = (index: number, value: unknown) => {
     const updatedFields = [...customFields];
     updatedFields[index].value = value;
     setCustomFields(updatedFields);
@@ -167,7 +173,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
           acc[field.key] = field.value;
           return acc;
         },
-        {} as Record<string, any>
+        {} as Record<string, unknown>
       );
 
       const updatedPhoto: Partial<Photo> = {
@@ -342,7 +348,9 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
       {/* Form Content */}
       <form
         id="photo-edit-form"
-        onSubmit={handleSubmit(onSubmit)}
+        onSubmit={e => {
+          void handleSubmit(onSubmit)(e);
+        }}
         onKeyDown={handleFormKeyDown}
         className="p-6"
       >

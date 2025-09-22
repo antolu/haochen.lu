@@ -132,8 +132,11 @@ describe('Auth Store', () => {
 
       await act(async () => {
         try {
-          await result.current.login({ username: 'testuser', password: 'wrong' });
-        } catch (error) {
+          await result.current.login({
+            username: 'testuser',
+            password: 'wrong',
+          });
+        } catch {
           // Expected to throw
         }
       });
@@ -144,27 +147,29 @@ describe('Auth Store', () => {
       expect(result.current.error).toBe('Invalid credentials');
     });
 
-    it('should set loading state during login', async () => {
+    it('should set loading state during login', () => {
       // Create a promise that we can control
-      let resolveLogin: (value: any) => void;
-      const loginPromise = new Promise(resolve => {
+      let resolveLogin: (value: TokenResponse) => void;
+      const loginPromise: Promise<TokenResponse> = new Promise(resolve => {
         resolveLogin = resolve;
       });
 
-      vi.mocked(auth.login).mockReturnValueOnce(loginPromise as any);
+      (
+        vi.mocked(auth.login) as { mockReturnValueOnce: (value: Promise<TokenResponse>) => void }
+      ).mockReturnValueOnce(loginPromise);
 
       const { result } = renderHook(() => useAuthStore());
 
       // Start login (don't await)
       act(() => {
-        result.current.login({ username: 'testuser', password: 'password' });
+        void result.current.login({ username: 'testuser', password: 'password' });
       });
 
       // Should be loading
       expect(result.current.isLoading).toBe(true);
 
       // Resolve the login
-      await act(async () => {
+      act(() => {
         resolveLogin!(mockTokenResponse);
         vi.mocked(auth.getMe).mockResolvedValueOnce(mockUser);
       });
@@ -226,12 +231,14 @@ describe('Auth Store', () => {
 
     it('should prevent multiple simultaneous refresh attempts', async () => {
       // Create a long-running refresh
-      let resolveRefresh: (value: any) => void;
-      const refreshPromise = new Promise(resolve => {
+      let resolveRefresh: (value: TokenResponse) => void;
+      const refreshPromise: Promise<TokenResponse> = new Promise(resolve => {
         resolveRefresh = resolve;
       });
 
-      vi.mocked(auth.refresh).mockReturnValueOnce(refreshPromise as any);
+      (
+        vi.mocked(auth.refresh) as { mockReturnValueOnce: (value: Promise<TokenResponse>) => void }
+      ).mockReturnValueOnce(refreshPromise);
 
       const { result } = renderHook(() => useAuthStore());
 
@@ -254,7 +261,7 @@ describe('Auth Store', () => {
       expect(secondRefresh).toBe(false); // Should return false immediately
 
       // Complete first refresh
-      await act(async () => {
+      act(() => {
         resolveRefresh!({
           access_token: 'new-token',
           expires_in: 900,
@@ -316,7 +323,7 @@ describe('Auth Store', () => {
 
   describe('Logout Functionality', () => {
     it('should logout successfully', async () => {
-      vi.mocked(auth.logout).mockResolvedValueOnce({} as any);
+      vi.mocked(auth.logout).mockResolvedValueOnce({} as void);
 
       const { result } = renderHook(() => useAuthStore());
 
@@ -359,7 +366,7 @@ describe('Auth Store', () => {
 
   describe('Logout Everywhere Functionality', () => {
     it('should logout everywhere successfully', async () => {
-      vi.mocked(auth.revokeAllSessions).mockResolvedValueOnce({} as any);
+      vi.mocked(auth.revokeAllSessions).mockResolvedValueOnce({} as void);
 
       const { result } = renderHook(() => useAuthStore());
 

@@ -2,14 +2,16 @@ import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useProject, useProjectReadme, parseTechnologies } from '../hooks/useProjects';
+type ProjectReadmeResponse = { content?: string; last_updated?: string; source?: string };
 import MarkdownRenderer from '../components/MarkdownRenderer';
 import { formatDate } from '../utils/dateFormat';
 
 const ProjectDetailPage: React.FC = () => {
-  const { slug } = useParams<{ slug: string }>();
+  const params = useParams<{ slug: string }>();
+  const slug = params.slug;
   const { data: project, isLoading, error } = useProject(slug ?? '');
   const { data: readme } = useProjectReadme(
-    project?.id || '',
+    project?.id ?? '',
     project?.use_readme ? project?.github_url : undefined
   );
 
@@ -54,7 +56,7 @@ const ProjectDetailPage: React.FC = () => {
   }
 
   const technologies = parseTechnologies(project.technologies);
-  const content = readme?.content || project.description;
+  const content = (readme as ProjectReadmeResponse | undefined)?.content ?? project.description;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -240,10 +242,12 @@ const ProjectDetailPage: React.FC = () => {
                       <dt className="text-gray-500">Last Updated</dt>
                       <dd className="text-gray-900">{formatDate(project.updated_at)}</dd>
                     </div>
-                    {readme?.last_updated && (
+                    {(readme as ProjectReadmeResponse | undefined)?.last_updated && (
                       <div>
                         <dt className="text-gray-500">README Updated</dt>
-                        <dd className="text-gray-900">{formatDate(readme.last_updated)}</dd>
+                        <dd className="text-gray-900">
+                          {formatDate((readme as ProjectReadmeResponse).last_updated as string)}
+                        </dd>
                       </div>
                     )}
                   </dl>
@@ -263,7 +267,7 @@ const ProjectDetailPage: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            {readme?.source && (
+            {(readme as ProjectReadmeResponse | undefined)?.source && (
               <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <div className="flex items-center">
                   <svg
@@ -281,7 +285,7 @@ const ProjectDetailPage: React.FC = () => {
                   </svg>
                   <span className="text-sm text-blue-800">
                     This content is automatically synced from the project's README.md file on{' '}
-                    {readme.source}.
+                    {(readme as ProjectReadmeResponse).source}.
                   </span>
                 </div>
               </div>

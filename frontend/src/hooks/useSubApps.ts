@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { subapps } from '../api/client';
-import type { SubApp, SubAppListResponse } from '../types';
+import type { SubApp, SubAppListResponse, SubAppStatsSummary } from '../types';
 import toast from 'react-hot-toast';
+import type { AxiosError } from 'axios';
 
 // Query Keys
 export const subappKeys = {
@@ -38,7 +39,7 @@ export const useSubApp = (identifier: string, enabled = true) => {
 
 // Hook to get sub-app statistics
 export const useSubAppStats = () => {
-  return useQuery({
+  return useQuery<SubAppStatsSummary>({
     queryKey: subappKeys.stats(),
     queryFn: () => subapps.getStats(),
     staleTime: 1000 * 60 * 2, // 2 minutes
@@ -54,16 +55,16 @@ export const useCreateSubApp = () => {
       subapps.create(data),
     onSuccess: newSubApp => {
       // Invalidate and refetch sub-apps list
-      queryClient.invalidateQueries({ queryKey: subappKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: subappKeys.stats() });
+      void queryClient.invalidateQueries({ queryKey: subappKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: subappKeys.stats() });
 
       // Add the new sub-app to the cache
       queryClient.setQueryData(subappKeys.detail(newSubApp.id), newSubApp);
 
       toast.success(`Sub-app "${newSubApp.name}" created successfully!`);
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.detail || 'Failed to create sub-app';
+    onError: (error: AxiosError<{ detail?: string }>) => {
+      const message = error.response?.data?.detail ?? 'Failed to create sub-app';
       toast.error(message);
     },
   });
@@ -92,12 +93,12 @@ export const useUpdateSubApp = () => {
       queryClient.setQueryData(subappKeys.detail(updatedSubApp.slug), updatedSubApp);
 
       // Invalidate stats
-      queryClient.invalidateQueries({ queryKey: subappKeys.stats() });
+      void queryClient.invalidateQueries({ queryKey: subappKeys.stats() });
 
       toast.success(`Sub-app "${updatedSubApp.name}" updated successfully!`);
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.detail || 'Failed to update sub-app';
+    onError: (error: AxiosError<{ detail?: string }>) => {
+      const message = error.response?.data?.detail ?? 'Failed to update sub-app';
       toast.error(message);
     },
   });
@@ -124,12 +125,12 @@ export const useDeleteSubApp = () => {
       queryClient.removeQueries({ queryKey: subappKeys.detail(deletedId) });
 
       // Invalidate stats
-      queryClient.invalidateQueries({ queryKey: subappKeys.stats() });
+      void queryClient.invalidateQueries({ queryKey: subappKeys.stats() });
 
       toast.success('Sub-app deleted successfully!');
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.detail || 'Failed to delete sub-app';
+    onError: (error: AxiosError<{ detail?: string }>) => {
+      const message = error.response?.data?.detail ?? 'Failed to delete sub-app';
       toast.error(message);
     },
   });
@@ -176,14 +177,14 @@ export const useToggleSubAppEnabled = () => {
       queryClient.setQueryData(subappKeys.detail(updatedSubApp.slug), updatedSubApp);
 
       // Invalidate stats
-      queryClient.invalidateQueries({ queryKey: subappKeys.stats() });
+      void queryClient.invalidateQueries({ queryKey: subappKeys.stats() });
 
       const action = updatedSubApp.enabled ? 'enabled' : 'disabled';
       toast.success(`Sub-app "${updatedSubApp.name}" ${action}!`);
     },
     onSettled: () => {
       // Always refetch after error or success to ensure consistency
-      queryClient.invalidateQueries({ queryKey: subappKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: subappKeys.lists() });
     },
   });
 };
@@ -199,12 +200,12 @@ export const useBulkUpdateSubApps = () => {
     },
     onSuccess: results => {
       // Invalidate all sub-app related queries
-      queryClient.invalidateQueries({ queryKey: subappKeys.all });
+      void queryClient.invalidateQueries({ queryKey: subappKeys.all });
 
       toast.success(`Successfully updated ${results.length} sub-apps!`);
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.detail || 'Failed to update sub-apps';
+    onError: (error: AxiosError<{ detail?: string }>) => {
+      const message = error.response?.data?.detail ?? 'Failed to update sub-apps';
       toast.error(message);
     },
   });

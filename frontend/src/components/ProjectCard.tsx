@@ -1,7 +1,6 @@
 import React, { memo } from 'react';
 import { Link } from 'react-router-dom';
-import type { Project } from '../hooks/useProjects';
-import { parseTechnologies } from '../hooks/useProjects';
+import { parseTechnologies, type Project } from '../hooks/useProjects';
 
 interface ProjectCardProps {
   project: Project;
@@ -97,7 +96,7 @@ const ProjectCard: React.FC<ProjectCardProps> = memo(({ project, className = '' 
 
           {/* Description */}
           <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-            {project.short_description || project.description}
+            {project.short_description ?? project.description}
           </p>
 
           {/* Technologies */}

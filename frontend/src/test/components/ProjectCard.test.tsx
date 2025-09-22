@@ -10,7 +10,7 @@
  * - Responsive behavior and accessibility
  */
 import { describe, it, expect, vi } from 'vitest';
-import { screen, fireEvent } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ProjectCard from '../../components/ProjectCard';
 import { createMockProject } from '../fixtures/projects';
@@ -89,7 +89,9 @@ describe('ProjectCard', () => {
     });
 
     it('handles unknown status gracefully', () => {
-      const project = createMockProject({ status: 'unknown' as any });
+      const project = createMockProject({
+        status: 'unknown' as 'active' | 'archived' | 'in_progress',
+      });
       renderWithProviders(<ProjectCard project={project} />);
 
       const statusBadge = screen.getByText('Unknown');

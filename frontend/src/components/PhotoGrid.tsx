@@ -61,7 +61,10 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
   };
 
   // Use DPI-aware image selection for optimal quality based on device and viewport
-  const optimalImage = selectOptimalImage(photo, ImageUseCase.GALLERY, { width, height });
+  const optimalImage = selectOptimalImage(photo, ImageUseCase.GALLERY, {
+    width,
+    height,
+  });
   const imageUrl = optimalImage.url;
   const srcSet = optimalImage.srcset;
   const sizes = optimalImage.sizes;

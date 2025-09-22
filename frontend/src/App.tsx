@@ -40,7 +40,7 @@ function App() {
   const checkAuth = useAuthStore(state => state.checkAuth);
 
   useEffect(() => {
-    checkAuth();
+    void checkAuth();
   }, [checkAuth]);
 
   return (

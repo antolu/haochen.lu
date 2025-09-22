@@ -7,10 +7,14 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
-import { renderWithProviders, mockUser, createXSSPayload } from '../utils';
+import { renderWithProviders, createXSSPayload } from '../utils';
 
 // Mock components for testing (these would be your actual components)
-const MockPhotoCard = ({ photo }: { photo: any }) => (
+const MockPhotoCard = ({
+  photo,
+}: {
+  photo: { title: string; description: string; tags?: string[] };
+}) => (
   <div data-testid="photo-card">
     <h3>{photo.title}</h3>
     <p>{photo.description}</p>
@@ -18,7 +22,11 @@ const MockPhotoCard = ({ photo }: { photo: any }) => (
   </div>
 );
 
-const MockProjectCard = ({ project }: { project: any }) => (
+const MockProjectCard = ({
+  project,
+}: {
+  project: { title: string; description: string; technologies?: string[] };
+}) => (
   <div data-testid="project-card">
     <h3>{project.title}</h3>
     <p dangerouslySetInnerHTML={{ __html: project.description }} />
@@ -26,12 +34,12 @@ const MockProjectCard = ({ project }: { project: any }) => (
   </div>
 );
 
-const MockBlogPost = ({ post }: { post: any }) => (
+/* const MockBlogPost = ({ post }: { post: any }) => (
   <article data-testid="blog-post">
     <h1>{post.title}</h1>
     <div dangerouslySetInnerHTML={{ __html: post.content }} />
   </article>
-);
+); */
 
 const MockCommentForm = ({ onSubmit }: { onSubmit: (comment: string) => void }) => {
   const handleSubmit = (e: React.FormEvent) => {
@@ -149,10 +157,18 @@ describe('XSS Prevention Tests', () => {
         return html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
       };
 
-      const SafeProjectCard = ({ project }: { project: any }) => (
+      const SafeProjectCard = ({
+        project,
+      }: {
+        project: { title: string; description: string; technologies?: string[] };
+      }) => (
         <div data-testid="project-card">
           <h3>{project.title}</h3>
-          <p dangerouslySetInnerHTML={{ __html: sanitizeHTML(project.description) }} />
+          <p
+            dangerouslySetInnerHTML={{
+              __html: sanitizeHTML(project.description),
+            }}
+          />
           <div>{project.technologies?.join(', ')}</div>
         </div>
       );
@@ -219,7 +235,7 @@ describe('XSS Prevention Tests', () => {
           .replace(/javascript:/gi, '');
       };
 
-      const SafeBlogPost = ({ post }: { post: any }) => (
+      const SafeBlogPost = ({ post }: { post: { title: string; content: string } }) => (
         <article data-testid="blog-post">
           <h1>{post.title}</h1>
           <div dangerouslySetInnerHTML={{ __html: sanitizeContent(post.content) }} />
@@ -352,20 +368,24 @@ alert('This should not execute');
       const fetchContent = vi.fn().mockResolvedValue(mockApiResponse);
 
       const DynamicContent = () => {
-        const [content, setContent] = React.useState<any>(null);
+        const [content, setContent] = React.useState<{ title: string; content: string } | null>(
+          null
+        );
 
         React.useEffect(() => {
-          fetchContent().then(data => {
-            // Sanitize before setting state
-            const sanitized = {
-              ...data,
-              content: data.content.replace(
-                /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-                ''
-              ),
-            };
-            setContent(sanitized);
-          });
+          void (fetchContent() as Promise<{ title: string; content: string }>).then(
+            (data: { title: string; content: string }) => {
+              // Sanitize before setting state
+              const sanitized = {
+                ...data,
+                content: data.content.replace(
+                  /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+                  ''
+                ),
+              };
+              setContent(sanitized);
+            }
+          );
         }, []);
 
         if (!content) return <div>Loading...</div>;
@@ -394,7 +414,7 @@ alert('This should not execute');
       expect(dynamicContent.querySelector('script')).toBeNull();
     });
 
-    it('should prevent XSS in search results', async () => {
+    it('should prevent XSS in search results', () => {
       const maliciousSearchResults = [
         {
           id: 'result-1',
@@ -408,7 +428,11 @@ alert('This should not execute');
         },
       ];
 
-      const SearchResults = ({ results }: { results: any[] }) => (
+      const SearchResults = ({
+        results,
+      }: {
+        results: { id: string; title: string; description: string }[];
+      }) => (
         <div data-testid="search-results">
           {results.map(result => (
             <div key={result.id} data-testid={`result-${result.id}`}>
@@ -449,7 +473,7 @@ alert('This should not execute');
         const handleClick = (event: React.MouseEvent) => {
           // Ensure event data is safe
           const target = event.target as HTMLElement;
-          const safeData = target.getAttribute('data-safe') || '';
+          const safeData = target.getAttribute('data-safe') ?? '';
           mockHandler(safeData);
         };
 

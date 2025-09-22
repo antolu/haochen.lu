@@ -97,10 +97,10 @@ const HomePage: React.FC = () => {
             className="text-xl md:text-2xl mb-12 animate-fade-in-delay"
           >
             <span className="block mb-2">
-              {homeContent?.['hero.tagline']?.content || 'Student. Traveler. Photographer.'}
+              {homeContent?.['hero.tagline']?.content ?? 'Student. Traveler. Photographer.'}
             </span>
             <span className="text-lg opacity-90">
-              {homeContent?.['hero.subtitle']?.content || 'Machine Learning at KTH Stockholm'}
+              {homeContent?.['hero.subtitle']?.content ?? 'Machine Learning at KTH Stockholm'}
             </span>
           </motion.div>
           <motion.div
@@ -155,10 +155,10 @@ const HomePage: React.FC = () => {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-serif font-bold mb-4">
-              {homeContent?.['about.title']?.content || 'About Me'}
+              {homeContent?.['about.title']?.content ?? 'About Me'}
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              {homeContent?.['about.description']?.content ||
+              {homeContent?.['about.description']?.content ??
                 "Passionate about learning new things, whether it's machine learning algorithms, photography techniques, or exploring new cultures through travel."}
             </p>
           </motion.div>
@@ -188,7 +188,7 @@ const HomePage: React.FC = () => {
               <div className="grid grid-cols-2 gap-6">
                 <div className="bg-white p-6 rounded-lg shadow-sm">
                   <h3 className="font-semibold text-gray-900 mb-3">
-                    {homeContent?.['about.interests_title']?.content || 'Interests'}
+                    {homeContent?.['about.interests_title']?.content ?? 'Interests'}
                   </h3>
                   <ul className="space-y-2 text-gray-700">
                     <li>📸 Photography</li>
@@ -199,7 +199,7 @@ const HomePage: React.FC = () => {
                 </div>
                 <div className="bg-white p-6 rounded-lg shadow-sm">
                   <h3 className="font-semibold text-gray-900 mb-3">
-                    {homeContent?.['about.skills_title']?.content || 'Skills'}
+                    {homeContent?.['about.skills_title']?.content ?? 'Skills'}
                   </h3>
                   <ul className="space-y-2 text-gray-700">
                     <li>🤖 Machine Learning</li>
@@ -239,10 +239,10 @@ const HomePage: React.FC = () => {
             className="text-center mb-12"
           >
             <h2 className="text-4xl font-serif font-bold text-gray-900 mb-4">
-              {homeContent?.['photography.title']?.content || 'Latest Photography'}
+              {homeContent?.['photography.title']?.content ?? 'Latest Photography'}
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              {homeContent?.['photography.description']?.content ||
+              {homeContent?.['photography.description']?.content ??
                 'My most recent captures from travels, adventures, and everyday moments.'}
             </p>
           </motion.div>
@@ -269,7 +269,7 @@ const HomePage: React.FC = () => {
                           src={optimalImage.url}
                           srcSet={optimalImage.srcset}
                           sizes={optimalImage.sizes}
-                          alt={photo.title || 'Photo'}
+                          alt={photo.title ?? 'Photo'}
                           className="w-full h-full object-cover group-hover:scale-102 md:group-hover:scale-105 transition-transform duration-300"
                           loading="lazy"
                         />
@@ -311,10 +311,10 @@ const HomePage: React.FC = () => {
             className="text-center mb-12"
           >
             <h2 className="text-4xl font-serif font-bold text-gray-900 mb-4">
-              {homeContent?.['projects.title']?.content || 'Latest Projects'}
+              {homeContent?.['projects.title']?.content ?? 'Latest Projects'}
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              {homeContent?.['projects.description']?.content ||
+              {homeContent?.['projects.description']?.content ??
                 'Recent projects and ongoing work that showcase my technical expertise and passion for development.'}
             </p>
           </motion.div>
@@ -342,11 +342,11 @@ const HomePage: React.FC = () => {
                   <div className="p-6">
                     <h3 className="text-xl font-semibold text-gray-900 mb-2">{project.title}</h3>
                     <p className="text-gray-600 mb-4 line-clamp-3">
-                      {project.short_description || project.description}
+                      {project.short_description ?? project.description}
                     </p>
                     {project.technologies && (
                       <div className="flex flex-wrap gap-2 mb-4">
-                        {JSON.parse(project.technologies)
+                        {(JSON.parse(project.technologies) as string[])
                           .slice(0, 3)
                           .map((tech: string) => (
                             <span
@@ -408,10 +408,10 @@ const HomePage: React.FC = () => {
             className="text-center mb-24"
           >
             <h2 className="text-4xl md:text-5xl font-serif font-bold mb-4">
-              {homeContent?.['contact.title']?.content || 'Get In Touch'}
+              {homeContent?.['contact.title']?.content ?? 'Get In Touch'}
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              {homeContent?.['contact.description']?.content ||
+              {homeContent?.['contact.description']?.content ??
                 "I'm always open to discussing new opportunities, collaborations, or just having a chat about photography and technology."}
             </p>
           </motion.div>
@@ -502,7 +502,7 @@ const HomePage: React.FC = () => {
               transition={{ duration: 0.2 }}
             >
               <div className="flex items-center justify-between p-4 border-b">
-                <h3 className="text-lg font-semibold truncate">{selectedPhoto.title || 'Photo'}</h3>
+                <h3 className="text-lg font-semibold truncate">{selectedPhoto.title ?? 'Photo'}</h3>
                 <button
                   onClick={() => setSelectedPhoto(null)}
                   className="text-gray-500 hover:text-gray-700"
@@ -516,7 +516,9 @@ const HomePage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    navigate('/photography', { state: { photoId: selectedPhoto.id } });
+                    void navigate('/photography', {
+                      state: { photoId: selectedPhoto.id },
+                    });
                     setSelectedPhoto(null);
                   }}
                   className="block text-left"
@@ -530,7 +532,7 @@ const HomePage: React.FC = () => {
                         src={optimalImage.url}
                         srcSet={optimalImage.srcset}
                         sizes={optimalImage.sizes}
-                        alt={selectedPhoto.title || 'Photo'}
+                        alt={selectedPhoto.title ?? 'Photo'}
                         className="w-full h-80 object-cover rounded-lg"
                       />
                     );
@@ -553,6 +555,7 @@ const HomePage: React.FC = () => {
                     </div>
                   )}
 
+                  {/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */}
                   {(selectedPhoto.camera_display_name ||
                     selectedPhoto.camera_make ||
                     selectedPhoto.camera_model ||
@@ -566,19 +569,21 @@ const HomePage: React.FC = () => {
                           selectedPhoto.camera_model) && (
                           <div>
                             Camera:{' '}
-                            {selectedPhoto.camera_display_name ||
-                              `${selectedPhoto.camera_make || ''} ${selectedPhoto.camera_model || ''}`.trim()}
+                            {selectedPhoto.camera_display_name ??
+                              `${selectedPhoto.camera_make ?? ''} ${selectedPhoto.camera_model ?? ''}`.trim()}
                           </div>
                         )}
-                        {(selectedPhoto.lens_display_name || selectedPhoto.lens) && (
+                        {(selectedPhoto.lens_display_name ?? selectedPhoto.lens) && (
                           <div className="mt-2">
-                            Lens: {selectedPhoto.lens_display_name || selectedPhoto.lens}
+                            Lens: {selectedPhoto.lens_display_name ?? selectedPhoto.lens}
                           </div>
                         )}
                       </div>
                     </div>
                   )}
+                  {/* eslint-enable @typescript-eslint/prefer-nullish-coalescing */}
 
+                  {/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */}
                   {(selectedPhoto.aperture ||
                     selectedPhoto.shutter_speed ||
                     selectedPhoto.iso ||
@@ -593,13 +598,14 @@ const HomePage: React.FC = () => {
                       </div>
                     </div>
                   )}
+                  {/* eslint-enable @typescript-eslint/prefer-nullish-coalescing */}
 
                   {typeof selectedPhoto.location_lat === 'number' &&
                     typeof selectedPhoto.location_lon === 'number' && (
                       <div>
                         <div className="text-gray-500">Location</div>
                         <div className="text-gray-800">
-                          {selectedPhoto.location_name || 'Unknown'}
+                          {selectedPhoto.location_name ?? 'Unknown'}
                           <div className="text-xs text-gray-500">
                             {selectedPhoto.location_lat.toFixed(6)},{' '}
                             {selectedPhoto.location_lon.toFixed(6)}

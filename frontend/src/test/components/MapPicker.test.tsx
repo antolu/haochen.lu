@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import MapPicker from '../../components/MapPicker';
 
@@ -25,13 +25,8 @@ vi.mock('react-leaflet', () => ({
   ),
   TileLayer: (props: any) => <div data-testid="tile-layer" {...props} />,
   Marker: (props: any) => <div data-testid="marker" {...props} />,
-  useMapEvents: ({ click }: any) => {
-    // Simulate click event handling
-    const handleClick = () => {
-      if (click) {
-        click({ latlng: { lat: 37.7749, lng: -122.4194 } });
-      }
-    };
+  useMapEvents: ({ click: _click }: { click?: (event: unknown) => void }) => {
+    // Simulate click event handling - currently unused but could be used for integration tests
     return null;
   },
   useMap: () => ({
@@ -42,7 +37,7 @@ vi.mock('react-leaflet', () => ({
 // Mock fetch for location search
 global.fetch = vi.fn();
 
-const mockFetch = global.fetch as any;
+const mockFetch = global.fetch as ReturnType<typeof vi.fn>;
 
 describe('MapPicker', () => {
   const defaultProps = {
@@ -86,7 +81,7 @@ describe('MapPicker', () => {
     expect(screen.queryByPlaceholderText('Search for a location...')).not.toBeInTheDocument();
   });
 
-  it('calls onLocationSelect when location is selected', async () => {
+  it('calls onLocationSelect when location is selected', () => {
     const onLocationSelect = vi.fn();
     render(<MapPicker {...defaultProps} onLocationSelect={onLocationSelect} />);
 
@@ -95,7 +90,7 @@ describe('MapPicker', () => {
     expect(onLocationSelect).not.toHaveBeenCalled();
   });
 
-  it('calls onLocationChange when location changes', async () => {
+  it('calls onLocationChange when location changes', () => {
     const onLocationChange = vi.fn();
     render(<MapPicker {...defaultProps} onLocationChange={onLocationChange} />);
 
@@ -377,7 +372,9 @@ describe('MapPicker', () => {
         expect(screen.getByText('New York City')).toBeInTheDocument();
       });
 
-      const resultButton = screen.getByRole('button', { name: /New York City/ });
+      const resultButton = screen.getByRole('button', {
+        name: /New York City/,
+      });
       expect(resultButton).toBeInTheDocument();
 
       // Should be focusable

@@ -37,7 +37,7 @@ export const generateMobileCaptionHtml = (photo: Photo, maxDescLength = 100): st
 
   // Truncate description for mobile
   if (description && description.length > maxDescLength) {
-    description = description.substring(0, maxDescLength) + '...';
+    description = `${description.substring(0, maxDescLength)}...`;
   }
 
   const parts: string[] = [];

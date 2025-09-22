@@ -138,6 +138,23 @@ export interface SubAppListResponse {
   total: number;
 }
 
+export interface PhotoStatsSummary {
+  total_photos: number;
+  featured_photos: number;
+  total_size: number;
+}
+
+export interface ProjectStatsSummary {
+  total_projects: number;
+  featured_projects: number;
+}
+
+export interface SubAppStatsSummary {
+  total_subapps: number;
+  enabled_subapps: number;
+  disabled_subapps: number;
+}
+
 export interface User {
   id: string;
   username: string;

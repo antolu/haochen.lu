@@ -22,15 +22,21 @@ const createPhotoMarker = (photoUrl: string) => {
 };
 
 // Custom cluster icon for grouped photos with thumbnail preview
-const createClusterIcon = (cluster: any) => {
+interface MarkerCluster {
+  getChildCount(): number;
+  getAllChildMarkers(): Array<{ options: { photo: Photo } }>;
+  getLatLng(): L.LatLng;
+}
+
+const createClusterIcon = (cluster: MarkerCluster) => {
   const count = cluster.getChildCount();
   const size = count < 10 ? 'small' : count < 100 ? 'medium' : 'large';
 
   // Get first few photos for preview
   const childMarkers = cluster.getAllChildMarkers();
-  const previewPhotos = childMarkers.slice(0, 4).map((marker: any) => {
+  const previewPhotos = childMarkers.slice(0, 4).map(marker => {
     const photo = marker.options.photo;
-    return photo.variants?.thumbnail?.url || photo.original_url;
+    return photo.variants?.thumbnail?.url ?? photo.original_url;
   });
 
   // Create thumbnail grid for clusters with 4+ photos
@@ -70,16 +76,20 @@ interface PhotoMapProps {
 }
 
 // Component to handle cluster events
+interface ClusterClickEvent {
+  layer: MarkerCluster;
+}
+
 const ClusterEvents: React.FC<{ onPhotoClick?: (photo: Photo) => void }> = ({ onPhotoClick }) => {
   const map = useMap();
 
   useEffect(() => {
-    map.on('cluster:click', (event: any) => {
+    map.on('cluster:click', (event: ClusterClickEvent) => {
       const cluster = event.layer;
       const childMarkers = cluster.getAllChildMarkers();
 
       // Create popup content with all photos in cluster
-      const photos = childMarkers.map((marker: any) => marker.options.photo);
+      const photos = childMarkers.map(marker => marker.options.photo);
 
       const popupContent = document.createElement('div');
       popupContent.className = 'cluster-popup';
@@ -90,12 +100,12 @@ const ClusterEvents: React.FC<{ onPhotoClick?: (photo: Photo) => void }> = ({ on
         <div class="cluster-popup-grid">
           ${photos
             .map((photo: Photo) => {
-              const thumbnailUrl = photo.variants?.thumbnail?.url || photo.original_url;
+              const thumbnailUrl = photo.variants?.thumbnail?.url ?? photo.original_url;
               return `
               <div class="cluster-popup-item" data-photo-id="${photo.id}">
-                <img src="${thumbnailUrl}" alt="${photo.title || 'Photo'}" class="cluster-popup-thumb" />
+                <img src="${thumbnailUrl}" alt="${photo.title ?? 'Photo'}" class="cluster-popup-thumb" />
                 <div class="cluster-popup-info">
-                  <p class="font-medium text-xs truncate">${photo.title || 'Untitled'}</p>
+                  <p class="font-medium text-xs truncate">${photo.title ?? 'Untitled'}</p>
                   ${photo.date_taken ? `<p class="text-xs text-gray-500">${new Date(photo.date_taken).toLocaleDateString()}</p>` : ''}
                 </div>
               </div>
@@ -106,9 +116,10 @@ const ClusterEvents: React.FC<{ onPhotoClick?: (photo: Photo) => void }> = ({ on
       `;
 
       // Add click handlers for individual photos
-      popupContent.querySelectorAll('.cluster-popup-item').forEach((item: any) => {
-        item.addEventListener('click', () => {
-          const photoId = item.dataset.photoId;
+      popupContent.querySelectorAll('.cluster-popup-item').forEach(item => {
+        const element = item as HTMLElement;
+        element.addEventListener('click', () => {
+          const photoId = element.dataset.photoId;
           const photo = photos.find((p: Photo) => p.id === photoId);
           if (photo && onPhotoClick) {
             onPhotoClick(photo);
@@ -170,20 +181,19 @@ const PhotoMap: React.FC<PhotoMapProps> = ({
     return photos.filter(photo => photo.location_lat && photo.location_lon);
   }, [photos]);
 
-  // Default center (San Francisco)
-  const defaultCenter: [number, number] = [37.7749, -122.4194];
-
   // Calculate center from photos or use default
   const mapCenter = useMemo((): [number, number] => {
+    const defaultCenter: [number, number] = [37.7749, -122.4194];
     if (photosWithLocation.length === 0) return defaultCenter;
 
     if (photosWithLocation.length === 1) {
-      return [photosWithLocation[0].location_lat!, photosWithLocation[0].location_lon!];
+      const photo = photosWithLocation[0];
+      return [photo.location_lat ?? 0, photo.location_lon ?? 0];
     }
 
     // Calculate average center
-    const latSum = photosWithLocation.reduce((sum, photo) => sum + photo.location_lat!, 0);
-    const lngSum = photosWithLocation.reduce((sum, photo) => sum + photo.location_lon!, 0);
+    const latSum = photosWithLocation.reduce((sum, photo) => sum + (photo.location_lat ?? 0), 0);
+    const lngSum = photosWithLocation.reduce((sum, photo) => sum + (photo.location_lon ?? 0), 0);
 
     return [latSum / photosWithLocation.length, lngSum / photosWithLocation.length];
   }, [photosWithLocation]);
@@ -250,12 +260,12 @@ const PhotoMap: React.FC<PhotoMapProps> = ({
           {photosWithLocation.map(photo => {
             // Get thumbnail URL - using variants system or fallback
             const thumbnailUrl =
-              photo.variants?.thumbnail?.url || photo.original_url || `/uploads/${photo.filename}`;
+              photo.variants?.thumbnail?.url ?? photo.original_url ?? `/uploads/${photo.filename}`;
 
             return (
               <Marker
                 key={photo.id}
-                position={[photo.location_lat!, photo.location_lon!]}
+                position={[photo.location_lat ?? 0, photo.location_lon ?? 0]}
                 icon={createPhotoMarker(thumbnailUrl)}
                 eventHandlers={{
                   click: () => onPhotoClick?.(photo),
@@ -281,7 +291,7 @@ const PhotoMap: React.FC<PhotoMapProps> = ({
                         📅 {formatDateSimple(photo.date_taken)}
                       </p>
                     )}
-                    {(photo.camera_make || photo.camera_model) && (
+                    {(photo.camera_make ?? photo.camera_model) && (
                       <p className="text-xs text-gray-500 mt-1">
                         📷 {photo.camera_make} {photo.camera_model}
                       </p>

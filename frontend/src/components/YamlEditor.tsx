@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { debounce } from 'lodash';
 
 interface ValidationResult {
   valid: boolean;
   errors: string[];
   warnings: string[];
-  config?: any;
+  config?: Record<string, unknown>;
 }
 
 interface YamlEditorProps {
@@ -28,11 +27,15 @@ const YamlEditor: React.FC<YamlEditorProps> = ({
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [isValidating, setIsValidating] = useState(false);
 
-  // Debounced validation function
-  const debouncedValidate = useCallback(
-    debounce(async (yamlContent: string) => {
+  // Validation function
+  const validateYaml = useCallback(
+    async (yamlContent: string) => {
       if (!yamlContent.trim()) {
-        const emptyResult: ValidationResult = { valid: true, errors: [], warnings: [] };
+        const emptyResult: ValidationResult = {
+          valid: true,
+          errors: [],
+          warnings: [],
+        };
         setValidationResult(emptyResult);
         setIsValidating(false);
         onValidationChange?.(emptyResult);
@@ -58,7 +61,7 @@ const YamlEditor: React.FC<YamlEditorProps> = ({
           throw new Error(`Validation failed: ${response.statusText}`);
         }
 
-        const result: ValidationResult = await response.json();
+        const result = (await response.json()) as ValidationResult;
         setValidationResult(result);
         onValidationChange?.(result);
       } catch (error) {
@@ -74,17 +77,14 @@ const YamlEditor: React.FC<YamlEditorProps> = ({
       } finally {
         setIsValidating(false);
       }
-    }, 500),
+    },
     [onValidationChange]
   );
 
   // Trigger validation when value changes
   useEffect(() => {
-    debouncedValidate(value);
-    return () => {
-      debouncedValidate.cancel();
-    };
-  }, [value, debouncedValidate]);
+    void validateYaml(value);
+  }, [value, validateYaml]);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     onChange(e.target.value);

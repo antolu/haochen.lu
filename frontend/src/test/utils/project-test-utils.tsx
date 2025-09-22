@@ -75,10 +75,12 @@ export const mockIntersectionObserver = () => {
 
 // Helper to trigger intersection observer
 export const triggerIntersectionObserver = (isIntersecting: boolean = true) => {
-  const mockObserver = window.IntersectionObserver as jest.MockedClass<typeof IntersectionObserver>;
+  const mockObserver = window.IntersectionObserver as unknown as {
+    mock: { calls: [IntersectionObserverCallback, ...unknown[]][] };
+  };
   const callback = mockObserver.mock.calls[mockObserver.mock.calls.length - 1]?.[0];
   if (callback) {
-    callback([{ isIntersecting }]);
+    callback([{ isIntersecting } as IntersectionObserverEntry]);
   }
 };
 
@@ -88,7 +90,7 @@ export const mockMatchMedia = (matches: boolean = false) => {
     writable: true,
     value: vi.fn().mockImplementation(query => ({
       matches,
-      media: query,
+      media: query as string,
       onchange: null,
       addListener: vi.fn(),
       removeListener: vi.fn(),

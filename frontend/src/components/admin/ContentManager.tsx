@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import type { AxiosError } from 'axios';
 import { content } from '../../api/client';
 import type { Content, ContentCreate, ContentUpdate } from '../../types';
 
@@ -45,11 +46,11 @@ const ContentManager: React.FC = () => {
   const createMutation = useMutation({
     mutationFn: (data: ContentCreate) => content.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-content'] });
+      void queryClient.invalidateQueries({ queryKey: ['admin-content'] });
       setShowCreateForm(false);
       resetForm();
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError) => {
       console.error('Error creating content:', error);
     },
   });
@@ -58,11 +59,11 @@ const ContentManager: React.FC = () => {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: ContentUpdate }) => content.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-content'] });
+      void queryClient.invalidateQueries({ queryKey: ['admin-content'] });
       setEditingContent(null);
       resetForm();
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError) => {
       console.error('Error updating content:', error);
     },
   });
@@ -71,9 +72,9 @@ const ContentManager: React.FC = () => {
   const deleteMutation = useMutation({
     mutationFn: (id: string) => content.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-content'] });
+      void queryClient.invalidateQueries({ queryKey: ['admin-content'] });
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError) => {
       console.error('Error deleting content:', error);
     },
   });

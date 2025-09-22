@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import type { ProjectFilters } from '../hooks/useProjects';
-import { useInfiniteProjects } from '../hooks/useProjects';
+import { useInfiniteProjects, type ProjectFilters } from '../hooks/useProjects';
 import ProjectGrid from '../components/ProjectGrid';
 
 const ProjectsPage: React.FC = () => {
@@ -11,13 +10,13 @@ const ProjectsPage: React.FC = () => {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, error } =
     useInfiniteProjects({
       ...filters,
-      search: searchQuery || undefined,
+      search: searchQuery.trim() === '' ? undefined : searchQuery,
     });
 
   const projects = data?.pages.flatMap(page => page.projects) ?? [];
   const totalProjects = data?.pages[0]?.total ?? 0;
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = (e: React.FormEvent): void => {
     e.preventDefault();
     // Search is handled by the query automatically when searchQuery changes
   };
@@ -153,13 +152,23 @@ const ProjectsPage: React.FC = () => {
                 </FilterButton>
                 <FilterButton
                   active={filters.status === 'active'}
-                  onClick={() => handleFilterChange({ status: 'active', featured: undefined })}
+                  onClick={() =>
+                    handleFilterChange({
+                      status: 'active',
+                      featured: undefined,
+                    })
+                  }
                 >
                   Active
                 </FilterButton>
                 <FilterButton
                   active={filters.status === 'in_progress'}
-                  onClick={() => handleFilterChange({ status: 'in_progress', featured: undefined })}
+                  onClick={() =>
+                    handleFilterChange({
+                      status: 'in_progress',
+                      featured: undefined,
+                    })
+                  }
                 >
                   In Progress
                 </FilterButton>
@@ -178,7 +187,9 @@ const ProjectsPage: React.FC = () => {
           {/* Projects Grid */}
           <ProjectGrid
             projects={projects}
-            onLoadMore={fetchNextPage}
+            onLoadMore={() => {
+              void fetchNextPage();
+            }}
             hasMore={hasNextPage}
             isLoading={isLoading}
             isLoadingMore={isFetchingNextPage}

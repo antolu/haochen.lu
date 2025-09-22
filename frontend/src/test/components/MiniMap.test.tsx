@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import MiniMap from '../../components/MiniMap';
 
 // Mock Leaflet and react-leaflet
 vi.mock('leaflet', () => {
-  const mockIcon = vi.fn(config => ({
+  const mockIcon = vi.fn((config: unknown) => ({
     options: config,
   }));
 
@@ -18,13 +18,21 @@ vi.mock('leaflet', () => {
 });
 
 vi.mock('react-leaflet', () => ({
-  MapContainer: ({ children, style, ...props }: any) => (
+  MapContainer: ({
+    children,
+    style,
+    ...props
+  }: {
+    children: React.ReactNode;
+    style?: React.CSSProperties;
+    [key: string]: unknown;
+  }) => (
     <div data-testid="mini-map-container" style={style} {...props}>
       {children}
     </div>
   ),
-  TileLayer: (props: any) => <div data-testid="mini-tile-layer" {...props} />,
-  Marker: (props: any) => <div data-testid="mini-marker" {...props} />,
+  TileLayer: (props: Record<string, unknown>) => <div data-testid="mini-tile-layer" {...props} />,
+  Marker: (props: Record<string, unknown>) => <div data-testid="mini-marker" {...props} />,
 }));
 
 describe('MiniMap', () => {
@@ -185,10 +193,8 @@ describe('MiniMap', () => {
       expect(overlay).toBeInTheDocument();
     });
 
-    it('stops propagation when overlay icon is clicked', async () => {
-      const user = userEvent.setup();
+    it('stops propagation when overlay icon is clicked', () => {
       const onClick = vi.fn();
-      const stopPropagation = vi.fn();
 
       render(<MiniMap {...defaultProps} onClick={onClick} />);
 
@@ -260,7 +266,7 @@ describe('MiniMap', () => {
 
   describe('Error Handling', () => {
     it('handles missing coordinates gracefully', () => {
-      // @ts-ignore - Testing runtime behavior
+      // @ts-expect-error - Testing runtime behavior
       render(<MiniMap latitude={undefined} longitude={undefined} />);
 
       // Should still render without crashing

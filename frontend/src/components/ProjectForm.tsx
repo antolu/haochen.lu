@@ -4,7 +4,6 @@ import MDEditor from '@uiw/react-md-editor';
 import { motion } from 'framer-motion';
 import RepositoryConnector from './RepositoryConnector';
 import TagMultiSelect from './admin/TagMultiSelect';
-import type { Project, ProjectCreate, ProjectUpdate } from '../hooks/useProjects';
 import {
   useCreateProject,
   useUpdateProject,
@@ -12,8 +11,11 @@ import {
   parseTechnologies,
   formatTechnologies,
   generateSlug,
+  useProjectTechnologies,
+  type Project,
+  type ProjectCreate,
+  type ProjectUpdate,
 } from '../hooks/useProjects';
-import { useProjectTechnologies } from '../hooks/useProjects';
 
 interface ProjectFormProps {
   project?: Project;
@@ -84,23 +86,23 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
       const technologies = parseTechnologies(project.technologies);
       setTechnologiesInput(technologies.join(', '));
       setMarkdownContent(project.description);
-      setUseReadme(project.use_readme || false);
+      setUseReadme(project.use_readme ?? false);
 
       reset({
         title: project.title,
         slug: project.slug,
         description: project.description,
-        short_description: project.short_description || '',
-        github_url: project.github_url || '',
-        demo_url: project.demo_url || '',
-        image_url: project.image_url || '',
+        short_description: project.short_description ?? '',
+        github_url: project.github_url ?? '',
+        demo_url: project.demo_url ?? '',
+        image_url: project.image_url ?? '',
         technologies: technologies.join(', '),
         featured: project.featured,
         status: project.status,
-        use_readme: project.use_readme || false,
-        repository_type: project.repository_type || undefined,
-        repository_owner: project.repository_owner || undefined,
-        repository_name: project.repository_name || undefined,
+        use_readme: project.use_readme ?? false,
+        repository_type: project.repository_type ?? undefined,
+        repository_owner: project.repository_owner ?? undefined,
+        repository_name: project.repository_name ?? undefined,
       });
     }
   }, [project, reset]);
@@ -150,7 +152,9 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
 
     setIsLoadingPreview(true);
     try {
-      const result = await previewReadmeMutation.mutateAsync(watchedGithubUrl);
+      const result = (await previewReadmeMutation.mutateAsync(watchedGithubUrl)) as {
+        content: string;
+      };
       setReadmePreview(result.content);
       setMarkdownContent(result.content);
     } catch (error) {
@@ -211,7 +215,12 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      <form
+        onSubmit={e => {
+          void handleSubmit(onSubmit)(e);
+        }}
+        className="space-y-8"
+      >
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -268,7 +277,9 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
                 URL Slug {!isEditing && '*'}
               </label>
               <input
-                {...register('slug', { required: !isEditing ? 'Slug is required' : false })}
+                {...register('slug', {
+                  required: !isEditing ? 'Slug is required' : false,
+                })}
                 type="text"
                 disabled={isEditing}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
@@ -408,7 +419,9 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
               {watchedGithubUrl && (
                 <button
                   type="button"
-                  onClick={handlePreviewReadme}
+                  onClick={() => {
+                    void handlePreviewReadme();
+                  }}
                   disabled={isLoadingPreview || !watchedGithubUrl}
                   className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 disabled:opacity-50"
                 >
@@ -451,7 +464,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
             <div data-color-mode="light">
               <MDEditor
                 value={markdownContent}
-                onChange={val => setMarkdownContent(val || '')}
+                onChange={val => setMarkdownContent(val ?? '')}
                 preview="edit"
                 height={400}
                 visibleDragbar={false}

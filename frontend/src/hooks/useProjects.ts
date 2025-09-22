@@ -1,5 +1,18 @@
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient, projects as projectsApi } from '../api/client';
+import type { ProjectStatsSummary } from '../types';
+
+interface ProjectReadmeResponse {
+  content: string;
+  last_updated?: string;
+  source?: string;
+}
+
+interface ProjectPreviewResponse {
+  content: string;
+  repo_url: string;
+  raw_url?: string;
+}
 
 export interface Project {
   id: string;
@@ -179,19 +192,24 @@ export function useFeaturedProjects() {
  * Hook for fetching project README content
  */
 export function useProjectReadme(projectId: string, repoUrl?: string) {
-  return useQuery({
+  return useQuery<ProjectReadmeResponse>({
     queryKey: projectKeys.readme(projectId),
-    queryFn: async () => {
+    queryFn: async (): Promise<ProjectReadmeResponse> => {
       // First check if we have cached README
       try {
-        const response = await apiClient.get(`/projects/${projectId}/readme`);
+        const response = await apiClient.get<ProjectReadmeResponse>(
+          `/projects/${projectId}/readme`
+        );
         return response.data;
       } catch (error) {
         // If no cached README and we have a repo URL, try to fetch
         if (repoUrl) {
-          const fetchResponse = await apiClient.post(`/projects/${projectId}/fetch-readme`, {
-            repo_url: repoUrl,
-          });
+          const fetchResponse = await apiClient.post<ProjectReadmeResponse>(
+            `/projects/${projectId}/fetch-readme`,
+            {
+              repo_url: repoUrl,
+            }
+          );
           return fetchResponse.data;
         }
         throw error;
@@ -207,10 +225,10 @@ export function useProjectReadme(projectId: string, repoUrl?: string) {
  * Hook for project statistics (admin only)
  */
 export function useProjectStats() {
-  return useQuery({
+  return useQuery<ProjectStatsSummary>({
     queryKey: projectKeys.stats(),
     queryFn: async () => {
-      const response = await apiClient.get('/projects/stats/summary');
+      const response = await apiClient.get<ProjectStatsSummary>('/projects/stats/summary');
       return response.data;
     },
     staleTime: 5 * 60 * 1000,
@@ -240,9 +258,9 @@ export function useCreateProject() {
     },
     onSuccess: newProject => {
       // Invalidate and refetch project lists
-      queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: projectKeys.featured() });
-      queryClient.invalidateQueries({ queryKey: projectKeys.stats() });
+      void queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: projectKeys.featured() });
+      void queryClient.invalidateQueries({ queryKey: projectKeys.stats() });
 
       // Set the new project in the cache
       queryClient.setQueryData(projectKeys.detail(newProject.id), newProject);
@@ -268,9 +286,9 @@ export function useUpdateProject() {
       queryClient.setQueryData(projectKeys.detail(updatedProject.slug), updatedProject);
 
       // Invalidate lists to reflect changes
-      queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: projectKeys.featured() });
-      queryClient.invalidateQueries({ queryKey: projectKeys.stats() });
+      void queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: projectKeys.featured() });
+      void queryClient.invalidateQueries({ queryKey: projectKeys.stats() });
     },
   });
 }
@@ -282,18 +300,17 @@ export function useDeleteProject() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: string) => {
-      const response = await apiClient.delete(`/projects/${id}`);
-      return response.data;
+    mutationFn: async (id: string): Promise<void> => {
+      await apiClient.delete(`/projects/${id}`);
     },
     onSuccess: (_, deletedId) => {
       // Remove the project from cache
       queryClient.removeQueries({ queryKey: projectKeys.detail(deletedId) });
 
       // Invalidate all lists
-      queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: projectKeys.featured() });
-      queryClient.invalidateQueries({ queryKey: projectKeys.stats() });
+      void queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: projectKeys.featured() });
+      void queryClient.invalidateQueries({ queryKey: projectKeys.stats() });
     },
   });
 }
@@ -302,9 +319,9 @@ export function useDeleteProject() {
  * Hook for fetching README preview (admin use)
  */
 export function usePreviewReadme() {
-  return useMutation({
-    mutationFn: async (repoUrl: string) => {
-      const response = await apiClient.post('/projects/preview-readme', {
+  return useMutation<ProjectPreviewResponse, Error, string>({
+    mutationFn: async (repoUrl: string): Promise<ProjectPreviewResponse> => {
+      const response = await apiClient.post<ProjectPreviewResponse>('/projects/preview-readme', {
         repo_url: repoUrl,
       });
       return response.data;
@@ -318,16 +335,27 @@ export function usePreviewReadme() {
 export function useRefreshReadme() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async ({ projectId, repoUrl }: { projectId: string; repoUrl: string }) => {
-      const response = await apiClient.post(`/projects/${projectId}/refresh-readme`, {
-        repo_url: repoUrl,
-      });
+  return useMutation<ProjectReadmeResponse, Error, { projectId: string; repoUrl: string }>({
+    mutationFn: async ({
+      projectId,
+      repoUrl,
+    }: {
+      projectId: string;
+      repoUrl: string;
+    }): Promise<ProjectReadmeResponse> => {
+      const response = await apiClient.post<ProjectReadmeResponse>(
+        `/projects/${projectId}/refresh-readme`,
+        {
+          repo_url: repoUrl,
+        }
+      );
       return response.data;
     },
     onSuccess: (_, { projectId }) => {
       // Invalidate README cache to force refetch
-      queryClient.invalidateQueries({ queryKey: projectKeys.readme(projectId) });
+      void queryClient.invalidateQueries({
+        queryKey: projectKeys.readme(projectId),
+      });
     },
   });
 }
@@ -340,7 +368,7 @@ export function useRefreshReadme() {
 export function parseTechnologies(technologies?: string): string[] {
   if (!technologies) return [];
   try {
-    return JSON.parse(technologies);
+    return JSON.parse(technologies) as string[];
   } catch {
     // Fallback to comma-separated parsing
     return technologies
@@ -360,9 +388,11 @@ export function formatTechnologies(technologies: string[]): string {
 /**
  * Extract repository info from URL
  */
-export function parseRepositoryUrl(
-  url: string
-): { type: 'github' | 'gitlab' | 'unknown'; owner: string; repo: string } | null {
+export function parseRepositoryUrl(url: string): {
+  type: 'github' | 'gitlab' | 'unknown';
+  owner: string;
+  repo: string;
+} | null {
   try {
     const urlObj = new URL(url);
     if (!(urlObj.protocol === 'http:' || urlObj.protocol === 'https:')) {

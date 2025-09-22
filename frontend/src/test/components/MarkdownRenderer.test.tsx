@@ -11,7 +11,7 @@
  * - Security (XSS prevention)
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import MarkdownRenderer from '../../components/MarkdownRenderer';
 import { renderWithProviders } from '../utils/project-test-utils';
@@ -26,9 +26,15 @@ Object.assign(navigator, {
 
 // Mock react-markdown and plugins
 vi.mock('react-markdown', () => ({
-  default: ({ children, components }: any) => {
+  default: ({
+    children,
+    components,
+  }: {
+    children: React.ReactNode;
+    components?: Record<string, React.ComponentType>;
+  }) => {
     // Simple mock that applies component transformations
-    if (components?.code) {
+    if (components && 'code' in components) {
       return <div data-testid="markdown-content">{children}</div>;
     }
     return <div data-testid="markdown-content">{children}</div>;
@@ -101,11 +107,11 @@ describe('MarkdownRenderer', () => {
 
     it('handles null/undefined content gracefully', () => {
       expect(() => {
-        renderWithProviders(<MarkdownRenderer content={null as any} />);
+        renderWithProviders(<MarkdownRenderer content={null as string} />);
       }).not.toThrow();
 
       expect(() => {
-        renderWithProviders(<MarkdownRenderer content={undefined as any} />);
+        renderWithProviders(<MarkdownRenderer content={undefined as unknown as string} />);
       }).not.toThrow();
     });
   });
@@ -157,7 +163,8 @@ print("Second block")
   describe('Copy-to-Clipboard Functionality', () => {
     beforeEach(() => {
       // Mock the actual MarkdownRenderer component behavior
-      vi.mocked(navigator.clipboard.writeText).mockResolvedValue();
+      const mockWriteText = vi.fn().mockResolvedValue(undefined);
+      vi.mocked(navigator.clipboard).writeText = mockWriteText;
     });
 
     it('copies code to clipboard when copy button is clicked', async () => {
@@ -172,7 +179,9 @@ print("Second block")
               <code>{codeContent}</code>
             </pre>
             <button
-              onClick={() => navigator.clipboard.writeText(codeContent)}
+              onClick={() => {
+                void navigator.clipboard.writeText(codeContent);
+              }}
               data-testid="copy-button"
             >
               Copy
@@ -184,7 +193,9 @@ print("Second block")
       const copyButton = screen.getByTestId('copy-button');
       await user.click(copyButton);
 
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(codeContent);
+      const clipboardMock = vi.mocked(navigator.clipboard);
+      const writeText = clipboardMock.writeText.bind(clipboardMock);
+      expect(writeText).toHaveBeenCalledWith(codeContent);
     });
 
     it('shows success feedback after copying', async () => {
@@ -194,8 +205,8 @@ print("Second block")
       renderWithProviders(
         <div>
           <button
-            onClick={async () => {
-              await navigator.clipboard.writeText('test');
+            onClick={() => {
+              void navigator.clipboard.writeText('test');
               // Simulate the copied state change
             }}
             data-testid="copy-button"
@@ -208,25 +219,28 @@ print("Second block")
       const copyButton = screen.getByTestId('copy-button');
       await user.click(copyButton);
 
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith('test');
+      const clipboardMock = vi.mocked(navigator.clipboard);
+      const writeText = clipboardMock.writeText.bind(clipboardMock);
+      expect(writeText).toHaveBeenCalledWith('test');
 
       vi.useRealTimers();
     });
 
     it('handles copy failure gracefully', async () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      vi.mocked(navigator.clipboard.writeText).mockRejectedValue(new Error('Copy failed'));
+      const clipboardMock = vi.mocked(navigator.clipboard);
+      clipboardMock.writeText.mockRejectedValue(new Error('Copy failed'));
 
       const user = userEvent.setup();
 
       renderWithProviders(
         <div>
           <button
-            onClick={() =>
-              navigator.clipboard
+            onClick={() => {
+              void navigator.clipboard
                 .writeText('test')
-                .catch(err => console.error('Failed to copy text: ', err))
-            }
+                .catch(err => console.error('Failed to copy text: ', err));
+            }}
             data-testid="copy-button"
           >
             Copy
@@ -511,7 +525,7 @@ This is a paragraph with a [link](https://example.com).
     });
 
     it('handles extremely nested markdown', () => {
-      const deeplyNested = Array(50).fill('>').join(' ') + ' Deep blockquote';
+      const deeplyNested = `${Array(50).fill('>').join(' ')} Deep blockquote`;
 
       expect(() => {
         renderWithProviders(<MarkdownRenderer content={deeplyNested} />);

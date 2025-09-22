@@ -24,10 +24,10 @@ vi.mock('react-hot-toast', () => ({
 }));
 
 // Test wrapper with all providers
-const TestWrapper: React.FC<{ children: React.ReactNode; initialEntries?: string[] }> = ({
-  children,
-  initialEntries = ['/'],
-}) => {
+const TestWrapper: React.FC<{
+  children: React.ReactNode;
+  initialEntries?: string[];
+}> = ({ children, initialEntries = ['/'] }) => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -36,7 +36,7 @@ const TestWrapper: React.FC<{ children: React.ReactNode; initialEntries?: string
   });
 
   // Ensure window.location exists for BrowserRouter
-  if (!(window as any).location || !(window as any).location.href) {
+  if (!(window as unknown as { location?: { href?: string } }).location?.href) {
     Object.defineProperty(window, 'location', {
       writable: true,
       value: {
@@ -51,7 +51,8 @@ const TestWrapper: React.FC<{ children: React.ReactNode; initialEntries?: string
       },
     });
   } else {
-    (window as any).location.pathname = initialEntries[0] || '/';
+    (window as unknown as { location: { pathname: string } }).location.pathname =
+      initialEntries[0] || '/';
   }
 
   return (
@@ -258,7 +259,9 @@ describe('Auth Components Integration Tests', () => {
       await user.click(loginButton);
 
       await waitFor(() => {
-        const loginRequest = JSON.parse(mockAxios.history.post[0].data);
+        const loginRequest = JSON.parse(mockAxios.history.post[0].data as string) as {
+          remember_me: boolean;
+        };
         expect(loginRequest.remember_me).toBe(false);
       });
 
@@ -275,7 +278,9 @@ describe('Auth Components Integration Tests', () => {
       await user.click(loginButton);
 
       await waitFor(() => {
-        const loginRequest = JSON.parse(mockAxios.history.post[0].data);
+        const loginRequest = JSON.parse(mockAxios.history.post[0].data as string) as {
+          remember_me: boolean;
+        };
         expect(loginRequest.remember_me).toBe(true);
       });
     });
@@ -508,7 +513,7 @@ describe('Auth Components Integration Tests', () => {
       });
     });
 
-    it('should handle session restoration on page refresh', async () => {
+    it('should handle session restoration on page refresh', () => {
       // Simulate existing session
       const authStore = useAuthStore.getState();
       authStore.setTokens('valid-token', 900);

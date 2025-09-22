@@ -11,32 +11,45 @@
  * - Responsive admin interface behavior
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import AdminProjects from '../../pages/admin/AdminProjects';
 import { mockProjects, mockProjectStats } from '../fixtures/projects';
 import { renderWithProviders } from '../utils/project-test-utils';
-import * as useProjectsModule from '../../hooks/useProjects';
+// import * as useProjectsModule from '../../hooks/useProjects';  // Unused but kept for future test enhancements
 
 // Mock the hooks
-const mockUseProjects = vi.fn();
-const mockUseDeleteProject = vi.fn();
-const mockUseProjectStats = vi.fn();
+const mockUseProjects = vi.fn(() => ({}));
+const mockUseDeleteProject = vi.fn(() => ({}));
+const mockUseProjectStats = vi.fn(() => ({}));
 
-vi.mock('../../hooks/useProjects', () => ({
-  ...vi.importActual('../../hooks/useProjects'),
-  useProjects: (...args: any[]) => mockUseProjects(...args),
-  useDeleteProject: () => mockUseDeleteProject(),
-  useProjectStats: () => mockUseProjectStats(),
-  parseTechnologies: vi.fn((tech: string) => (tech ? tech.split(',').map(t => t.trim()) : [])),
-}));
+vi.mock('../../hooks/useProjects', async () => {
+  const actual = await vi.importActual('../../hooks/useProjects');
+  return {
+    ...actual,
+    useProjects: (...args: unknown[]) => mockUseProjects(...args),
+    useDeleteProject: () => mockUseDeleteProject(),
+    useProjectStats: () => mockUseProjectStats(),
+    parseTechnologies: vi.fn((tech: string) =>
+      tech ? tech.split(',').map((t: string) => t.trim()) : []
+    ),
+  };
+});
 
 // Mock ProjectForm component
 vi.mock('../../components/ProjectForm', () => ({
-  default: ({ project, onSuccess, onCancel }: any) => (
+  default: ({
+    project,
+    onSuccess,
+    onCancel,
+  }: {
+    project?: { title?: string };
+    onSuccess?: () => void;
+    onCancel?: () => void;
+  }) => (
     <div data-testid="project-form">
       <h2>{project ? 'Edit Project' : 'Create Project'}</h2>
-      <div data-testid="project-form-title">{project?.title || 'New Project Form'}</div>
+      <div data-testid="project-form-title">{project?.title ?? 'New Project Form'}</div>
       <button onClick={() => onSuccess?.({ id: 'new-id', title: 'New Project' })}>
         Save Project
       </button>
@@ -270,7 +283,9 @@ describe('AdminProjects', () => {
       const user = userEvent.setup();
       renderWithProviders(<AdminProjects />);
 
-      const createButton = screen.getByRole('button', { name: /create new project/i });
+      const createButton = screen.getByRole('button', {
+        name: /create new project/i,
+      });
       await user.click(createButton);
 
       const saveButton = screen.getByRole('button', { name: 'Save Project' });

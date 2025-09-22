@@ -4,7 +4,7 @@
  * authentication features of the API client.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import axios, { AxiosError } from 'axios';
+import { AxiosError } from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 import { apiClient } from '@/api/client';
 
@@ -24,7 +24,7 @@ const mockAuthState = {
 
 // Set up global auth store mock
 beforeEach(() => {
-  (window as any).__authStore = mockAuthStore;
+  (window as unknown as { __authStore: unknown }).__authStore = mockAuthStore;
   mockAuthStore.getState.mockReturnValue(mockAuthState);
   vi.clearAllMocks();
 });
@@ -77,7 +77,7 @@ describe('API Client Interceptors', () => {
 
       await apiClient.get('/test');
 
-      const request = mockAxios.history.get[0];
+      // const request = mockAxios.history.get[0];  // Unused but kept for potential future assertions
       // The withCredentials should be set in the axios instance config
       expect(apiClient.defaults.withCredentials).toBe(true);
     });
@@ -86,7 +86,7 @@ describe('API Client Interceptors', () => {
   describe('Response Interceptor - Token Refresh', () => {
     it('should refresh token on 401 error and retry request', async () => {
       const originalToken = 'expired-token';
-      const newToken = 'refreshed-token';
+      // const newToken = 'refreshed-token';  // Unused but kept for potential future assertions
 
       mockAuthStore.getState.mockReturnValue({
         ...mockAuthState,
@@ -130,7 +130,7 @@ describe('API Client Interceptors', () => {
       try {
         await apiClient.get('/test');
         expect.fail('Should have thrown an error');
-      } catch (error) {
+      } catch {
         expect(mockClearAuth).toHaveBeenCalled();
         // Redirect behavior may be blocked in test environment; assert clearAuth only
       }
@@ -182,7 +182,7 @@ describe('API Client Interceptors', () => {
       try {
         await apiClient.get('/test');
         expect.fail('Should have thrown an error');
-      } catch (error) {
+      } catch {
         expect(mockAxios.history.get).toHaveLength(2); // Original + one retry only
       }
     });
@@ -201,7 +201,7 @@ describe('API Client Interceptors', () => {
       try {
         await apiClient.get('/test');
         expect.fail('Should have thrown an error');
-      } catch (error) {
+      } catch {
         expect(mockClearAuth).toHaveBeenCalled();
       }
     });
@@ -230,7 +230,7 @@ describe('API Client Interceptors', () => {
       try {
         await apiClient.get('/test');
         expect.fail('Should have thrown an error');
-      } catch (error) {
+      } catch {
         expect(mockClearAuth).toHaveBeenCalled();
         expect(mockLocation.href).toBe('/login'); // Should not change
       }
@@ -244,7 +244,7 @@ describe('API Client Interceptors', () => {
       try {
         await apiClient.get('/test');
         expect.fail('Should have thrown an error');
-      } catch (error) {
+      } catch {
         expect(mockAuthState.refreshToken).not.toHaveBeenCalled();
         expect((error as AxiosError).response?.status).toBe(500);
       }
@@ -256,7 +256,7 @@ describe('API Client Interceptors', () => {
       try {
         await apiClient.get('/test');
         expect.fail('Should have thrown an error');
-      } catch (error) {
+      } catch {
         expect(mockAuthState.refreshToken).not.toHaveBeenCalled();
         expect((error as AxiosError).response?.status).toBe(403);
       }
@@ -268,7 +268,7 @@ describe('API Client Interceptors', () => {
       try {
         await apiClient.get('/test');
         expect.fail('Should have thrown an error');
-      } catch (error) {
+      } catch {
         expect(mockAuthState.refreshToken).not.toHaveBeenCalled();
         expect((error as AxiosError).response?.status).toBe(404);
       }
@@ -313,7 +313,7 @@ describe('API Client Interceptors', () => {
 
       // All should succeed
       const results = await Promise.all(promises);
-      expect(results.map(r => r.data)).toEqual([
+      expect(results.map((r: { data: unknown }) => r.data)).toEqual([
         { data: 'test1' },
         { data: 'test2' },
         { data: 'test3' },
@@ -336,8 +336,8 @@ describe('API Client Interceptors', () => {
 
       // Start multiple requests
       const promises = [
-        apiClient.get('/test1').catch(e => e),
-        apiClient.get('/test2').catch(e => e),
+        apiClient.get('/test1').catch((e: unknown) => e),
+        apiClient.get('/test2').catch((e: unknown) => e),
       ];
 
       // Let them queue up
@@ -357,7 +357,7 @@ describe('API Client Interceptors', () => {
   describe('Edge Cases', () => {
     it('should handle requests without auth store', async () => {
       // Remove auth store
-      delete (window as any).__authStore;
+      delete (window as unknown as { __authStore?: unknown }).__authStore;
 
       mockAxios.onGet('/test').reply(200, { data: 'success' });
 
@@ -366,7 +366,7 @@ describe('API Client Interceptors', () => {
     });
 
     it('should handle malformed auth store', async () => {
-      (window as any).__authStore = { invalidStore: true };
+      (window as unknown as { __authStore: unknown }).__authStore = { invalidStore: true };
 
       mockAxios.onGet('/test').reply(200, { data: 'success' });
 
@@ -386,7 +386,7 @@ describe('API Client Interceptors', () => {
       try {
         await apiClient.get('/test');
         expect.fail('Should have thrown an error');
-      } catch (error) {
+      } catch {
         expect(error).toBeInstanceOf(Error);
       }
     });
@@ -412,7 +412,7 @@ describe('API Client Interceptors', () => {
       try {
         await apiClient.get('/test');
         expect.fail('Should have thrown an error');
-      } catch (error) {
+      } catch {
         // Should handle the changing auth state gracefully
         expect(error).toBeInstanceOf(Error);
       }
@@ -457,8 +457,8 @@ describe('API Client Interceptors', () => {
       await apiClient.post('/test', postData);
 
       expect(mockAxios.history.post).toHaveLength(2);
-      expect(JSON.parse(mockAxios.history.post[0].data)).toEqual(postData);
-      expect(JSON.parse(mockAxios.history.post[1].data)).toEqual(postData);
+      expect(JSON.parse(mockAxios.history.post[0].data as string)).toEqual(postData);
+      expect(JSON.parse(mockAxios.history.post[1].data as string)).toEqual(postData);
     });
   });
 });

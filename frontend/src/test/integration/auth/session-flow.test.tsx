@@ -47,7 +47,10 @@ const locationMock = {
   assign: vi.fn(),
   reload: vi.fn(),
 };
-Object.defineProperty(window, 'location', { value: locationMock, writable: true });
+Object.defineProperty(window, 'location', {
+  value: locationMock,
+  writable: true,
+});
 
 const mockUser = {
   id: '1',
@@ -116,7 +119,11 @@ describe('Session Flow Integration Tests', () => {
 
       // Verify API call was made with remember_me flag
       expect(mockAxios.history.post).toHaveLength(1);
-      const loginRequest = JSON.parse(mockAxios.history.post[0].data);
+      const loginRequest = JSON.parse(mockAxios.history.post[0].data as string) as {
+        username: string;
+        password: string;
+        remember_me: boolean;
+      };
       expect(loginRequest.username).toBe('testuser');
       expect(loginRequest.password).toBe('password123');
       expect(loginRequest.remember_me).toBe(true);
@@ -145,7 +152,9 @@ describe('Session Flow Integration Tests', () => {
         expect(useAuthStore.getState().isAuthenticated).toBe(true);
       });
 
-      const loginRequest = JSON.parse(mockAxios.history.post[0].data);
+      const loginRequest = JSON.parse(mockAxios.history.post[0].data as string) as {
+        remember_me: boolean;
+      };
       expect(loginRequest.remember_me).toBe(false);
     });
 
@@ -247,7 +256,7 @@ describe('Session Flow Integration Tests', () => {
 
       const results = await Promise.all(promises);
 
-      expect(results.map(r => r.data)).toEqual([
+      expect(results.map((r: { data: unknown }) => r.data)).toEqual([
         { data: 'data1' },
         { data: 'data2' },
         { data: 'data3' },
@@ -269,7 +278,7 @@ describe('Session Flow Integration Tests', () => {
       try {
         await apiClient.get('/protected-resource');
         expect.fail('Should have thrown an error');
-      } catch (error) {
+      } catch {
         // Should clear auth state
         expect(useAuthStore.getState().isAuthenticated).toBe(false);
         expect(useAuthStore.getState().user).toBeNull();
@@ -540,7 +549,12 @@ describe('Session Flow Integration Tests', () => {
               {isAuthenticated ? 'Authenticated' : 'Not Authenticated'}
             </div>
             <div data-testid="username">{user?.username}</div>
-            <button onClick={logout} data-testid="logout-btn">
+            <button
+              onClick={() => {
+                void logout();
+              }}
+              data-testid="logout-btn"
+            >
               Logout
             </button>
           </div>

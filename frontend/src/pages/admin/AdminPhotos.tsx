@@ -29,8 +29,12 @@ const AdminPhotos: React.FC = () => {
   const deleteMutation = useDeletePhoto();
   const toggleFeaturedMutation = useTogglePhotoFeatured();
 
-  const photos = photosData?.photos || [];
-  const stats = statsData || { total_photos: 0, featured_photos: 0, total_size: 0 };
+  const photos = photosData?.photos ?? [];
+  const stats = statsData ?? {
+    total_photos: 0,
+    featured_photos: 0,
+    total_size: 0,
+  };
 
   const handleUploadComplete = () => {
     setShowUpload(false);
@@ -86,7 +90,7 @@ const AdminPhotos: React.FC = () => {
     const k = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
   };
 
   if (photosError) {
@@ -301,19 +305,25 @@ const AdminPhotos: React.FC = () => {
             </div>
             <div className="flex space-x-2">
               <button
-                onClick={() => handleBulkToggleFeatured(true)}
+                onClick={() => {
+                  void handleBulkToggleFeatured(true);
+                }}
                 className="px-3 py-1 text-xs font-medium text-yellow-700 bg-yellow-100 hover:bg-yellow-200 rounded border border-yellow-300 transition-colors"
               >
                 ⭐ Feature
               </button>
               <button
-                onClick={() => handleBulkToggleFeatured(false)}
+                onClick={() => {
+                  void handleBulkToggleFeatured(false);
+                }}
                 className="px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded border border-gray-300 transition-colors"
               >
                 Remove Feature
               </button>
               <button
-                onClick={handleBulkDelete}
+                onClick={() => {
+                  void handleBulkDelete();
+                }}
                 className="px-3 py-1 text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded border border-red-300 transition-colors"
               >
                 🗑 Delete
@@ -386,7 +396,7 @@ const AdminPhotos: React.FC = () => {
 
           {photos.length > 0 && !editingPhoto && (
             <button
-              onClick={handleSelectAll}
+              onClick={() => handleSelectAll()}
               className="text-sm text-blue-600 hover:text-blue-800 font-medium"
             >
               {selectedPhotos.size === photos.length ? 'Deselect All' : 'Select All'}

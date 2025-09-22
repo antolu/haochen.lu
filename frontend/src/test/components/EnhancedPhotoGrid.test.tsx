@@ -315,10 +315,11 @@ describe('Enhanced PhotoGrid with Location Metadata', () => {
   describe('Image Loading and Error Handling', () => {
     it('shows loading skeleton while image loads', () => {
       // Mock inView but not loaded
-      vi.mocked(require('react-intersection-observer').useInView).mockReturnValue({
+      const mod = await import('react-intersection-observer');
+      vi.mocked(mod.useInView).mockReturnValue({
         ref: vi.fn(),
         inView: true,
-      });
+      } as unknown as ReturnType<typeof mod.useInView>);
 
       render(<PhotoGrid {...defaultProps} />);
 
@@ -392,7 +393,8 @@ describe('Enhanced PhotoGrid with Location Metadata', () => {
       render(<PhotoGrid {...defaultProps} />);
 
       // useInView should be called for each photo card
-      expect(require('react-intersection-observer').useInView).toHaveBeenCalled();
+      const mod = await import('react-intersection-observer');
+      expect(mod.useInView).toHaveBeenCalled();
     });
 
     it('applies progressive image loading', () => {

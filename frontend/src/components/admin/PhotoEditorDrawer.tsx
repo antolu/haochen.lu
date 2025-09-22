@@ -25,11 +25,11 @@ const PhotoEditorDrawer: React.FC<PhotoEditorDrawerProps> = ({ photo, onClose })
   useEffect(() => {
     if (photo) {
       setForm({
-        title: photo.title || '',
-        description: photo.description || '',
-        category: photo.category || '',
-        tags: photo.tags || '',
-        comments: photo.comments || '',
+        title: photo.title ?? '',
+        description: photo.description ?? '',
+        category: photo.category ?? '',
+        tags: photo.tags ?? '',
+        comments: photo.comments ?? '',
         featured: !!photo.featured,
       });
     }
@@ -114,7 +114,7 @@ const PhotoEditorDrawer: React.FC<PhotoEditorDrawerProps> = ({ photo, onClose })
           <div>
             <label className="block text-sm font-medium text-gray-700">Tags</label>
             <TagMultiSelect
-              value={(form.tags || '')
+              value={(form.tags ?? '')
                 .split(',')
                 .map(t => t.trim())
                 .filter(Boolean)}
@@ -138,7 +138,12 @@ const PhotoEditorDrawer: React.FC<PhotoEditorDrawerProps> = ({ photo, onClose })
             <button onClick={onClose} className="px-4 py-2 rounded border border-gray-300">
               Cancel
             </button>
-            <button onClick={handleSave} className="px-4 py-2 rounded bg-blue-600 text-white">
+            <button
+              onClick={() => {
+                void handleSave();
+              }}
+              className="px-4 py-2 rounded bg-blue-600 text-white"
+            >
               Save
             </button>
           </div>

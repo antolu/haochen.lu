@@ -22,9 +22,7 @@ export const isRetinaDisplay = (): boolean => {
 let cachedRetinaResult: boolean | null = null;
 
 export const getCachedRetinaDetection = (): boolean => {
-  if (cachedRetinaResult === null) {
-    cachedRetinaResult = isRetinaDisplay();
-  }
+  cachedRetinaResult ??= isRetinaDisplay();
   return cachedRetinaResult;
 };
 
@@ -81,9 +79,18 @@ export const getHighQualityTileConfig = (): TileConfig => {
  */
 export const getOptimizedMarkerIcon = (size: 'small' | 'medium' | 'large' = 'medium') => {
   const sizeConfig = {
-    small: { iconSize: [16, 25] as [number, number], shadowSize: [25, 25] as [number, number] },
-    medium: { iconSize: [20, 32] as [number, number], shadowSize: [32, 32] as [number, number] },
-    large: { iconSize: [25, 41] as [number, number], shadowSize: [41, 41] as [number, number] },
+    small: {
+      iconSize: [16, 25] as [number, number],
+      shadowSize: [25, 25] as [number, number],
+    },
+    medium: {
+      iconSize: [20, 32] as [number, number],
+      shadowSize: [32, 32] as [number, number],
+    },
+    large: {
+      iconSize: [25, 41] as [number, number],
+      shadowSize: [41, 41] as [number, number],
+    },
   };
 
   const config = sizeConfig[size];

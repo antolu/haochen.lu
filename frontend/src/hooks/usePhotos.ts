@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { photos } from '../api/client';
-import type { Photo, PhotoListResponse } from '../types';
+import type { Photo, PhotoListResponse, PhotoStatsSummary } from '../types';
 import toast from 'react-hot-toast';
 
 // Query Keys
@@ -26,8 +26,8 @@ export const usePhotos = () => {
         // Sort by order first, then by date taken (newest first)
         if (a.order !== b.order) return a.order - b.order;
         return (
-          new Date(b.date_taken || b.created_at).getTime() -
-          new Date(a.date_taken || a.created_at).getTime()
+          new Date(b.date_taken ?? b.created_at).getTime() -
+          new Date(a.date_taken ?? a.created_at).getTime()
         );
       }),
     }),
@@ -80,7 +80,7 @@ export const usePhoto = (id: string, enabled = true) => {
 
 // Hook to get photo statistics
 export const usePhotoStats = () => {
-  return useQuery({
+  return useQuery<PhotoStatsSummary>({
     queryKey: photoKeys.stats(),
     queryFn: () => photos.getStats(),
     staleTime: 1000 * 60 * 2, // 2 minutes
@@ -121,19 +121,19 @@ export const useUploadPhoto = () => {
       await queryClient.cancelQueries({ queryKey: photoKeys.lists() });
 
       // Snapshot the previous value
-      const previousData = queryClient.getQueryData(photoKeys.list('admin'));
+      const previousData = queryClient.getQueryData<PhotoListResponse>(photoKeys.list('admin'));
 
       // Optimistically update with placeholder
-      queryClient.setQueryData(photoKeys.list('admin'), (old: any) => {
-        if (!old) return { photos: [], total: 0 };
+      queryClient.setQueryData<PhotoListResponse>(photoKeys.list('admin'), old => {
+        if (!old) return { photos: [], total: 0 } as PhotoListResponse;
 
         const optimisticPhoto: Partial<Photo> = {
           id: `temp-${Date.now()}`,
-          title: metadata.title || file.name,
+          title: metadata.title ?? file.name,
           description: metadata.description,
           category: metadata.category,
           tags: metadata.tags,
-          featured: metadata.featured || false,
+          featured: metadata.featured ?? false,
           filename: file.name,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -163,16 +163,16 @@ export const useUploadPhoto = () => {
 
     onSuccess: newPhoto => {
       // Invalidate and refetch
-      queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: photoKeys.stats() });
-      queryClient.invalidateQueries({ queryKey: photoKeys.featured() });
+      void queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: photoKeys.stats() });
+      void queryClient.invalidateQueries({ queryKey: photoKeys.featured() });
 
       toast.success(`"${newPhoto.title}" uploaded successfully!`);
     },
 
     onSettled: () => {
       // Always refetch after error or success
-      queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
     },
   });
 };
@@ -190,12 +190,12 @@ export const useUpdatePhoto = () => {
       await queryClient.cancelQueries({ queryKey: photoKeys.detail(id) });
 
       // Snapshot the previous values
-      const previousListData = queryClient.getQueryData(photoKeys.list('admin'));
-      const previousDetailData = queryClient.getQueryData(photoKeys.detail(id));
+      const previousListData = queryClient.getQueryData<PhotoListResponse>(photoKeys.list('admin'));
+      const previousDetailData = queryClient.getQueryData<Photo>(photoKeys.detail(id));
 
       // Optimistically update the list
-      queryClient.setQueryData(photoKeys.list('admin'), (old: any) => {
-        if (!old) return old;
+      queryClient.setQueryData<PhotoListResponse>(photoKeys.list('admin'), old => {
+        if (!old) return old as unknown as PhotoListResponse;
         return {
           ...old,
           photos: old.photos.map((photo: Photo) =>
@@ -205,9 +205,9 @@ export const useUpdatePhoto = () => {
       });
 
       // Optimistically update the detail
-      queryClient.setQueryData(photoKeys.detail(id), (old: any) => {
-        if (!old) return old;
-        return { ...old, ...data, updated_at: new Date().toISOString() };
+      queryClient.setQueryData<Photo>(photoKeys.detail(id), old => {
+        if (!old) return old as unknown as Photo;
+        return { ...old, ...data, updated_at: new Date().toISOString() } as Photo;
       });
 
       return { previousListData, previousDetailData };
@@ -226,12 +226,14 @@ export const useUpdatePhoto = () => {
 
     onSuccess: updatedPhoto => {
       // Invalidate related queries
-      queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: photoKeys.detail(updatedPhoto.id) });
-      queryClient.invalidateQueries({ queryKey: photoKeys.stats() });
+      void queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
+      void queryClient.invalidateQueries({
+        queryKey: photoKeys.detail(updatedPhoto.id),
+      });
+      void queryClient.invalidateQueries({ queryKey: photoKeys.stats() });
 
       if (updatedPhoto.featured) {
-        queryClient.invalidateQueries({ queryKey: photoKeys.featured() });
+        void queryClient.invalidateQueries({ queryKey: photoKeys.featured() });
       }
 
       toast.success(`"${updatedPhoto.title}" updated successfully!`);
@@ -251,11 +253,11 @@ export const useDeletePhoto = () => {
       await queryClient.cancelQueries({ queryKey: photoKeys.lists() });
 
       // Snapshot the previous value
-      const previousData = queryClient.getQueryData(photoKeys.list('admin'));
+      const previousData = queryClient.getQueryData<PhotoListResponse>(photoKeys.list('admin'));
 
       // Optimistically update by removing the photo
-      queryClient.setQueryData(photoKeys.list('admin'), (old: any) => {
-        if (!old) return old;
+      queryClient.setQueryData<PhotoListResponse>(photoKeys.list('admin'), old => {
+        if (!old) return old as unknown as PhotoListResponse;
         return {
           ...old,
           photos: old.photos.filter((photo: Photo) => photo.id !== id),
@@ -276,9 +278,9 @@ export const useDeletePhoto = () => {
 
     onSuccess: () => {
       // Invalidate and refetch
-      queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: photoKeys.stats() });
-      queryClient.invalidateQueries({ queryKey: photoKeys.featured() });
+      void queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: photoKeys.stats() });
+      void queryClient.invalidateQueries({ queryKey: photoKeys.featured() });
 
       toast.success('Photo deleted successfully!');
     },
@@ -298,11 +300,11 @@ export const useTogglePhotoFeatured = () => {
       await queryClient.cancelQueries({ queryKey: photoKeys.lists() });
 
       // Snapshot the previous value
-      const previousData = queryClient.getQueryData(photoKeys.list('admin'));
+      const previousData = queryClient.getQueryData<PhotoListResponse>(photoKeys.list('admin'));
 
       // Optimistically update
-      queryClient.setQueryData(photoKeys.list('admin'), (old: any) => {
-        if (!old) return old;
+      queryClient.setQueryData<PhotoListResponse>(photoKeys.list('admin'), old => {
+        if (!old) return old as unknown as PhotoListResponse;
         return {
           ...old,
           photos: old.photos.map((photo: Photo) =>
@@ -324,9 +326,9 @@ export const useTogglePhotoFeatured = () => {
 
     onSuccess: ({ featured }) => {
       // Invalidate related queries
-      queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: photoKeys.featured() });
-      queryClient.invalidateQueries({ queryKey: photoKeys.stats() });
+      void queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: photoKeys.featured() });
+      void queryClient.invalidateQueries({ queryKey: photoKeys.stats() });
 
       toast.success(featured ? 'Photo added to featured!' : 'Photo removed from featured!');
     },
@@ -349,21 +351,21 @@ export const useReorderPhotos = () => {
     onMutate: async ({ items }) => {
       await queryClient.cancelQueries({ queryKey: photoKeys.lists() });
 
-      const previousData = queryClient.getQueryData(photoKeys.list('admin'));
+      const previousData = queryClient.getQueryData<PhotoListResponse>(photoKeys.list('admin'));
 
       // Optimistically apply new order
-      queryClient.setQueryData(photoKeys.list('admin'), (old: any) => {
-        if (!old) return old;
+      queryClient.setQueryData<PhotoListResponse>(photoKeys.list('admin'), old => {
+        if (!old) return old as unknown as PhotoListResponse;
         const orderMap = new Map(items.map(i => [i.id, i.order]));
         const updated = old.photos.map((p: Photo) =>
-          orderMap.has(p.id) ? { ...p, order: orderMap.get(p.id)! } : p
+          orderMap.has(p.id) ? { ...p, order: orderMap.get(p.id) ?? p.order } : p
         );
         // Keep list sorted by order then date
         updated.sort((a: Photo, b: Photo) => {
           if (a.order !== b.order) return a.order - b.order;
           return (
-            new Date(b.date_taken || b.created_at).getTime() -
-            new Date(a.date_taken || a.created_at).getTime()
+            new Date(b.date_taken ?? b.created_at).getTime() -
+            new Date(a.date_taken ?? a.created_at).getTime()
           );
         });
         return { ...old, photos: updated };
@@ -380,7 +382,7 @@ export const useReorderPhotos = () => {
     },
 
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
     },
   });
 };

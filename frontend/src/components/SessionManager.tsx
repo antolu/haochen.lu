@@ -6,12 +6,13 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/stores/authStore';
+import type { AxiosError } from 'axios';
 
 const SessionManager: React.FC = () => {
   const { logoutEverywhere, logout, user } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogoutEverywhere = async () => {
+  const handleLogoutEverywhere = async (): Promise<void> => {
     if (!confirm('This will log you out of all devices. Continue?')) {
       return;
     }
@@ -21,20 +22,22 @@ const SessionManager: React.FC = () => {
       await logoutEverywhere();
       toast.success('Successfully logged out of all devices');
       // Component will unmount due to auth state change
-    } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Failed to logout from all devices');
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError<{ detail?: string }>;
+      toast.error(axiosError.response?.data?.detail ?? 'Failed to logout from all devices');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleLogout = async () => {
+  const handleLogout = async (): Promise<void> => {
     setIsLoading(true);
     try {
       await logout();
       toast.success('Successfully logged out');
-    } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Logout failed');
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError<{ detail?: string }>;
+      toast.error(axiosError.response?.data?.detail ?? 'Logout failed');
     } finally {
       setIsLoading(false);
     }
@@ -57,7 +60,9 @@ const SessionManager: React.FC = () => {
             </p>
           </div>
           <button
-            onClick={handleLogout}
+            onClick={() => {
+              void handleLogout();
+            }}
             disabled={isLoading}
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
           >
@@ -77,7 +82,9 @@ const SessionManager: React.FC = () => {
           </div>
 
           <button
-            onClick={handleLogoutEverywhere}
+            onClick={() => {
+              void handleLogoutEverywhere();
+            }}
             disabled={isLoading}
             className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
           >

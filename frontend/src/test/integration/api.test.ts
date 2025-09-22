@@ -10,13 +10,13 @@
  * - API endpoint integration with backend
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import axios from 'axios';
+// import axios from 'axios';  // Unused but kept for future API mocking
 import MockAdapter from 'axios-mock-adapter';
 import apiClient, { projects, photos, blog, subapps, auth } from '../../api/client';
 import { createMockProject, mockProjectsListResponse } from '../fixtures/projects';
 import type {
-  Project,
-  ProjectListResponse,
+  // Project,  // Unused in current tests
+  // ProjectListResponse,  // Unused in current tests
   Photo,
   PhotoListResponse,
   BlogPost,
@@ -58,8 +58,12 @@ describe('API Integration Tests', () => {
     mockAdapter = new MockAdapter(apiClient);
     vi.clearAllMocks();
     // Provide a default auth store for apiClient interceptors
-    (window as any).__authStore = {
-      getState: () => ({ accessToken: 'mock-token', clearAuth: vi.fn(), refreshToken: vi.fn() }),
+    (window as unknown as { __authStore: unknown }).__authStore = {
+      getState: () => ({
+        accessToken: 'mock-token',
+        clearAuth: vi.fn(),
+        refreshToken: vi.fn(),
+      }),
     };
   });
 
@@ -80,7 +84,7 @@ describe('API Integration Tests', () => {
 
     it('includes authorization header when token exists', async () => {
       // apiClient reads token from window.__authStore, not localStorage
-      (window as any).__authStore = {
+      (window as unknown as { __authStore: unknown }).__authStore = {
         getState: () => ({ accessToken: 'test-token' }),
       };
       mockAdapter.onGet('/test').reply(200, {});
@@ -91,7 +95,7 @@ describe('API Integration Tests', () => {
     });
 
     it('works without authorization header when no token', async () => {
-      (window as any).__authStore = {
+      (window as unknown as { __authStore: unknown }).__authStore = {
         getState: () => ({ accessToken: undefined }),
       };
       mockAdapter.onGet('/test').reply(200, {});
@@ -104,12 +108,12 @@ describe('API Integration Tests', () => {
     it('handles 401 responses by clearing token and redirecting', async () => {
       // Navigate to a non-public page to trigger redirect behavior and set location
       window.history.pushState({}, '', '/admin');
-      (window as any).location.pathname = '/admin';
+      (window as unknown as { location: { pathname: string } }).location.pathname = '/admin';
       mockAdapter.onGet('/protected').reply(401, { message: 'Unauthorized' });
 
       try {
         await apiClient.get('/protected');
-      } catch (error) {
+      } catch {
         // Expected to throw
       }
 
@@ -230,21 +234,24 @@ describe('API Integration Tests', () => {
 
     it('creates new project', async () => {
       const newProject = { ...mockProject };
-      delete (newProject as any).id;
-      delete (newProject as any).slug;
-      delete (newProject as any).created_at;
-      delete (newProject as any).updated_at;
+      delete (newProject as Record<string, unknown>).id;
+      delete (newProject as Record<string, unknown>).slug;
+      delete (newProject as Record<string, unknown>).created_at;
+      delete (newProject as Record<string, unknown>).updated_at;
 
       mockAdapter.onPost('/projects').reply(201, mockProject);
 
       const result = await projects.create(newProject);
 
       expect(result).toEqual(mockProject);
-      expect(JSON.parse(mockAdapter.history.post[0].data)).toMatchObject(newProject);
+      expect(JSON.parse(mockAdapter.history.post[0].data as string)).toMatchObject(newProject);
     });
 
     it('updates existing project', async () => {
-      const updates = { title: 'Updated Title', description: 'Updated description' };
+      const updates = {
+        title: 'Updated Title',
+        description: 'Updated description',
+      };
       const updatedProject = { ...mockProject, ...updates };
 
       mockAdapter.onPut('/projects/project-1').reply(200, updatedProject);
@@ -252,7 +259,7 @@ describe('API Integration Tests', () => {
       const result = await projects.update('project-1', updates);
 
       expect(result).toEqual(updatedProject);
-      expect(JSON.parse(mockAdapter.history.put[0].data)).toEqual(updates);
+      expect(JSON.parse(mockAdapter.history.put[0].data as string)).toEqual(updates);
     });
 
     it('deletes project', async () => {
@@ -355,7 +362,9 @@ describe('API Integration Tests', () => {
     });
 
     it('uploads photo with metadata', async () => {
-      const file = new File(['photo content'], 'test.jpg', { type: 'image/jpeg' });
+      const file = new File(['photo content'], 'test.jpg', {
+        type: 'image/jpeg',
+      });
       const metadata = {
         title: 'New Photo',
         description: 'Uploaded photo',
@@ -462,12 +471,12 @@ describe('API Integration Tests', () => {
 
     it('creates new blog post', async () => {
       const newPost = { ...mockBlogPost };
-      delete (newPost as any).id;
-      delete (newPost as any).slug;
-      delete (newPost as any).view_count;
-      delete (newPost as any).read_time;
-      delete (newPost as any).created_at;
-      delete (newPost as any).updated_at;
+      delete (newPost as Record<string, unknown>).id;
+      delete (newPost as Record<string, unknown>).slug;
+      delete (newPost as Record<string, unknown>).view_count;
+      delete (newPost as Record<string, unknown>).read_time;
+      delete (newPost as Record<string, unknown>).created_at;
+      delete (newPost as Record<string, unknown>).updated_at;
 
       mockAdapter.onPost('/blog').reply(201, mockBlogPost);
 
@@ -579,10 +588,10 @@ describe('API Integration Tests', () => {
 
     it('creates new sub-app', async () => {
       const newSubApp = { ...mockSubApp };
-      delete (newSubApp as any).id;
-      delete (newSubApp as any).slug;
-      delete (newSubApp as any).created_at;
-      delete (newSubApp as any).updated_at;
+      delete (newSubApp as Record<string, unknown>).id;
+      delete (newSubApp as Record<string, unknown>).slug;
+      delete (newSubApp as Record<string, unknown>).created_at;
+      delete (newSubApp as Record<string, unknown>).updated_at;
 
       mockAdapter.onPost('/subapps').reply(201, mockSubApp);
 

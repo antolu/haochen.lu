@@ -8,6 +8,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import { renderWithProviders, mockPhoto, mockIntersectionObserver } from '../utils';
 
+interface MockPhoto {
+  id: string;
+  title: string;
+  thumbnail_url: string;
+  category?: string;
+  tags?: string | string[];
+}
+
 // Mock the PhotoGallery component
 const MockPhotoGallery = ({
   photos,
@@ -15,8 +23,8 @@ const MockPhotoGallery = ({
   loading = false,
   error = null,
 }: {
-  photos: any[];
-  onPhotoClick?: (photo: any) => void;
+  photos: MockPhoto[];
+  onPhotoClick?: (photo: MockPhoto) => void;
   loading?: boolean;
   error?: string | null;
 }) => {
@@ -65,7 +73,7 @@ const MockPhotoGallery = ({
             <div className="photo-meta p-2">
               <h3 className="font-semibold">{photo.title}</h3>
               {photo.category && <span className="text-sm text-gray-500">{photo.category}</span>}
-              {photo.tags && photo.tags.length > 0 && (
+              {photo.tags && Array.isArray(photo.tags) && photo.tags.length > 0 && (
                 <div className="tags mt-1">
                   {photo.tags.map((tag: string) => (
                     <span
@@ -85,8 +93,8 @@ const MockPhotoGallery = ({
   );
 };
 
-const MockLazyPhotoGallery = ({ photos }: { photos: any[] }) => {
-  const [visiblePhotos, setVisiblePhotos] = React.useState<any[]>([]);
+const MockLazyPhotoGallery = ({ photos }: { photos: MockPhoto[] }) => {
+  const [visiblePhotos, setVisiblePhotos] = React.useState<MockPhoto[]>([]);
   const [loadedImages, setLoadedImages] = React.useState<Set<string>>(new Set());
 
   React.useEffect(() => {
@@ -141,7 +149,12 @@ const MockLazyPhotoGallery = ({ photos }: { photos: any[] }) => {
 describe('PhotoGallery Component Tests', () => {
   const mockPhotos = [
     { ...mockPhoto, id: 'photo-1', title: 'Sunset Landscape' },
-    { ...mockPhoto, id: 'photo-2', title: 'Mountain View', category: 'landscape' },
+    {
+      ...mockPhoto,
+      id: 'photo-2',
+      title: 'Mountain View',
+      category: 'landscape',
+    },
     {
       ...mockPhoto,
       id: 'photo-3',
@@ -334,7 +347,7 @@ describe('PhotoGallery Component Tests', () => {
         { width: 1024, expected: 3 }, // Desktop
       ];
 
-      testViewports.forEach(({ width, expected }) => {
+      testViewports.forEach(({ width, expected: _expected }) => {
         // Mock window.innerWidth
         Object.defineProperty(window, 'innerWidth', {
           writable: true,
@@ -343,7 +356,7 @@ describe('PhotoGallery Component Tests', () => {
         });
 
         // Mock matchMedia for responsive testing
-        window.matchMedia = vi.fn().mockImplementation(query => ({
+        window.matchMedia = vi.fn().mockImplementation((query: string) => ({
           matches: query.includes(`${width}px`),
           media: query,
           onchange: null,

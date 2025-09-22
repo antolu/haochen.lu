@@ -23,7 +23,7 @@ import {
 let mockAdapter: MockAdapter;
 
 // Mock repository responses
-const mockGitHubRepo = {
+/* const mockGitHubRepo = {
   id: 123456,
   name: 'test-project',
   full_name: 'testuser/test-project',
@@ -53,9 +53,9 @@ const mockGitHubRepo = {
     spdx_id: 'MIT',
     url: 'https://api.github.com/licenses/mit',
   },
-};
+}; */
 
-const mockGitLabProject = {
+/* const mockGitLabProject = {
   id: 789012,
   name: 'test-project',
   path: 'test-project',
@@ -73,7 +73,7 @@ const mockGitLabProject = {
   forks_count: 5,
   open_issues_count: 2,
   tag_list: ['vue', 'javascript', 'frontend'],
-};
+}; */
 
 const mockReadmeContent = `# Test Project
 
@@ -255,8 +255,8 @@ describe('Repository Service Integration Tests', () => {
       });
 
       expect(response.data).toEqual(expectedResponse);
-      expect(response.data.content).toContain('# Test Project');
-      expect(response.data.content).toContain('## Features');
+      expect((response.data as { content: string }).content).toContain('# Test Project');
+      expect((response.data as { content: string }).content).toContain('## Features');
     });
 
     it('fetches README content from GitLab', async () => {
@@ -275,7 +275,7 @@ describe('Repository Service Integration Tests', () => {
       });
 
       expect(response.data).toEqual(expectedResponse);
-      expect(response.data.source).toBe('gitlab');
+      expect((response.data as { source: string }).source).toBe('gitlab');
     });
 
     it('handles README not found in repository', async () => {
@@ -312,14 +312,14 @@ describe('Repository Service Integration Tests', () => {
       const response = await apiClient.get(`/projects/${projectId}/readme`);
 
       expect(response.data).toEqual(cachedResponse);
-      expect(response.data.cached).toBe(true);
+      expect((response.data as { cached: boolean }).cached).toBe(true);
     });
 
     it('refreshes README content when requested', async () => {
       const projectId = 'project-1';
       const repoUrl = 'https://github.com/testuser/test-project';
       const refreshedResponse = {
-        content: mockReadmeContent + '\n\n## Updates\n\nNew content added.',
+        content: `${mockReadmeContent}\n\n## Updates\n\nNew content added.`,
         source: 'github',
         last_updated: '2023-01-25T15:30:00Z',
         refreshed: true,
@@ -332,7 +332,7 @@ describe('Repository Service Integration Tests', () => {
       });
 
       expect(response.data).toEqual(refreshedResponse);
-      expect(response.data.content).toContain('## Updates');
+      expect((response.data as { content: string }).content).toContain('## Updates');
     });
 
     it('handles README parsing errors', async () => {
@@ -372,7 +372,7 @@ describe('Repository Service Integration Tests', () => {
       });
 
       expect(response.data).toEqual(previewResponse);
-      expect(response.data.preview).toBe(true);
+      expect((response.data as { preview: boolean }).preview).toBe(true);
     });
 
     it('handles preview for different README formats', async () => {
@@ -411,7 +411,7 @@ Installation
       });
 
       expect(response.data).toEqual(previewResponse);
-      expect(response.data.format).toBe('rst');
+      expect((response.data as { format: string }).format).toBe('rst');
     });
 
     it('handles preview timeouts gracefully', async () => {
@@ -501,7 +501,7 @@ Installation
       ];
 
       invalidUrls.forEach(url => {
-        const result = parseRepositoryUrl(url as any);
+        const result = parseRepositoryUrl(url as string);
         expect(result).toBeNull();
       });
     });
@@ -676,7 +676,7 @@ Installation
       });
 
       expect(response.status).toBe(200);
-      expect(response.data.valid).toBe(true);
+      expect((response.data as { valid: boolean }).valid).toBe(true);
     });
 
     it('handles partial service degradation gracefully', async () => {
@@ -731,7 +731,7 @@ Installation
         })
       ).rejects.toMatchObject({
         code: 'ECONNABORTED',
-        message: expect.stringContaining('timeout'),
+        message: expect.stringContaining('timeout') as string,
       });
     });
   });

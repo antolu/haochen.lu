@@ -1,11 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import LocationInput from '../../components/LocationInput';
 
 // Mock MapPicker component
 vi.mock('../../components/MapPicker', () => ({
-  default: ({ onLocationSelect, disabled }: any) => (
+  default: ({
+    onLocationSelect,
+    disabled,
+  }: {
+    onLocationSelect?: (lat: number, lng: number) => void;
+    disabled?: boolean;
+  }) => (
     <div data-testid="map-picker">
       <button
         data-testid="map-click-simulator"
@@ -20,7 +26,7 @@ vi.mock('../../components/MapPicker', () => ({
 
 // Mock fetch for reverse geocoding
 global.fetch = vi.fn();
-const mockFetch = global.fetch as any;
+const mockFetch = global.fetch as ReturnType<typeof vi.fn>;
 
 // Mock geolocation
 const mockGeolocation = {
@@ -47,14 +53,16 @@ describe('LocationInput', () => {
           location_name: 'San Francisco, California, United States',
         }),
     });
-    mockGeolocation.getCurrentPosition.mockImplementation(success => {
-      success({
-        coords: {
-          latitude: 37.7749,
-          longitude: -122.4194,
-        },
-      });
-    });
+    mockGeolocation.getCurrentPosition.mockImplementation(
+      (success: (position: GeolocationPosition) => void) => {
+        success({
+          coords: {
+            latitude: 37.7749,
+            longitude: -122.4194,
+          },
+        });
+      }
+    );
   });
 
   it('renders all input fields', () => {
@@ -263,9 +271,11 @@ describe('LocationInput', () => {
       const user = userEvent.setup();
       const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
 
-      mockGeolocation.getCurrentPosition.mockImplementation((success, error) => {
-        error({ message: 'Permission denied' });
-      });
+      mockGeolocation.getCurrentPosition.mockImplementation(
+        (success, error: ((error: GeolocationPositionError) => void) | undefined) => {
+          error?.({ code: 1, message: 'Permission denied' } as GeolocationPositionError);
+        }
+      );
 
       render(<LocationInput />);
 

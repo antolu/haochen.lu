@@ -19,7 +19,7 @@ import { api } from '../../api/client';
 // Mock the API client
 vi.mock('../../api/client', () => ({
   api: {
-    post: vi.fn(),
+    post: vi.fn(() => Promise.resolve({ data: {} })),
   },
 }));
 
@@ -36,7 +36,7 @@ describe('RepositoryConnector', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockApi.post.mockResolvedValue({
+    vi.mocked(mockApi.post).mockResolvedValue({
       data: {
         type: 'github',
         owner: 'testuser',
@@ -209,14 +209,17 @@ describe('RepositoryConnector', () => {
       await user.type(input, 'https://github.com/test/repo');
       await user.click(validateButton);
 
-      expect(mockApi.post).toHaveBeenCalledWith('/projects/repository/validate', {
+      expect(vi.mocked(mockApi.post)).toHaveBeenCalledWith('/projects/repository/validate', {
         repository_url: 'https://github.com/test/repo',
       });
     });
 
     it('shows loading state during validation', async () => {
       const user = userEvent.setup();
-      mockApi.post.mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
+      vi.mocked(mockApi.post).mockImplementation(
+        () =>
+          new Promise<{ data: unknown }>(resolve => setTimeout(() => resolve({ data: {} }), 100))
+      );
 
       renderWithProviders(<RepositoryConnector {...defaultProps} />);
 
@@ -257,13 +260,17 @@ describe('RepositoryConnector', () => {
 
     it('displays error state after failed validation', async () => {
       const user = userEvent.setup();
-      mockApi.post.mockRejectedValue({
-        response: {
-          data: {
-            detail: 'Repository not found',
-          },
-        },
-      });
+      vi.mocked(mockApi.post).mockRejectedValue(
+        new Error(
+          JSON.stringify({
+            response: {
+              data: {
+                detail: 'Repository not found',
+              },
+            },
+          })
+        )
+      );
 
       renderWithProviders(<RepositoryConnector {...defaultProps} />);
 
@@ -283,7 +290,7 @@ describe('RepositoryConnector', () => {
 
     it('handles network errors gracefully', async () => {
       const user = userEvent.setup();
-      mockApi.post.mockRejectedValue(new Error('Network error'));
+      vi.mocked(mockApi.post).mockRejectedValue(new Error('Network error'));
 
       renderWithProviders(<RepositoryConnector {...defaultProps} />);
 
@@ -306,7 +313,7 @@ describe('RepositoryConnector', () => {
       const validateButton = screen.getByRole('button', { name: /validate/i });
       await user.click(validateButton);
 
-      expect(mockApi.post).not.toHaveBeenCalled();
+      expect(vi.mocked(mockApi.post)).not.toHaveBeenCalled();
     });
 
     it('disables validate button for empty URL', () => {
@@ -320,7 +327,7 @@ describe('RepositoryConnector', () => {
   describe('Repository Type Icons', () => {
     it('displays GitHub icon for GitHub repositories', async () => {
       const user = userEvent.setup();
-      mockApi.post.mockResolvedValue({
+      vi.mocked(mockApi.post).mockResolvedValue({
         data: {
           type: 'github',
           owner: 'test',
@@ -348,7 +355,7 @@ describe('RepositoryConnector', () => {
 
     it('displays GitLab icon for GitLab repositories', async () => {
       const user = userEvent.setup();
-      mockApi.post.mockResolvedValue({
+      vi.mocked(mockApi.post).mockResolvedValue({
         data: {
           type: 'gitlab',
           owner: 'test',
@@ -473,8 +480,8 @@ describe('RepositoryConnector', () => {
 
       const errorMessage = screen.getByText('Please enter a valid GitHub or GitLab repository URL');
       expect(errorMessage).toBeInTheDocument();
-      const errorWrapper = (errorMessage.closest('div')?.parentElement?.parentElement
-        ?.parentElement ?? null) as HTMLElement | null;
+      const errorWrapper =
+        errorMessage.closest('div')?.parentElement?.parentElement?.parentElement ?? null;
       expect(errorWrapper).toHaveClass('bg-red-50');
     });
   });
@@ -484,14 +491,14 @@ describe('RepositoryConnector', () => {
       expect(() => {
         renderWithProviders(
           <RepositoryConnector
-            onChange={undefined as any}
+            onChange={undefined as never}
             onValidationChange={mockOnValidationChange}
           />
         );
       }).not.toThrow();
     });
 
-    it('handles missing onValidationChange callback gracefully', async () => {
+    it('handles missing onValidationChange callback gracefully', () => {
       const user = userEvent.setup();
       renderWithProviders(
         <RepositoryConnector onChange={mockOnChange} onValidationChange={undefined} />
@@ -502,8 +509,8 @@ describe('RepositoryConnector', () => {
       expect(() => user.type(input, 'https://github.com/test/repo')).not.toThrow();
     });
 
-    it('handles very long URLs', async () => {
-      const longUrl = 'https://github.com/' + 'a'.repeat(100) + '/' + 'b'.repeat(100);
+    it('handles very long URLs', () => {
+      const longUrl = `https://github.com/${'a'.repeat(100)}/${'b'.repeat(100)}`;
 
       renderWithProviders(<RepositoryConnector {...defaultProps} />);
 
@@ -516,7 +523,7 @@ describe('RepositoryConnector', () => {
 
     it('handles special characters in repository names', async () => {
       const user = userEvent.setup();
-      mockApi.post.mockResolvedValue({
+      vi.mocked(mockApi.post).mockResolvedValue({
         data: {
           type: 'github',
           owner: 'test-user',
@@ -541,7 +548,7 @@ describe('RepositoryConnector', () => {
 
     it('handles API responses without expected fields', async () => {
       const user = userEvent.setup();
-      mockApi.post.mockResolvedValue({
+      vi.mocked(mockApi.post).mockResolvedValue({
         data: {
           type: 'unknown',
           valid: true,

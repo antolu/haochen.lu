@@ -19,7 +19,7 @@ const AdminLayout: React.FC = () => {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      checkAuth();
+      void checkAuth();
     }
   }, [isAuthenticated, checkAuth]);
 
@@ -44,7 +44,7 @@ const AdminLayout: React.FC = () => {
   };
 
   const handleLogout = () => {
-    logout();
+    void logout();
   };
 
   return (
