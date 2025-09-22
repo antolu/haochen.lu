@@ -19,9 +19,22 @@ import { renderWithProviders } from '../utils/project-test-utils';
 // import * as useProjectsModule from '../../hooks/useProjects';  // Unused but kept for future test enhancements
 
 // Mock the hooks
-const mockUseProjects = vi.fn(() => ({}));
-const mockUseDeleteProject = vi.fn(() => ({}));
-const mockUseProjectStats = vi.fn(() => ({}));
+const mockRefetch = vi.fn();
+const mockMutate = vi.fn();
+const mockUseProjects = vi.fn(() => ({
+  data: { projects: [], totalPages: 1, currentPage: 1, totalProjects: 0 },
+  refetch: mockRefetch,
+  isLoading: false,
+  error: null,
+}));
+const mockUseDeleteProject = vi.fn(() => ({
+  mutate: mockMutate,
+  isPending: false,
+}));
+const mockUseProjectStats = vi.fn(() => ({
+  data: { total: 0, featured: 0, active: 0 },
+  isLoading: false,
+}));
 
 vi.mock('../../hooks/useProjects', async () => {
   const actual = await vi.importActual('../../hooks/useProjects');

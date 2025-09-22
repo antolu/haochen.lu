@@ -18,6 +18,16 @@ import { createMockProject, mockReadmeResponse } from '../fixtures/projects';
 import { renderWithProviders } from '../utils/project-test-utils';
 // import * as useProjectsModule from '../../hooks/useProjects';  // Unused but kept for future test enhancements
 
+// Mock react-router-dom
+const mockUseParams = vi.fn(() => ({ slug: 'test-project' }));
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useParams: () => mockUseParams(),
+  };
+});
+
 // Mock the hooks
 const mockUseProject = vi.fn(() => ({}));
 const mockUseProjectReadme = vi.fn(() => ({}));
@@ -473,12 +483,14 @@ describe('ProjectDetailPage', () => {
 
   describe('URL Parameter Handling', () => {
     it('uses slug parameter from URL', () => {
+      mockUseParams.mockReturnValue({ slug: 'test-slug' });
       renderWithRouter(<ProjectDetailPage />, ['/projects/test-slug']);
 
       expect(mockUseProject).toHaveBeenCalledWith('test-slug');
     });
 
     it('handles empty slug parameter', () => {
+      mockUseParams.mockReturnValue({ slug: '' });
       renderWithRouter(<ProjectDetailPage />, ['/projects/']);
 
       expect(mockUseProject).toHaveBeenCalledWith('');

@@ -9,24 +9,31 @@ import MockAdapter from 'axios-mock-adapter';
 import { apiClient } from '@/api/client';
 
 // Mock the global auth store
+const mockRefreshToken = vi.fn();
+const mockClearAuth = vi.fn();
+
 const mockAuthStore = {
   getState: vi.fn(),
   subscribe: vi.fn(),
   setState: vi.fn(),
+  refreshToken: mockRefreshToken,
+  clearAuth: mockClearAuth,
 };
 
 const mockAuthState = {
   accessToken: 'valid-token',
-  refreshToken: vi.fn(),
-  clearAuth: vi.fn(),
+  clearAuth: mockClearAuth,
   isRefreshing: false,
 };
 
 // Set up global auth store mock
 beforeEach(() => {
   (window as unknown as { __authStore: unknown }).__authStore = mockAuthStore;
-  mockAuthStore.getState.mockReturnValue(mockAuthState);
   vi.clearAllMocks();
+  mockAuthStore.getState.mockReturnValue(mockAuthState);
+  // Set default mock behavior - tests will override as needed
+  mockRefreshToken.mockResolvedValue(true);
+  mockClearAuth.mockImplementation(() => {});
 });
 
 describe('API Client Interceptors', () => {
@@ -91,8 +98,10 @@ describe('API Client Interceptors', () => {
       mockAuthStore.getState.mockReturnValue({
         ...mockAuthState,
         accessToken: originalToken,
-        refreshToken: vi.fn().mockResolvedValue(true),
       });
+
+      // Mock successful token refresh
+      mockRefreshToken.mockResolvedValue(true);
 
       // First request fails with 401
       mockAxios.onGet('/test').replyOnce(401, { detail: 'Token expired' });
@@ -103,12 +112,11 @@ describe('API Client Interceptors', () => {
 
       // refreshToken is from store in interceptor; verify final success
       expect(result.data).toEqual({ data: 'success' });
+      expect(mockRefreshToken).toHaveBeenCalled();
       expect(mockAxios.history.get).toHaveLength(2); // Original + retry
     });
 
     it('should clear auth and redirect on refresh failure', async () => {
-      const mockClearAuth = vi.fn();
-
       // Mock location for redirect test
       const mockLocation = {
         pathname: '/dashboard',
@@ -121,9 +129,10 @@ describe('API Client Interceptors', () => {
 
       mockAuthStore.getState.mockReturnValue({
         ...mockAuthState,
-        clearAuth: mockClearAuth,
-        refreshToken: vi.fn().mockResolvedValue(false), // Refresh fails
       });
+
+      // Mock refresh token failure
+      mockRefreshToken.mockResolvedValue(false);
 
       mockAxios.onGet('/test').reply(401, { detail: 'Token expired' });
 
@@ -173,8 +182,10 @@ describe('API Client Interceptors', () => {
     it('should not retry requests that are already retries', async () => {
       mockAuthStore.getState.mockReturnValue({
         ...mockAuthState,
-        refreshToken: vi.fn().mockResolvedValue(true),
       });
+
+      // Mock successful token refresh
+      mockRefreshToken.mockResolvedValue(true);
 
       // Always return 401
       mockAxios.onGet('/test').reply(401, { detail: 'Token expired' });
@@ -188,13 +199,12 @@ describe('API Client Interceptors', () => {
     });
 
     it('should handle refresh token promise rejection', async () => {
-      const mockClearAuth = vi.fn();
-
       mockAuthStore.getState.mockReturnValue({
         ...mockAuthState,
-        clearAuth: mockClearAuth,
-        refreshToken: vi.fn().mockRejectedValue(new Error('Network error')),
       });
+
+      // Mock refresh token failure
+      mockRefreshToken.mockRejectedValue(new Error('Network error'));
 
       mockAxios.onGet('/test').reply(401, { detail: 'Token expired' });
 
@@ -207,8 +217,6 @@ describe('API Client Interceptors', () => {
     });
 
     it('should not redirect if already on login page', async () => {
-      const mockClearAuth = vi.fn();
-
       // Mock location as login page
       const mockLocation = {
         pathname: '/login',
@@ -221,9 +229,10 @@ describe('API Client Interceptors', () => {
 
       mockAuthStore.getState.mockReturnValue({
         ...mockAuthState,
-        clearAuth: mockClearAuth,
-        refreshToken: vi.fn().mockResolvedValue(false),
       });
+
+      // Mock refresh token failure
+      mockRefreshToken.mockResolvedValue(false);
 
       mockAxios.onGet('/test').reply(401, { detail: 'Token expired' });
 
@@ -244,8 +253,8 @@ describe('API Client Interceptors', () => {
       try {
         await apiClient.get('/test');
         expect.fail('Should have thrown an error');
-      } catch {
-        expect(mockAuthState.refreshToken).not.toHaveBeenCalled();
+      } catch (error) {
+        expect(mockRefreshToken).not.toHaveBeenCalled();
         expect((error as AxiosError).response?.status).toBe(500);
       }
     });
@@ -256,8 +265,8 @@ describe('API Client Interceptors', () => {
       try {
         await apiClient.get('/test');
         expect.fail('Should have thrown an error');
-      } catch {
-        expect(mockAuthState.refreshToken).not.toHaveBeenCalled();
+      } catch (error) {
+        expect(mockRefreshToken).not.toHaveBeenCalled();
         expect((error as AxiosError).response?.status).toBe(403);
       }
     });
@@ -268,8 +277,8 @@ describe('API Client Interceptors', () => {
       try {
         await apiClient.get('/test');
         expect.fail('Should have thrown an error');
-      } catch {
-        expect(mockAuthState.refreshToken).not.toHaveBeenCalled();
+      } catch (error) {
+        expect(mockRefreshToken).not.toHaveBeenCalled();
         expect((error as AxiosError).response?.status).toBe(404);
       }
     });
@@ -328,7 +337,7 @@ describe('API Client Interceptors', () => {
 
       mockAuthStore.getState.mockReturnValue({
         ...mockAuthState,
-        clearAuth: vi.fn(),
+        // clearAuth moved to global mock
         refreshToken: vi.fn().mockReturnValue(refreshPromise),
       });
 
@@ -377,8 +386,8 @@ describe('API Client Interceptors', () => {
     it('should handle network errors during refresh', async () => {
       mockAuthStore.getState.mockReturnValue({
         ...mockAuthState,
-        clearAuth: vi.fn(),
-        refreshToken: vi.fn().mockRejectedValue(new Error('Network error')),
+        // clearAuth moved to global mock
+        // refreshToken moved to global mock
       });
 
       mockAxios.onGet('/test').reply(401, { detail: 'Token expired' });
@@ -386,7 +395,7 @@ describe('API Client Interceptors', () => {
       try {
         await apiClient.get('/test');
         expect.fail('Should have thrown an error');
-      } catch {
+      } catch (error) {
         expect(error).toBeInstanceOf(Error);
       }
     });
@@ -398,12 +407,12 @@ describe('API Client Interceptors', () => {
         if (callCount === 1) {
           return {
             ...mockAuthState,
-            refreshToken: vi.fn().mockResolvedValue(true),
+            // refreshToken moved to global mock
           };
         }
         return {
           ...mockAuthState,
-          refreshToken: vi.fn().mockResolvedValue(false),
+          // refreshToken moved to global mock
         };
       });
 
@@ -412,7 +421,7 @@ describe('API Client Interceptors', () => {
       try {
         await apiClient.get('/test');
         expect.fail('Should have thrown an error');
-      } catch {
+      } catch (error) {
         // Should handle the changing auth state gracefully
         expect(error).toBeInstanceOf(Error);
       }
@@ -423,7 +432,7 @@ describe('API Client Interceptors', () => {
     it('should preserve original request configuration', async () => {
       mockAuthStore.getState.mockReturnValue({
         ...mockAuthState,
-        refreshToken: vi.fn().mockResolvedValue(true),
+        // refreshToken moved to global mock
       });
 
       const customHeaders = { 'X-Custom-Header': 'custom-value' };
@@ -447,7 +456,7 @@ describe('API Client Interceptors', () => {
     it('should handle POST requests with body data', async () => {
       mockAuthStore.getState.mockReturnValue({
         ...mockAuthState,
-        refreshToken: vi.fn().mockResolvedValue(true),
+        // refreshToken moved to global mock
       });
 
       const postData = { name: 'test', value: 123 };
