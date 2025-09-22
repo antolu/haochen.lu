@@ -164,7 +164,7 @@ describe('ProjectForm', () => {
 
       expect(screen.getByText('Create New Project')).toBeInTheDocument();
       expect(screen.getByText('Add a new project to your portfolio')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /create project/i })).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: /create project/i })).toHaveLength(2);
     });
 
     it('renders edit form with correct title when project is provided', () => {
@@ -173,7 +173,7 @@ describe('ProjectForm', () => {
 
       expect(screen.getByText('Edit Project')).toBeInTheDocument();
       expect(screen.getByText('Update project information and content')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /update project/i })).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: /update project/i })).toHaveLength(2);
     });
 
     it('renders all form sections', () => {
@@ -192,9 +192,7 @@ describe('ProjectForm', () => {
       expect(
         screen.getByPlaceholderText('Brief description for project cards')
       ).toBeInTheDocument();
-      expect(
-        screen.getByPlaceholderText('React, TypeScript, Node.js, PostgreSQL')
-      ).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('Search or create technologies...')).toBeInTheDocument();
       expect(screen.getByPlaceholderText('https://project-demo.com')).toBeInTheDocument();
       expect(screen.getByPlaceholderText('https://example.com/image.jpg')).toBeInTheDocument();
     });
@@ -390,9 +388,10 @@ describe('ProjectForm', () => {
 
       renderWithProviders(<ProjectForm onSuccess={mockSuccess} />);
 
-      const submitButton = screen.getByRole('button', {
+      const submitButtons = screen.getAllByRole('button', {
         name: /create project/i,
       });
+      const submitButton = submitButtons[0]; // Use the first submit button
       await user.click(submitButton);
 
       await waitFor(() => {
@@ -407,9 +406,10 @@ describe('ProjectForm', () => {
 
       renderWithProviders(<ProjectForm project={project} onSuccess={mockSuccess} />);
 
-      const submitButton = screen.getByRole('button', {
+      const submitButtons = screen.getAllByRole('button', {
         name: /update project/i,
       });
+      const submitButton = submitButtons[0]; // Use the first submit button
       await user.click(submitButton);
 
       await waitFor(() => {
@@ -423,9 +423,10 @@ describe('ProjectForm', () => {
 
       renderWithProviders(<ProjectForm onSuccess={mockSuccess} />);
 
-      const submitButton = screen.getByRole('button', {
+      const submitButtons = screen.getAllByRole('button', {
         name: /create project/i,
       });
+      const submitButton = submitButtons[0]; // Use the first submit button
       await user.click(submitButton);
 
       await waitFor(() => {
@@ -440,9 +441,10 @@ describe('ProjectForm', () => {
       const user = userEvent.setup();
       renderWithProviders(<ProjectForm />);
 
-      const submitButton = screen.getByRole('button', {
+      const submitButtons = screen.getAllByRole('button', {
         name: /create project/i,
       });
+      const submitButton = submitButtons[0]; // Use the first submit button
       await user.click(submitButton);
 
       await waitFor(() => {
@@ -604,9 +606,10 @@ describe('ProjectForm', () => {
     it('handles missing onSuccess callback', () => {
       renderWithProviders(<ProjectForm />);
 
-      const submitButton = screen.getByRole('button', {
+      const submitButtons = screen.getAllByRole('button', {
         name: /create project/i,
       });
+      const submitButton = submitButtons[0]; // Use the first submit button
 
       expect(submitButton).toBeInTheDocument();
     });
