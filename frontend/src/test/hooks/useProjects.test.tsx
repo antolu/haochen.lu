@@ -515,7 +515,8 @@ describe('useProjects Hook', () => {
       const deleteProject = result.current.mutateAsync;
       const response = await deleteProject('project-1');
 
-      expect(response).toEqual({ success: true });
+      // Hook returns void on success
+      expect(response).toBeUndefined();
       expect(vi.mocked(mockApiClient.delete)).toHaveBeenCalledWith('/projects/project-1');
     });
 

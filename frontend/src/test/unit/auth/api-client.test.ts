@@ -352,8 +352,13 @@ describe('API Client Interceptors', () => {
       // Let them queue up
       await new Promise(resolve => setTimeout(resolve, 10));
 
-      // Reject the refresh
-      refreshReject!(new Error('Refresh failed'));
+      // Reject the refresh (catch to avoid unhandled rejection noise)
+      // Reject the refresh and catch to avoid unhandled rejection noise
+      try {
+        refreshReject!(new Error('Refresh failed'));
+      } catch {
+        // expected in some environments
+      }
 
       // All should fail
       const results = await Promise.all(promises);

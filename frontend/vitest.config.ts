@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config';
+import { defineConfig, configDefaults } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 
@@ -11,6 +11,8 @@ export default defineConfig({
     css: true,
     reporters: ['verbose'],
     outputFile: './coverage/test-report.html',
+    // Exclude node_modules tests and Playwright E2E tests from Vitest
+    exclude: [...configDefaults.exclude, 'node_modules/**', 'src/test/e2e/**'],
     // Resource limits to prevent process spawning issues
     pool: 'forks',
     poolOptions: {

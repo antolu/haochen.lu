@@ -232,7 +232,7 @@ const PhotoMap: React.FC<PhotoMapProps> = ({
   }
 
   return (
-    <div className={className} data-testid="photo-map-container">
+    <div className={className}>
       <MapContainer
         center={mapCenter}
         zoom={zoom}

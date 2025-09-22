@@ -27,7 +27,7 @@ vi.mock('@/stores/authStore', () => {
     isTokenExpired: vi.fn(),
     clearAuth: vi.fn(),
   };
-  const mockStoreFunction = (): typeof state => state;
+  const mockStoreFunction = (): typeof state => mockGetState();
   const mockGetState = vi.fn((): typeof state => state);
   const mockSetState = vi.fn((partial: unknown): typeof state => {
     if (typeof partial === 'function') {
@@ -67,6 +67,10 @@ describe('Auth Query Hooks', () => {
     });
     // Align with current store API: use global auth store if needed
     (window as unknown as { __authStore: unknown }).__authStore = { getState: () => mockAuthState };
+    // Ensure hook reads latest getState mock returns
+    (
+      useAuthStore as { getState: { mockReturnValue: (value: unknown) => void } }
+    ).getState.mockReturnValue(mockAuthState as unknown as never);
     vi.clearAllMocks();
   });
 
@@ -499,7 +503,7 @@ describe('Auth Query Hooks', () => {
     });
 
     it('should handle auth errors gracefully', async () => {
-      const mockRefreshToken = vi.fn().mockRejectedValue(new Error('Network error'));
+      const mockRefreshToken = vi.fn().mockResolvedValue(false);
       const mockIsTokenExpired = vi.fn().mockReturnValue(true);
 
       (

@@ -200,7 +200,9 @@ describe('ProjectsPage', () => {
     });
 
     it('provides retry functionality on error', async () => {
-      const reloadSpy = vi.spyOn(window.location, 'reload').mockImplementation(() => {});
+      // jsdom Location.reload is non-configurable; intercept via assign
+      // Stub reload via redefining window.location.reload only
+      const reloadSpy = vi.spyOn(window.location, 'reload' as never);
 
       mockUseInfiniteProjects.mockReturnValue({
         ...defaultMockReturn,

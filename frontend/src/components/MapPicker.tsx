@@ -216,7 +216,6 @@ const MapPicker: React.FC<MapPickerProps> = ({
           zoom={zoom}
           style={{ height: `${height}px`, width: '100%' }}
           className="rounded-lg overflow-hidden"
-          data-testid="map-picker-container"
         >
           <TileLayer
             url={tileConfig.url}

@@ -286,14 +286,13 @@ const MainLayout: React.FC = () => {
                 <li>Location: Geneva, Switzerland</li>
                 {footerContent?.['contact.cv_url']?.content && (
                   <li>
-                    CV:{' '}
                     <a
                       href={footerContent['contact.cv_url'].content}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-gray-300 hover:text-white transition-colors duration-200 underline"
                     >
-                      Download CV
+                      CV
                     </a>
                   </li>
                 )}

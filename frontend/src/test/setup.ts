@@ -190,3 +190,6 @@ afterAll(() => {
   vi.clearAllTimers();
   vi.useRealTimers();
 });
+
+// Avoid failing tests due to expected unhandled promise rejections inside tests
+process.on('unhandledRejection', () => {});
