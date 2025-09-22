@@ -1,233 +1,201 @@
-# Modern Portfolio & Photography Platform
+# Portfolio & Photography Platform
 
-A comprehensive full-stack web application built with **FastAPI (Python) backend** and **React (TypeScript) frontend**, featuring advanced photo management with interactive location mapping, blog system, project showcase, and authenticated sub-applications access.
+A full-stack web application built with FastAPI backend and React frontend, featuring photo management with interactive location mapping, project showcase, blog system, and admin interface.
 
-## 🌟 Key Features
+## Overview
 
-### Photography System
-- **Interactive Photo Map**: Location-based clustering with zoom-responsive separation
-- **Advanced Photo Management**: Upload with automatic EXIF extraction and GPS data processing
-- **Responsive Image Processing**: 5-tier WebP optimization (thumbnail to print quality)
-- **Gallery Experience**: Virtualized infinite scroll with lightbox integration
-- **Location Services**: OpenStreetMap integration with geocoding and search
+This platform combines a personal portfolio with advanced photo management capabilities. The standout feature is an interactive photo map that uses location clustering to organize and display photos geographically. Photos are processed into multiple responsive variants and can be managed through a comprehensive admin interface with location editing capabilities.
+
+## Architecture
+
+### Technology Stack
+
+Backend:
+- FastAPI with async operations and automatic API documentation
+- SQLAlchemy 2.0 with PostgreSQL 15 for data persistence
+- Redis 7 for caching and session management
+- OpenStreetMap Nominatim for geocoding services
+- Alembic for database migrations
+
+Frontend:
+- React 18 with TypeScript and strict type checking
+- Vite for development server and build tooling
+- TanStack Query for server state management with optimistic updates
+- Zustand for client state management
+- Leaflet with react-leaflet-cluster for interactive maps
+- Tailwind CSS v4 for styling
+- Framer Motion for animations
+
+Infrastructure:
+- Docker Compose for multi-container orchestration
+- Nginx reverse proxy with optimized static file serving
+- Health checks and container monitoring
+
+### Project Structure
+
+```
+backend/
+├── app/
+│   ├── api/                 # API route handlers
+│   │   ├── auth.py         # Authentication endpoints
+│   │   ├── photos.py       # Photo CRUD and locations API
+│   │   ├── projects.py     # Project management
+│   │   ├── blog.py         # Blog system
+│   │   └── locations.py    # Geocoding services
+│   ├── core/               # Security, image processing, configuration
+│   ├── crud/               # Database operations layer
+│   ├── models/             # SQLAlchemy database models
+│   └── schemas/            # Pydantic request/response schemas
+├── alembic/                # Database migration files
+└── tests/                  # Backend test suites
+
+frontend/
+├── src/
+│   ├── components/         # Reusable UI components
+│   │   ├── PhotoMap.tsx    # Interactive clustering map
+│   │   ├── PhotoGrid.tsx   # Virtualized photo gallery
+│   │   ├── LocationInput.tsx # Location selection component
+│   │   └── admin/          # Admin interface components
+│   ├── pages/              # Route-level components
+│   ├── hooks/              # Custom React hooks
+│   ├── api/                # API client with TypeScript types
+│   ├── stores/             # Zustand state stores
+│   └── types/              # TypeScript type definitions
+└── tests/                  # Frontend test suites
+
+uploads/                    # Original uploaded images
+compressed/                 # Processed WebP image variants
+```
+
+## Key Features
+
+### Interactive Photo Map
+The core feature provides location-based photo exploration:
+- Automatic clustering of nearby photos with thumbnail previews
+- Zoom-responsive cluster separation for detailed exploration
+- Interactive popups showing all photos in a cluster with metadata
+- Synchronization between map selections and photo gallery
+- Global scale support for worldwide photo collections
+
+### Photo Management System
+Complete photo lifecycle management:
+- Upload with automatic EXIF extraction including GPS coordinates
+- Responsive image processing generating 5 WebP variants (400px to 2400px)
+- Location enhancement through automatic geocoding
+- Admin interface with tabbed editing for metadata, location, and custom fields
+- Interactive map-based location editing
 
 ### Content Management
-- **Project Portfolio**: GitHub/GitLab integration with automatic README fetching
-- **Blog System**: Full markdown blog with draft/publish workflow and syntax highlighting
-- **Sub-Applications**: Authenticated access to internal tools and external services
-- **Admin Dashboard**: Comprehensive content management with location editing
+- Project portfolio with GitHub/GitLab repository integration
+- Automatic README fetching and caching from repositories
+- Blog system with markdown rendering and syntax highlighting
+- Sub-applications with authenticated access control
 
-### Technical Excellence
-- **Modern Stack**: FastAPI + React 18 + TypeScript + PostgreSQL + Redis
-- **Real-time Updates**: TanStack Query with optimistic UI updates
-- **Location Clustering**: Interactive map with thumbnail previews and cluster navigation
-- **Security First**: JWT authentication with enforced environment variable validation
-- **Docker Ready**: Complete containerization with health checks and development tools
+### Admin Interface
+Comprehensive management dashboard:
+- Photo metadata editing with location services integration
+- Custom field system for flexible metadata storage
+- Project CRUD operations with repository validation
+- User management and authentication controls
 
-## 🚀 Quick Start
+## Development Setup
 
 ### Prerequisites
 - Docker and Docker Compose
 - Git
+- Python 3.11+ (for local backend development)
+- Node.js 18+ (for local frontend development)
 
-### 1. Clone and Setup
+### Environment Configuration
+
+Create a `.env` file with required security variables:
+
 ```bash
-git clone <your-repo-url>
-cd portfolio-app
-
-# Generate secure environment variables
+# Generate secure keys
 python -c "import secrets; print(f'SECRET_KEY={secrets.token_urlsafe(32)}')" >> .env
 python -c "import secrets; print(f'SESSION_SECRET_KEY={secrets.token_urlsafe(32)}')" >> .env
 echo "ADMIN_PASSWORD=your_secure_password" >> .env
+
+# Optional configuration
+echo "ENVIRONMENT=development" >> .env
+echo "POSTGRES_DB=portfolio" >> .env
+echo "POSTGRES_PASSWORD=portfolio_password" >> .env
 ```
 
-### 2. Deploy with Development Script (Recommended)
+Required environment variables:
+- `SECRET_KEY`: JWT signing key (minimum 32 characters)
+- `SESSION_SECRET_KEY`: Session encryption key (minimum 32 characters)
+- `ADMIN_PASSWORD`: Admin user password (minimum 8 characters)
+
+The application will not start without these security variables.
+
+### Development Commands
+
+#### Using the Development Script (Recommended)
+
 ```bash
 # Start development environment with live reload
 ./dev.sh start
 
-# View logs
-./dev.sh logs
-
-# Stop environment
-./dev.sh stop
-```
-
-### 3. Access the Application
-- **Website**: http://localhost
-- **Admin**: http://localhost/admin (login with admin/your_password)
-- **API Docs**: http://localhost/api/docs
-- **Photography Map**: http://localhost/photography (with clustering demo data)
-
-## 🗺️ Interactive Photo Map
-
-Our standout feature provides an immersive way to explore photography by location:
-
-- **Smart Clustering**: Photos automatically group by proximity with visual thumbnail previews
-- **Zoom Navigation**: Clusters dynamically separate as you zoom in for detailed exploration
-- **Interactive Popups**: Click clusters to view all photos with metadata and navigation
-- **Grid Synchronization**: Map selections highlight and scroll to photos in the gallery
-- **Global Scale**: Handles worldwide photo collections with optimized performance
-
-## 🛠 Tech Stack
-
-### Backend
-- **FastAPI** - Modern async web framework with automatic API documentation
-- **SQLAlchemy 2.0** - Async ORM with advanced relationship handling
-- **PostgreSQL 15** - Primary database with JSONB support for flexible metadata
-- **Redis 7** - Caching and session management
-- **OpenStreetMap Nominatim** - Location services and geocoding
-
-### Frontend
-- **React 18** - Latest React with concurrent features
-- **TypeScript** - Type safety with strict configuration
-- **Vite** - Lightning-fast build tool and dev server
-- **TanStack Query** - Server state management with optimistic updates
-- **Leaflet + react-leaflet-cluster** - Interactive maps with clustering
-- **Tailwind CSS v4** - Utility-first styling with modern features
-- **Framer Motion** - Smooth animations and transitions
-
-### Infrastructure
-- **Docker Compose** - Multi-container orchestration
-- **Nginx** - Reverse proxy with optimized static serving
-- **Alembic** - Database migrations with version control
-
-## 📁 Project Structure
-
-```
-├── backend/                    # FastAPI backend
-│   ├── app/
-│   │   ├── api/               # API route handlers
-│   │   │   ├── photos.py      # Photo CRUD + locations endpoint
-│   │   │   ├── projects.py    # Project management
-│   │   │   ├── blog.py        # Blog system
-│   │   │   └── locations.py   # Geocoding services
-│   │   ├── core/              # Security, image processing
-│   │   ├── crud/              # Database operations
-│   │   ├── models/            # SQLAlchemy models
-│   │   └── schemas/           # Pydantic schemas
-│   ├── alembic/               # Database migrations
-│   └── requirements.txt
-├── frontend/                   # React frontend
-│   ├── src/
-│   │   ├── components/        # Reusable UI components
-│   │   │   ├── PhotoMap.tsx   # Interactive clustering map
-│   │   │   ├── PhotoGrid.tsx  # Virtualized photo gallery
-│   │   │   ├── MapPicker.tsx  # Location selection
-│   │   │   └── admin/         # Admin interface
-│   │   ├── pages/             # Route components
-│   │   │   ├── PhotographyPage.tsx  # Gallery + map integration
-│   │   │   └── admin/         # Admin pages
-│   │   ├── api/               # API client with types
-│   │   └── types/             # TypeScript definitions
-│   └── package.json
-├── uploads/                    # Original image uploads
-├── compressed/                 # Processed WebP variants
-├── dev.sh                     # Development utility script
-├── docker-compose.yml         # Container orchestration
-├── CLAUDE.md                  # Comprehensive development guide
-├── TRUENAS_DEPLOYMENT.md      # TrueNAS Scale deployment
-└── .env.example              # Environment template
-```
-
-## 🔧 API Overview
-
-### Photo System
-- `GET /api/photos` - Paginated photos with filtering
-- `GET /api/photos/locations` - **Optimized location data for map clustering**
-- `POST /api/photos` - Upload with EXIF extraction (admin)
-- `PUT /api/photos/{id}` - Update metadata with location editing (admin)
-
-### Location Services
-- `GET /api/locations/search` - Location search with autocomplete
-- `POST /api/locations/geocode` - Address to coordinates
-- `POST /api/locations/reverse` - Coordinates to address
-
-### Content Management
-- `GET /api/projects` - Project portfolio with repository integration
-- `GET /api/blog` - Blog posts with markdown rendering
-- `GET /api/subapps` - Sub-applications with authentication
-
-## 📸 Image Processing Pipeline
-
-1. **Upload**: Multi-part form with metadata extraction
-2. **EXIF Processing**: Camera settings, GPS coordinates, timestamps using ExifRead
-3. **Responsive Generation**: 5 WebP variants (400px-2400px) with quality optimization
-4. **Location Enhancement**: Automatic geocoding for GPS coordinates
-5. **Database Storage**: Structured metadata with JSONB variants column
-6. **Map Integration**: Real-time location data for clustering display
-
-## 🔒 Security & Configuration
-
-### Required Environment Variables
-The application enforces strict security and **will not start** without:
-
-```env
-SECRET_KEY=your_jwt_signing_key_minimum_32_characters
-SESSION_SECRET_KEY=your_session_encryption_key_minimum_32_characters
-ADMIN_PASSWORD=your_secure_admin_password_minimum_8_characters
-```
-
-### Generate Secure Keys
-```bash
-python -c "import secrets; print('SECRET_KEY=' + secrets.token_urlsafe(32))"
-python -c "import secrets; print('SESSION_SECRET_KEY=' + secrets.token_urlsafe(32))"
-```
-
-### Production Deployment
-```bash
-# Set production environment
-echo "ENVIRONMENT=production" >> .env
-echo "COOKIE_SECURE=true" >> .env
-echo "CORS_ORIGINS=https://yourdomain.com" >> .env
-
-# Deploy
-docker-compose up -d
-```
-
-## 📚 Documentation
-
-### Development & Architecture
-- **[CLAUDE.md](./CLAUDE.md)** - Comprehensive development guide, architecture details, and troubleshooting
-  - Complete tech stack documentation
-  - Component architecture and design patterns
-  - Interactive photo map implementation details
-  - Testing strategies and deployment notes
-  - Common development issues and solutions
-
-### Deployment
-- **[TRUENAS_DEPLOYMENT.md](./TRUENAS_DEPLOYMENT.md)** - Step-by-step TrueNAS Scale deployment guide
-  - Container service configuration
-  - Dataset setup and persistent storage
-  - Network and security configuration
-
-### Development Tools
-- **[dev.sh](./dev.sh)** - Comprehensive development utility script
-  - `./dev.sh start` - Development environment with live reload
-  - `./dev.sh test` - Run test suites
-  - `./dev.sh build` - Production build
-  - `./dev.sh help` - Full command reference
-
-## 🔧 Development Workflow
-
-### Local Development
-```bash
-# Start development environment
-./dev.sh start
-
 # View real-time logs
-./dev.sh logs [service]
+./dev.sh logs [service_name]
 
-# Run tests
-./dev.sh test
+# Stop development environment
+./dev.sh stop
+
+# Restart services
+./dev.sh restart
 
 # Build production assets
 ./dev.sh build
+
+# Run test suites
+./dev.sh test
+
+# Show all available commands
+./dev.sh help
+```
+
+#### Manual Docker Commands
+
+```bash
+# Start all services
+docker compose up -d
+
+# View logs for specific service
+docker compose logs -f backend
+docker compose logs -f frontend
+
+# Stop all services
+docker compose down
+
+# Complete rebuild
+docker system prune -f
+docker compose build --no-cache
+docker compose up -d
+```
+
+#### Local Development (Without Docker)
+
+Backend:
+```bash
+cd backend
+pip install -e .
+alembic upgrade head
+uvicorn app.main:app --reload --port 8000
+```
+
+Frontend:
+```bash
+cd frontend
+npm install
+npm run dev
 ```
 
 ### Database Management
+
 ```bash
-# Create migration
+# Create new migration
 docker compose exec backend alembic revision --autogenerate -m "description"
 
 # Apply migrations
@@ -235,82 +203,231 @@ docker compose exec backend alembic upgrade head
 
 # View migration history
 docker compose exec backend alembic history
+
+# Downgrade migration
+docker compose exec backend alembic downgrade -1
 ```
 
 ### Testing
-```bash
-# Frontend tests
-cd frontend && npm run test           # Unit tests with Vitest
-cd frontend && npm run test:e2e       # E2E tests with Playwright
-cd frontend && npm run test:components # Component tests
 
-# Backend tests
-docker compose exec backend pytest tests/     # All tests
-docker compose exec backend pytest tests/unit/ # Unit tests only
+Frontend testing:
+```bash
+cd frontend
+npm run test                # Unit tests with Vitest
+npm run test:e2e           # E2E tests with Playwright
+npm run test:components    # Component tests only
+npm run test:coverage      # Generate coverage report
+npm run lint              # ESLint checking
 ```
 
-## ⚡ Performance Features
-
-### Backend Optimizations
-- **Async Operations**: Full async/await architecture with FastAPI
-- **Database Indexing**: Optimized queries for location data and photo metadata
-- **Redis Caching**: Intelligent caching for frequently accessed data
-- **Image Processing**: Efficient WebP conversion with quality optimization
-
-### Frontend Optimizations
-- **Virtualized Scrolling**: Handle large photo collections efficiently
-- **Clustering Algorithms**: Optimized map rendering for thousands of photos
-- **Code Splitting**: Route-based lazy loading for optimal bundle sizes
-- **Image Variants**: Responsive loading with appropriate quality for context
-
-### Map Performance
-- **Chunked Loading**: Efficient marker rendering for large photo collections
-- **Cluster Optimization**: Configurable radius and zoom thresholds
-- **Thumbnail Caching**: Compressed variants for fast marker rendering
-- **Event Debouncing**: Smooth interactions without performance degradation
-
-## 🛡 Troubleshooting
-
-### Common Issues
-- **Map not loading**: Check OpenStreetMap service availability and network connectivity
-- **Clusters not forming**: Verify photo location data exists and clustering radius configuration
-- **Image upload fails**: Check file size limits (50MB default) and upload directory permissions
-- **Authentication issues**: Verify JWT secret keys and admin password configuration
-
-### Development Commands
+Backend testing:
 ```bash
-# Reset development environment
-./dev.sh stop && docker system prune -f && ./dev.sh start
+# Via Docker
+docker compose exec backend python -m pytest tests/
+docker compose exec backend python -m pytest tests/unit/
+docker compose exec backend python -m pytest tests/integration/
 
-# Check API documentation
-open http://localhost/api/docs
-
-# View container logs
-./dev.sh logs backend
-./dev.sh logs frontend
+# Local
+cd backend
+pytest tests/
+pytest --cov=app tests/
 ```
 
-## 📄 License
+Code quality:
+```bash
+# Backend linting and type checking
+ruff check --fix --unsafe-fixes --preview
+ruff format
+mypy app/ tests/
 
-MIT License - see LICENSE file for details.
+# Frontend linting and formatting
+cd frontend
+npm run lint -- --fix
+npm run format
+```
 
-## 🤝 Contributing
+### Pre-commit Hooks
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Follow the code style guidelines in [CLAUDE.md](./CLAUDE.md)
-4. Add tests for new features
-5. Commit your changes (`git commit -m 'Add amazing feature'`)
-6. Push to the branch (`git push origin feature/amazing-feature`)
-7. Open a Pull Request
+Install pre-commit hooks for automated quality checks:
+```bash
+pre-commit install
+pre-commit run --all-files
+```
 
-## 🆘 Support
+Configured hooks include:
+- End-of-file and trailing whitespace fixes
+- YAML, JSON, and TOML validation
+- Python: ruff linting and formatting, mypy type checking, bandit security scanning
+- Frontend: prettier formatting, ESLint checking
 
-- **Development Guide**: See [CLAUDE.md](./CLAUDE.md) for comprehensive documentation
-- **API Documentation**: Visit `/api/docs` endpoint when running
-- **Issues**: Open GitHub issues for bugs and feature requests
-- **Security**: Report vulnerabilities privately via GitHub Security tab
+## API Reference
 
----
+### Core Endpoints
 
-Built with modern tools and best practices for creators and developers who demand excellence in both form and function. Features an innovative interactive photo map that transforms how users explore and discover content by location.
+Authentication:
+- `POST /api/auth/login` - Admin login with JWT token
+- `POST /api/auth/logout` - Session termination
+- `GET /api/auth/me` - Current user information
+
+Photos:
+- `GET /api/photos` - Paginated photo listing with filtering
+- `GET /api/photos/locations` - Optimized location data for map clustering
+- `POST /api/photos` - Upload with EXIF extraction (admin only)
+- `PUT /api/photos/{id}` - Update metadata and location (admin only)
+- `DELETE /api/photos/{id}` - Delete photo and variants (admin only)
+
+Location Services:
+- `GET /api/locations/search` - Location search with autocomplete
+- `POST /api/locations/geocode` - Convert address to coordinates
+- `POST /api/locations/reverse` - Convert coordinates to address
+
+Projects:
+- `GET /api/projects` - Project portfolio with repository integration
+- `POST /api/projects` - Create project with validation (admin only)
+- `PUT /api/projects/{id}` - Update project (admin only)
+
+Blog:
+- `GET /api/blog` - Blog posts with markdown rendering
+- `POST /api/blog` - Create blog post (admin only)
+
+### Image Processing Pipeline
+
+1. Upload: Multipart form submission with file validation
+2. EXIF Extraction: Camera settings, GPS coordinates, timestamps using ExifRead
+3. Processing: Auto-rotation correction and responsive variant generation
+4. Geocoding: Automatic location name resolution for GPS coordinates
+5. Storage: Original files in `/uploads`, optimized variants in `/compressed`
+6. Database: Structured metadata with JSONB variants column
+
+Generated image variants:
+- thumbnail: 400px, 75% quality - for grid thumbnails and previews
+- small: 800px, 80% quality - mobile viewing
+- medium: 1200px, 85% quality - desktop viewing
+- large: 1600px, 90% quality - high-resolution viewing
+- xlarge: 2400px, 95% quality - print quality
+
+## Deployment
+
+### Production Environment
+
+```bash
+# Set production configuration
+echo "ENVIRONMENT=production" >> .env
+echo "COOKIE_SECURE=true" >> .env
+echo "CORS_ORIGINS=https://yourdomain.com" >> .env
+
+# Deploy production stack
+docker compose -f docker-compose.yml up -d
+```
+
+### Multi-platform Docker Images
+
+For cross-platform deployment:
+
+```bash
+# Build and push to registry
+docker buildx build --platform linux/amd64,linux/arm64 -t yourregistry/backend:latest backend --push
+docker buildx build --platform linux/amd64,linux/arm64 -t yourregistry/frontend:latest frontend --push
+
+# Local multi-platform build
+docker buildx build --platform linux/amd64,linux/arm64 -t backend:latest backend --load
+docker buildx build --platform linux/amd64,linux/arm64 -t frontend:latest frontend --load
+```
+
+### TrueNAS Scale Deployment
+
+See [TRUENAS_DEPLOYMENT.md](./TRUENAS_DEPLOYMENT.md) for detailed TrueNAS Scale deployment instructions including:
+- Container service configuration
+- Dataset setup and persistent storage
+- Network configuration and port mapping
+- Security considerations
+
+### Production Checklist
+
+Security:
+- Generate secure random keys for SECRET_KEY and SESSION_SECRET_KEY
+- Set strong ADMIN_PASSWORD
+- Configure CORS_ORIGINS for your domain
+- Enable COOKIE_SECURE for HTTPS
+
+Performance:
+- Set up PostgreSQL backups
+- Configure upload directory backups
+- Monitor disk space for image storage
+- Set up Redis persistence if needed
+
+Monitoring:
+- Enable Docker health checks
+- Monitor container logs
+- Set up disk space alerts
+- Configure uptime monitoring
+
+## Access URLs
+
+Development:
+- Website: http://localhost
+- Admin interface: http://localhost/admin
+- API documentation: http://localhost/api/docs
+- Direct backend: http://localhost:8000 (for debugging)
+
+Production:
+- Configure your domain in CORS_ORIGINS
+- Set up SSL certificates through reverse proxy
+- Admin credentials: admin / your_admin_password
+
+## Troubleshooting
+
+### Development Reset
+
+```bash
+# Complete environment reset
+./dev.sh stop
+docker system prune -f
+docker volume prune -f
+./dev.sh start
+
+# Reset database only
+docker compose down
+docker volume rm $(docker volume ls -q | grep postgres)
+docker compose up -d
+```
+
+### Container Debugging
+
+```bash
+# Access container shell
+docker compose exec backend bash
+docker compose exec frontend sh
+
+# Check container health
+docker compose ps
+docker compose logs backend
+docker compose logs frontend
+
+# Monitor resource usage
+docker stats
+```
+
+### Performance Monitoring
+
+Check image processing performance:
+```bash
+# Monitor disk usage
+df -h uploads/ compressed/
+
+# Check image variant generation
+ls -la compressed/
+```
+
+Monitor database performance:
+```bash
+# PostgreSQL query logs
+docker compose logs db | grep -i slow
+```
+
+## Documentation
+
+- [CLAUDE.md](./CLAUDE.md): Comprehensive development guide with architecture details
+- [TRUENAS_DEPLOYMENT.md](./TRUENAS_DEPLOYMENT.md): TrueNAS Scale deployment instructions
+- [dev.sh](./dev.sh): Development script command reference (run `./dev.sh help`)
+- `/api/docs`: Interactive API documentation (when running)
