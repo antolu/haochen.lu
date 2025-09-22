@@ -610,11 +610,15 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="title-input"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Title Template
                   </label>
                   <input
                     {...register('title')}
+                    id="title-input"
                     type="text"
                     placeholder="Leave empty to use filename"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -622,9 +626,15 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                  <label
+                    htmlFor="category-input"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Category
+                  </label>
                   <input
                     {...register('category')}
+                    id="category-input"
                     type="text"
                     placeholder="e.g., Portrait, Landscape, Street"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -633,9 +643,15 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <label
+                  htmlFor="description-input"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Description
+                </label>
                 <textarea
                   {...register('description')}
+                  id="description-input"
                   rows={3}
                   placeholder="Describe these photos..."
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -643,9 +659,15 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({ onComplete, onCancel, maxFile
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+                <label
+                  htmlFor="tags-input"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Tags
+                </label>
                 <input
                   {...register('tags')}
+                  id="tags-input"
                   type="text"
                   placeholder="e.g., outdoor, nature, sunset (comma-separated)"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
