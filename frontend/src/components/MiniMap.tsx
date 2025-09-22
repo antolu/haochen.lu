@@ -38,13 +38,13 @@ const MiniMap: React.FC<MiniMapProps> = ({
         aspectRatio: aspectRatio === 'square' ? '1' : undefined,
       };
     }
-    return { width: size, height: size };
+    return { width: `${size}px`, height: `${size}px` };
   };
 
   return (
     <div
       className={`relative overflow-hidden rounded border border-gray-200 ${
-        onClick ? 'cursor-pointer' : ''
+        onClick ? 'cursor-pointer hover:border-blue-300' : ''
       } ${className}`}
       style={getMapDimensions()}
       onClick={onClick}
@@ -70,7 +70,10 @@ const MiniMap: React.FC<MiniMapProps> = ({
       </MapContainer>
 
       {onClick && (
-        <div className="absolute inset-0 bg-transparent flex items-center justify-center">
+        <div
+          className="absolute inset-0 bg-transparent flex items-center justify-center"
+          data-testid="mini-map-overlay"
+        >
           <div className="bg-white bg-opacity-90 rounded-full p-1 opacity-0 hover:opacity-100 transition-opacity duration-200">
             <svg
               className="h-4 w-4 text-blue-600"

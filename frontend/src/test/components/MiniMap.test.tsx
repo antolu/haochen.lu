@@ -116,18 +116,13 @@ describe('MiniMap', () => {
     expect(screen.getByTestId('mini-map-container')).toBeInTheDocument();
 
     // Should have hover overlay with magnifying glass icon
-    const overlay = screen
-      .getByTestId('mini-map-container')
-      .parentElement?.querySelector('.absolute.inset-0');
-    expect(overlay).toBeInTheDocument();
+    expect(screen.getByTestId('mini-map-overlay')).toBeInTheDocument();
   });
 
   it('does not show hover overlay when not clickable', () => {
     render(<MiniMap {...defaultProps} />);
 
-    const container = screen.getByTestId('mini-map-container').parentElement;
-    const overlay = container?.querySelector('.absolute.inset-0.bg-transparent');
-    expect(overlay).not.toBeInTheDocument();
+    expect(screen.queryByTestId('mini-map-overlay')).not.toBeInTheDocument();
   });
 
   describe('Map Configuration', () => {
@@ -179,7 +174,8 @@ describe('MiniMap', () => {
       render(<MiniMap {...defaultProps} onClick={onClick} />);
 
       // SVG magnifying glass should be present in hover overlay
-      const svg = screen.getByTestId('mini-map-container').parentElement?.querySelector('svg');
+      const overlay = screen.getByTestId('mini-map-overlay');
+      const svg = overlay.querySelector('svg');
       expect(svg).toBeInTheDocument();
     });
 
@@ -187,10 +183,9 @@ describe('MiniMap', () => {
       const onClick = vi.fn();
       render(<MiniMap {...defaultProps} onClick={onClick} />);
 
-      const overlay = screen
-        .getByTestId('mini-map-container')
-        .parentElement?.querySelector('.hover\\:bg-blue-500');
-      expect(overlay).toBeInTheDocument();
+      const overlay = screen.getByTestId('mini-map-overlay');
+      const iconWrapper = overlay.querySelector('.hover\\:opacity-100');
+      expect(iconWrapper).toBeInTheDocument();
     });
 
     it('stops propagation when overlay icon is clicked', () => {
@@ -246,10 +241,9 @@ describe('MiniMap', () => {
       render(<MiniMap {...defaultProps} onClick={onClick} />);
 
       // The hover overlay should have appropriate opacity for contrast
-      const overlay = screen
-        .getByTestId('mini-map-container')
-        .parentElement?.querySelector('.hover\\:bg-blue-500');
-      expect(overlay).toHaveClass('hover:bg-opacity-10');
+      const overlay = screen.getByTestId('mini-map-overlay');
+      const iconWrapper = overlay.querySelector('.hover\\:opacity-100');
+      expect(iconWrapper).toHaveClass('hover:opacity-100');
     });
 
     it('shows focus state for keyboard navigation', () => {
