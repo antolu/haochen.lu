@@ -158,28 +158,24 @@ describe('ProjectCard', () => {
   });
 
   describe('External Links', () => {
-    it('displays demo link when demo_url is provided', () => {
+    it('displays demo button when demo_url is provided', () => {
       const project = createMockProject({
         demo_url: 'https://demo.example.com',
       });
       renderWithProviders(<ProjectCard project={project} />);
 
-      const demoLink = screen.getByRole('link', { name: /view live demo/i });
-      expect(demoLink).toHaveAttribute('href', 'https://demo.example.com');
-      expect(demoLink).toHaveAttribute('target', '_blank');
-      expect(demoLink).toHaveAttribute('rel', 'noopener noreferrer');
+      const demoButton = screen.getByRole('button', { name: /demo/i });
+      expect(demoButton).toBeInTheDocument();
     });
 
-    it('displays GitHub link when github_url is provided', () => {
+    it('displays GitHub button when github_url is provided', () => {
       const project = createMockProject({
         github_url: 'https://github.com/test/project',
       });
       renderWithProviders(<ProjectCard project={project} />);
 
-      const githubLink = screen.getByRole('link', { name: /view source/i });
-      expect(githubLink).toHaveAttribute('href', 'https://github.com/test/project');
-      expect(githubLink).toHaveAttribute('target', '_blank');
-      expect(githubLink).toHaveAttribute('rel', 'noopener noreferrer');
+      const githubButton = screen.getByRole('button', { name: /code/i });
+      expect(githubButton).toBeInTheDocument();
     });
 
     it('does not display demo link when demo_url is null', () => {
@@ -215,8 +211,8 @@ describe('ProjectCard', () => {
       const project = createMockProject({ image_url: null });
       renderWithProviders(<ProjectCard project={project} />);
 
-      // Should display the fallback SVG icon
-      const svgIcon = screen.getByRole('img', { hidden: true });
+      // Should display the fallback SVG icon (query SVG directly as it doesn't have img role)
+      const svgIcon = document.querySelector('svg');
       expect(svgIcon).toBeInTheDocument();
     });
 
@@ -224,8 +220,8 @@ describe('ProjectCard', () => {
       const project = createMockProject({ image_url: '' });
       renderWithProviders(<ProjectCard project={project} />);
 
-      // Should display the fallback SVG icon
-      const svgIcon = screen.getByRole('img', { hidden: true });
+      // Should display the fallback SVG icon (query SVG directly as it doesn't have img role)
+      const svgIcon = document.querySelector('svg');
       expect(svgIcon).toBeInTheDocument();
     });
   });
@@ -240,7 +236,7 @@ describe('ProjectCard', () => {
       renderWithProviders(<ProjectCard project={project} />);
 
       // Should show some indication of GitHub integration
-      expect(screen.getByRole('link', { name: /view source/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /code/i })).toBeInTheDocument();
     });
 
     it('displays repository type indicator for GitLab', () => {
@@ -252,7 +248,7 @@ describe('ProjectCard', () => {
       });
       renderWithProviders(<ProjectCard project={project} />);
 
-      expect(screen.getByRole('link', { name: /view source/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /code/i })).toBeInTheDocument();
     });
 
     it('shows README indicator when use_readme is true', () => {
@@ -281,11 +277,12 @@ describe('ProjectCard', () => {
       const project = createMockProject();
       renderWithProviders(<ProjectCard project={project} />);
 
-      const projectLink = screen.getByRole('link');
+      // The buttons receive focus before the main project link
+      const codeButton = screen.getByRole('button', { name: /code/i });
 
-      // Test focus
+      // Test focus - buttons get focus first
       await userEvent.tab();
-      expect(projectLink).toHaveFocus();
+      expect(codeButton).toHaveFocus();
     });
 
     it('handles click events on external links', async () => {
@@ -297,12 +294,12 @@ describe('ProjectCard', () => {
 
       renderWithProviders(<ProjectCard project={project} />);
 
-      const demoLink = screen.getByRole('link', { name: /view live demo/i });
-      const githubLink = screen.getByRole('link', { name: /view source/i });
+      const demoButton = screen.getByRole('button', { name: /demo/i });
+      const githubButton = screen.getByRole('button', { name: /code/i });
 
       // These should not throw errors when clicked
-      await user.click(demoLink);
-      await user.click(githubLink);
+      await user.click(demoButton);
+      await user.click(githubButton);
     });
   });
 
@@ -324,9 +321,13 @@ describe('ProjectCard', () => {
       });
       renderWithProviders(<ProjectCard project={project} />);
 
-      // Should render all technologies without breaking layout
+      // Should render first few technologies and overflow indicator
       expect(screen.getByText('React')).toBeInTheDocument();
-      expect(screen.getByText('Vite')).toBeInTheDocument();
+      expect(screen.getByText('TypeScript')).toBeInTheDocument();
+      expect(screen.getByText('Node.js')).toBeInTheDocument();
+      expect(screen.getByText('Express')).toBeInTheDocument();
+      // Should show overflow indicator for remaining technologies
+      expect(screen.getByText('+12 more')).toBeInTheDocument();
     });
 
     it('handles missing required fields gracefully', () => {

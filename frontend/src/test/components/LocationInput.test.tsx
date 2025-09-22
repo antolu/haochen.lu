@@ -68,6 +68,7 @@ describe('LocationInput', () => {
   it('renders all input fields', () => {
     render(<LocationInput {...defaultProps} />);
 
+    expect(screen.getByLabelText('Search Location')).toBeInTheDocument();
     expect(screen.getByLabelText('Location Name')).toBeInTheDocument();
     expect(screen.getByLabelText('Latitude')).toBeInTheDocument();
     expect(screen.getByLabelText('Longitude')).toBeInTheDocument();
@@ -116,7 +117,7 @@ describe('LocationInput', () => {
     await user.clear(latInput);
     await user.type(latInput, '40.7128');
 
-    expect(onLocationChange).toHaveBeenLastCalledWith(40.7128, -122.4194);
+    expect(onLocationChange).toHaveBeenLastCalledWith(40.7128, -122.4194, expect.any(String));
   });
 
   it('calls onLocationChange when longitude is changed', async () => {
@@ -129,7 +130,7 @@ describe('LocationInput', () => {
     await user.clear(lonInput);
     await user.type(lonInput, '-74.0060');
 
-    expect(onLocationChange).toHaveBeenLastCalledWith(37.7749, -74.006);
+    expect(onLocationChange).toHaveBeenLastCalledWith(37.7749, -74.006, expect.any(String));
   });
 
   it('does not call onLocationChange with invalid coordinates', async () => {
@@ -319,6 +320,7 @@ describe('LocationInput', () => {
     it('disables all input fields when disabled', () => {
       render(<LocationInput {...defaultProps} disabled={true} />);
 
+      expect(screen.getByLabelText('Search Location')).toBeDisabled();
       expect(screen.getByLabelText('Location Name')).toBeDisabled();
       expect(screen.getByLabelText('Latitude')).toBeDisabled();
       expect(screen.getByLabelText('Longitude')).toBeDisabled();
@@ -402,6 +404,7 @@ describe('LocationInput', () => {
     it('provides proper labels for all inputs', () => {
       render(<LocationInput {...defaultProps} />);
 
+      expect(screen.getByLabelText('Search Location')).toBeInTheDocument();
       expect(screen.getByLabelText('Location Name')).toBeInTheDocument();
       expect(screen.getByLabelText('Latitude')).toBeInTheDocument();
       expect(screen.getByLabelText('Longitude')).toBeInTheDocument();
@@ -410,6 +413,7 @@ describe('LocationInput', () => {
     it('provides helpful placeholder text', () => {
       render(<LocationInput />);
 
+      expect(screen.getByPlaceholderText('Search for a location...')).toBeInTheDocument();
       expect(
         screen.getByPlaceholderText('Enter location name or let it be auto-detected')
       ).toBeInTheDocument();
@@ -419,6 +423,11 @@ describe('LocationInput', () => {
     it('provides helpful instructions', () => {
       render(<LocationInput {...defaultProps} />);
 
+      expect(
+        screen.getByText(
+          'Type to search for locations and GPS coordinates will be set automatically'
+        )
+      ).toBeInTheDocument();
       expect(
         screen.getByText('Override the auto-detected location name if needed')
       ).toBeInTheDocument();

@@ -73,7 +73,7 @@ const ProjectGrid: React.FC<ProjectGridProps> = ({
           </svg>
         </div>
         <h3 className="text-lg font-medium text-gray-900 mb-2">No projects found</h3>
-        <p className="text-gray-500">Try adjusting your filters or check back later.</p>
+        <p className="text-gray-500">Create your first project to get started!</p>
       </div>
     );
   }
@@ -83,6 +83,7 @@ const ProjectGrid: React.FC<ProjectGridProps> = ({
       {/* Project Grid */}
       <motion.div
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"
+        role="grid"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, staggerChildren: 0.1 }}
@@ -101,7 +102,7 @@ const ProjectGrid: React.FC<ProjectGridProps> = ({
 
       {/* Load More Trigger */}
       {hasMore && (
-        <div ref={loadMoreRef} className="flex justify-center py-8">
+        <div ref={loadMoreRef} className="flex justify-center py-8" data-testid="load-more-trigger">
           {isLoadingMore ? (
             <div className="flex items-center gap-3">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
@@ -126,7 +127,10 @@ const ProjectGrid: React.FC<ProjectGridProps> = ({
 // Loading skeleton component
 const ProjectGridSkeleton: React.FC = () => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div
+      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+      data-testid="loading-skeleton"
+    >
       {Array.from({ length: 6 }).map((_, index) => (
         <ProjectCardSkeleton key={index} />
       ))}

@@ -175,9 +175,15 @@ const LocationInput: React.FC<LocationInputProps> = ({
       <div className="space-y-4">
         {/* Location Search Input */}
         <div className="relative">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Search Location</label>
+          <label
+            htmlFor="search-location-input"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Search Location
+          </label>
           <div className="relative">
             <input
+              id="search-location-input"
               ref={searchInputRef}
               type="text"
               value={searchQuery || manualLocationName}
@@ -218,11 +224,45 @@ const LocationInput: React.FC<LocationInputProps> = ({
           </p>
         </div>
 
+        {/* Location Name Input */}
+        <div>
+          <label
+            htmlFor="location-name-input"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Location Name
+          </label>
+          <input
+            id="location-name-input"
+            type="text"
+            value={manualLocationName}
+            onChange={e => {
+              setManualLocationName(e.target.value);
+              if (latitude !== undefined && longitude !== undefined) {
+                onLocationChange?.(latitude, longitude, e.target.value);
+              }
+            }}
+            onKeyDown={handleKeyDown}
+            placeholder="Enter location name or let it be auto-detected"
+            disabled={disabled}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Override the auto-detected location name if needed
+          </p>
+        </div>
+
         {/* Coordinates Display/Input */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
+            <label
+              htmlFor="latitude-input"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Latitude
+            </label>
             <input
+              id="latitude-input"
               type="number"
               step="any"
               value={latitude ?? ''}
@@ -239,8 +279,14 @@ const LocationInput: React.FC<LocationInputProps> = ({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Longitude</label>
+            <label
+              htmlFor="longitude-input"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Longitude
+            </label>
             <input
+              id="longitude-input"
               type="number"
               step="any"
               value={longitude ?? ''}
