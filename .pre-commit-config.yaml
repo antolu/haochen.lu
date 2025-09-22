@@ -28,7 +28,7 @@ repos:
 
   # Python linting and formatting
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.12
+    rev: v0.13.1
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix, --unsafe-fixes, --preview]
@@ -38,7 +38,7 @@ repos:
 
   # Python type checking
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.17.1
+    rev: v1.18.2
     hooks:
       - id: mypy
         files: ^backend/
@@ -50,7 +50,7 @@ repos:
 
   # ESLint for TypeScript/JavaScript linting
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v9.33.0
+    rev: v9.36.0
     hooks:
       - id: eslint
         files: ^frontend/.*\.(ts|tsx|js|jsx)$  # Explicitly match TypeScript and JavaScript files
@@ -76,7 +76,7 @@ repos:
 
   # Docker linting
   - repo: https://github.com/hadolint/hadolint
-    rev: v2.12.0
+    rev: v2.14.0
     hooks:
       - id: hadolint-docker
 
