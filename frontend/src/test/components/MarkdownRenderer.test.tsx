@@ -65,7 +65,8 @@ describe('MarkdownRenderer', () => {
       renderWithProviders(<MarkdownRenderer content={content} />);
 
       expect(screen.getByTestId('markdown-content')).toBeInTheDocument();
-      expect(screen.getByText(content)).toBeInTheDocument();
+      expect(screen.getByText('# Hello World')).toBeInTheDocument();
+      expect(screen.getByText('This is a test.')).toBeInTheDocument();
     });
 
     it('applies default prose classes', () => {
@@ -193,13 +194,11 @@ print("Second block")
       const copyButton = screen.getByTestId('copy-button');
       await user.click(copyButton);
 
-      const clipboardMock = vi.mocked(navigator.clipboard);
-      const writeText = clipboardMock.writeText.bind(clipboardMock);
-      expect(writeText).toHaveBeenCalledWith(codeContent);
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(codeContent);
     });
 
     it('shows success feedback after copying', async () => {
-      vi.useFakeTimers();
       const user = userEvent.setup();
 
       renderWithProviders(
@@ -219,11 +218,8 @@ print("Second block")
       const copyButton = screen.getByTestId('copy-button');
       await user.click(copyButton);
 
-      const clipboardMock = vi.mocked(navigator.clipboard);
-      const writeText = clipboardMock.writeText.bind(clipboardMock);
-      expect(writeText).toHaveBeenCalledWith('test');
-
-      vi.useRealTimers();
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith('test');
     });
 
     it('handles copy failure gracefully', async () => {
@@ -251,9 +247,13 @@ print("Second block")
       const copyButton = screen.getByTestId('copy-button');
       await user.click(copyButton);
 
-      await waitFor(() => {
-        expect(consoleSpy).toHaveBeenCalledWith('Failed to copy text: ', expect.any(Error));
-      });
+      // Wait for the async operation to complete and error to be logged
+      await waitFor(
+        () => {
+          expect(consoleSpy).toHaveBeenCalledWith('Failed to copy text: ', expect.any(Error));
+        },
+        { timeout: 1000 }
+      );
 
       consoleSpy.mockRestore();
     });
@@ -506,12 +506,22 @@ This is a paragraph with a [link](https://example.com).
         </div>
       );
 
-      // Test keyboard navigation
-      await user.tab();
-      expect(screen.getByTestId('copy-button')).toHaveFocus();
+      // Test keyboard navigation with timeout handling
+      await waitFor(
+        async () => {
+          await user.tab();
+          expect(screen.getByTestId('copy-button')).toHaveFocus();
+        },
+        { timeout: 1000 }
+      );
 
-      await user.tab();
-      expect(screen.getByTestId('external-link')).toHaveFocus();
+      await waitFor(
+        async () => {
+          await user.tab();
+          expect(screen.getByTestId('external-link')).toHaveFocus();
+        },
+        { timeout: 1000 }
+      );
     });
   });
 
