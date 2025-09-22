@@ -171,6 +171,13 @@ print("Second block")
     it('copies code to clipboard when copy button is clicked', async () => {
       const user = userEvent.setup();
       const codeContent = 'console.log("test");';
+      const writeTextSpy = vi.fn().mockResolvedValue(undefined);
+
+      // Mock clipboard for this specific test
+      Object.defineProperty(navigator, 'clipboard', {
+        value: { writeText: writeTextSpy },
+        configurable: true,
+      });
 
       // Create a more realistic test by rendering the actual copy button
       renderWithProviders(
@@ -194,12 +201,18 @@ print("Second block")
       const copyButton = screen.getByTestId('copy-button');
       await user.click(copyButton);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(codeContent);
+      expect(writeTextSpy).toHaveBeenCalledWith(codeContent);
     });
 
     it('shows success feedback after copying', async () => {
       const user = userEvent.setup();
+      const writeTextSpy = vi.fn().mockResolvedValue(undefined);
+
+      // Mock clipboard for this specific test
+      Object.defineProperty(navigator, 'clipboard', {
+        value: { writeText: writeTextSpy },
+        configurable: true,
+      });
 
       renderWithProviders(
         <div>
@@ -218,8 +231,7 @@ print("Second block")
       const copyButton = screen.getByTestId('copy-button');
       await user.click(copyButton);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith('test');
+      expect(writeTextSpy).toHaveBeenCalledWith('test');
     });
 
     it('handles copy failure gracefully', async () => {
