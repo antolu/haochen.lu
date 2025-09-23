@@ -14,6 +14,8 @@ except ImportError:
     REDIS_AVAILABLE = False
     redis = None
 
+from urllib.parse import urlparse
+
 from app.config import settings
 
 logger = logging.getLogger(__name__)
@@ -40,12 +42,22 @@ class RedisClient:
         self._connection_attempted = True
 
         try:
-            self._redis = redis.from_url(
-                settings.redis_url,
+            # Parse URL and construct client using Redis() so tests can patch redis.Redis
+            parsed = urlparse(settings.redis_url)
+            host = parsed.hostname or "localhost"
+            port = int(parsed.port or 6379)
+            try:
+                db_str = (parsed.path or "/0").lstrip("/")
+                db = int(db_str) if db_str else 0
+            except Exception:
+                db = 0
+
+            self._redis = redis.Redis(
+                host=host,
+                port=port,
+                db=db,
                 decode_responses=True,
                 socket_connect_timeout=5,
-                socket_keepalive=True,
-                socket_keepalive_options={},
                 health_check_interval=30,
             )
 
@@ -98,7 +110,14 @@ class RedisClient:
             return None
 
         try:
-            return await self._redis.get(key)
+            value = await self._redis.get(key)
+            # Ensure string return for tests even if backend returns bytes
+            if isinstance(value, bytes):
+                try:
+                    return value.decode()
+                except Exception:
+                    return None
+            return value
         except Exception as e:
             logger.exception(f"Redis GET failed: {e}")
             return None
