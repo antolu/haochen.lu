@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 from typing import Annotated, Any
 from uuid import UUID
 
@@ -14,6 +15,7 @@ from fastapi import (
     status,
 )
 from fastapi.responses import FileResponse
+from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.file_access import file_access_controller
@@ -40,6 +42,21 @@ from app.schemas.profile_picture import (
 from app.types.access_control import FileType
 
 router = APIRouter()
+
+
+def _raise_invalid_dimensions() -> None:
+    """Raise HTTPException for invalid image dimensions."""
+    raise HTTPException(status_code=400, detail="Invalid image dimensions")
+
+
+def _raise_not_square() -> None:
+    """Raise HTTPException for non-square images."""
+    raise HTTPException(
+        status_code=400,
+        detail=(
+            "Profile pictures must be square (1:1). Please crop your image to a square."
+        ),
+    )
 
 
 def populate_profile_picture_urls(
@@ -161,28 +178,30 @@ async def upload_profile_picture(
         )
 
     try:
-        # Process image
+        # Read file content once to allow pre-validation and processing
+        content_bytes = await file.read()
+
+        # Pre-validate square aspect before any heavy processing
+        try:
+            with Image.open(io.BytesIO(content_bytes)) as im:
+                w, h = im.size
+        except Exception as e:
+            raise HTTPException(status_code=400, detail="Invalid image file") from e
+
+        if w <= 0 or h <= 0:
+            _raise_invalid_dimensions()
+
+        aspect_ratio = w / h
+        # Accept 0.95-1.05 (~5% tolerance)
+        if not (0.95 <= aspect_ratio <= 1.05):
+            _raise_not_square()
+
+        # Process image using a fresh BytesIO since we've consumed the stream
         processed_data = await image_processor.process_image(
-            file.file,
+            io.BytesIO(content_bytes),
             file.filename or "profile.jpg",
-            title or file.filename or "Profile Picture"
+            title or file.filename or "Profile Picture",
         )
-
-        # Validate that the image is square (or close to it)
-        width = processed_data.get("width", 0)
-        height = processed_data.get("height", 0)
-
-        # Allow small deviations but prefer square images
-        if width > 0 and height > 0:
-            aspect_ratio = width / height
-            if aspect_ratio < 0.8 or aspect_ratio > 1.2:
-                raise HTTPException(
-                    status_code=400,
-                    detail=(
-                        "Profile pictures should be approximately square. "
-                        "Please crop the image to a 1:1 aspect ratio."
-                    )
-                )
 
         # Create profile picture record
         profile_picture_data = ProfilePictureCreate(
@@ -191,17 +210,22 @@ async def upload_profile_picture(
         )
 
         profile_picture = await create_profile_picture(
-            db,
-            profile_picture_data,
-            **processed_data
+            db, profile_picture_data, **processed_data
         )
 
         # Add secure URLs to response
-        profile_picture_dict = ProfilePictureResponse.model_validate(profile_picture).model_dump()
-        profile_picture_dict = populate_profile_picture_urls(profile_picture_dict, str(profile_picture.id))
+        profile_picture_dict = ProfilePictureResponse.model_validate(
+            profile_picture
+        ).model_dump()
+        profile_picture_dict = populate_profile_picture_urls(
+            profile_picture_dict, str(profile_picture.id)
+        )
 
         return ProfilePictureResponse.model_validate(profile_picture_dict)
 
+    except HTTPException:
+        # Re-raise expected HTTP errors (e.g., non-square validation)
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Error processing image: {e!s}"
@@ -220,8 +244,12 @@ async def activate_profile_picture_endpoint(
         raise HTTPException(status_code=404, detail="Profile picture not found")
 
     # Add secure URLs to response
-    profile_picture_dict = ProfilePictureResponse.model_validate(profile_picture).model_dump()
-    profile_picture_dict = populate_profile_picture_urls(profile_picture_dict, str(profile_picture.id))
+    profile_picture_dict = ProfilePictureResponse.model_validate(
+        profile_picture
+    ).model_dump()
+    profile_picture_dict = populate_profile_picture_urls(
+        profile_picture_dict, str(profile_picture.id)
+    )
 
     return ProfilePictureResponse.model_validate(profile_picture_dict)
 
@@ -234,13 +262,19 @@ async def update_profile_picture_endpoint(
     current_user=Depends(get_current_admin_user),
 ):
     """Update profile picture metadata (admin only)."""
-    profile_picture = await update_profile_picture(db, profile_picture_id, profile_picture_update)
+    profile_picture = await update_profile_picture(
+        db, profile_picture_id, profile_picture_update
+    )
     if not profile_picture:
         raise HTTPException(status_code=404, detail="Profile picture not found")
 
     # Add secure URLs to response
-    profile_picture_dict = ProfilePictureResponse.model_validate(profile_picture).model_dump()
-    profile_picture_dict = populate_profile_picture_urls(profile_picture_dict, str(profile_picture.id))
+    profile_picture_dict = ProfilePictureResponse.model_validate(
+        profile_picture
+    ).model_dump()
+    profile_picture_dict = populate_profile_picture_urls(
+        profile_picture_dict, str(profile_picture.id)
+    )
 
     return ProfilePictureResponse.model_validate(profile_picture_dict)
 
