@@ -34,14 +34,13 @@ class TestPhotoDeletionCascade:
         photo = await PhotoFactory.create_async(
             test_session,
             original_path=str(temp_upload_dir / "test_original.jpg"),
-            webp_path=str(temp_compressed_dir / "test.webp"),
-            thumbnail_path=str(temp_compressed_dir / "test_thumb.webp"),
         )
 
         # Create the actual files
         original_file = temp_upload_dir / "test_original.jpg"
-        webp_file = temp_compressed_dir / "test.webp"
-        thumb_file = temp_compressed_dir / "test_thumb.webp"
+        # Using variants in JSON, create representative files
+        webp_file = temp_compressed_dir / f"{photo.id}_small.webp"
+        thumb_file = temp_compressed_dir / f"{photo.id}_thumb.webp"
 
         original_file.write_bytes(b"fake original data")
         webp_file.write_bytes(b"fake webp data")

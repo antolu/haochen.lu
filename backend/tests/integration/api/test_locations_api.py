@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 
 from app.main import app
 
@@ -332,7 +332,8 @@ class TestLocationAPIIntegration:
             "osm_id": None,
         }
 
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.get(
                 "/api/locations/reverse?lat=37.7749&lng=-122.4194"
             )
@@ -356,7 +357,8 @@ class TestLocationAPIIntegration:
             }
         ]
 
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.get("/api/locations/search?q=test")
 
             assert response.status_code == 200
