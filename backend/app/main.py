@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import APIRouter, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -65,24 +65,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Routes
-app.include_router(auth.router, prefix="/auth", tags=["auth"])
-app.include_router(photos.router, prefix="/photos", tags=["photos"])
-app.include_router(
+# Routes under /api prefix for tests compatibility
+api_router = APIRouter(prefix="/api")
+api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
+api_router.include_router(photos.router, prefix="/photos", tags=["photos"])
+api_router.include_router(
     profile_pictures.router, prefix="/profile-pictures", tags=["profile-pictures"]
 )
-app.include_router(projects.router, prefix="/projects", tags=["projects"])
-app.include_router(blog.router, prefix="/blog", tags=["blog"])
-app.include_router(subapps.router, prefix="/subapps", tags=["subapps"])
-app.include_router(
+api_router.include_router(projects.router, prefix="/projects", tags=["projects"])
+api_router.include_router(blog.router, prefix="/blog", tags=["blog"])
+api_router.include_router(subapps.router, prefix="/subapps", tags=["subapps"])
+api_router.include_router(
     subapp_integration.router, prefix="/subapp-integration", tags=["subapp-integration"]
 )
-app.include_router(
+api_router.include_router(
     camera_aliases.router, prefix="/camera-aliases", tags=["camera-aliases"]
 )
-app.include_router(lens_aliases.router, prefix="/lens-aliases", tags=["lens-aliases"])
-app.include_router(content.router)
-app.include_router(locations.router, prefix="", tags=["locations"])
+api_router.include_router(
+    lens_aliases.router, prefix="/lens-aliases", tags=["lens-aliases"]
+)
+api_router.include_router(content.router)
+api_router.include_router(locations.router)
+
+app.include_router(api_router)
 
 # Static files removed - now served through API with access control
 # Files are now accessed via /api/photos/{photo_id}/file/{variant} endpoints
