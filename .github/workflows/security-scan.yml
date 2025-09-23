@@ -67,7 +67,7 @@ jobs:
         grep -r -E "postgresql://[^:]+:[^@]+@" app/ >> secrets-check.txt || echo "No DB credentials found"
 
     - name: Upload backend security reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: backend-security-reports
@@ -152,7 +152,7 @@ jobs:
         kill $SERVER_PID || true
 
     - name: Upload frontend security reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: frontend-security-reports
@@ -218,7 +218,7 @@ jobs:
         ./hadolint frontend/Dockerfile > frontend-dockerfile-check.txt 2>&1 || true
 
     - name: Upload container security reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: container-security-reports
@@ -277,7 +277,7 @@ jobs:
         find . -name "*.bak" -o -name "*.backup" -o -name "*~" | head -10 >> sensitive-files-check.txt || echo "No backup files found"
 
     - name: Upload infrastructure security reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: infrastructure-security-reports
@@ -293,7 +293,7 @@ jobs:
 
     steps:
     - name: Download all security reports
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         path: security-reports
 
@@ -338,7 +338,7 @@ jobs:
         echo "4. Ensure all container images are regularly updated" >> security-summary.md
 
     - name: Upload security summary
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: security-summary
         path: security-summary.md

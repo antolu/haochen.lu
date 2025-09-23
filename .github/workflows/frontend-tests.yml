@@ -74,7 +74,7 @@ jobs:
         npm run build
 
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: frontend-build-${{ matrix.node-version }}
         path: frontend/dist
@@ -120,7 +120,7 @@ jobs:
         lighthouse http://localhost:3000 --only-categories=accessibility --output json --output-path lighthouse-accessibility.json
 
     - name: Upload accessibility reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: accessibility-reports
@@ -164,7 +164,7 @@ jobs:
         grep -r -i -E "(api_key|secret|password|token)" dist/ > secrets-check.txt || echo "No secrets found"
 
     - name: Upload security reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: frontend-security-reports
@@ -259,7 +259,7 @@ jobs:
         npm run test:e2e
 
     - name: Upload Playwright report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: playwright-report
@@ -308,7 +308,7 @@ jobs:
         npx playwright test --config=playwright-visual.config.ts
 
     - name: Upload visual diff artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: failure()
       with:
         name: visual-regression-diff
@@ -381,7 +381,7 @@ jobs:
         "
 
     - name: Upload performance reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: performance-reports
