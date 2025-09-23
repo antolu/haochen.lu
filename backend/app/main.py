@@ -11,6 +11,7 @@ from app.api import (
     blog,
     camera_aliases,
     content,
+    hero_images,
     lens_aliases,
     locations,
     photos,
@@ -65,12 +66,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Routes under /api prefix for tests compatibility
-api_router = APIRouter(prefix="/api")
+# Routes without /api prefix (nginx handles the prefix)
+api_router = APIRouter()
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(photos.router, prefix="/photos", tags=["photos"])
 api_router.include_router(
     profile_pictures.router, prefix="/profile-pictures", tags=["profile-pictures"]
+)
+api_router.include_router(
+    hero_images.router, prefix="/hero-images", tags=["hero-images"]
 )
 api_router.include_router(projects.router, prefix="/projects", tags=["projects"])
 api_router.include_router(blog.router, prefix="/blog", tags=["blog"])

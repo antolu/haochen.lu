@@ -37,6 +37,23 @@ from app.schemas.content import (
 from app.schemas.content import (
     ContentUpdate as ContentUpdate,
 )
+from app.schemas.hero_image import (
+    HeroImageActivate as HeroImageActivate,
+)
+
+# Hero image schemas
+from app.schemas.hero_image import (
+    HeroImageCreate as HeroImageCreate,
+)
+from app.schemas.hero_image import (
+    HeroImageFocalPointUpdate as HeroImageFocalPointUpdate,
+)
+from app.schemas.hero_image import (
+    HeroImageResponse as HeroImageResponse,
+)
+from app.schemas.hero_image import (
+    HeroImageUpdate as HeroImageUpdate,
+)
 
 # Photo schemas
 from app.schemas.photo import (
