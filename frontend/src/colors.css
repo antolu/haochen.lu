@@ -748,6 +748,11 @@
     object-position: 65% center; /* Default: slightly right of center */
   }
 
+  /* Dynamic hero image focal points using CSS custom properties */
+  .dynamic-hero-focal-point {
+    object-position: var(--hero-desktop-x, 55%) var(--hero-desktop-y, 50%);
+  }
+
   /* Mobile-specific fixes for horizontal overflow */
   @media (max-width: 767px) {
     .mobile-safe {
@@ -768,6 +773,11 @@
       object-position: 70% center; /* More to the right on mobile */
     }
 
+    /* Dynamic hero focal point for mobile */
+    .dynamic-hero-focal-point {
+      object-position: var(--hero-mobile-x, 70%) var(--hero-mobile-y, 50%);
+    }
+
     /* Ensure containers don't overflow on mobile */
     .max-w-7xl,
     .max-w-6xl,
@@ -785,6 +795,11 @@
   @media (min-width: 768px) and (max-width: 1023px) {
     .hero-focal-point {
       object-position: 60% center; /* Slightly less right on tablets */
+    }
+
+    /* Dynamic hero focal point for tablet */
+    .dynamic-hero-focal-point {
+      object-position: var(--hero-tablet-x, 60%) var(--hero-tablet-y, 50%);
     }
   }
 

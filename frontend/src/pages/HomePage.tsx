@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 
-import { photos, projects, content } from "../api/client";
+import { photos, projects, content, heroImages } from "../api/client";
 import type { Photo } from "../types";
 import { formatDate } from "../utils/dateFormat";
 import { selectOptimalImage, ImageUseCase } from "../utils/imageUtils";
@@ -18,6 +18,13 @@ const HomePage: React.FC = () => {
   const { data: latestProjects } = useQuery({
     queryKey: ["projects", "latest"],
     queryFn: () => projects.list({ status: "active" }),
+  });
+
+  // Fetch active hero image
+  const { data: activeHeroImage } = useQuery({
+    queryKey: ["hero-images", "active"],
+    queryFn: () => heroImages.getActive(),
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   // Fetch all homepage content
@@ -58,42 +65,91 @@ const HomePage: React.FC = () => {
     <div className="min-h-screen w-full m-0 p-0 mobile-safe">
       {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        {/* Hero Background Image with responsive focal points:
-             Mobile: 70% center (more to the right for portrait crops)
-             Tablet: 60% center (balanced for medium screens)
-             Desktop: 55% center (more centered for wide screens) */}
-        <picture className="absolute inset-0 w-full h-full">
-          <source
-            media="(min-width: 1920px)"
-            srcSet="/images/hero-xl.webp"
-            type="image/webp"
-          />
-          <source
-            media="(min-width: 1200px)"
-            srcSet="/images/hero-lg.webp"
-            type="image/webp"
-          />
-          <source
-            media="(min-width: 768px)"
-            srcSet="/images/hero-md.webp"
-            type="image/webp"
-          />
-          <source
-            media="(max-width: 767px)"
-            srcSet="/images/hero-sm.webp"
-            type="image/webp"
-          />
-          {/* JPEG fallback for browsers that don't support WebP */}
-          <source media="(min-width: 1920px)" srcSet="/images/hero-xl.jpg" />
-          <source media="(min-width: 1200px)" srcSet="/images/hero-lg.jpg" />
-          <source media="(min-width: 768px)" srcSet="/images/hero-md.jpg" />
-          <img
-            src="/images/hero-lg.jpg"
-            alt="Mountain landscape with person standing on ridge"
-            className="w-full h-full object-cover hero-focal-point"
-            loading="eager"
-          />
-        </picture>
+        {/* Dynamic Hero Background Image */}
+        {activeHeroImage ? (
+          (() => {
+            const optimalImage = selectOptimalImage(
+              activeHeroImage.photo,
+              ImageUseCase.HERO,
+            );
+
+            // Generate responsive focal points with fallbacks
+            const mobileFocalPoint = activeHeroImage.focal_points_responsive
+              ?.mobile || {
+              x: activeHeroImage.focal_point_x,
+              y: activeHeroImage.focal_point_y,
+            };
+            const tabletFocalPoint = activeHeroImage.focal_points_responsive
+              ?.tablet || {
+              x: activeHeroImage.focal_point_x,
+              y: activeHeroImage.focal_point_y,
+            };
+            const desktopFocalPoint = activeHeroImage.focal_points_responsive
+              ?.desktop || {
+              x: activeHeroImage.focal_point_x,
+              y: activeHeroImage.focal_point_y,
+            };
+
+            return (
+              <div
+                className="absolute inset-0 w-full h-full hero-image-container"
+                style={
+                  {
+                    "--hero-mobile-x": `${mobileFocalPoint.x}%`,
+                    "--hero-mobile-y": `${mobileFocalPoint.y}%`,
+                    "--hero-tablet-x": `${tabletFocalPoint.x}%`,
+                    "--hero-tablet-y": `${tabletFocalPoint.y}%`,
+                    "--hero-desktop-x": `${desktopFocalPoint.x}%`,
+                    "--hero-desktop-y": `${desktopFocalPoint.y}%`,
+                  } as React.CSSProperties
+                }
+              >
+                <img
+                  src={optimalImage.url}
+                  srcSet={optimalImage.srcset}
+                  sizes={optimalImage.sizes}
+                  alt={activeHeroImage.photo.title || "Hero image"}
+                  className="w-full h-full object-cover dynamic-hero-focal-point"
+                  loading="eager"
+                />
+              </div>
+            );
+          })()
+        ) : (
+          /* Fallback to static hero image */
+          <picture className="absolute inset-0 w-full h-full">
+            <source
+              media="(min-width: 1920px)"
+              srcSet="/images/hero-xl.webp"
+              type="image/webp"
+            />
+            <source
+              media="(min-width: 1200px)"
+              srcSet="/images/hero-lg.webp"
+              type="image/webp"
+            />
+            <source
+              media="(min-width: 768px)"
+              srcSet="/images/hero-md.webp"
+              type="image/webp"
+            />
+            <source
+              media="(max-width: 767px)"
+              srcSet="/images/hero-sm.webp"
+              type="image/webp"
+            />
+            {/* JPEG fallback for browsers that don't support WebP */}
+            <source media="(min-width: 1920px)" srcSet="/images/hero-xl.jpg" />
+            <source media="(min-width: 1200px)" srcSet="/images/hero-lg.jpg" />
+            <source media="(min-width: 768px)" srcSet="/images/hero-md.jpg" />
+            <img
+              src="/images/hero-lg.jpg"
+              alt="Mountain landscape with person standing on ridge"
+              className="w-full h-full object-cover hero-focal-point"
+              loading="eager"
+            />
+          </picture>
+        )}
 
         {/* Dark overlay for better text readability */}
         <div className="absolute inset-0 bg-gradient-to-br from-black/50 to-black/30"></div>
