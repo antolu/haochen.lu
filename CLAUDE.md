@@ -404,6 +404,12 @@ Tailwind v4 requires all reset styles inside `@layer base` in `/frontend/src/ind
 - Apply: `docker compose exec backend alembic upgrade head`
 - History: `docker compose exec backend alembic history`
 
+**IMPORTANT: Migration File Naming Convention**
+- Migration files MUST use numeric format: `001_description.py`, `002_description.py`, etc.
+- After autogeneration, manually rename files from hash format (e.g., `6d97478363ce_description.py`) to numeric format
+- Update the `revision` variable in the file to match the new filename (e.g., `revision = "005_description"`)
+- This ensures proper migration ordering and readability
+
 ### Image Upload Issues
 
 **Common Upload Errors:**
