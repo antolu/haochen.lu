@@ -1,19 +1,25 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { useInfiniteProjects, type ProjectFilters } from '../hooks/useProjects';
-import ProjectGrid from '../components/ProjectGrid';
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import { useInfiniteProjects, type ProjectFilters } from "../hooks/useProjects";
+import ProjectGrid from "../components/ProjectGrid";
 
 const ProjectsPage: React.FC = () => {
   const [filters, setFilters] = useState<ProjectFilters>({});
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, error } =
-    useInfiniteProjects({
-      ...filters,
-      search: searchQuery.trim() === '' ? undefined : searchQuery,
-    });
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    error,
+  } = useInfiniteProjects({
+    ...filters,
+    search: searchQuery.trim() === "" ? undefined : searchQuery,
+  });
 
-  const projects = data?.pages.flatMap(page => page.projects) ?? [];
+  const projects = data?.pages.flatMap((page) => page.projects) ?? [];
   const totalProjects = data?.pages[0]?.total ?? 0;
 
   const handleSearch = (e: React.FormEvent): void => {
@@ -22,7 +28,7 @@ const ProjectsPage: React.FC = () => {
   };
 
   const handleFilterChange = (newFilters: Partial<ProjectFilters>) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
+    setFilters((prev) => ({ ...prev, ...newFilters }));
   };
 
   if (error) {
@@ -45,7 +51,9 @@ const ProjectsPage: React.FC = () => {
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Failed to load projects</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Failed to load projects
+            </h3>
             <p className="text-gray-500 mb-4">
               There was an error loading the projects. Please try again.
             </p>
@@ -81,8 +89,9 @@ const ProjectsPage: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
             >
-              Explore my portfolio of applications, tools, and experiments. From web applications to
-              open-source contributions, here's what I've been building.
+              Explore my portfolio of applications, tools, and experiments. From
+              web applications to open-source contributions, here's what I've
+              been building.
             </motion.p>
 
             {/* Stats */}
@@ -115,7 +124,7 @@ const ProjectsPage: React.FC = () => {
                     type="text"
                     placeholder="Search projects..."
                     value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -146,15 +155,17 @@ const ProjectsPage: React.FC = () => {
                 </FilterButton>
                 <FilterButton
                   active={filters.featured === true}
-                  onClick={() => handleFilterChange({ featured: true, status: undefined })}
+                  onClick={() =>
+                    handleFilterChange({ featured: true, status: undefined })
+                  }
                 >
                   Featured
                 </FilterButton>
                 <FilterButton
-                  active={filters.status === 'active'}
+                  active={filters.status === "active"}
                   onClick={() =>
                     handleFilterChange({
-                      status: 'active',
+                      status: "active",
                       featured: undefined,
                     })
                   }
@@ -162,10 +173,10 @@ const ProjectsPage: React.FC = () => {
                   Active
                 </FilterButton>
                 <FilterButton
-                  active={filters.status === 'in_progress'}
+                  active={filters.status === "in_progress"}
                   onClick={() =>
                     handleFilterChange({
-                      status: 'in_progress',
+                      status: "in_progress",
                       featured: undefined,
                     })
                   }
@@ -178,7 +189,9 @@ const ProjectsPage: React.FC = () => {
             {/* Results Count */}
             {!isLoading && (
               <div className="mt-4 text-sm text-gray-500">
-                {searchQuery && <span>Search results for "{searchQuery}" • </span>}
+                {searchQuery && (
+                  <span>Search results for "{searchQuery}" • </span>
+                )}
                 Showing {projects.length} of {totalProjects} projects
               </div>
             )}
@@ -207,14 +220,18 @@ interface FilterButtonProps {
   onClick: () => void;
 }
 
-const FilterButton: React.FC<FilterButtonProps> = ({ children, active = false, onClick }) => {
+const FilterButton: React.FC<FilterButtonProps> = ({
+  children,
+  active = false,
+  onClick,
+}) => {
   return (
     <button
       onClick={onClick}
       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
         active
-          ? 'bg-blue-600 text-white'
-          : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+          ? "bg-blue-600 text-white"
+          : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
       }`}
     >
       {children}

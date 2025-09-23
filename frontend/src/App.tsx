@@ -1,32 +1,32 @@
-import { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from 'react-hot-toast';
+import { useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "react-hot-toast";
 
-import { useAuthStore } from './stores/authStore';
-import MainLayout from './layouts/MainLayout';
-import AdminLayout from './layouts/AdminLayout';
+import { useAuthStore } from "./stores/authStore";
+import MainLayout from "./layouts/MainLayout";
+import AdminLayout from "./layouts/AdminLayout";
 
 // Public pages
-import HomePage from './pages/HomePage';
-import PhotographyPage from './pages/PhotographyPage';
-import ProjectsPage from './pages/ProjectsPage';
-import ProjectDetailPage from './pages/ProjectDetailPage';
-import BlogPage from './pages/BlogPage';
-import BlogPostPage from './pages/BlogPostPage';
-import LoginPage from './pages/LoginPage';
+import HomePage from "./pages/HomePage";
+import PhotographyPage from "./pages/PhotographyPage";
+import ProjectsPage from "./pages/ProjectsPage";
+import ProjectDetailPage from "./pages/ProjectDetailPage";
+import BlogPage from "./pages/BlogPage";
+import BlogPostPage from "./pages/BlogPostPage";
+import LoginPage from "./pages/LoginPage";
 
 // Admin pages
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminPhotos from './pages/admin/AdminPhotos';
-import AdminProfilePictures from './pages/admin/AdminProfilePictures';
-import AdminProjects from './pages/admin/AdminProjects';
-import AdminBlog from './pages/admin/AdminBlog';
-import AdminCameraAliases from './pages/admin/AdminCameraAliases';
-import AdminLensAliases from './pages/admin/AdminLensAliases';
-import AdminSubApps from './pages/admin/AdminSubApps';
-import AdminSubAppIntegration from './pages/admin/AdminSubAppIntegration';
-import AdminContent from './pages/admin/AdminContent';
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminPhotos from "./pages/admin/AdminPhotos";
+import AdminProfilePictures from "./pages/admin/AdminProfilePictures";
+import AdminProjects from "./pages/admin/AdminProjects";
+import AdminBlog from "./pages/admin/AdminBlog";
+import AdminCameraAliases from "./pages/admin/AdminCameraAliases";
+import AdminLensAliases from "./pages/admin/AdminLensAliases";
+import AdminSubApps from "./pages/admin/AdminSubApps";
+import AdminSubAppIntegration from "./pages/admin/AdminSubAppIntegration";
+import AdminContent from "./pages/admin/AdminContent";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,7 +38,7 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  const checkAuth = useAuthStore(state => state.checkAuth);
+  const checkAuth = useAuthStore((state) => state.checkAuth);
 
   useEffect(() => {
     void checkAuth();
@@ -68,13 +68,19 @@ function App() {
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} />
               <Route path="photos" element={<AdminPhotos />} />
-              <Route path="profile-pictures" element={<AdminProfilePictures />} />
+              <Route
+                path="profile-pictures"
+                element={<AdminProfilePictures />}
+              />
               <Route path="projects" element={<AdminProjects />} />
               <Route path="blog" element={<AdminBlog />} />
               <Route path="camera-aliases" element={<AdminCameraAliases />} />
               <Route path="lens-aliases" element={<AdminLensAliases />} />
               <Route path="subapps" element={<AdminSubApps />} />
-              <Route path="subapps/integrate" element={<AdminSubAppIntegration />} />
+              <Route
+                path="subapps/integrate"
+                element={<AdminSubAppIntegration />}
+              />
               <Route path="content" element={<AdminContent />} />
             </Route>
           </Routes>
@@ -84,8 +90,8 @@ function App() {
             toastOptions={{
               duration: 4000,
               style: {
-                background: '#363636',
-                color: '#fff',
+                background: "#363636",
+                color: "#fff",
               },
             }}
           />

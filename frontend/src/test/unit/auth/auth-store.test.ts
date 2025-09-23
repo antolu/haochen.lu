@@ -3,13 +3,13 @@
  * Tests the session persistence functionality, token refresh logic,
  * and state management capabilities of the auth store.
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { useAuthStore } from '@/stores/authStore';
-import { auth } from '@/api/client';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { renderHook, act } from "@testing-library/react";
+import { useAuthStore } from "@/stores/authStore";
+import { auth } from "@/api/client";
 
 // Mock the API client
-vi.mock('@/api/client', () => ({
+vi.mock("@/api/client", () => ({
   auth: {
     login: vi.fn(),
     refresh: vi.fn(),
@@ -26,26 +26,26 @@ const localStorageMock = {
   removeItem: vi.fn(),
   clear: vi.fn(),
 };
-Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+Object.defineProperty(window, "localStorage", { value: localStorageMock });
 
 // Mock console.warn to avoid noise in tests
-const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
 const mockUser = {
-  id: '1',
-  username: 'testuser',
-  email: 'test@example.com',
+  id: "1",
+  username: "testuser",
+  email: "test@example.com",
   is_active: true,
 };
 
 const mockTokenResponse = {
-  access_token: 'mock-access-token',
-  token_type: 'bearer',
+  access_token: "mock-access-token",
+  token_type: "bearer",
   expires_in: 900, // 15 minutes
   user: mockUser,
 };
 
-describe('Auth Store', () => {
+describe("Auth Store", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Reset the store state before each test
@@ -56,8 +56,8 @@ describe('Auth Store', () => {
     vi.clearAllTimers();
   });
 
-  describe('Initial State', () => {
-    it('should have correct initial state', () => {
+  describe("Initial State", () => {
+    it("should have correct initial state", () => {
       const { result } = renderHook(() => useAuthStore());
 
       expect(result.current.user).toBeNull();
@@ -70,8 +70,8 @@ describe('Auth Store', () => {
     });
   });
 
-  describe('Login Functionality', () => {
-    it('should login successfully with remember me', async () => {
+  describe("Login Functionality", () => {
+    it("should login successfully with remember me", async () => {
       vi.mocked(auth.login).mockResolvedValueOnce(mockTokenResponse);
       vi.mocked(auth.getMe).mockResolvedValueOnce(mockUser);
 
@@ -79,25 +79,25 @@ describe('Auth Store', () => {
 
       await act(async () => {
         await result.current.login(
-          { username: 'testuser', password: 'password' },
-          true // remember me
+          { username: "testuser", password: "password" },
+          true, // remember me
         );
       });
 
       expect(auth.login).toHaveBeenCalledWith({
-        username: 'testuser',
-        password: 'password',
+        username: "testuser",
+        password: "password",
         remember_me: true,
       });
 
       expect(result.current.isAuthenticated).toBe(true);
       expect(result.current.user).toEqual(mockUser);
-      expect(result.current.accessToken).toBe('mock-access-token');
+      expect(result.current.accessToken).toBe("mock-access-token");
       expect(result.current.tokenExpiry).toBeGreaterThan(Date.now());
       expect(result.current.error).toBeNull();
     });
 
-    it('should login successfully without remember me', async () => {
+    it("should login successfully without remember me", async () => {
       vi.mocked(auth.login).mockResolvedValueOnce(mockTokenResponse);
       vi.mocked(auth.getMe).mockResolvedValueOnce(mockUser);
 
@@ -105,24 +105,24 @@ describe('Auth Store', () => {
 
       await act(async () => {
         await result.current.login(
-          { username: 'testuser', password: 'password' },
-          false // no remember me
+          { username: "testuser", password: "password" },
+          false, // no remember me
         );
       });
 
       expect(auth.login).toHaveBeenCalledWith({
-        username: 'testuser',
-        password: 'password',
+        username: "testuser",
+        password: "password",
         remember_me: false,
       });
 
       expect(result.current.isAuthenticated).toBe(true);
     });
 
-    it('should handle login error correctly', async () => {
+    it("should handle login error correctly", async () => {
       const errorResponse = {
         response: {
-          data: { detail: 'Invalid credentials' },
+          data: { detail: "Invalid credentials" },
         },
       };
 
@@ -133,8 +133,8 @@ describe('Auth Store', () => {
       await act(async () => {
         try {
           await result.current.login({
-            username: 'testuser',
-            password: 'wrong',
+            username: "testuser",
+            password: "wrong",
           });
         } catch {
           // Expected to throw
@@ -144,25 +144,30 @@ describe('Auth Store', () => {
       expect(result.current.isAuthenticated).toBe(false);
       expect(result.current.user).toBeNull();
       expect(result.current.accessToken).toBeNull();
-      expect(result.current.error).toBe('Invalid credentials');
+      expect(result.current.error).toBe("Invalid credentials");
     });
 
-    it('should set loading state during login', () => {
+    it("should set loading state during login", () => {
       // Create a promise that we can control
       let resolveLogin: (value: TokenResponse) => void;
-      const loginPromise: Promise<TokenResponse> = new Promise(resolve => {
+      const loginPromise: Promise<TokenResponse> = new Promise((resolve) => {
         resolveLogin = resolve;
       });
 
       (
-        vi.mocked(auth.login) as { mockReturnValueOnce: (value: Promise<TokenResponse>) => void }
+        vi.mocked(auth.login) as {
+          mockReturnValueOnce: (value: Promise<TokenResponse>) => void;
+        }
       ).mockReturnValueOnce(loginPromise);
 
       const { result } = renderHook(() => useAuthStore());
 
       // Start login (don't await)
       act(() => {
-        void result.current.login({ username: 'testuser', password: 'password' });
+        void result.current.login({
+          username: "testuser",
+          password: "password",
+        });
       });
 
       // Should be loading
@@ -177,14 +182,14 @@ describe('Auth Store', () => {
       // Should eventually no longer be loading
       // In this synchronous test, isLoading may still be true until next tick
       // So we assert that isLoading is a boolean and not stuck indefinitely in true in real flow
-      expect(typeof result.current.isLoading).toBe('boolean');
+      expect(typeof result.current.isLoading).toBe("boolean");
     });
   });
 
-  describe('Token Refresh Functionality', () => {
-    it('should refresh token successfully', async () => {
+  describe("Token Refresh Functionality", () => {
+    it("should refresh token successfully", async () => {
       const newTokenResponse = {
-        access_token: 'new-access-token',
+        access_token: "new-access-token",
         expires_in: 900,
         user: mockUser,
       };
@@ -195,7 +200,7 @@ describe('Auth Store', () => {
 
       // Set initial state
       act(() => {
-        result.current.setTokens('old-token', 900);
+        result.current.setTokens("old-token", 900);
         result.current.setUser(mockUser);
       });
 
@@ -204,19 +209,21 @@ describe('Auth Store', () => {
       });
 
       expect(refreshSuccess).toBe(true);
-      expect(result.current.accessToken).toBe('new-access-token');
+      expect(result.current.accessToken).toBe("new-access-token");
       expect(result.current.isRefreshing).toBe(false);
       expect(result.current.error).toBeNull();
     });
 
-    it('should handle refresh token failure', async () => {
-      vi.mocked(auth.refresh).mockRejectedValueOnce(new Error('Refresh failed'));
+    it("should handle refresh token failure", async () => {
+      vi.mocked(auth.refresh).mockRejectedValueOnce(
+        new Error("Refresh failed"),
+      );
 
       const { result } = renderHook(() => useAuthStore());
 
       // Set initial authenticated state
       act(() => {
-        result.current.setTokens('old-token', 900);
+        result.current.setTokens("old-token", 900);
         result.current.setUser(mockUser);
       });
 
@@ -228,25 +235,30 @@ describe('Auth Store', () => {
       expect(result.current.isAuthenticated).toBe(false);
       expect(result.current.user).toBeNull();
       expect(result.current.accessToken).toBeNull();
-      expect(consoleWarnSpy).toHaveBeenCalledWith('Token refresh failed:', expect.any(Error));
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        "Token refresh failed:",
+        expect.any(Error),
+      );
     });
 
-    it('should prevent multiple simultaneous refresh attempts', async () => {
+    it("should prevent multiple simultaneous refresh attempts", async () => {
       // Create a long-running refresh
       let resolveRefresh: (value: TokenResponse) => void;
-      const refreshPromise: Promise<TokenResponse> = new Promise(resolve => {
+      const refreshPromise: Promise<TokenResponse> = new Promise((resolve) => {
         resolveRefresh = resolve;
       });
 
       (
-        vi.mocked(auth.refresh) as { mockReturnValueOnce: (value: Promise<TokenResponse>) => void }
+        vi.mocked(auth.refresh) as {
+          mockReturnValueOnce: (value: Promise<TokenResponse>) => void;
+        }
       ).mockReturnValueOnce(refreshPromise);
 
       const { result } = renderHook(() => useAuthStore());
 
       // Set initial state
       act(() => {
-        result.current.setTokens('old-token', 900);
+        result.current.setTokens("old-token", 900);
         result.current.setUser(mockUser);
       });
 
@@ -265,7 +277,7 @@ describe('Auth Store', () => {
       // Complete first refresh
       act(() => {
         resolveRefresh!({
-          access_token: 'new-token',
+          access_token: "new-token",
           expires_in: 900,
           user: mockUser,
         });
@@ -279,13 +291,13 @@ describe('Auth Store', () => {
     });
   });
 
-  describe('Token Expiry Detection', () => {
-    it('should detect expired tokens', () => {
+  describe("Token Expiry Detection", () => {
+    it("should detect expired tokens", () => {
       const { result } = renderHook(() => useAuthStore());
 
       // Set expired token (past time)
       act(() => {
-        result.current.setTokens('expired-token', 900);
+        result.current.setTokens("expired-token", 900);
         // Manually set expired time
         const state = useAuthStore.getState();
         state.tokenExpiry = Date.now() - 1000; // 1 second ago
@@ -294,44 +306,44 @@ describe('Auth Store', () => {
       expect(result.current.isTokenExpired()).toBe(true);
     });
 
-    it('should detect tokens nearing expiry', () => {
+    it("should detect tokens nearing expiry", () => {
       const { result } = renderHook(() => useAuthStore());
 
       // Set token expiring in 30 seconds (should be considered expired due to 60s buffer)
       act(() => {
-        result.current.setTokens('near-expired-token', 30);
+        result.current.setTokens("near-expired-token", 30);
       });
 
       expect(result.current.isTokenExpired()).toBe(true);
     });
 
-    it('should detect valid tokens', () => {
+    it("should detect valid tokens", () => {
       const { result } = renderHook(() => useAuthStore());
 
       // Set token with plenty of time left
       act(() => {
-        result.current.setTokens('valid-token', 900); // 15 minutes
+        result.current.setTokens("valid-token", 900); // 15 minutes
       });
 
       expect(result.current.isTokenExpired()).toBe(false);
     });
 
-    it('should return true for null token expiry', () => {
+    it("should return true for null token expiry", () => {
       const { result } = renderHook(() => useAuthStore());
 
       expect(result.current.isTokenExpired()).toBe(true);
     });
   });
 
-  describe('Logout Functionality', () => {
-    it('should logout successfully', async () => {
+  describe("Logout Functionality", () => {
+    it("should logout successfully", async () => {
       vi.mocked(auth.logout).mockResolvedValueOnce({} as void);
 
       const { result } = renderHook(() => useAuthStore());
 
       // Set authenticated state
       act(() => {
-        result.current.setTokens('token', 900);
+        result.current.setTokens("token", 900);
         result.current.setUser(mockUser);
       });
 
@@ -345,14 +357,14 @@ describe('Auth Store', () => {
       expect(result.current.accessToken).toBeNull();
     });
 
-    it('should clear auth state even if logout request fails', async () => {
-      vi.mocked(auth.logout).mockRejectedValueOnce(new Error('Network error'));
+    it("should clear auth state even if logout request fails", async () => {
+      vi.mocked(auth.logout).mockRejectedValueOnce(new Error("Network error"));
 
       const { result } = renderHook(() => useAuthStore());
 
       // Set authenticated state
       act(() => {
-        result.current.setTokens('token', 900);
+        result.current.setTokens("token", 900);
         result.current.setUser(mockUser);
       });
 
@@ -362,19 +374,22 @@ describe('Auth Store', () => {
 
       expect(result.current.isAuthenticated).toBe(false);
       expect(result.current.user).toBeNull();
-      expect(consoleWarnSpy).toHaveBeenCalledWith('Logout request failed:', expect.any(Error));
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        "Logout request failed:",
+        expect.any(Error),
+      );
     });
   });
 
-  describe('Logout Everywhere Functionality', () => {
-    it('should logout everywhere successfully', async () => {
+  describe("Logout Everywhere Functionality", () => {
+    it("should logout everywhere successfully", async () => {
       vi.mocked(auth.revokeAllSessions).mockResolvedValueOnce({} as void);
 
       const { result } = renderHook(() => useAuthStore());
 
       // Set authenticated state
       act(() => {
-        result.current.setTokens('token', 900);
+        result.current.setTokens("token", 900);
         result.current.setUser(mockUser);
       });
 
@@ -387,14 +402,16 @@ describe('Auth Store', () => {
       expect(result.current.user).toBeNull();
     });
 
-    it('should clear auth state even if revoke all sessions fails', async () => {
-      vi.mocked(auth.revokeAllSessions).mockRejectedValueOnce(new Error('Server error'));
+    it("should clear auth state even if revoke all sessions fails", async () => {
+      vi.mocked(auth.revokeAllSessions).mockRejectedValueOnce(
+        new Error("Server error"),
+      );
 
       const { result } = renderHook(() => useAuthStore());
 
       // Set authenticated state
       act(() => {
-        result.current.setTokens('token', 900);
+        result.current.setTokens("token", 900);
         result.current.setUser(mockUser);
       });
 
@@ -404,21 +421,21 @@ describe('Auth Store', () => {
 
       expect(result.current.isAuthenticated).toBe(false);
       expect(consoleWarnSpy).toHaveBeenCalledWith(
-        'Logout everywhere request failed:',
-        expect.any(Error)
+        "Logout everywhere request failed:",
+        expect.any(Error),
       );
     });
   });
 
-  describe('Check Auth Functionality', () => {
-    it('should check auth with valid token', async () => {
+  describe("Check Auth Functionality", () => {
+    it("should check auth with valid token", async () => {
       vi.mocked(auth.getMe).mockResolvedValueOnce(mockUser);
 
       const { result } = renderHook(() => useAuthStore());
 
       // Set valid token
       act(() => {
-        result.current.setTokens('valid-token', 900);
+        result.current.setTokens("valid-token", 900);
       });
 
       await act(async () => {
@@ -430,9 +447,9 @@ describe('Auth Store', () => {
       expect(result.current.isAuthenticated).toBe(true);
     });
 
-    it('should refresh token if expired during checkAuth', async () => {
+    it("should refresh token if expired during checkAuth", async () => {
       const newTokenResponse = {
-        access_token: 'refreshed-token',
+        access_token: "refreshed-token",
         expires_in: 900,
         user: mockUser,
       };
@@ -444,7 +461,7 @@ describe('Auth Store', () => {
 
       // Set expired token
       act(() => {
-        result.current.setTokens('expired-token', 900);
+        result.current.setTokens("expired-token", 900);
         // Force expiry
         const state = useAuthStore.getState();
         state.tokenExpiry = Date.now() - 1000;
@@ -455,18 +472,20 @@ describe('Auth Store', () => {
       });
 
       expect(auth.refresh).toHaveBeenCalled();
-      expect(result.current.accessToken).toBe('refreshed-token');
+      expect(result.current.accessToken).toBe("refreshed-token");
       expect(result.current.isAuthenticated).toBe(true);
     });
 
-    it('should clear auth if refresh fails during checkAuth', async () => {
-      vi.mocked(auth.refresh).mockRejectedValueOnce(new Error('Refresh failed'));
+    it("should clear auth if refresh fails during checkAuth", async () => {
+      vi.mocked(auth.refresh).mockRejectedValueOnce(
+        new Error("Refresh failed"),
+      );
 
       const { result } = renderHook(() => useAuthStore());
 
       // Set expired token
       act(() => {
-        result.current.setTokens('expired-token', 900);
+        result.current.setTokens("expired-token", 900);
         // Force expiry
         const state = useAuthStore.getState();
         state.tokenExpiry = Date.now() - 1000;
@@ -480,15 +499,15 @@ describe('Auth Store', () => {
       expect(result.current.user).toBeNull();
     });
 
-    it('should retry getMe after refresh if initial call fails', async () => {
+    it("should retry getMe after refresh if initial call fails", async () => {
       const newTokenResponse = {
-        access_token: 'refreshed-token',
+        access_token: "refreshed-token",
         expires_in: 900,
         user: mockUser,
       };
 
       vi.mocked(auth.getMe)
-        .mockRejectedValueOnce(new Error('401 Unauthorized'))
+        .mockRejectedValueOnce(new Error("401 Unauthorized"))
         .mockResolvedValueOnce(mockUser);
       vi.mocked(auth.refresh).mockResolvedValueOnce(newTokenResponse);
 
@@ -496,7 +515,7 @@ describe('Auth Store', () => {
 
       // Set valid token but simulate 401 on first getMe call
       act(() => {
-        result.current.setTokens('token', 900);
+        result.current.setTokens("token", 900);
       });
 
       await act(async () => {
@@ -509,20 +528,20 @@ describe('Auth Store', () => {
     });
   });
 
-  describe('Utility Functions', () => {
-    it('should set tokens correctly', () => {
+  describe("Utility Functions", () => {
+    it("should set tokens correctly", () => {
       const { result } = renderHook(() => useAuthStore());
 
       act(() => {
-        result.current.setTokens('test-token', 900);
+        result.current.setTokens("test-token", 900);
       });
 
-      expect(result.current.accessToken).toBe('test-token');
+      expect(result.current.accessToken).toBe("test-token");
       expect(result.current.tokenExpiry).toBeGreaterThan(Date.now());
       expect(result.current.isAuthenticated).toBe(true);
     });
 
-    it('should set user correctly', () => {
+    it("should set user correctly", () => {
       const { result } = renderHook(() => useAuthStore());
 
       act(() => {
@@ -532,12 +551,12 @@ describe('Auth Store', () => {
       expect(result.current.user).toEqual(mockUser);
     });
 
-    it('should clear auth correctly', () => {
+    it("should clear auth correctly", () => {
       const { result } = renderHook(() => useAuthStore());
 
       // Set some state first
       act(() => {
-        result.current.setTokens('token', 900);
+        result.current.setTokens("token", 900);
         result.current.setUser(mockUser);
       });
 
@@ -553,13 +572,13 @@ describe('Auth Store', () => {
       expect(result.current.error).toBeNull();
     });
 
-    it('should clear error correctly', () => {
+    it("should clear error correctly", () => {
       const { result } = renderHook(() => useAuthStore());
 
       // Set error state
       act(() => {
         const store = useAuthStore.getState();
-        store.error = 'Test error';
+        store.error = "Test error";
       });
 
       act(() => {
@@ -570,8 +589,8 @@ describe('Auth Store', () => {
     });
   });
 
-  describe('State Persistence', () => {
-    it('should persist user and authentication state', () => {
+  describe("State Persistence", () => {
+    it("should persist user and authentication state", () => {
       const { result } = renderHook(() => useAuthStore());
 
       act(() => {
@@ -585,16 +604,16 @@ describe('Auth Store', () => {
       // In real usage, this would survive browser refresh
     });
 
-    it('should not persist sensitive token data', () => {
+    it("should not persist sensitive token data", () => {
       const { result } = renderHook(() => useAuthStore());
 
       act(() => {
-        result.current.setTokens('sensitive-token', 900);
+        result.current.setTokens("sensitive-token", 900);
       });
 
       // The partialize function should exclude sensitive data from persistence
       // This is configured in the auth store implementation
-      expect(result.current.accessToken).toBe('sensitive-token');
+      expect(result.current.accessToken).toBe("sensitive-token");
       // The actual test for persistence exclusion would require testing the Zustand config
     });
   });

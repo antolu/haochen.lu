@@ -1,14 +1,29 @@
-import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
-import L from 'leaflet';
-import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
-import { getTileConfig } from '../utils/mapUtils';
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useMemo,
+} from "react";
+import L from "leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  useMapEvents,
+  useMap,
+} from "react-leaflet";
+import { getTileConfig } from "../utils/mapUtils";
 
 // Fix for default markers in react-leaflet
 delete (L.Icon.Default.prototype as Record<string, unknown>)._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+  iconRetinaUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+  iconUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
 });
 
 interface MapPickerProps {
@@ -36,9 +51,12 @@ interface SearchResult {
 }
 
 // Component to handle map click events
-const MapEvents: React.FC<MapEventsProps> = ({ onLocationSelect, disabled }) => {
+const MapEvents: React.FC<MapEventsProps> = ({
+  onLocationSelect,
+  disabled,
+}) => {
   useMapEvents({
-    click: e => {
+    click: (e) => {
       if (!disabled && onLocationSelect) {
         onLocationSelect(e.latlng.lat, e.latlng.lng);
       }
@@ -66,7 +84,7 @@ const MapController: React.FC<{
 const LocationSearch: React.FC<{
   onLocationSelect: (lat: number, lng: number, name: string) => void;
 }> = ({ onLocationSelect }) => {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -81,14 +99,14 @@ const LocationSearch: React.FC<{
     setIsLoading(true);
     try {
       const response = await fetch(
-        `/api/locations/search?q=${encodeURIComponent(searchQuery)}&limit=5`
+        `/api/locations/search?q=${encodeURIComponent(searchQuery)}&limit=5`,
       );
       if (response.ok) {
         const data = (await response.json()) as SearchResult[];
         setResults(data);
       }
     } catch (error) {
-      console.error('Error searching locations:', error);
+      console.error("Error searching locations:", error);
       setResults([]);
     } finally {
       setIsLoading(false);
@@ -154,8 +172,12 @@ const LocationSearch: React.FC<{
                 className="w-full px-3 py-2 text-left hover:bg-gray-50 focus:bg-gray-50 focus:outline-none first:rounded-t-lg last:rounded-b-lg"
                 onClick={() => handleResultClick(result)}
               >
-                <div className="font-medium text-gray-900">{result.location_name}</div>
-                <div className="text-sm text-gray-500 truncate">{result.location_address}</div>
+                <div className="font-medium text-gray-900">
+                  {result.location_name}
+                </div>
+                <div className="text-sm text-gray-500 truncate">
+                  {result.location_address}
+                </div>
               </button>
             ))
           )}
@@ -163,7 +185,9 @@ const LocationSearch: React.FC<{
       )}
 
       {/* Overlay to close dropdown */}
-      {isOpen && <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />}
+      {isOpen && (
+        <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+      )}
     </div>
   );
 };
@@ -177,7 +201,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
   onLocationChange,
   disabled = false,
   showSearch = true,
-  className = '',
+  className = "",
 }) => {
   const tileConfig = useMemo(() => getTileConfig(), []);
   const [currentLat, setCurrentLat] = useState(latitude);
@@ -196,25 +220,27 @@ const MapPicker: React.FC<MapPickerProps> = ({
       onLocationSelect?.(lat, lng);
       onLocationChange?.(lat, lng);
     },
-    [onLocationSelect, onLocationChange]
+    [onLocationSelect, onLocationChange],
   );
 
   const handleSearchLocationSelect = useCallback(
     (lat: number, lng: number) => {
       handleLocationSelect(lat, lng);
     },
-    [handleLocationSelect]
+    [handleLocationSelect],
   );
 
   return (
     <div className={className}>
-      {showSearch && <LocationSearch onLocationSelect={handleSearchLocationSelect} />}
+      {showSearch && (
+        <LocationSearch onLocationSelect={handleSearchLocationSelect} />
+      )}
 
       <div className="relative">
         <MapContainer
           center={[currentLat, currentLng]}
           zoom={zoom}
-          style={{ height: `${height}px`, width: '100%' }}
+          style={{ height: `${height}px`, width: "100%" }}
           className="rounded-lg overflow-hidden"
         >
           <TileLayer
@@ -224,9 +250,16 @@ const MapPicker: React.FC<MapPickerProps> = ({
             attribution={tileConfig.attribution}
           />
 
-          <MapEvents onLocationSelect={handleLocationSelect} disabled={disabled} />
+          <MapEvents
+            onLocationSelect={handleLocationSelect}
+            disabled={disabled}
+          />
 
-          <MapController latitude={currentLat} longitude={currentLng} zoom={zoom} />
+          <MapController
+            latitude={currentLat}
+            longitude={currentLng}
+            zoom={zoom}
+          />
 
           <Marker position={[currentLat, currentLng]} />
         </MapContainer>
@@ -242,8 +275,8 @@ const MapPicker: React.FC<MapPickerProps> = ({
 
       {!disabled && (
         <div className="mt-2 text-sm text-gray-500">
-          Click on the map to select a location • Coordinates: {currentLat.toFixed(6)},{' '}
-          {currentLng.toFixed(6)}
+          Click on the map to select a location • Coordinates:{" "}
+          {currentLat.toFixed(6)}, {currentLng.toFixed(6)}
         </div>
       )}
     </div>

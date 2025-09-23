@@ -1,7 +1,7 @@
-import React, { useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import ProjectCard from './ProjectCard';
-import type { Project } from '../hooks/useProjects';
+import React, { useRef, useEffect } from "react";
+import { motion } from "framer-motion";
+import ProjectCard from "./ProjectCard";
+import type { Project } from "../hooks/useProjects";
 
 interface ProjectGridProps {
   projects: Project[];
@@ -18,7 +18,7 @@ const ProjectGrid: React.FC<ProjectGridProps> = ({
   hasMore = false,
   isLoading = false,
   isLoadingMore = false,
-  className = '',
+  className = "",
 }) => {
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
@@ -27,15 +27,15 @@ const ProjectGrid: React.FC<ProjectGridProps> = ({
     if (!onLoadMore || !hasMore || isLoadingMore) return;
 
     const observer = new IntersectionObserver(
-      entries => {
+      (entries) => {
         if (entries[0].isIntersecting) {
           onLoadMore();
         }
       },
       {
         threshold: 0.1,
-        rootMargin: '100px',
-      }
+        rootMargin: "100px",
+      },
     );
 
     const currentRef = loadMoreRef.current;
@@ -72,8 +72,12 @@ const ProjectGrid: React.FC<ProjectGridProps> = ({
             />
           </svg>
         </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No projects found</h3>
-        <p className="text-gray-500">Create your first project to get started!</p>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">
+          No projects found
+        </h3>
+        <p className="text-gray-500">
+          Create your first project to get started!
+        </p>
       </div>
     );
   }
@@ -88,7 +92,7 @@ const ProjectGrid: React.FC<ProjectGridProps> = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, staggerChildren: 0.1 }}
       >
-        {projects.map(project => (
+        {projects.map((project) => (
           <motion.div
             key={project.id}
             initial={{ opacity: 0, y: 20 }}
@@ -102,7 +106,11 @@ const ProjectGrid: React.FC<ProjectGridProps> = ({
 
       {/* Load More Trigger */}
       {hasMore && (
-        <div ref={loadMoreRef} className="flex justify-center py-8" data-testid="load-more-trigger">
+        <div
+          ref={loadMoreRef}
+          className="flex justify-center py-8"
+          data-testid="load-more-trigger"
+        >
           {isLoadingMore ? (
             <div className="flex items-center gap-3">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
@@ -117,7 +125,9 @@ const ProjectGrid: React.FC<ProjectGridProps> = ({
       {/* No More Projects */}
       {!hasMore && projects.length > 0 && (
         <div className="text-center py-8">
-          <p className="text-gray-500">You've reached the end of the projects.</p>
+          <p className="text-gray-500">
+            You've reached the end of the projects.
+          </p>
         </div>
       )}
     </div>

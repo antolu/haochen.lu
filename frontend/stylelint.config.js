@@ -1,14 +1,21 @@
 export default {
-  extends: ['stylelint-config-standard'],
+  extends: ["stylelint-config-standard"],
   rules: {
-    'at-rule-no-unknown': [
+    "at-rule-no-unknown": [
       true,
       {
-        ignoreAtRules: ['tailwind', 'apply', 'variants', 'responsive', 'screen', 'layer'],
+        ignoreAtRules: [
+          "tailwind",
+          "apply",
+          "variants",
+          "responsive",
+          "screen",
+          "layer",
+        ],
       },
     ],
-    'declaration-block-trailing-semicolon': null,
-    'no-descending-specificity': null,
-    'selector-class-pattern': null,
+    "declaration-block-trailing-semicolon": null,
+    "no-descending-specificity": null,
+    "selector-class-pattern": null,
   },
 };

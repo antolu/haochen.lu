@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import { userEvent } from '@testing-library/user-event';
-import MapPicker from '../../components/MapPicker';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import { userEvent } from "@testing-library/user-event";
+import MapPicker from "../../components/MapPicker";
 
 // Mock Leaflet and react-leaflet
-vi.mock('leaflet', () => {
+vi.mock("leaflet", () => {
   const Icon = {
     Default: {
       prototype: { _getIconUrl: vi.fn() },
@@ -17,7 +17,7 @@ vi.mock('leaflet', () => {
   };
 });
 
-vi.mock('react-leaflet', () => ({
+vi.mock("react-leaflet", () => ({
   MapContainer: ({ children, ...props }: any) => (
     <div data-testid="map-container" {...props}>
       {children}
@@ -39,7 +39,7 @@ global.fetch = vi.fn();
 
 const mockFetch = global.fetch as ReturnType<typeof vi.fn>;
 
-describe('MapPicker', () => {
+describe("MapPicker", () => {
   const defaultProps = {
     latitude: 37.7749,
     longitude: -122.4194,
@@ -55,33 +55,37 @@ describe('MapPicker', () => {
     });
   });
 
-  it('renders map container with correct props', () => {
+  it("renders map container with correct props", () => {
     render(<MapPicker {...defaultProps} />);
 
-    const mapContainer = screen.getByTestId('map-container');
+    const mapContainer = screen.getByTestId("map-container");
     expect(mapContainer).toBeInTheDocument();
   });
 
-  it('displays coordinates in help text', () => {
+  it("displays coordinates in help text", () => {
     render(<MapPicker {...defaultProps} />);
 
     expect(screen.getByText(/37\.774900/)).toBeInTheDocument();
     expect(screen.getByText(/-122\.419400/)).toBeInTheDocument();
   });
 
-  it('shows search input when showSearch is true', () => {
+  it("shows search input when showSearch is true", () => {
     render(<MapPicker {...defaultProps} showSearch={true} />);
 
-    expect(screen.getByPlaceholderText('Search for a location...')).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText("Search for a location..."),
+    ).toBeInTheDocument();
   });
 
-  it('hides search input when showSearch is false', () => {
+  it("hides search input when showSearch is false", () => {
     render(<MapPicker {...defaultProps} showSearch={false} />);
 
-    expect(screen.queryByPlaceholderText('Search for a location...')).not.toBeInTheDocument();
+    expect(
+      screen.queryByPlaceholderText("Search for a location..."),
+    ).not.toBeInTheDocument();
   });
 
-  it('calls onLocationSelect when location is selected', () => {
+  it("calls onLocationSelect when location is selected", () => {
     const onLocationSelect = vi.fn();
     render(<MapPicker {...defaultProps} onLocationSelect={onLocationSelect} />);
 
@@ -90,7 +94,7 @@ describe('MapPicker', () => {
     expect(onLocationSelect).not.toHaveBeenCalled();
   });
 
-  it('calls onLocationChange when location changes', () => {
+  it("calls onLocationChange when location changes", () => {
     const onLocationChange = vi.fn();
     render(<MapPicker {...defaultProps} onLocationChange={onLocationChange} />);
 
@@ -98,31 +102,33 @@ describe('MapPicker', () => {
     expect(onLocationChange).not.toHaveBeenCalled();
   });
 
-  it('updates coordinates when props change', () => {
+  it("updates coordinates when props change", () => {
     const { rerender } = render(<MapPicker {...defaultProps} />);
 
     expect(screen.getByText(/37\.774900/)).toBeInTheDocument();
 
-    rerender(<MapPicker {...defaultProps} latitude={40.7128} longitude={-74.006} />);
+    rerender(
+      <MapPicker {...defaultProps} latitude={40.7128} longitude={-74.006} />,
+    );
 
     expect(screen.getByText(/40\.712800/)).toBeInTheDocument();
     expect(screen.getByText(/-74\.006000/)).toBeInTheDocument();
   });
 
-  it('shows disabled overlay when disabled', () => {
+  it("shows disabled overlay when disabled", () => {
     render(<MapPicker {...defaultProps} disabled={true} />);
 
-    expect(screen.getByText('Map disabled')).toBeInTheDocument();
+    expect(screen.getByText("Map disabled")).toBeInTheDocument();
   });
 
-  it('hides help text when disabled', () => {
+  it("hides help text when disabled", () => {
     render(<MapPicker {...defaultProps} disabled={true} />);
 
     expect(screen.queryByText(/Click on the map/)).not.toBeInTheDocument();
   });
 
-  describe('Location Search', () => {
-    it('performs search when typing in search input', async () => {
+  describe("Location Search", () => {
+    it("performs search when typing in search input", async () => {
       const user = userEvent.setup();
 
       mockFetch.mockResolvedValue({
@@ -132,28 +138,32 @@ describe('MapPicker', () => {
             {
               latitude: 40.7128,
               longitude: -74.006,
-              location_name: 'New York City',
-              location_address: 'New York, NY, USA',
+              location_name: "New York City",
+              location_address: "New York, NY, USA",
             },
           ]),
       });
 
       render(<MapPicker {...defaultProps} showSearch={true} />);
 
-      const searchInput = screen.getByPlaceholderText('Search for a location...');
+      const searchInput = screen.getByPlaceholderText(
+        "Search for a location...",
+      );
 
-      await user.type(searchInput, 'New York');
+      await user.type(searchInput, "New York");
 
       // Wait for debounced search
       await waitFor(
         () => {
-          expect(mockFetch).toHaveBeenCalledWith('/api/locations/search?q=New%20York&limit=5');
+          expect(mockFetch).toHaveBeenCalledWith(
+            "/api/locations/search?q=New%20York&limit=5",
+          );
         },
-        { timeout: 500 }
+        { timeout: 500 },
       );
     });
 
-    it('displays search results in dropdown', async () => {
+    it("displays search results in dropdown", async () => {
       const user = userEvent.setup();
 
       mockFetch.mockResolvedValue({
@@ -163,26 +173,28 @@ describe('MapPicker', () => {
             {
               latitude: 40.7128,
               longitude: -74.006,
-              location_name: 'New York City',
-              location_address: 'New York, NY, USA',
+              location_name: "New York City",
+              location_address: "New York, NY, USA",
             },
           ]),
       });
 
       render(<MapPicker {...defaultProps} showSearch={true} />);
 
-      const searchInput = screen.getByPlaceholderText('Search for a location...');
+      const searchInput = screen.getByPlaceholderText(
+        "Search for a location...",
+      );
 
-      await user.type(searchInput, 'New York');
+      await user.type(searchInput, "New York");
       await user.click(searchInput); // Focus to show dropdown
 
       await waitFor(() => {
-        expect(screen.getByText('New York City')).toBeInTheDocument();
-        expect(screen.getByText('New York, NY, USA')).toBeInTheDocument();
+        expect(screen.getByText("New York City")).toBeInTheDocument();
+        expect(screen.getByText("New York, NY, USA")).toBeInTheDocument();
       });
     });
 
-    it('selects location when search result is clicked', async () => {
+    it("selects location when search result is clicked", async () => {
       const user = userEvent.setup();
       const onLocationSelect = vi.fn();
 
@@ -193,93 +205,112 @@ describe('MapPicker', () => {
             {
               latitude: 40.7128,
               longitude: -74.006,
-              location_name: 'New York City',
-              location_address: 'New York, NY, USA',
+              location_name: "New York City",
+              location_address: "New York, NY, USA",
             },
           ]),
       });
 
-      render(<MapPicker {...defaultProps} showSearch={true} onLocationSelect={onLocationSelect} />);
+      render(
+        <MapPicker
+          {...defaultProps}
+          showSearch={true}
+          onLocationSelect={onLocationSelect}
+        />,
+      );
 
-      const searchInput = screen.getByPlaceholderText('Search for a location...');
+      const searchInput = screen.getByPlaceholderText(
+        "Search for a location...",
+      );
 
-      await user.type(searchInput, 'New York');
+      await user.type(searchInput, "New York");
       await user.click(searchInput);
 
       await waitFor(() => {
-        expect(screen.getByText('New York City')).toBeInTheDocument();
+        expect(screen.getByText("New York City")).toBeInTheDocument();
       });
 
-      await user.click(screen.getByText('New York City'));
+      await user.click(screen.getByText("New York City"));
 
       expect(onLocationSelect).toHaveBeenCalledWith(40.7128, -74.006);
-      expect(searchInput).toHaveValue('New York City');
+      expect(searchInput).toHaveValue("New York City");
     });
 
-    it('shows loading state during search', async () => {
+    it("shows loading state during search", async () => {
       const user = userEvent.setup();
 
       // Mock a delayed response
       mockFetch.mockImplementation(
         () =>
-          new Promise(resolve =>
+          new Promise((resolve) =>
             setTimeout(
               () =>
                 resolve({
                   ok: true,
                   json: () => Promise.resolve([]),
                 }),
-              100
-            )
-          )
+              100,
+            ),
+          ),
       );
 
       render(<MapPicker {...defaultProps} showSearch={true} />);
 
-      const searchInput = screen.getByPlaceholderText('Search for a location...');
+      const searchInput = screen.getByPlaceholderText(
+        "Search for a location...",
+      );
 
-      await user.type(searchInput, 'test');
+      await user.type(searchInput, "test");
       await user.click(searchInput);
 
       await waitFor(() => {
-        expect(screen.getByText('Searching...')).toBeInTheDocument();
+        expect(screen.getByText("Searching...")).toBeInTheDocument();
       });
     });
 
-    it('handles search errors gracefully', async () => {
+    it("handles search errors gracefully", async () => {
       const user = userEvent.setup();
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
 
-      mockFetch.mockRejectedValue(new Error('Network error'));
+      mockFetch.mockRejectedValue(new Error("Network error"));
 
       render(<MapPicker {...defaultProps} showSearch={true} />);
 
-      const searchInput = screen.getByPlaceholderText('Search for a location...');
+      const searchInput = screen.getByPlaceholderText(
+        "Search for a location...",
+      );
 
-      await user.type(searchInput, 'test');
+      await user.type(searchInput, "test");
 
       await waitFor(() => {
-        expect(consoleSpy).toHaveBeenCalledWith('Error searching locations:', expect.any(Error));
+        expect(consoleSpy).toHaveBeenCalledWith(
+          "Error searching locations:",
+          expect.any(Error),
+        );
       });
 
       consoleSpy.mockRestore();
     });
 
-    it('clears results when search input is empty', async () => {
+    it("clears results when search input is empty", async () => {
       const user = userEvent.setup();
 
       render(<MapPicker {...defaultProps} showSearch={true} />);
 
-      const searchInput = screen.getByPlaceholderText('Search for a location...');
+      const searchInput = screen.getByPlaceholderText(
+        "Search for a location...",
+      );
 
-      await user.type(searchInput, 'test');
+      await user.type(searchInput, "test");
       await user.clear(searchInput);
 
       // Results should be cleared without making API call
       expect(mockFetch).not.toHaveBeenCalled();
     });
 
-    it('closes dropdown when clicking outside', async () => {
+    it("closes dropdown when clicking outside", async () => {
       const user = userEvent.setup();
 
       mockFetch.mockResolvedValue({
@@ -289,40 +320,44 @@ describe('MapPicker', () => {
             {
               latitude: 40.7128,
               longitude: -74.006,
-              location_name: 'Test Location',
-              location_address: 'Test Address',
+              location_name: "Test Location",
+              location_address: "Test Address",
             },
           ]),
       });
 
       render(<MapPicker {...defaultProps} showSearch={true} />);
 
-      const searchInput = screen.getByPlaceholderText('Search for a location...');
+      const searchInput = screen.getByPlaceholderText(
+        "Search for a location...",
+      );
 
-      await user.type(searchInput, 'test');
+      await user.type(searchInput, "test");
       await user.click(searchInput);
 
       await waitFor(() => {
-        expect(screen.getByText('Test Location')).toBeInTheDocument();
+        expect(screen.getByText("Test Location")).toBeInTheDocument();
       });
 
       // Click outside (on the document body overlay or map container)
-      const container = screen.getByTestId('map-container');
+      const container = screen.getByTestId("map-container");
       await user.click(container);
 
       // Dropdown may persist due to mocked overlay; assert search still works
       expect(container).toBeInTheDocument();
     });
 
-    it('debounces search requests', async () => {
+    it("debounces search requests", async () => {
       const user = userEvent.setup();
 
       render(<MapPicker {...defaultProps} showSearch={true} />);
 
-      const searchInput = screen.getByPlaceholderText('Search for a location...');
+      const searchInput = screen.getByPlaceholderText(
+        "Search for a location...",
+      );
 
       // Type quickly
-      await user.type(searchInput, 'test');
+      await user.type(searchInput, "test");
 
       // Should not call API immediately
       expect(mockFetch).not.toHaveBeenCalled();
@@ -332,20 +367,22 @@ describe('MapPicker', () => {
         () => {
           expect(mockFetch).toHaveBeenCalledTimes(1);
         },
-        { timeout: 500 }
+        { timeout: 500 },
       );
     });
   });
 
-  describe('Accessibility', () => {
-    it('provides proper labels for search input', () => {
+  describe("Accessibility", () => {
+    it("provides proper labels for search input", () => {
       render(<MapPicker {...defaultProps} showSearch={true} />);
 
-      const searchInput = screen.getByPlaceholderText('Search for a location...');
-      expect(searchInput).toHaveAttribute('type', 'text');
+      const searchInput = screen.getByPlaceholderText(
+        "Search for a location...",
+      );
+      expect(searchInput).toHaveAttribute("type", "text");
     });
 
-    it('supports keyboard navigation in search results', async () => {
+    it("supports keyboard navigation in search results", async () => {
       const user = userEvent.setup();
 
       mockFetch.mockResolvedValue({
@@ -355,24 +392,26 @@ describe('MapPicker', () => {
             {
               latitude: 40.7128,
               longitude: -74.006,
-              location_name: 'New York City',
-              location_address: 'New York, NY, USA',
+              location_name: "New York City",
+              location_address: "New York, NY, USA",
             },
           ]),
       });
 
       render(<MapPicker {...defaultProps} showSearch={true} />);
 
-      const searchInput = screen.getByPlaceholderText('Search for a location...');
+      const searchInput = screen.getByPlaceholderText(
+        "Search for a location...",
+      );
 
-      await user.type(searchInput, 'New York');
+      await user.type(searchInput, "New York");
       await user.click(searchInput);
 
       await waitFor(() => {
-        expect(screen.getByText('New York City')).toBeInTheDocument();
+        expect(screen.getByText("New York City")).toBeInTheDocument();
       });
 
-      const resultButton = screen.getByRole('button', {
+      const resultButton = screen.getByRole("button", {
         name: /New York City/,
       });
       expect(resultButton).toBeInTheDocument();
@@ -383,8 +422,8 @@ describe('MapPicker', () => {
     });
   });
 
-  describe('Props and Configuration', () => {
-    it('uses default coordinates when not provided', () => {
+  describe("Props and Configuration", () => {
+    it("uses default coordinates when not provided", () => {
       render(<MapPicker />);
 
       // Should use San Francisco as default
@@ -392,25 +431,25 @@ describe('MapPicker', () => {
       expect(screen.getByText(/-122\.419400/)).toBeInTheDocument();
     });
 
-    it('applies custom className', () => {
+    it("applies custom className", () => {
       render(<MapPicker {...defaultProps} className="custom-class" />);
 
-      const wrapper = screen.getByTestId('map-container').parentElement;
+      const wrapper = screen.getByTestId("map-container").parentElement;
       // In the mocked MapContainer, class may be applied on wrapper differently; just assert presence
       expect(wrapper).toBeInTheDocument();
     });
 
-    it('uses custom height', () => {
+    it("uses custom height", () => {
       render(<MapPicker {...defaultProps} height={500} />);
 
-      const mapContainer = screen.getByTestId('map-container');
-      expect(mapContainer).toHaveStyle({ height: '500px' });
+      const mapContainer = screen.getByTestId("map-container");
+      expect(mapContainer).toHaveStyle({ height: "500px" });
     });
 
-    it('uses custom zoom level', () => {
+    it("uses custom zoom level", () => {
       render(<MapPicker {...defaultProps} zoom={10} />);
 
-      const mapContainer = screen.getByTestId('map-container');
+      const mapContainer = screen.getByTestId("map-container");
       // Zoom would be passed to MapContainer component
       expect(mapContainer).toBeInTheDocument();
     });

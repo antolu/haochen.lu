@@ -2,69 +2,73 @@
  * Debug utility to test image selection on different device configurations
  */
 
-import { selectOptimalImage, debugImageSelection, ImageUseCase } from './imageUtils';
-import type { Photo } from '../types';
+import {
+  selectOptimalImage,
+  debugImageSelection,
+  ImageUseCase,
+} from "./imageUtils";
+import type { Photo } from "../types";
 
 // Mock photo for testing
 const testPhoto: Photo = {
-  id: 'debug-photo',
-  title: 'Debug Test Photo',
-  filename: 'debug.jpg',
-  original_path: '/uploads/debug.jpg',
-  original_url: '/api/photos/debug-photo/file',
+  id: "debug-photo",
+  title: "Debug Test Photo",
+  filename: "debug.jpg",
+  original_path: "/uploads/debug.jpg",
+  original_url: "/api/photos/debug-photo/file",
   file_size: 2000000,
   width: 4000,
   height: 3000,
   featured: false,
   view_count: 0,
   order: 0,
-  created_at: '2024-01-01T00:00:00Z',
-  updated_at: '2024-01-01T00:00:00Z',
+  created_at: "2024-01-01T00:00:00Z",
+  updated_at: "2024-01-01T00:00:00Z",
   variants: {
     thumbnail: {
-      path: '/compressed/debug-thumbnail.webp',
-      filename: 'debug-thumbnail.webp',
-      url: '/api/photos/debug-photo/file/thumbnail',
+      path: "/compressed/debug-thumbnail.webp",
+      filename: "debug-thumbnail.webp",
+      url: "/api/photos/debug-photo/file/thumbnail",
       width: 400,
       height: 300,
       size_bytes: 25000,
-      format: 'webp',
+      format: "webp",
     },
     small: {
-      path: '/compressed/debug-small.webp',
-      filename: 'debug-small.webp',
-      url: '/api/photos/debug-photo/file/small',
+      path: "/compressed/debug-small.webp",
+      filename: "debug-small.webp",
+      url: "/api/photos/debug-photo/file/small",
       width: 800,
       height: 600,
       size_bytes: 75000,
-      format: 'webp',
+      format: "webp",
     },
     medium: {
-      path: '/compressed/debug-medium.webp',
-      filename: 'debug-medium.webp',
-      url: '/api/photos/debug-photo/file/medium',
+      path: "/compressed/debug-medium.webp",
+      filename: "debug-medium.webp",
+      url: "/api/photos/debug-photo/file/medium",
       width: 1200,
       height: 900,
       size_bytes: 150000,
-      format: 'webp',
+      format: "webp",
     },
     large: {
-      path: '/compressed/debug-large.webp',
-      filename: 'debug-large.webp',
-      url: '/api/photos/debug-photo/file/large',
+      path: "/compressed/debug-large.webp",
+      filename: "debug-large.webp",
+      url: "/api/photos/debug-photo/file/large",
       width: 1600,
       height: 1200,
       size_bytes: 250000,
-      format: 'webp',
+      format: "webp",
     },
     xlarge: {
-      path: '/compressed/debug-xlarge.webp',
-      filename: 'debug-xlarge.webp',
-      url: '/api/photos/debug-photo/file/xlarge',
+      path: "/compressed/debug-xlarge.webp",
+      filename: "debug-xlarge.webp",
+      url: "/api/photos/debug-photo/file/xlarge",
       width: 2400,
       height: 1800,
       size_bytes: 450000,
-      format: 'webp',
+      format: "webp",
     },
   },
 };
@@ -78,13 +82,13 @@ interface DeviceTest {
 
 const testDevices: DeviceTest[] = [
   {
-    name: 'Desktop Standard',
+    name: "Desktop Standard",
     devicePixelRatio: 1,
     viewportWidth: 1920,
     viewportHeight: 1080,
   },
   {
-    name: 'Desktop High-DPI',
+    name: "Desktop High-DPI",
     devicePixelRatio: 2,
     viewportWidth: 1920,
     viewportHeight: 1080,
@@ -102,37 +106,37 @@ const testDevices: DeviceTest[] = [
     viewportHeight: 1117,
   },
   {
-    name: 'iPad Pro',
+    name: "iPad Pro",
     devicePixelRatio: 2,
     viewportWidth: 1024,
     viewportHeight: 1366,
   },
   {
-    name: 'iPad',
+    name: "iPad",
     devicePixelRatio: 2,
     viewportWidth: 768,
     viewportHeight: 1024,
   },
   {
-    name: 'iPhone 15 Pro',
+    name: "iPhone 15 Pro",
     devicePixelRatio: 3,
     viewportWidth: 393,
     viewportHeight: 852,
   },
   {
-    name: 'iPhone SE',
+    name: "iPhone SE",
     devicePixelRatio: 3,
     viewportWidth: 375,
     viewportHeight: 667,
   },
   {
-    name: 'Android Phone',
+    name: "Android Phone",
     devicePixelRatio: 2.75,
     viewportWidth: 412,
     viewportHeight: 915,
   },
   {
-    name: 'Surface Pro',
+    name: "Surface Pro",
     devicePixelRatio: 1.5,
     viewportWidth: 1368,
     viewportHeight: 912,
@@ -143,15 +147,15 @@ const testDevices: DeviceTest[] = [
  * Mock window properties for testing
  */
 const mockDevice = (device: DeviceTest) => {
-  Object.defineProperty(window, 'devicePixelRatio', {
+  Object.defineProperty(window, "devicePixelRatio", {
     writable: true,
     value: device.devicePixelRatio,
   });
-  Object.defineProperty(window, 'innerWidth', {
+  Object.defineProperty(window, "innerWidth", {
     writable: true,
     value: device.viewportWidth,
   });
-  Object.defineProperty(window, 'innerHeight', {
+  Object.defineProperty(window, "innerHeight", {
     writable: true,
     value: device.viewportHeight,
   });
@@ -172,20 +176,20 @@ export const testImageSelectionAcrossDevices = () => {
     fileSize?: number;
   }[] = [];
 
-  if (process.env.NODE_ENV !== 'development') return results;
+  if (process.env.NODE_ENV !== "development") return results;
   // eslint-disable-next-line no-console
-  console.group('🖼️  DPI-Aware Image Selection Test Results');
+  console.group("🖼️  DPI-Aware Image Selection Test Results");
 
-  testDevices.forEach(device => {
+  testDevices.forEach((device) => {
     // Mock the device
     mockDevice(device);
 
     // eslint-disable-next-line no-console
     console.group(
-      `📱 ${device.name} (${device.devicePixelRatio}x DPI, ${device.viewportWidth}×${device.viewportHeight})`
+      `📱 ${device.name} (${device.devicePixelRatio}x DPI, ${device.viewportWidth}×${device.viewportHeight})`,
     );
 
-    Object.values(ImageUseCase).forEach(useCase => {
+    Object.values(ImageUseCase).forEach((useCase) => {
       const debug = debugImageSelection(testPhoto, useCase) as {
         targetSize: number;
         context: unknown;
@@ -200,7 +204,8 @@ export const testImageSelectionAcrossDevices = () => {
       console.log(`${useCase}:`, {
         selectedVariant: selection.selectedVariant,
         targetSize: debug.targetSize,
-        actualSize: testPhoto.variants?.[selection.selectedVariant]?.width ?? 'N/A',
+        actualSize:
+          testPhoto.variants?.[selection.selectedVariant]?.width ?? "N/A",
         fileSize: `${Math.round((testPhoto.variants?.[selection.selectedVariant]?.size_bytes ?? 0) / 1024)}KB`,
         url: selection.url,
       });
@@ -231,33 +236,34 @@ export const testImageSelectionAcrossDevices = () => {
  * Test bandwidth efficiency compared to static selection
  */
 export const testBandwidthEfficiency = () => {
-  if (process.env.NODE_ENV !== 'development') {
+  if (process.env.NODE_ENV !== "development") {
     return { staticBytes: 0, dynamicBytes: 0, savings: 0, percentSavings: 0 };
   }
   // eslint-disable-next-line no-console
-  console.group('📊 Bandwidth Efficiency Analysis');
+  console.group("📊 Bandwidth Efficiency Analysis");
 
   // Static selection (what we used before)
   const staticSelection = {
-    thumbnail: 'small',
-    gallery: 'small',
-    lightbox: 'xlarge',
-    hero: 'large',
-    admin: 'thumbnail',
+    thumbnail: "small",
+    gallery: "small",
+    lightbox: "xlarge",
+    hero: "large",
+    admin: "thumbnail",
   };
 
   let totalStaticBytes = 0;
   let totalDynamicBytes = 0;
 
-  testDevices.forEach(device => {
+  testDevices.forEach((device) => {
     mockDevice(device);
 
-    Object.values(ImageUseCase).forEach(useCase => {
+    Object.values(ImageUseCase).forEach((useCase) => {
       const staticVariant = staticSelection[useCase];
       const staticBytes = testPhoto.variants?.[staticVariant]?.size_bytes ?? 0;
 
       const dynamicSelection = selectOptimalImage(testPhoto, useCase);
-      const dynamicBytes = testPhoto.variants?.[dynamicSelection.selectedVariant]?.size_bytes ?? 0;
+      const dynamicBytes =
+        testPhoto.variants?.[dynamicSelection.selectedVariant]?.size_bytes ?? 0;
 
       totalStaticBytes += staticBytes;
       totalDynamicBytes += dynamicBytes;
@@ -268,7 +274,7 @@ export const testBandwidthEfficiency = () => {
   const percentSavings = ((savings / totalStaticBytes) * 100).toFixed(1);
 
   // eslint-disable-next-line no-console
-  console.log('Total bandwidth comparison:', {
+  console.log("Total bandwidth comparison:", {
     staticApproach: `${Math.round(totalStaticBytes / 1024 / 1024)}MB`,
     dynamicApproach: `${Math.round(totalDynamicBytes / 1024 / 1024)}MB`,
     savings: `${Math.round(savings / 1024 / 1024)}MB (${percentSavings}%)`,
@@ -289,42 +295,45 @@ export const testBandwidthEfficiency = () => {
  * Test quality improvements for high-DPI displays
  */
 export const testHighDPIQuality = () => {
-  if (process.env.NODE_ENV !== 'development') return;
+  if (process.env.NODE_ENV !== "development") return;
   // eslint-disable-next-line no-console
-  console.group('✨ High-DPI Quality Analysis');
+  console.group("✨ High-DPI Quality Analysis");
 
   const standardDevice = {
-    name: 'Standard Monitor',
+    name: "Standard Monitor",
     devicePixelRatio: 1,
     viewportWidth: 1920,
     viewportHeight: 1080,
   };
   const retinaDevice = {
-    name: 'Retina Display',
+    name: "Retina Display",
     devicePixelRatio: 2,
     viewportWidth: 1920,
     viewportHeight: 1080,
   };
   const ultraDevice = {
-    name: 'Ultra High-DPI',
+    name: "Ultra High-DPI",
     devicePixelRatio: 3,
     viewportWidth: 390,
     viewportHeight: 844,
   };
 
-  [standardDevice, retinaDevice, ultraDevice].forEach(device => {
+  [standardDevice, retinaDevice, ultraDevice].forEach((device) => {
     mockDevice(device);
 
     // eslint-disable-next-line no-console
     console.group(`🖥️  ${device.name} (${device.devicePixelRatio}x)`);
 
-    Object.values(ImageUseCase).forEach(useCase => {
+    Object.values(ImageUseCase).forEach((useCase) => {
       const selection = selectOptimalImage(testPhoto, useCase);
       const variant = testPhoto.variants?.[selection.selectedVariant];
 
       if (variant) {
         const pixelDensity = variant.width / device.viewportWidth;
-        const qualityScore = Math.min(pixelDensity * device.devicePixelRatio, 3);
+        const qualityScore = Math.min(
+          pixelDensity * device.devicePixelRatio,
+          3,
+        );
 
         // eslint-disable-next-line no-console
         console.log(`${useCase}:`, {
@@ -333,7 +342,11 @@ export const testHighDPIQuality = () => {
           pixelDensity: `${pixelDensity.toFixed(2)}x`,
           qualityScore: `${qualityScore.toFixed(2)}/3`,
           sharpness:
-            qualityScore >= 2 ? '🔥 Crisp' : qualityScore >= 1.5 ? '✅ Good' : '⚠️  Blurry',
+            qualityScore >= 2
+              ? "🔥 Crisp"
+              : qualityScore >= 1.5
+                ? "✅ Good"
+                : "⚠️  Blurry",
         });
       }
     });
@@ -347,7 +360,7 @@ export const testHighDPIQuality = () => {
 };
 
 // Auto-run tests in development
-if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
   // Run tests after a short delay to avoid interfering with app startup
   setTimeout(() => {
     testImageSelectionAcrossDevices();

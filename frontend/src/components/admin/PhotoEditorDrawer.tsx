@@ -1,21 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import type { Photo } from '../../types';
-import { useUpdatePhoto, usePhotoTags } from '../../hooks/usePhotos';
-import TagMultiSelect from './TagMultiSelect';
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import type { Photo } from "../../types";
+import { useUpdatePhoto, usePhotoTags } from "../../hooks/usePhotos";
+import TagMultiSelect from "./TagMultiSelect";
 
 interface PhotoEditorDrawerProps {
   photo: Photo | null;
   onClose: () => void;
 }
 
-const PhotoEditorDrawer: React.FC<PhotoEditorDrawerProps> = ({ photo, onClose }) => {
+const PhotoEditorDrawer: React.FC<PhotoEditorDrawerProps> = ({
+  photo,
+  onClose,
+}) => {
   const [form, setForm] = useState({
-    title: '',
-    description: '',
-    category: '',
-    tags: '',
-    comments: '',
+    title: "",
+    description: "",
+    category: "",
+    tags: "",
+    comments: "",
     featured: false,
   });
 
@@ -25,11 +28,11 @@ const PhotoEditorDrawer: React.FC<PhotoEditorDrawerProps> = ({ photo, onClose })
   useEffect(() => {
     if (photo) {
       setForm({
-        title: photo.title ?? '',
-        description: photo.description ?? '',
-        category: photo.category ?? '',
-        tags: photo.tags ?? '',
-        comments: photo.comments ?? '',
+        title: photo.title ?? "",
+        description: photo.description ?? "",
+        category: photo.category ?? "",
+        tags: photo.tags ?? "",
+        comments: photo.comments ?? "",
         featured: !!photo.featured,
       });
     }
@@ -44,12 +47,12 @@ const PhotoEditorDrawer: React.FC<PhotoEditorDrawerProps> = ({ photo, onClose })
   useEffect(() => {
     if (!photo) return;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         onClose();
       }
     };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, [onClose, photo]);
 
   return (
@@ -70,56 +73,75 @@ const PhotoEditorDrawer: React.FC<PhotoEditorDrawerProps> = ({ photo, onClose })
 
       <motion.div
         className="absolute top-0 right-0 h-full w-full max-w-md bg-white shadow-xl p-6 overflow-y-auto"
-        initial={{ x: '100%' }}
+        initial={{ x: "100%" }}
         animate={{ x: 0 }}
-        exit={{ x: '100%' }}
-        transition={{ type: 'tween', duration: 0.25 }}
+        exit={{ x: "100%" }}
+        transition={{ type: "tween", duration: 0.25 }}
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Edit Photo</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
             ✕
           </button>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Title</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Title
+            </label>
             <input
               className="mt-1 w-full border border-gray-300 rounded px-3 py-2"
               value={form.title}
-              onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, title: e.target.value }))
+              }
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Description</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Description
+            </label>
             <textarea
               className="mt-1 w-full border border-gray-300 rounded px-3 py-2"
               rows={4}
               value={form.description}
-              onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, description: e.target.value }))
+              }
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Category</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Category
+            </label>
             <input
               className="mt-1 w-full border border-gray-300 rounded px-3 py-2"
               value={form.category}
-              onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, category: e.target.value }))
+              }
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Tags</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Tags
+            </label>
             <TagMultiSelect
-              value={(form.tags ?? '')
-                .split(',')
-                .map(t => t.trim())
+              value={(form.tags ?? "")
+                .split(",")
+                .map((t) => t.trim())
                 .filter(Boolean)}
               options={distinctTags}
-              onChange={vals => setForm(f => ({ ...f, tags: vals.join(',') }))}
+              onChange={(vals) =>
+                setForm((f) => ({ ...f, tags: vals.join(",") }))
+              }
             />
           </div>
 
@@ -128,14 +150,19 @@ const PhotoEditorDrawer: React.FC<PhotoEditorDrawerProps> = ({ photo, onClose })
               <input
                 type="checkbox"
                 checked={form.featured}
-                onChange={e => setForm(f => ({ ...f, featured: e.target.checked }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, featured: e.target.checked }))
+                }
               />
               <span className="text-sm text-gray-700">Featured</span>
             </label>
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
-            <button onClick={onClose} className="px-4 py-2 rounded border border-gray-300">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 rounded border border-gray-300"
+            >
               Cancel
             </button>
             <button

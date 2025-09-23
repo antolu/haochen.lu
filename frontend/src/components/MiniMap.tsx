@@ -1,7 +1,7 @@
-import React, { useMemo } from 'react';
-import L from 'leaflet';
-import { MapContainer, TileLayer, Marker } from 'react-leaflet';
-import { getTileConfig, getOptimizedMarkerIcon } from '../utils/mapUtils';
+import React, { useMemo } from "react";
+import L from "leaflet";
+import { MapContainer, TileLayer, Marker } from "react-leaflet";
+import { getTileConfig, getOptimizedMarkerIcon } from "../utils/mapUtils";
 
 interface MiniMapProps {
   latitude: number;
@@ -9,7 +9,7 @@ interface MiniMapProps {
   zoom?: number;
   size?: number;
   responsive?: boolean;
-  aspectRatio?: 'square' | 'wide';
+  aspectRatio?: "square" | "wide";
   className?: string;
   onClick?: () => void;
 }
@@ -20,22 +20,22 @@ const MiniMap: React.FC<MiniMapProps> = ({
   zoom = 13,
   size = 120,
   responsive = false,
-  aspectRatio = 'square',
-  className = '',
+  aspectRatio = "square",
+  className = "",
   onClick,
 }) => {
   const tileConfig = useMemo(() => getTileConfig(), []);
   const marker = useMemo(() => {
-    const iconConfig = getOptimizedMarkerIcon('small');
+    const iconConfig = getOptimizedMarkerIcon("small");
     return L.icon(iconConfig);
   }, []);
 
   const getMapDimensions = () => {
     if (responsive) {
       return {
-        width: '100%',
-        height: aspectRatio === 'square' ? 'auto' : '200px',
-        aspectRatio: aspectRatio === 'square' ? '1' : undefined,
+        width: "100%",
+        height: aspectRatio === "square" ? "auto" : "200px",
+        aspectRatio: aspectRatio === "square" ? "1" : undefined,
       };
     }
     return { width: `${size}px`, height: `${size}px` };
@@ -44,7 +44,7 @@ const MiniMap: React.FC<MiniMapProps> = ({
   return (
     <div
       className={`relative overflow-hidden rounded border border-gray-200 ${
-        onClick ? 'cursor-pointer hover:border-blue-300' : ''
+        onClick ? "cursor-pointer hover:border-blue-300" : ""
       } ${className}`}
       style={getMapDimensions()}
       onClick={onClick}
@@ -52,7 +52,7 @@ const MiniMap: React.FC<MiniMapProps> = ({
       <MapContainer
         center={[latitude, longitude]}
         zoom={zoom}
-        style={{ width: '100%', height: '100%' }}
+        style={{ width: "100%", height: "100%" }}
         zoomControl={false}
         scrollWheelZoom={false}
         dragging={false}

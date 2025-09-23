@@ -224,4 +224,4 @@ export interface ApiError {
 }
 
 // Re-export profile picture types
-export * from './profilePicture';
+export * from "./profilePicture";

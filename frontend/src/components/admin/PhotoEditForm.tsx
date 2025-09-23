@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { motion } from 'framer-motion';
-import toast from 'react-hot-toast';
-import LocationInput from '../LocationInput';
-import type { Photo } from '../../types';
-import { formatDateSimple } from '../../utils/dateFormat';
-import { selectOptimalImage, ImageUseCase } from '../../utils/imageUtils';
+import React, { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { motion } from "framer-motion";
+import toast from "react-hot-toast";
+import LocationInput from "../LocationInput";
+import type { Photo } from "../../types";
+import { formatDateSimple } from "../../utils/dateFormat";
+import { selectOptimalImage, ImageUseCase } from "../../utils/imageUtils";
 
 interface PhotoEditFormProps {
   photo: Photo;
@@ -46,12 +46,12 @@ interface FormData {
 
 // Define available custom field types
 const FIELD_TYPES = [
-  { value: 'text', label: 'Text' },
-  { value: 'number', label: 'Number' },
-  { value: 'date', label: 'Date' },
-  { value: 'boolean', label: 'Yes/No' },
-  { value: 'select', label: 'Dropdown' },
-  { value: 'textarea', label: 'Long Text' },
+  { value: "text", label: "Text" },
+  { value: "number", label: "Number" },
+  { value: "date", label: "Date" },
+  { value: "boolean", label: "Yes/No" },
+  { value: "select", label: "Dropdown" },
+  { value: "textarea", label: "Long Text" },
 ];
 
 const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
@@ -60,9 +60,9 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
   onCancel,
   isLoading = false,
 }) => {
-  const [activeTab, setActiveTab] = useState<'basic' | 'location' | 'technical' | 'custom'>(
-    'basic'
-  );
+  const [activeTab, setActiveTab] = useState<
+    "basic" | "location" | "technical" | "custom"
+  >("basic");
   const [customFields, setCustomFields] = useState<
     Array<{
       key: string;
@@ -72,9 +72,9 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
       options?: string[];
     }>
   >([]);
-  const [newFieldKey, setNewFieldKey] = useState('');
-  const [newFieldType, setNewFieldType] = useState('text');
-  const [newFieldLabel, setNewFieldLabel] = useState('');
+  const [newFieldKey, setNewFieldKey] = useState("");
+  const [newFieldType, setNewFieldType] = useState("text");
+  const [newFieldLabel, setNewFieldLabel] = useState("");
 
   const {
     register,
@@ -84,26 +84,28 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
     formState: { errors },
   } = useForm<FormData>({
     defaultValues: {
-      title: photo.title ?? '',
-      description: photo.description ?? '',
-      category: photo.category ?? '',
-      tags: photo.tags ?? '',
-      comments: photo.comments ?? '',
+      title: photo.title ?? "",
+      description: photo.description ?? "",
+      category: photo.category ?? "",
+      tags: photo.tags ?? "",
+      comments: photo.comments ?? "",
       featured: photo.featured ?? false,
       location_lat: photo.location_lat,
       location_lon: photo.location_lon,
-      location_name: photo.location_name ?? '',
-      location_address: photo.location_address ?? '',
+      location_name: photo.location_name ?? "",
+      location_address: photo.location_address ?? "",
       altitude: photo.altitude,
-      camera_make: photo.camera_make ?? '',
-      camera_model: photo.camera_model ?? '',
-      lens: photo.lens ?? '',
+      camera_make: photo.camera_make ?? "",
+      camera_model: photo.camera_model ?? "",
+      lens: photo.lens ?? "",
       iso: photo.iso,
       aperture: photo.aperture,
-      shutter_speed: photo.shutter_speed ?? '',
+      shutter_speed: photo.shutter_speed ?? "",
       focal_length: photo.focal_length,
-      date_taken: photo.date_taken ? new Date(photo.date_taken).toISOString().slice(0, 16) : '',
-      timezone: photo.timezone ?? '',
+      date_taken: photo.date_taken
+        ? new Date(photo.date_taken).toISOString().slice(0, 16)
+        : "",
+      timezone: photo.timezone ?? "",
       custom_metadata: photo.custom_metadata ?? {},
     },
   });
@@ -111,33 +113,39 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
   // Initialize custom fields from photo metadata
   useEffect(() => {
     if (photo.custom_metadata) {
-      const fields = Object.entries(photo.custom_metadata).map(([key, value]) => ({
-        key,
-        type:
-          typeof value === 'boolean' ? 'boolean' : typeof value === 'number' ? 'number' : 'text',
-        label: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' '),
-        value,
-      }));
+      const fields = Object.entries(photo.custom_metadata).map(
+        ([key, value]) => ({
+          key,
+          type:
+            typeof value === "boolean"
+              ? "boolean"
+              : typeof value === "number"
+                ? "number"
+                : "text",
+          label: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, " "),
+          value,
+        }),
+      );
       setCustomFields(fields);
     }
   }, [photo.custom_metadata]);
 
   const handleLocationChange = (lat: number, lng: number, name?: string) => {
-    setValue('location_lat', lat);
-    setValue('location_lon', lng);
+    setValue("location_lat", lat);
+    setValue("location_lon", lng);
     if (name) {
-      setValue('location_name', name);
+      setValue("location_name", name);
     }
   };
 
   const addCustomField = () => {
     if (!newFieldKey || !newFieldLabel) {
-      toast.error('Please enter both key and label for the custom field');
+      toast.error("Please enter both key and label for the custom field");
       return;
     }
 
-    if (customFields.some(field => field.key === newFieldKey)) {
-      toast.error('A field with this key already exists');
+    if (customFields.some((field) => field.key === newFieldKey)) {
+      toast.error("A field with this key already exists");
       return;
     }
 
@@ -145,13 +153,14 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
       key: newFieldKey,
       type: newFieldType,
       label: newFieldLabel,
-      value: newFieldType === 'boolean' ? false : newFieldType === 'number' ? 0 : '',
+      value:
+        newFieldType === "boolean" ? false : newFieldType === "number" ? 0 : "",
     };
 
     setCustomFields([...customFields, newField]);
-    setNewFieldKey('');
-    setNewFieldLabel('');
-    setNewFieldType('text');
+    setNewFieldKey("");
+    setNewFieldLabel("");
+    setNewFieldType("text");
   };
 
   const updateCustomField = (index: number, value: unknown) => {
@@ -173,80 +182,94 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
           acc[field.key] = field.value;
           return acc;
         },
-        {} as Record<string, unknown>
+        {} as Record<string, unknown>,
       );
 
       const updatedPhoto: Partial<Photo> = {
         ...data,
-        custom_metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
-        date_taken: data.date_taken ? new Date(data.date_taken).toISOString() : undefined,
+        custom_metadata:
+          Object.keys(metadata).length > 0 ? metadata : undefined,
+        date_taken: data.date_taken
+          ? new Date(data.date_taken).toISOString()
+          : undefined,
       };
 
       await onSave(updatedPhoto);
-      toast.success('Photo updated successfully');
+      toast.success("Photo updated successfully");
     } catch (error) {
-      toast.error('Failed to update photo');
-      console.error('Error updating photo:', error);
+      toast.error("Failed to update photo");
+      console.error("Error updating photo:", error);
     }
   };
 
   // Handle form keydown to prevent Enter key from submitting form
   const handleFormKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !(e.target instanceof HTMLTextAreaElement)) {
+    if (e.key === "Enter" && !(e.target instanceof HTMLTextAreaElement)) {
       e.preventDefault();
       e.stopPropagation();
     }
   };
 
-  const renderCustomField = (field: (typeof customFields)[0], index: number) => {
+  const renderCustomField = (
+    field: (typeof customFields)[0],
+    index: number,
+  ) => {
     switch (field.type) {
-      case 'boolean':
+      case "boolean":
         return (
           <label className="flex items-center">
             <input
               type="checkbox"
               checked={field.value}
-              onChange={e => updateCustomField(index, e.target.checked)}
+              onChange={(e) => updateCustomField(index, e.target.checked)}
               className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
             />
             <span className="ml-2 text-sm text-gray-700">{field.label}</span>
           </label>
         );
 
-      case 'number':
+      case "number":
         return (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {field.label}
+            </label>
             <input
               type="number"
               value={field.value}
-              onChange={e => updateCustomField(index, parseFloat(e.target.value) || 0)}
+              onChange={(e) =>
+                updateCustomField(index, parseFloat(e.target.value) || 0)
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
         );
 
-      case 'textarea':
+      case "textarea":
         return (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {field.label}
+            </label>
             <textarea
               value={field.value}
-              onChange={e => updateCustomField(index, e.target.value)}
+              onChange={(e) => updateCustomField(index, e.target.value)}
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
         );
 
-      case 'date':
+      case "date":
         return (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {field.label}
+            </label>
             <input
               type="date"
               value={field.value}
-              onChange={e => updateCustomField(index, e.target.value)}
+              onChange={(e) => updateCustomField(index, e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -255,11 +278,13 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
       default: // text
         return (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {field.label}
+            </label>
             <input
               type="text"
               value={field.value}
-              onChange={e => updateCustomField(index, e.target.value)}
+              onChange={(e) => updateCustomField(index, e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -268,10 +293,10 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
   };
 
   const tabs = [
-    { key: 'basic', label: 'Basic Info', icon: '📝' },
-    { key: 'location', label: 'Location', icon: '📍' },
-    { key: 'technical', label: 'Technical', icon: '📷' },
-    { key: 'custom', label: 'Custom Fields', icon: '⚙️' },
+    { key: "basic", label: "Basic Info", icon: "📝" },
+    { key: "location", label: "Location", icon: "📍" },
+    { key: "technical", label: "Technical", icon: "📷" },
+    { key: "custom", label: "Custom Fields", icon: "⚙️" },
   ] as const;
 
   return (
@@ -294,7 +319,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
               disabled={isLoading}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
             >
-              {isLoading ? 'Saving...' : 'Save Changes'}
+              {isLoading ? "Saving..." : "Save Changes"}
             </button>
           </div>
         </div>
@@ -305,7 +330,10 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
         <div className="flex items-center space-x-4">
           <div className="w-20 h-20 rounded-lg overflow-hidden bg-gray-200">
             {(() => {
-              const optimalImage = selectOptimalImage(photo, ImageUseCase.ADMIN);
+              const optimalImage = selectOptimalImage(
+                photo,
+                ImageUseCase.ADMIN,
+              );
               return (
                 <img
                   src={optimalImage.url}
@@ -316,11 +344,16 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
             })()}
           </div>
           <div>
-            <h3 className="font-medium text-gray-900">{photo.title || 'Untitled'}</h3>
+            <h3 className="font-medium text-gray-900">
+              {photo.title || "Untitled"}
+            </h3>
             <p className="text-sm text-gray-500">
-              {photo.width} × {photo.height} • {(photo.file_size / 1024 / 1024).toFixed(1)} MB
+              {photo.width} × {photo.height} •{" "}
+              {(photo.file_size / 1024 / 1024).toFixed(1)} MB
             </p>
-            <p className="text-sm text-gray-500">Uploaded {formatDateSimple(photo.created_at)}</p>
+            <p className="text-sm text-gray-500">
+              Uploaded {formatDateSimple(photo.created_at)}
+            </p>
           </div>
         </div>
       </div>
@@ -328,14 +361,14 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
       {/* Tabs */}
       <div className="border-b border-gray-200">
         <nav className="flex space-x-8 px-6">
-          {tabs.map(tab => (
+          {tabs.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
               className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                 activeTab === tab.key
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
               <span className="mr-2">{tab.icon}</span>
@@ -348,7 +381,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
       {/* Form Content */}
       <form
         id="photo-edit-form"
-        onSubmit={e => {
+        onSubmit={(e) => {
           void handleSubmit(onSubmit)(e);
         }}
         onKeyDown={handleFormKeyDown}
@@ -361,26 +394,32 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
           transition={{ duration: 0.2 }}
         >
           {/* Basic Info Tab */}
-          {activeTab === 'basic' && (
+          {activeTab === "basic" && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Title *
+                  </label>
                   <input
                     type="text"
-                    {...register('title', { required: 'Title is required' })}
+                    {...register("title", { required: "Title is required" })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                   {errors.title && (
-                    <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.title.message}
+                    </p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Category
+                  </label>
                   <input
                     type="text"
-                    {...register('category')}
+                    {...register("category")}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="e.g., Nature, Portrait, Architecture"
                   />
@@ -388,9 +427,11 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description
+                </label>
                 <textarea
-                  {...register('description')}
+                  {...register("description")}
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Describe this photo..."
@@ -398,19 +439,23 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tags
+                </label>
                 <input
                   type="text"
-                  {...register('tags')}
+                  {...register("tags")}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="landscape, sunset, mountain (comma-separated)"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Comments</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Comments
+                </label>
                 <textarea
-                  {...register('comments')}
+                  {...register("comments")}
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Internal comments or notes..."
@@ -420,21 +465,23 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
               <div className="flex items-center">
                 <input
                   type="checkbox"
-                  {...register('featured')}
+                  {...register("featured")}
                   className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                 />
-                <label className="ml-2 text-sm text-gray-700">Featured Photo</label>
+                <label className="ml-2 text-sm text-gray-700">
+                  Featured Photo
+                </label>
               </div>
             </div>
           )}
 
           {/* Location Tab */}
-          {activeTab === 'location' && (
+          {activeTab === "location" && (
             <div className="space-y-6">
               <LocationInput
-                latitude={watch('location_lat')}
-                longitude={watch('location_lon')}
-                locationName={watch('location_name')}
+                latitude={watch("location_lat")}
+                longitude={watch("location_lon")}
+                locationName={watch("location_name")}
                 onLocationChange={handleLocationChange}
               />
 
@@ -444,7 +491,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
                     Full Address
                   </label>
                   <textarea
-                    {...register('location_address')}
+                    {...register("location_address")}
                     rows={2}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Complete geocoded address"
@@ -458,7 +505,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
                   <input
                     type="number"
                     step="0.1"
-                    {...register('altitude')}
+                    {...register("altitude")}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
@@ -467,7 +514,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
           )}
 
           {/* Technical Tab */}
-          {activeTab === 'technical' && (
+          {activeTab === "technical" && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -476,7 +523,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
                   </label>
                   <input
                     type="text"
-                    {...register('camera_make')}
+                    {...register("camera_make")}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
@@ -487,25 +534,29 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
                   </label>
                   <input
                     type="text"
-                    {...register('camera_model')}
+                    {...register("camera_model")}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Lens</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Lens
+                  </label>
                   <input
                     type="text"
-                    {...register('lens')}
+                    {...register("lens")}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">ISO</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    ISO
+                  </label>
                   <input
                     type="number"
-                    {...register('iso')}
+                    {...register("iso")}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
@@ -517,7 +568,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
                   <input
                     type="number"
                     step="0.1"
-                    {...register('aperture')}
+                    {...register("aperture")}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
@@ -528,7 +579,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
                   </label>
                   <input
                     type="text"
-                    {...register('shutter_speed')}
+                    {...register("shutter_speed")}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="1/60, 2s, etc."
                   />
@@ -540,25 +591,29 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
                   </label>
                   <input
                     type="number"
-                    {...register('focal_length')}
+                    {...register("focal_length")}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Date Taken</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Date Taken
+                  </label>
                   <input
                     type="datetime-local"
-                    {...register('date_taken')}
+                    {...register("date_taken")}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Timezone
+                  </label>
                   <input
                     type="text"
-                    {...register('timezone')}
+                    {...register("timezone")}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="+02:00, PST, etc."
                   />
@@ -568,17 +623,24 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
           )}
 
           {/* Custom Fields Tab */}
-          {activeTab === 'custom' && (
+          {activeTab === "custom" && (
             <div className="space-y-6">
               {/* Existing Custom Fields */}
               {customFields.length > 0 && (
                 <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Custom Fields</h3>
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    Custom Fields
+                  </h3>
                   <div className="space-y-4">
                     {customFields.map((field, index) => (
-                      <div key={field.key} className="border border-gray-200 rounded-lg p-4">
+                      <div
+                        key={field.key}
+                        className="border border-gray-200 rounded-lg p-4"
+                      >
                         <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-medium text-gray-900">{field.label}</h4>
+                          <h4 className="font-medium text-gray-900">
+                            {field.label}
+                          </h4>
                           <button
                             type="button"
                             onClick={() => removeCustomField(index)}
@@ -608,7 +670,9 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
 
               {/* Add New Custom Field */}
               <div className="border-t border-gray-200 pt-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Add Custom Field</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                  Add Custom Field
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -617,8 +681,10 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
                     <input
                       type="text"
                       value={newFieldKey}
-                      onChange={e =>
-                        setNewFieldKey(e.target.value.toLowerCase().replace(/\s+/g, '_'))
+                      onChange={(e) =>
+                        setNewFieldKey(
+                          e.target.value.toLowerCase().replace(/\s+/g, "_"),
+                        )
                       }
                       placeholder="field_name"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -632,7 +698,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
                     <input
                       type="text"
                       value={newFieldLabel}
-                      onChange={e => setNewFieldLabel(e.target.value)}
+                      onChange={(e) => setNewFieldLabel(e.target.value)}
                       placeholder="Display Name"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
@@ -644,10 +710,10 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
                     </label>
                     <select
                       value={newFieldType}
-                      onChange={e => setNewFieldType(e.target.value)}
+                      onChange={(e) => setNewFieldType(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
-                      {FIELD_TYPES.map(type => (
+                      {FIELD_TYPES.map((type) => (
                         <option key={type.value} value={type.value}>
                           {type.label}
                         </option>

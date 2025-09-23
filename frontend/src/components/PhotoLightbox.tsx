@@ -1,31 +1,40 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
-import lightGallery from 'lightgallery';
-import lgThumbnail from 'lightgallery/plugins/thumbnail';
-import lgZoom from 'lightgallery/plugins/zoom';
-import lgFullscreen from 'lightgallery/plugins/fullscreen';
+import React, { useRef, useEffect, useState, useCallback } from "react";
+import lightGallery from "lightgallery";
+import lgThumbnail from "lightgallery/plugins/thumbnail";
+import lgZoom from "lightgallery/plugins/zoom";
+import lgFullscreen from "lightgallery/plugins/fullscreen";
 
 // LightGallery type definitions
 interface LightGalleryInstance {
   outer: Element[];
   find(selector: string): { remove(): void; length: number };
-  addEventListener(event: string, handler: EventListenerOrEventListenerObject): void;
-  removeEventListener(event: string, handler: EventListenerOrEventListenerObject): void;
+  addEventListener(
+    event: string,
+    handler: EventListenerOrEventListenerObject,
+  ): void;
+  removeEventListener(
+    event: string,
+    handler: EventListenerOrEventListenerObject,
+  ): void;
 }
 
 interface LightGalleryEvent {
   detail: { index: number };
 }
 
-import 'lightgallery/css/lightgallery.css';
-import 'lightgallery/css/lg-zoom.css';
-import 'lightgallery/css/lg-thumbnail.css';
-import 'lightgallery/css/lg-fullscreen.css';
-import '../styles/lightgallery-captions.css';
+import "lightgallery/css/lightgallery.css";
+import "lightgallery/css/lg-zoom.css";
+import "lightgallery/css/lg-thumbnail.css";
+import "lightgallery/css/lg-fullscreen.css";
+import "../styles/lightgallery-captions.css";
 
-import PhotoSwipeMetadataSidebar from './PhotoSwipeMetadataSidebar';
-import { generateCaptionHtml, generateMobileCaptionHtml } from '../utils/captionUtils';
-import { selectOptimalImage, ImageUseCase } from '../utils/imageUtils';
-import type { Photo } from '../types';
+import PhotoSwipeMetadataSidebar from "./PhotoSwipeMetadataSidebar";
+import {
+  generateCaptionHtml,
+  generateMobileCaptionHtml,
+} from "../utils/captionUtils";
+import { selectOptimalImage, ImageUseCase } from "../utils/imageUtils";
+import type { Photo } from "../types";
 
 interface PhotoLightboxProps {
   photos: Photo[];
@@ -58,7 +67,9 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
 
   // Helper to generate caption HTML based on screen size
   const getCaptionHtml = useCallback((photo: Photo) => {
-    return isMobile() ? generateMobileCaptionHtml(photo) : generateCaptionHtml(photo);
+    return isMobile()
+      ? generateMobileCaptionHtml(photo)
+      : generateCaptionHtml(photo);
   }, []);
 
   // Helper to handle photo download
@@ -68,7 +79,7 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
         ? `/api/photos/${photo.id}/download/${variant}`
         : `/api/photos/${photo.id}/download`;
 
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const headers: Record<string, string> = {};
       if (token) {
         headers.Authorization = `Bearer ${token}`;
@@ -81,47 +92,53 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.download = variant ? `${photo.title}_${variant}.webp` : `${photo.title}_original.jpg`;
+      link.download = variant
+        ? `${photo.title}_${variant}.webp`
+        : `${photo.title}_original.jpg`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Download failed:', error);
+      console.error("Download failed:", error);
     }
   };
 
   // Helper to inject toolbar buttons using LightGallery event system
   const injectToolbarButtons = useCallback(
     (lgInstance: LightGalleryInstance) => {
-      const toolbar = lgInstance.outer[0]?.querySelector('.lg-toolbar');
+      const toolbar = lgInstance.outer[0]?.querySelector(".lg-toolbar");
       if (!toolbar) return;
 
       // Clear any existing custom buttons
-      toolbar.querySelectorAll('.lg-custom-info, .lg-custom-download').forEach(el => el.remove());
+      toolbar
+        .querySelectorAll(".lg-custom-info, .lg-custom-download")
+        .forEach((el) => el.remove());
 
       // Create Info button
-      const infoBtn = document.createElement('button');
-      infoBtn.type = 'button';
-      infoBtn.className = 'lg-icon lg-custom-info';
-      infoBtn.setAttribute('aria-label', 'Show info');
-      infoBtn.title = 'Info';
-      infoBtn.innerHTML = '<span style="font-weight:600;font-family:system-ui">i</span>';
-      infoBtn.onclick = ev => {
+      const infoBtn = document.createElement("button");
+      infoBtn.type = "button";
+      infoBtn.className = "lg-icon lg-custom-info";
+      infoBtn.setAttribute("aria-label", "Show info");
+      infoBtn.title = "Info";
+      infoBtn.innerHTML =
+        '<span style="font-weight:600;font-family:system-ui">i</span>';
+      infoBtn.onclick = (ev) => {
         ev.preventDefault();
-        setSidebarOpen(prev => !prev);
+        setSidebarOpen((prev) => !prev);
       };
 
       // Create Download button
-      const downloadBtn = document.createElement('button');
-      downloadBtn.type = 'button';
-      downloadBtn.className = 'lg-icon lg-custom-download';
-      downloadBtn.setAttribute('aria-label', 'Download photo');
-      downloadBtn.title = 'Download';
-      downloadBtn.innerHTML = '<span style="font-weight:600;font-family:system-ui">↓</span>';
-      downloadBtn.onclick = ev => {
+      const downloadBtn = document.createElement("button");
+      downloadBtn.type = "button";
+      downloadBtn.className = "lg-icon lg-custom-download";
+      downloadBtn.setAttribute("aria-label", "Download photo");
+      downloadBtn.title = "Download";
+      downloadBtn.innerHTML =
+        '<span style="font-weight:600;font-family:system-ui">↓</span>';
+      downloadBtn.onclick = (ev) => {
         ev.preventDefault();
         void handleDownload(currentPhoto);
       };
@@ -133,14 +150,14 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
       infoBtnRef.current = infoBtn;
       downloadBtnRef.current = downloadBtn;
     },
-    [currentPhoto]
+    [currentPhoto],
   );
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    const dynamicElements = photos.map(photo => {
+    const dynamicElements = photos.map((photo) => {
       // Use DPI-aware selection for lightbox viewing (high quality)
       const lightboxImage = selectOptimalImage(photo, ImageUseCase.LIGHTBOX);
       const thumbnailImage = selectOptimalImage(photo, ImageUseCase.THUMBNAIL);
@@ -154,10 +171,10 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
 
     const lgOptions = {
       plugins: [lgThumbnail, lgZoom, lgFullscreen],
-      licenseKey: '0000-0000-000-0000',
+      licenseKey: "0000-0000-000-0000",
       dynamic: true,
       dynamicEl: dynamicElements,
-      mode: 'lg-slide',
+      mode: "lg-slide",
       speed: 500,
       thumbnail: true,
       showThumbByDefault: false,
@@ -177,34 +194,37 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
     };
     galleryRef.current = lightGallery(
       container as HTMLElement,
-      lgOptions as Parameters<typeof lightGallery>[1]
+      lgOptions as Parameters<typeof lightGallery>[1],
     ) as LightGalleryInstance;
 
     const onInit = (e: Event) => {
-      const lgInstance = (e as LightGalleryEvent & { detail: { instance: LightGalleryInstance } })
-        .detail.instance;
+      const lgInstance = (
+        e as LightGalleryEvent & { detail: { instance: LightGalleryInstance } }
+      ).detail.instance;
       injectToolbarButtons(lgInstance);
     };
 
-    const onBeforeSlide = (e: Event) => setCurrentIndex((e as LightGalleryEvent).detail.index);
-    const onAfterSlide = (e: Event) => setCurrentIndex((e as LightGalleryEvent).detail.index);
+    const onBeforeSlide = (e: Event) =>
+      setCurrentIndex((e as LightGalleryEvent).detail.index);
+    const onAfterSlide = (e: Event) =>
+      setCurrentIndex((e as LightGalleryEvent).detail.index);
     const onAfterClose = () => {
       setSidebarOpen(false);
       onClose();
     };
 
-    container.addEventListener('lgInit', onInit);
-    container.addEventListener('lgBeforeSlide', onBeforeSlide);
-    container.addEventListener('lgAfterSlide', onAfterSlide);
-    container.addEventListener('lgAfterClose', onAfterClose);
+    container.addEventListener("lgInit", onInit);
+    container.addEventListener("lgBeforeSlide", onBeforeSlide);
+    container.addEventListener("lgAfterSlide", onAfterSlide);
+    container.addEventListener("lgAfterClose", onAfterClose);
 
     return () => {
       if (!container) return;
-      container.removeEventListener('lgInit', onInit);
-      container.removeEventListener('lgBeforeSlide', onBeforeSlide);
-      container.removeEventListener('lgAfterSlide', onAfterSlide);
-      container.removeEventListener('lgAfterClose', onAfterClose);
-      if (galleryRef.current && 'destroy' in galleryRef.current) {
+      container.removeEventListener("lgInit", onInit);
+      container.removeEventListener("lgBeforeSlide", onBeforeSlide);
+      container.removeEventListener("lgAfterSlide", onAfterSlide);
+      container.removeEventListener("lgAfterClose", onAfterClose);
+      if (galleryRef.current && "destroy" in galleryRef.current) {
         (galleryRef.current as unknown as { destroy(): void }).destroy();
       }
       infoBtnRef.current = null;
@@ -216,10 +236,13 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
     if (!galleryRef.current) return;
 
     if (isOpen) {
-      const dynamicElements = photos.map(photo => {
+      const dynamicElements = photos.map((photo) => {
         // Use DPI-aware selection for lightbox viewing (high quality)
         const lightboxImage = selectOptimalImage(photo, ImageUseCase.LIGHTBOX);
-        const thumbnailImage = selectOptimalImage(photo, ImageUseCase.THUMBNAIL);
+        const thumbnailImage = selectOptimalImage(
+          photo,
+          ImageUseCase.THUMBNAIL,
+        );
 
         return {
           src: lightboxImage.url,
@@ -232,7 +255,10 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
         if (dynamicElements.length === 0) {
           return;
         }
-        const safeIndex = Math.max(0, Math.min(initialIndex, dynamicElements.length - 1));
+        const safeIndex = Math.max(
+          0,
+          Math.min(initialIndex, dynamicElements.length - 1),
+        );
         const gallery = galleryRef.current as unknown as {
           refresh?: (elements: unknown[]) => void;
           updateSlides?: (elements: unknown[], index: number) => void;
@@ -240,9 +266,9 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
           openGallery?: (index: number) => void;
         };
 
-        if (typeof gallery.refresh === 'function') {
+        if (typeof gallery.refresh === "function") {
           gallery.refresh(dynamicElements);
-        } else if (typeof gallery.updateSlides === 'function') {
+        } else if (typeof gallery.updateSlides === "function") {
           gallery.updateSlides(dynamicElements, safeIndex);
         }
         const items = gallery.galleryItems ?? [];
@@ -250,7 +276,7 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
           return;
         }
         setCurrentIndex(safeIndex);
-        if (typeof gallery.openGallery === 'function') {
+        if (typeof gallery.openGallery === "function") {
           gallery.openGallery(safeIndex);
           if (defaultShowInfo) {
             setSidebarOpen(true);
@@ -258,7 +284,7 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
           onOpened?.();
         }
       } catch (error) {
-        console.error('Failed to open gallery:', error);
+        console.error("Failed to open gallery:", error);
       }
     }
   }, [isOpen, initialIndex, photos, onOpened, defaultShowInfo, getCaptionHtml]);
@@ -267,15 +293,18 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   useEffect(() => {
     const infoBtn = infoBtnRef.current;
     if (infoBtn) {
-      infoBtn.setAttribute('aria-pressed', sidebarOpen ? 'true' : 'false');
-      infoBtn.setAttribute('aria-label', sidebarOpen ? 'Hide info' : 'Show info');
-      infoBtn.classList.toggle('lg-custom-info--active', !!sidebarOpen);
+      infoBtn.setAttribute("aria-pressed", sidebarOpen ? "true" : "false");
+      infoBtn.setAttribute(
+        "aria-label",
+        sidebarOpen ? "Hide info" : "Show info",
+      );
+      infoBtn.classList.toggle("lg-custom-info--active", !!sidebarOpen);
     }
   }, [sidebarOpen]);
 
   return (
     <>
-      <div ref={containerRef} style={{ display: 'none' }} />
+      <div ref={containerRef} style={{ display: "none" }} />
 
       {currentPhoto && sidebarOpen && (
         <PhotoSwipeMetadataSidebar

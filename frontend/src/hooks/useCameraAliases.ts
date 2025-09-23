@@ -1,5 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '../api/client';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "../api/client";
 
 export interface CameraAlias {
   id: string;
@@ -63,12 +63,13 @@ export interface CameraAliasFilters {
 
 // Query key factory
 export const cameraAliasKeys = {
-  all: ['camera-aliases'] as const,
-  lists: () => [...cameraAliasKeys.all, 'list'] as const,
-  list: (filters: CameraAliasFilters) => [...cameraAliasKeys.lists(), filters] as const,
-  details: () => [...cameraAliasKeys.all, 'detail'] as const,
+  all: ["camera-aliases"] as const,
+  lists: () => [...cameraAliasKeys.all, "list"] as const,
+  list: (filters: CameraAliasFilters) =>
+    [...cameraAliasKeys.lists(), filters] as const,
+  details: () => [...cameraAliasKeys.all, "detail"] as const,
   detail: (id: string) => [...cameraAliasKeys.details(), id] as const,
-  discovery: () => [...cameraAliasKeys.all, 'discovery'] as const,
+  discovery: () => [...cameraAliasKeys.all, "discovery"] as const,
 };
 
 // Hooks
@@ -79,14 +80,16 @@ export function useCameraAliases(filters: CameraAliasFilters = {}) {
     queryFn: async (): Promise<CameraAliasListResponse> => {
       const params = new URLSearchParams();
 
-      if (filters.page) params.append('page', filters.page.toString());
-      if (filters.per_page) params.append('per_page', filters.per_page.toString());
-      if (filters.search) params.append('search', filters.search);
-      if (filters.brand) params.append('brand', filters.brand);
-      if (filters.is_active !== undefined) params.append('is_active', filters.is_active.toString());
+      if (filters.page) params.append("page", filters.page.toString());
+      if (filters.per_page)
+        params.append("per_page", filters.per_page.toString());
+      if (filters.search) params.append("search", filters.search);
+      if (filters.brand) params.append("brand", filters.brand);
+      if (filters.is_active !== undefined)
+        params.append("is_active", filters.is_active.toString());
 
       const response = await apiClient.get<CameraAliasListResponse>(
-        `/camera-aliases?${params.toString()}`
+        `/camera-aliases?${params.toString()}`,
       );
       return response.data;
     },
@@ -97,7 +100,9 @@ export function useCameraAlias(id: string) {
   return useQuery<CameraAlias>({
     queryKey: cameraAliasKeys.detail(id),
     queryFn: async (): Promise<CameraAlias> => {
-      const response = await apiClient.get<CameraAlias>(`/camera-aliases/${id}`);
+      const response = await apiClient.get<CameraAlias>(
+        `/camera-aliases/${id}`,
+      );
       return response.data;
     },
     enabled: !!id,
@@ -109,7 +114,7 @@ export function useCameraDiscovery() {
     queryKey: cameraAliasKeys.discovery(),
     queryFn: async (): Promise<CameraDiscoveryResponse> => {
       const response = await apiClient.get<CameraDiscoveryResponse>(
-        '/camera-aliases/discover/cameras'
+        "/camera-aliases/discover/cameras",
       );
       return response.data;
     },
@@ -121,12 +126,17 @@ export function useCreateCameraAlias() {
 
   return useMutation({
     mutationFn: async (data: CameraAliasCreate): Promise<CameraAlias> => {
-      const response = await apiClient.post<CameraAlias>('/camera-aliases', data);
+      const response = await apiClient.post<CameraAlias>(
+        "/camera-aliases",
+        data,
+      );
       return response.data;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: cameraAliasKeys.lists() });
-      void queryClient.invalidateQueries({ queryKey: cameraAliasKeys.discovery() });
+      void queryClient.invalidateQueries({
+        queryKey: cameraAliasKeys.discovery(),
+      });
     },
   });
 }
@@ -142,13 +152,20 @@ export function useUpdateCameraAlias() {
       id: string;
       data: CameraAliasUpdate;
     }): Promise<CameraAlias> => {
-      const response = await apiClient.put<CameraAlias>(`/camera-aliases/${id}`, data);
+      const response = await apiClient.put<CameraAlias>(
+        `/camera-aliases/${id}`,
+        data,
+      );
       return response.data;
     },
     onSuccess: (_, { id }) => {
       void queryClient.invalidateQueries({ queryKey: cameraAliasKeys.lists() });
-      void queryClient.invalidateQueries({ queryKey: cameraAliasKeys.detail(id) });
-      void queryClient.invalidateQueries({ queryKey: cameraAliasKeys.discovery() });
+      void queryClient.invalidateQueries({
+        queryKey: cameraAliasKeys.detail(id),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: cameraAliasKeys.discovery(),
+      });
     },
   });
 }
@@ -162,7 +179,9 @@ export function useDeleteCameraAlias() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: cameraAliasKeys.lists() });
-      void queryClient.invalidateQueries({ queryKey: cameraAliasKeys.discovery() });
+      void queryClient.invalidateQueries({
+        queryKey: cameraAliasKeys.discovery(),
+      });
     },
   });
 }

@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
+import { Link, useLocation } from "react-router-dom";
 
-import { photos } from '../api/client';
-import PhotoGrid from '../components/PhotoGrid';
-import PhotoLightbox from '../components/PhotoLightbox';
-import PhotoMap from '../components/PhotoMap';
-import type { Photo, PhotoListResponse } from '../types';
+import { photos } from "../api/client";
+import PhotoGrid from "../components/PhotoGrid";
+import PhotoLightbox from "../components/PhotoLightbox";
+import PhotoMap from "../components/PhotoMap";
+import type { Photo, PhotoListResponse } from "../types";
 
 const PhotographyPage: React.FC = () => {
   const [allPhotos, setAllPhotos] = useState<Photo[]>([]);
@@ -16,7 +16,9 @@ const PhotographyPage: React.FC = () => {
   const [isPhotoSwipeOpen, setIsPhotoSwipeOpen] = useState(false);
   const [isLGOpening, setIsLGOpening] = useState(false);
   const [photoSwipeIndex, setPhotoSwipeIndex] = useState(0);
-  const [highlightedPhotoId, setHighlightedPhotoId] = useState<string | null>(null);
+  const [highlightedPhotoId, setHighlightedPhotoId] = useState<string | null>(
+    null,
+  );
   const photoGridRef = useRef<HTMLDivElement>(null);
   const photosPerPage = 24;
   const location = useLocation() as { state?: { photoId?: string } };
@@ -27,12 +29,12 @@ const PhotographyPage: React.FC = () => {
     isLoading,
     error,
   } = useQuery<PhotoListResponse>({
-    queryKey: ['photos', 'list', currentPage],
+    queryKey: ["photos", "list", currentPage],
     queryFn: () =>
       photos.list({
         page: currentPage,
         per_page: photosPerPage,
-        order_by: 'created_at',
+        order_by: "created_at",
       }),
   });
 
@@ -42,7 +44,7 @@ const PhotographyPage: React.FC = () => {
       if (currentPage === 1) {
         setAllPhotos(photoData.photos);
       } else {
-        setAllPhotos(prev => [...prev, ...photoData.photos]);
+        setAllPhotos((prev) => [...prev, ...photoData.photos]);
       }
       setIsLoadingMore(false);
     }
@@ -52,7 +54,7 @@ const PhotographyPage: React.FC = () => {
   useEffect(() => {
     const targetId = location?.state?.photoId;
     if (!targetId || allPhotos.length === 0) return;
-    const idx = allPhotos.findIndex(p => p.id === targetId);
+    const idx = allPhotos.findIndex((p) => p.id === targetId);
     if (idx >= 0) {
       setPhotoSwipeIndex(idx);
       setIsLGOpening(true);
@@ -67,7 +69,7 @@ const PhotographyPage: React.FC = () => {
   };
 
   const handleMapPhotoClick = (photo: Photo) => {
-    const index = allPhotos.findIndex(p => p.id === photo.id);
+    const index = allPhotos.findIndex((p) => p.id === photo.id);
     if (index >= 0) {
       // Highlight the photo in the grid
       setHighlightedPhotoId(photo.id);
@@ -91,7 +93,7 @@ const PhotographyPage: React.FC = () => {
 
         photoGridRef.current.scrollTo({
           top: scrollTop,
-          behavior: 'smooth',
+          behavior: "smooth",
         });
       }
 
@@ -118,7 +120,7 @@ const PhotographyPage: React.FC = () => {
   const handleLoadMore = () => {
     if (photoData && currentPage < photoData.pages) {
       setIsLoadingMore(true);
-      setCurrentPage(prev => prev + 1);
+      setCurrentPage((prev) => prev + 1);
     }
   };
 
@@ -147,8 +149,8 @@ const PhotographyPage: React.FC = () => {
             Photography
           </h1>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            A collection of my favorite captures from travels, adventures, and everyday moments
-            around the world.
+            A collection of my favorite captures from travels, adventures, and
+            everyday moments around the world.
           </p>
         </motion.div>
 
@@ -160,7 +162,9 @@ const PhotographyPage: React.FC = () => {
             className="text-center py-12"
           >
             <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
-              <p className="text-red-600">Failed to load photos. Please try again later.</p>
+              <p className="text-red-600">
+                Failed to load photos. Please try again later.
+              </p>
             </div>
           </motion.div>
         )}
@@ -198,7 +202,11 @@ const PhotographyPage: React.FC = () => {
             >
               {isLoadingMore ? (
                 <>
-                  <svg className="animate-spin mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24">
+                  <svg
+                    className="animate-spin mr-2 h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
                     <circle
                       className="opacity-25"
                       cx="12"
@@ -262,8 +270,8 @@ const PhotographyPage: React.FC = () => {
                 Explore by Location
               </h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Discover where these photos were captured. Click on markers to view photos from that
-                location.
+                Discover where these photos were captured. Click on markers to
+                view photos from that location.
               </p>
             </div>
             <PhotoMap

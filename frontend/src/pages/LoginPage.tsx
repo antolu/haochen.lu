@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
-import type { AxiosError } from 'axios';
-import { useForm } from 'react-hook-form';
-import { motion } from 'framer-motion';
-import toast from 'react-hot-toast';
+import React, { useState, useEffect } from "react";
+import { Navigate, useLocation } from "react-router-dom";
+import type { AxiosError } from "axios";
+import { useForm } from "react-hook-form";
+import { motion } from "framer-motion";
+import toast from "react-hot-toast";
 
-import { useAuthStore } from '../stores/authStore';
-import type { LoginRequest } from '../types';
+import { useAuthStore } from "../stores/authStore";
+import type { LoginRequest } from "../types";
 
 interface LoginFormData extends LoginRequest {
   rememberMe: boolean;
@@ -14,7 +14,13 @@ interface LoginFormData extends LoginRequest {
 
 const LoginPage: React.FC = () => {
   const location = useLocation();
-  const { login, isAuthenticated, error, clearError, isLoading: authLoading } = useAuthStore();
+  const {
+    login,
+    isAuthenticated,
+    error,
+    clearError,
+    isLoading: authLoading,
+  } = useAuthStore();
   const [isLocalLoading, setIsLocalLoading] = useState(false);
 
   // Use auth store loading state or local loading state
@@ -27,9 +33,11 @@ const LoginPage: React.FC = () => {
   } = useForm<LoginFormData>();
 
   const from =
-    (location.state && typeof location.state === 'object' && 'from' in location.state
+    (location.state &&
+    typeof location.state === "object" &&
+    "from" in location.state
       ? (location.state as { from?: { pathname?: string } }).from?.pathname
-      : undefined) ?? '/admin';
+      : undefined) ?? "/admin";
 
   // Clear local loading state when authentication state changes
   useEffect(() => {
@@ -50,27 +58,27 @@ const LoginPage: React.FC = () => {
       // Set a timeout to prevent hanging login attempts
       const loginPromise = login(data, data.rememberMe);
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Login timeout')), 30000)
+        setTimeout(() => reject(new Error("Login timeout")), 30000),
       );
 
       await Promise.race([loginPromise, timeoutPromise]);
-      toast.success('Login successful!');
+      toast.success("Login successful!");
     } catch (error: unknown) {
-      let errorMessage = 'Login failed';
+      let errorMessage = "Login failed";
 
       const axiosError = error as AxiosError<{ detail?: string }>;
       const message = (error as Error).message;
 
-      if (message === 'Login timeout') {
-        errorMessage = 'Login request timed out. Please try again.';
+      if (message === "Login timeout") {
+        errorMessage = "Login request timed out. Please try again.";
       } else if (axiosError?.response?.data?.detail) {
         errorMessage = axiosError.response.data.detail ?? errorMessage;
       } else if (axiosError?.response?.status === 401) {
-        errorMessage = 'Invalid username or password';
+        errorMessage = "Invalid username or password";
       } else if (axiosError?.response?.status === 403) {
-        errorMessage = 'Access denied';
+        errorMessage = "Access denied";
       } else if ((axiosError?.response?.status ?? 0) >= 500) {
-        errorMessage = 'Server error. Please try again later.';
+        errorMessage = "Server error. Please try again later.";
       }
 
       toast.error(errorMessage);
@@ -99,13 +107,16 @@ const LoginPage: React.FC = () => {
 
         <form
           className="mt-8 space-y-6"
-          onSubmit={e => {
-            void handleSubmit(d => onSubmit(d))(e);
+          onSubmit={(e) => {
+            void handleSubmit((d) => onSubmit(d))(e);
           }}
         >
           <div className="rounded-md shadow-sm space-y-4">
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="username"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Username
               </label>
               <input
@@ -113,18 +124,23 @@ const LoginPage: React.FC = () => {
                 type="text"
                 autoComplete="username"
                 className={`relative block w-full px-3 py-2 border rounded-md placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm ${
-                  errors.username ? 'border-red-300' : 'border-gray-300'
+                  errors.username ? "border-red-300" : "border-gray-300"
                 }`}
                 placeholder="Enter your username"
-                {...register('username', { required: 'Username is required' })}
+                {...register("username", { required: "Username is required" })}
               />
               {errors.username && (
-                <p className="mt-1 text-sm text-red-600">{errors.username.message}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.username.message}
+                </p>
               )}
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Password
               </label>
               <input
@@ -132,13 +148,15 @@ const LoginPage: React.FC = () => {
                 type="password"
                 autoComplete="current-password"
                 className={`relative block w-full px-3 py-2 border rounded-md placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm ${
-                  errors.password ? 'border-red-300' : 'border-gray-300'
+                  errors.password ? "border-red-300" : "border-gray-300"
                 }`}
                 placeholder="Enter your password"
-                {...register('password', { required: 'Password is required' })}
+                {...register("password", { required: "Password is required" })}
               />
               {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.password.message}
+                </p>
               )}
             </div>
           </div>
@@ -148,9 +166,12 @@ const LoginPage: React.FC = () => {
               id="rememberMe"
               type="checkbox"
               className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-              {...register('rememberMe')}
+              {...register("rememberMe")}
             />
-            <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-700">
+            <label
+              htmlFor="rememberMe"
+              className="ml-2 block text-sm text-gray-700"
+            >
               Keep me logged in for 30 days
             </label>
           </div>
@@ -173,13 +194,16 @@ const LoginPage: React.FC = () => {
                   Signing in...
                 </div>
               ) : (
-                'Sign in'
+                "Sign in"
               )}
             </button>
           </div>
 
           <div className="text-center">
-            <a href="/" className="text-primary-600 hover:text-primary-500 text-sm font-medium">
+            <a
+              href="/"
+              className="text-primary-600 hover:text-primary-500 text-sm font-medium"
+            >
               ← Back to home
             </a>
           </div>

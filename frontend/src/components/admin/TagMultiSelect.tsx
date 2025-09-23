@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState } from "react";
 
 interface TagMultiSelectProps {
   value: string[];
@@ -11,14 +11,14 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
   value,
   options,
   onChange,
-  placeholder = 'Search or create tags...',
+  placeholder = "Search or create tags...",
 }) => {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return options;
-    return options.filter(o => o.toLowerCase().includes(q));
+    return options.filter((o) => o.toLowerCase().includes(q));
   }, [query, options]);
 
   const addTag = (tag: string) => {
@@ -26,19 +26,19 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
     if (!cleaned) return;
     if (value.includes(cleaned)) return;
     onChange([...value, cleaned]);
-    setQuery('');
+    setQuery("");
   };
 
   const removeTag = (tag: string) => {
-    onChange(value.filter(v => v !== tag));
+    onChange(value.filter((v) => v !== tag));
   };
 
-  const onKeyDown: React.KeyboardEventHandler<HTMLInputElement> = e => {
-    if (e.key === 'Enter') {
+  const onKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
+    if (e.key === "Enter") {
       e.preventDefault();
       if (query) addTag(query);
     }
-    if (e.key === 'Backspace' && !query && value.length) {
+    if (e.key === "Backspace" && !query && value.length) {
       removeTag(value[value.length - 1]);
     }
   };
@@ -46,13 +46,16 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
   return (
     <div className="mt-1">
       <div className="flex flex-wrap items-center gap-2 border border-gray-300 rounded px-2 py-2">
-        {value.map(tag => (
+        {value.map((tag) => (
           <span
             key={tag}
             className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded"
           >
             {tag}
-            <button onClick={() => removeTag(tag)} className="text-blue-600 hover:text-blue-800">
+            <button
+              onClick={() => removeTag(tag)}
+              className="text-blue-600 hover:text-blue-800"
+            >
               ✕
             </button>
           </span>
@@ -61,7 +64,7 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
           className="flex-1 min-w-[120px] outline-none text-sm"
           placeholder={placeholder}
           value={query}
-          onChange={e => setQuery(e.target.value)}
+          onChange={(e) => setQuery(e.target.value)}
           onKeyDown={onKeyDown}
         />
       </div>
@@ -72,7 +75,7 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
               No match. Press Enter to create "{query}".
             </div>
           )}
-          {filtered.map(opt => (
+          {filtered.map((opt) => (
             <button
               key={opt}
               onClick={() => addTag(opt)}

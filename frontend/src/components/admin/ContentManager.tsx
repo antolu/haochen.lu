@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { AxiosError } from 'axios';
-import { content } from '../../api/client';
-import type { Content, ContentCreate, ContentUpdate } from '../../types';
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { AxiosError } from "axios";
+import { content } from "../../api/client";
+import type { Content, ContentCreate, ContentUpdate } from "../../types";
 
 interface ContentFormData {
   key: string;
@@ -17,16 +17,16 @@ const ContentManager: React.FC = () => {
   const [editingContent, setEditingContent] = useState<Content | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [formData, setFormData] = useState<ContentFormData>({
-    key: '',
-    title: '',
-    content: '',
-    content_type: 'text',
-    category: 'general',
+    key: "",
+    title: "",
+    content: "",
+    content_type: "text",
+    category: "general",
     is_active: true,
   });
   const [filter, setFilter] = useState({
-    category: '',
-    search: '',
+    category: "",
+    search: "",
     is_active: true,
   });
 
@@ -38,7 +38,7 @@ const ContentManager: React.FC = () => {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['admin-content', filter],
+    queryKey: ["admin-content", filter],
     queryFn: () => content.list(filter),
   });
 
@@ -46,25 +46,26 @@ const ContentManager: React.FC = () => {
   const createMutation = useMutation({
     mutationFn: (data: ContentCreate) => content.create(data),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['admin-content'] });
+      void queryClient.invalidateQueries({ queryKey: ["admin-content"] });
       setShowCreateForm(false);
       resetForm();
     },
     onError: (error: AxiosError) => {
-      console.error('Error creating content:', error);
+      console.error("Error creating content:", error);
     },
   });
 
   // Update content mutation
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: ContentUpdate }) => content.update(id, data),
+    mutationFn: ({ id, data }: { id: string; data: ContentUpdate }) =>
+      content.update(id, data),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['admin-content'] });
+      void queryClient.invalidateQueries({ queryKey: ["admin-content"] });
       setEditingContent(null);
       resetForm();
     },
     onError: (error: AxiosError) => {
-      console.error('Error updating content:', error);
+      console.error("Error updating content:", error);
     },
   });
 
@@ -72,20 +73,20 @@ const ContentManager: React.FC = () => {
   const deleteMutation = useMutation({
     mutationFn: (id: string) => content.delete(id),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['admin-content'] });
+      void queryClient.invalidateQueries({ queryKey: ["admin-content"] });
     },
     onError: (error: AxiosError) => {
-      console.error('Error deleting content:', error);
+      console.error("Error deleting content:", error);
     },
   });
 
   const resetForm = () => {
     setFormData({
-      key: '',
-      title: '',
-      content: '',
-      content_type: 'text',
-      category: 'general',
+      key: "",
+      title: "",
+      content: "",
+      content_type: "text",
+      category: "general",
       is_active: true,
     });
   };
@@ -123,12 +124,12 @@ const ContentManager: React.FC = () => {
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this content?')) {
+    if (window.confirm("Are you sure you want to delete this content?")) {
       deleteMutation.mutate(id);
     }
   };
 
-  const categories = ['hero', 'about', 'contact', 'navigation', 'general'];
+  const categories = ["hero", "about", "contact", "navigation", "general"];
 
   if (isLoading) {
     return (
@@ -141,7 +142,8 @@ const ContentManager: React.FC = () => {
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded">
-        Error loading content: {error instanceof Error ? error.message : 'Unknown error'}
+        Error loading content:{" "}
+        {error instanceof Error ? error.message : "Unknown error"}
       </div>
     );
   }
@@ -162,14 +164,18 @@ const ContentManager: React.FC = () => {
       <div className="bg-white p-4 rounded-lg border space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Category
+            </label>
             <select
               value={filter.category}
-              onChange={e => setFilter({ ...filter, category: e.target.value })}
+              onChange={(e) =>
+                setFilter({ ...filter, category: e.target.value })
+              }
               className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <option value="">All Categories</option>
-              {categories.map(cat => (
+              {categories.map((cat) => (
                 <option key={cat} value={cat}>
                   {cat.charAt(0).toUpperCase() + cat.slice(1)}
                 </option>
@@ -177,10 +183,14 @@ const ContentManager: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Status
+            </label>
             <select
-              value={filter.is_active ? 'active' : 'inactive'}
-              onChange={e => setFilter({ ...filter, is_active: e.target.value === 'active' })}
+              value={filter.is_active ? "active" : "inactive"}
+              onChange={(e) =>
+                setFilter({ ...filter, is_active: e.target.value === "active" })
+              }
               className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <option value="active">Active</option>
@@ -188,11 +198,13 @@ const ContentManager: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Search
+            </label>
             <input
               type="text"
               value={filter.search}
-              onChange={e => setFilter({ ...filter, search: e.target.value })}
+              onChange={(e) => setFilter({ ...filter, search: e.target.value })}
               placeholder="Search by title, key, or content..."
               className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
@@ -230,7 +242,7 @@ const ContentManager: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {contentList?.content.map(item => (
+              {contentList?.content.map((item) => (
                 <tr key={item.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {item.key}
@@ -249,10 +261,12 @@ const ContentManager: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        item.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        item.is_active
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
                       }`}
                     >
-                      {item.is_active ? 'Active' : 'Inactive'}
+                      {item.is_active ? "Active" : "Inactive"}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
@@ -295,7 +309,7 @@ const ContentManager: React.FC = () => {
           <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">
-                {editingContent ? 'Edit Content' : 'Create Content'}
+                {editingContent ? "Edit Content" : "Create Content"}
               </h3>
               <button
                 onClick={() => {
@@ -305,7 +319,12 @@ const ContentManager: React.FC = () => {
                 }}
                 className="text-gray-400 hover:text-gray-600"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -318,27 +337,36 @@ const ContentManager: React.FC = () => {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Key *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Key *
+                </label>
                 <input
                   type="text"
                   value={formData.key}
-                  onChange={e => setFormData({ ...formData, key: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, key: e.target.value })
+                  }
                   disabled={!!editingContent}
                   required
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100"
                   placeholder="e.g., hero.title, about.description"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Unique identifier for this content (cannot be changed after creation)
+                  Unique identifier for this content (cannot be changed after
+                  creation)
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Title *
+                </label>
                 <input
                   type="text"
                   value={formData.title}
-                  onChange={e => setFormData({ ...formData, title: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, title: e.target.value })
+                  }
                   required
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder="Human-readable title"
@@ -347,13 +375,17 @@ const ContentManager: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Category
+                  </label>
                   <select
                     value={formData.category}
-                    onChange={e => setFormData({ ...formData, category: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, category: e.target.value })
+                    }
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
-                    {categories.map(cat => (
+                    {categories.map((cat) => (
                       <option key={cat} value={cat}>
                         {cat.charAt(0).toUpperCase() + cat.slice(1)}
                       </option>
@@ -367,7 +399,9 @@ const ContentManager: React.FC = () => {
                   </label>
                   <select
                     value={formData.content_type}
-                    onChange={e => setFormData({ ...formData, content_type: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, content_type: e.target.value })
+                    }
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                     <option value="text">Text</option>
@@ -378,10 +412,14 @@ const ContentManager: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Content *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Content *
+                </label>
                 <textarea
                   value={formData.content}
-                  onChange={e => setFormData({ ...formData, content: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, content: e.target.value })
+                  }
                   required
                   rows={6}
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -394,10 +432,15 @@ const ContentManager: React.FC = () => {
                   type="checkbox"
                   id="is_active"
                   checked={formData.is_active}
-                  onChange={e => setFormData({ ...formData, is_active: e.target.checked })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, is_active: e.target.checked })
+                  }
                   className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                 />
-                <label htmlFor="is_active" className="ml-2 text-sm text-gray-700">
+                <label
+                  htmlFor="is_active"
+                  className="ml-2 text-sm text-gray-700"
+                >
                   Active (content will be displayed on the website)
                 </label>
               </div>
@@ -416,14 +459,16 @@ const ContentManager: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  disabled={createMutation.isPending || updateMutation.isPending}
+                  disabled={
+                    createMutation.isPending || updateMutation.isPending
+                  }
                   className="px-4 py-2 bg-primary-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
                 >
                   {createMutation.isPending || updateMutation.isPending
-                    ? 'Saving...'
+                    ? "Saving..."
                     : editingContent
-                      ? 'Update'
-                      : 'Create'}
+                      ? "Update"
+                      : "Create"}
                 </button>
               </div>
             </form>

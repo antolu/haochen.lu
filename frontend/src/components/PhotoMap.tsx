@@ -1,16 +1,16 @@
-import React, { useEffect, useMemo } from 'react';
-import L from 'leaflet';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import MarkerClusterGroup from 'react-leaflet-cluster';
-import type { Photo } from '../types';
-import { formatDateSimple } from '../utils/dateFormat';
-import { getTileConfig } from '../utils/mapUtils';
-import './PhotoMap.css';
+import React, { useEffect, useMemo } from "react";
+import L from "leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import MarkerClusterGroup from "react-leaflet-cluster";
+import type { Photo } from "../types";
+import { formatDateSimple } from "../utils/dateFormat";
+import { getTileConfig } from "../utils/mapUtils";
+import "./PhotoMap.css";
 
 // Custom photo marker icon
 const createPhotoMarker = (photoUrl: string) => {
   return L.divIcon({
-    className: 'custom-photo-marker',
+    className: "custom-photo-marker",
     html: `
       <div class="w-10 h-10 rounded-full border-2 border-white shadow-lg overflow-hidden">
         <img src="${photoUrl}" class="w-full h-full object-cover" />
@@ -30,11 +30,11 @@ interface MarkerCluster {
 
 const createClusterIcon = (cluster: MarkerCluster) => {
   const count = cluster.getChildCount();
-  const size = count < 10 ? 'small' : count < 100 ? 'medium' : 'large';
+  const size = count < 10 ? "small" : count < 100 ? "medium" : "large";
 
   // Get first few photos for preview
   const childMarkers = cluster.getAllChildMarkers();
-  const previewPhotos = childMarkers.slice(0, 4).map(marker => {
+  const previewPhotos = childMarkers.slice(0, 4).map((marker) => {
     const photo = marker.options.photo;
     return photo.variants?.thumbnail?.url ?? photo.original_url;
   });
@@ -44,10 +44,10 @@ const createClusterIcon = (cluster: MarkerCluster) => {
     count >= 4
       ? `
     <div class="cluster-thumbnails">
-      ${previewPhotos.map((url: string) => `<img src="${url}" class="cluster-thumb" />`).join('')}
+      ${previewPhotos.map((url: string) => `<img src="${url}" class="cluster-thumb" />`).join("")}
     </div>
   `
-      : '';
+      : "";
 
   return L.divIcon({
     html: `
@@ -58,11 +58,11 @@ const createClusterIcon = (cluster: MarkerCluster) => {
         </div>
       </div>
     `,
-    className: 'photo-cluster-marker',
+    className: "photo-cluster-marker",
     iconSize: L.point(
       count < 10 ? 40 : count < 100 ? 50 : 60,
       count < 10 ? 40 : count < 100 ? 50 : 60,
-      true
+      true,
     ),
   });
 };
@@ -80,19 +80,21 @@ interface ClusterClickEvent {
   layer: MarkerCluster;
 }
 
-const ClusterEvents: React.FC<{ onPhotoClick?: (photo: Photo) => void }> = ({ onPhotoClick }) => {
+const ClusterEvents: React.FC<{ onPhotoClick?: (photo: Photo) => void }> = ({
+  onPhotoClick,
+}) => {
   const map = useMap();
 
   useEffect(() => {
-    map.on('cluster:click', (event: ClusterClickEvent) => {
+    map.on("cluster:click", (event: ClusterClickEvent) => {
       const cluster = event.layer;
       const childMarkers = cluster.getAllChildMarkers();
 
       // Create popup content with all photos in cluster
-      const photos = childMarkers.map(marker => marker.options.photo);
+      const photos = childMarkers.map((marker) => marker.options.photo);
 
-      const popupContent = document.createElement('div');
-      popupContent.className = 'cluster-popup';
+      const popupContent = document.createElement("div");
+      popupContent.className = "cluster-popup";
       popupContent.innerHTML = `
         <div class="cluster-popup-header">
           <h3 class="font-semibold text-sm mb-2">${photos.length} photos at this location</h3>
@@ -100,25 +102,26 @@ const ClusterEvents: React.FC<{ onPhotoClick?: (photo: Photo) => void }> = ({ on
         <div class="cluster-popup-grid">
           ${photos
             .map((photo: Photo) => {
-              const thumbnailUrl = photo.variants?.thumbnail?.url ?? photo.original_url;
+              const thumbnailUrl =
+                photo.variants?.thumbnail?.url ?? photo.original_url;
               return `
               <div class="cluster-popup-item" data-photo-id="${photo.id}">
-                <img src="${thumbnailUrl}" alt="${photo.title ?? 'Photo'}" class="cluster-popup-thumb" />
+                <img src="${thumbnailUrl}" alt="${photo.title ?? "Photo"}" class="cluster-popup-thumb" />
                 <div class="cluster-popup-info">
-                  <p class="font-medium text-xs truncate">${photo.title ?? 'Untitled'}</p>
-                  ${photo.date_taken ? `<p class="text-xs text-gray-500">${new Date(photo.date_taken).toLocaleDateString()}</p>` : ''}
+                  <p class="font-medium text-xs truncate">${photo.title ?? "Untitled"}</p>
+                  ${photo.date_taken ? `<p class="text-xs text-gray-500">${new Date(photo.date_taken).toLocaleDateString()}</p>` : ""}
                 </div>
               </div>
             `;
             })
-            .join('')}
+            .join("")}
         </div>
       `;
 
       // Add click handlers for individual photos
-      popupContent.querySelectorAll('.cluster-popup-item').forEach(item => {
+      popupContent.querySelectorAll(".cluster-popup-item").forEach((item) => {
         const element = item as HTMLElement;
-        element.addEventListener('click', () => {
+        element.addEventListener("click", () => {
           const photoId = element.dataset.photoId;
           const photo = photos.find((p: Photo) => p.id === photoId);
           if (photo && onPhotoClick) {
@@ -130,7 +133,7 @@ const ClusterEvents: React.FC<{ onPhotoClick?: (photo: Photo) => void }> = ({ on
       // Show popup at cluster location
       L.popup({
         maxWidth: 300,
-        className: 'cluster-popup-container',
+        className: "cluster-popup-container",
       })
         .setLatLng(cluster.getLatLng())
         .setContent(popupContent)
@@ -138,7 +141,7 @@ const ClusterEvents: React.FC<{ onPhotoClick?: (photo: Photo) => void }> = ({ on
     });
 
     return () => {
-      map.off('cluster:click');
+      map.off("cluster:click");
     };
   }, [map, onPhotoClick]);
 
@@ -153,7 +156,7 @@ const MapBounds: React.FC<{ photos: Photo[] }> = ({ photos }) => {
     if (photos.length === 0) return;
 
     const bounds = L.latLngBounds([]);
-    photos.forEach(photo => {
+    photos.forEach((photo) => {
       if (photo.location_lat && photo.location_lon) {
         bounds.extend([photo.location_lat, photo.location_lon]);
       }
@@ -172,13 +175,13 @@ const PhotoMap: React.FC<PhotoMapProps> = ({
   onPhotoClick,
   height = 400,
   zoom = 10,
-  className = '',
+  className = "",
 }) => {
   const tileConfig = useMemo(() => getTileConfig(), []);
 
   // Filter photos that have location data
   const photosWithLocation = useMemo(() => {
-    return photos.filter(photo => photo.location_lat && photo.location_lon);
+    return photos.filter((photo) => photo.location_lat && photo.location_lon);
   }, [photos]);
 
   // Calculate center from photos or use default
@@ -192,10 +195,19 @@ const PhotoMap: React.FC<PhotoMapProps> = ({
     }
 
     // Calculate average center
-    const latSum = photosWithLocation.reduce((sum, photo) => sum + (photo.location_lat ?? 0), 0);
-    const lngSum = photosWithLocation.reduce((sum, photo) => sum + (photo.location_lon ?? 0), 0);
+    const latSum = photosWithLocation.reduce(
+      (sum, photo) => sum + (photo.location_lat ?? 0),
+      0,
+    );
+    const lngSum = photosWithLocation.reduce(
+      (sum, photo) => sum + (photo.location_lon ?? 0),
+      0,
+    );
 
-    return [latSum / photosWithLocation.length, lngSum / photosWithLocation.length];
+    return [
+      latSum / photosWithLocation.length,
+      lngSum / photosWithLocation.length,
+    ];
   }, [photosWithLocation]);
 
   if (photosWithLocation.length === 0) {
@@ -225,7 +237,9 @@ const PhotoMap: React.FC<PhotoMapProps> = ({
             />
           </svg>
           <p className="font-medium">No geotagged photos</p>
-          <p className="text-sm">Upload photos with GPS coordinates to see them on the map</p>
+          <p className="text-sm">
+            Upload photos with GPS coordinates to see them on the map
+          </p>
         </div>
       </div>
     );
@@ -236,7 +250,7 @@ const PhotoMap: React.FC<PhotoMapProps> = ({
       <MapContainer
         center={mapCenter}
         zoom={zoom}
-        style={{ height: `${height}px`, width: '100%' }}
+        style={{ height: `${height}px`, width: "100%" }}
         className="rounded-lg overflow-hidden"
       >
         <TileLayer
@@ -257,10 +271,12 @@ const PhotoMap: React.FC<PhotoMapProps> = ({
           showCoverageOnHover={false}
           zoomToBoundsOnClick={true}
         >
-          {photosWithLocation.map(photo => {
+          {photosWithLocation.map((photo) => {
             // Get thumbnail URL - using variants system or fallback
             const thumbnailUrl =
-              photo.variants?.thumbnail?.url ?? photo.original_url ?? `/uploads/${photo.filename}`;
+              photo.variants?.thumbnail?.url ??
+              photo.original_url ??
+              `/uploads/${photo.filename}`;
 
             return (
               <Marker
@@ -276,15 +292,17 @@ const PhotoMap: React.FC<PhotoMapProps> = ({
                     <div className="aspect-video mb-2 rounded overflow-hidden">
                       <img
                         src={thumbnailUrl}
-                        alt={photo.title || 'Photo'}
+                        alt={photo.title || "Photo"}
                         className="w-full h-full object-cover"
                       />
                     </div>
                     <h3 className="font-semibold text-sm mb-1 truncate">
-                      {photo.title || 'Untitled'}
+                      {photo.title || "Untitled"}
                     </h3>
                     {photo.location_name && (
-                      <p className="text-xs text-gray-600 mb-1">📍 {photo.location_name}</p>
+                      <p className="text-xs text-gray-600 mb-1">
+                        📍 {photo.location_name}
+                      </p>
                     )}
                     {photo.date_taken && (
                       <p className="text-xs text-gray-500">
@@ -306,7 +324,7 @@ const PhotoMap: React.FC<PhotoMapProps> = ({
 
       <div className="mt-2 text-sm text-gray-500">
         Showing {photosWithLocation.length} geotagged photo
-        {photosWithLocation.length !== 1 ? 's' : ''} of {photos.length} total
+        {photosWithLocation.length !== 1 ? "s" : ""} of {photos.length} total
       </div>
     </div>
   );

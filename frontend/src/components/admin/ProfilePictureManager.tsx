@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import ProfilePictureUpload from '../ProfilePictureUpload';
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import ProfilePictureUpload from "../ProfilePictureUpload";
 import {
   useProfilePictures,
   useActiveProfilePicture,
   useUploadProfilePicture,
   useActivateProfilePicture,
   useDeleteProfilePicture,
-} from '../../hooks/useProfilePictures';
-import { selectOptimalImage, ImageUseCase } from '../../utils/imageUtils';
-import type { ProfilePicture } from '../../types';
+} from "../../hooks/useProfilePictures";
+import { selectOptimalImage, ImageUseCase } from "../../utils/imageUtils";
+import type { ProfilePicture } from "../../types";
 
 const ProfilePictureManager: React.FC = () => {
   const [showUpload, setShowUpload] = useState(false);
@@ -31,7 +31,7 @@ const ProfilePictureManager: React.FC = () => {
       await uploadMutation.mutateAsync({ file, title });
       setShowUpload(false);
     } catch (error) {
-      console.error('Upload failed:', error);
+      console.error("Upload failed:", error);
     }
   };
 
@@ -39,25 +39,25 @@ const ProfilePictureManager: React.FC = () => {
     try {
       await activateMutation.mutateAsync(id);
     } catch (error) {
-      console.error('Activation failed:', error);
+      console.error("Activation failed:", error);
     }
   };
 
   const handleDelete = async (profilePicture: ProfilePicture) => {
-    const confirmMessage = `Are you sure you want to delete "${profilePicture.title ?? 'this profile picture'}"? This action cannot be undone.`;
+    const confirmMessage = `Are you sure you want to delete "${profilePicture.title ?? "this profile picture"}"? This action cannot be undone.`;
     if (!window.confirm(confirmMessage)) return;
 
     try {
       await deleteMutation.mutateAsync(profilePicture.id);
     } catch (error) {
-      console.error('Deletion failed:', error);
+      console.error("Deletion failed:", error);
     }
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 B';
+    if (bytes === 0) return "0 B";
     const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const sizes = ["B", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
   };
@@ -98,7 +98,9 @@ const ProfilePictureManager: React.FC = () => {
       <div className="mb-8">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Profile Pictures</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Profile Pictures
+            </h1>
             <p className="mt-2 text-gray-600">
               Manage your profile pictures. Only one can be active at a time.
             </p>
@@ -132,8 +134,12 @@ const ProfilePictureManager: React.FC = () => {
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Pictures</p>
-              <p className="text-2xl font-bold text-gray-900">{profilePictures.length}</p>
+              <p className="text-sm font-medium text-gray-600">
+                Total Pictures
+              </p>
+              <p className="text-2xl font-bold text-gray-900">
+                {profilePictures.length}
+              </p>
             </div>
           </div>
         </div>
@@ -156,8 +162,12 @@ const ProfilePictureManager: React.FC = () => {
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Active Picture</p>
-              <p className="text-2xl font-bold text-gray-900">{activeProfilePicture ? '1' : '0'}</p>
+              <p className="text-sm font-medium text-gray-600">
+                Active Picture
+              </p>
+              <p className="text-2xl font-bold text-gray-900">
+                {activeProfilePicture ? "1" : "0"}
+              </p>
             </div>
           </div>
         </div>
@@ -183,7 +193,10 @@ const ProfilePictureManager: React.FC = () => {
               <p className="text-sm font-medium text-gray-600">Total Size</p>
               <p className="text-2xl font-bold text-gray-900">
                 {formatFileSize(
-                  profilePictures.reduce((total, pic) => total + (pic.file_size ?? 0), 0)
+                  profilePictures.reduce(
+                    (total, pic) => total + (pic.file_size ?? 0),
+                    0,
+                  ),
                 )}
               </p>
             </div>
@@ -219,7 +232,9 @@ const ProfilePictureManager: React.FC = () => {
       {/* Profile Pictures Grid */}
       <div className="bg-white rounded-lg border border-gray-200">
         <div className="p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">All Profile Pictures</h2>
+          <h2 className="text-lg font-medium text-gray-900 mb-4">
+            All Profile Pictures
+          </h2>
 
           {isLoading ? (
             <div className="flex justify-center py-12">
@@ -240,7 +255,9 @@ const ProfilePictureManager: React.FC = () => {
                   d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
               </svg>
-              <p className="text-gray-600 mb-4">No profile pictures uploaded yet</p>
+              <p className="text-gray-600 mb-4">
+                No profile pictures uploaded yet
+              </p>
               <button
                 onClick={() => setShowUpload(true)}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -250,15 +267,20 @@ const ProfilePictureManager: React.FC = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {profilePictures.map(profilePicture => {
-                const optimalImage = selectOptimalImage(profilePicture, ImageUseCase.THUMBNAIL);
+              {profilePictures.map((profilePicture) => {
+                const optimalImage = selectOptimalImage(
+                  profilePicture,
+                  ImageUseCase.THUMBNAIL,
+                );
                 const isActive = profilePicture.id === activeProfilePicture?.id;
 
                 return (
                   <div
                     key={profilePicture.id}
                     className={`relative bg-white rounded-lg border-2 overflow-hidden transition-colors ${
-                      isActive ? 'border-green-500' : 'border-gray-200 hover:border-gray-300'
+                      isActive
+                        ? "border-green-500"
+                        : "border-gray-200 hover:border-gray-300"
                     }`}
                   >
                     {/* Active Badge */}
@@ -274,7 +296,7 @@ const ProfilePictureManager: React.FC = () => {
                     <div className="aspect-square bg-gray-100">
                       <img
                         src={optimalImage.url}
-                        alt={profilePicture.title ?? 'Profile Picture'}
+                        alt={profilePicture.title ?? "Profile Picture"}
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -282,25 +304,31 @@ const ProfilePictureManager: React.FC = () => {
                     {/* Info */}
                     <div className="p-4">
                       <h3 className="font-medium text-gray-900 truncate">
-                        {profilePicture.title ?? 'Untitled'}
+                        {profilePicture.title ?? "Untitled"}
                       </h3>
                       <p className="text-sm text-gray-500 mt-1">
-                        {profilePicture.width}×{profilePicture.height} •{' '}
+                        {profilePicture.width}×{profilePicture.height} •{" "}
                         {formatFileSize(profilePicture.file_size ?? 0)}
                       </p>
                       <p className="text-xs text-gray-400 mt-1">
-                        {new Date(profilePicture.created_at).toLocaleDateString()}
+                        {new Date(
+                          profilePicture.created_at,
+                        ).toLocaleDateString()}
                       </p>
 
                       {/* Actions */}
                       <div className="flex space-x-2 mt-3">
                         {!isActive && (
                           <button
-                            onClick={() => void handleActivate(profilePicture.id)}
+                            onClick={() =>
+                              void handleActivate(profilePicture.id)
+                            }
                             disabled={activateMutation.isPending}
                             className="flex-1 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50"
                           >
-                            {activateMutation.isPending ? 'Setting...' : 'Set Active'}
+                            {activateMutation.isPending
+                              ? "Setting..."
+                              : "Set Active"}
                           </button>
                         )}
                         <button
@@ -308,7 +336,7 @@ const ProfilePictureManager: React.FC = () => {
                           disabled={deleteMutation.isPending}
                           className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors disabled:opacity-50"
                         >
-                          {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+                          {deleteMutation.isPending ? "Deleting..." : "Delete"}
                         </button>
                       </div>
                     </div>

@@ -1,7 +1,11 @@
-import React, { useMemo, useState } from 'react';
-import type { Photo } from '../../types';
-import { useReorderPhotos, useDeletePhoto, useTogglePhotoFeatured } from '../../hooks/usePhotos';
-import { selectOptimalImage, ImageUseCase } from '../../utils/imageUtils';
+import React, { useMemo, useState } from "react";
+import type { Photo } from "../../types";
+import {
+  useReorderPhotos,
+  useDeletePhoto,
+  useTogglePhotoFeatured,
+} from "../../hooks/usePhotos";
+import { selectOptimalImage, ImageUseCase } from "../../utils/imageUtils";
 
 interface PhotoListTableProps {
   photos: Photo[];
@@ -9,7 +13,11 @@ interface PhotoListTableProps {
   onEdit: (photo: Photo) => void;
 }
 
-const PhotoListTable: React.FC<PhotoListTableProps> = ({ photos, isLoading = false, onEdit }) => {
+const PhotoListTable: React.FC<PhotoListTableProps> = ({
+  photos,
+  isLoading = false,
+  onEdit,
+}) => {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [localOrder, setLocalOrder] = useState<Record<string, number>>({});
 
@@ -18,7 +26,7 @@ const PhotoListTable: React.FC<PhotoListTableProps> = ({ photos, isLoading = fal
   const reorderMutation = useReorderPhotos();
 
   const sorted = useMemo(() => {
-    const arr = [...photos].map(p => ({
+    const arr = [...photos].map((p) => ({
       ...p,
       order: localOrder[p.id] ?? p.order,
     }));
@@ -26,13 +34,14 @@ const PhotoListTable: React.FC<PhotoListTableProps> = ({ photos, isLoading = fal
       a.order !== b.order
         ? a.order - b.order
         : new Date(b.date_taken ?? b.created_at).getTime() -
-          new Date(a.date_taken ?? a.created_at).getTime()
+          new Date(a.date_taken ?? a.created_at).getTime(),
     );
     return arr;
   }, [photos, localOrder]);
 
   const handleDragStart = (index: number) => setDragIndex(index);
-  const handleDragOver = (e: React.DragEvent<HTMLTableRowElement>) => e.preventDefault();
+  const handleDragOver = (e: React.DragEvent<HTMLTableRowElement>) =>
+    e.preventDefault();
   const handleDrop = (dropIndex: number) => {
     if (dragIndex === null || dragIndex === dropIndex) return;
     const reordered = [...sorted];
@@ -60,7 +69,9 @@ const PhotoListTable: React.FC<PhotoListTableProps> = ({ photos, isLoading = fal
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">#</th>
+            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+              #
+            </th>
             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
               Preview
             </th>
@@ -94,10 +105,15 @@ const PhotoListTable: React.FC<PhotoListTableProps> = ({ photos, isLoading = fal
               onDrop={() => handleDrop(index)}
               className="hover:bg-gray-50"
             >
-              <td className="px-4 py-2 text-sm text-gray-500 cursor-move">☰</td>
+              <td className="px-4 py-2 text-sm text-gray-500 cursor-move">
+                ☰
+              </td>
               <td className="px-4 py-2">
                 {(() => {
-                  const optimalImage = selectOptimalImage(p, ImageUseCase.ADMIN);
+                  const optimalImage = selectOptimalImage(
+                    p,
+                    ImageUseCase.ADMIN,
+                  );
                   return (
                     <img
                       src={optimalImage.url}
@@ -108,21 +124,29 @@ const PhotoListTable: React.FC<PhotoListTableProps> = ({ photos, isLoading = fal
                 })()}
               </td>
               <td className="px-4 py-2">
-                <div className="text-sm text-gray-900 truncate max-w-xs" title={p.title}>
-                  {p.title ?? 'Untitled'}
+                <div
+                  className="text-sm text-gray-900 truncate max-w-xs"
+                  title={p.title}
+                >
+                  {p.title ?? "Untitled"}
                 </div>
                 {p.description && (
-                  <div className="text-xs text-gray-500 truncate max-w-sm" title={p.description}>
+                  <div
+                    className="text-xs text-gray-500 truncate max-w-sm"
+                    title={p.description}
+                  >
                     {p.description}
                   </div>
                 )}
               </td>
-              <td className="px-4 py-2 text-sm text-gray-700">{p.category ?? '-'}</td>
+              <td className="px-4 py-2 text-sm text-gray-700">
+                {p.category ?? "-"}
+              </td>
               <td
                 className="px-4 py-2 text-sm text-gray-700 truncate max-w-xs"
-                title={p.tags ?? ''}
+                title={p.tags ?? ""}
               >
-                {p.tags ?? '-'}
+                {p.tags ?? "-"}
               </td>
               <td className="px-4 py-2">
                 <button
@@ -132,9 +156,9 @@ const PhotoListTable: React.FC<PhotoListTableProps> = ({ photos, isLoading = fal
                       featured: !p.featured,
                     })
                   }
-                  className={`px-2 py-1 text-xs rounded border ${p.featured ? 'bg-yellow-100 border-yellow-300 text-yellow-700' : 'bg-gray-100 border-gray-300 text-gray-700'}`}
+                  className={`px-2 py-1 text-xs rounded border ${p.featured ? "bg-yellow-100 border-yellow-300 text-yellow-700" : "bg-gray-100 border-gray-300 text-gray-700"}`}
                 >
-                  {p.featured ? 'Featured' : 'Normal'}
+                  {p.featured ? "Featured" : "Normal"}
                 </button>
               </td>
               <td className="px-4 py-2 text-sm text-gray-500">{p.order}</td>

@@ -2,13 +2,13 @@
  * Image optimization utilities for DPI-aware and responsive image selection
  */
 
-import type { Photo } from '../types';
+import type { Photo } from "../types";
 
 export interface DeviceContext {
   devicePixelRatio: number;
   viewportWidth: number;
   viewportHeight: number;
-  connectionSpeed?: 'slow' | 'fast' | 'unknown';
+  connectionSpeed?: "slow" | "fast" | "unknown";
 }
 
 export interface ImageVariant {
@@ -33,9 +33,9 @@ export interface OptimalImageSelection {
  * Device DPI categories for image optimization
  */
 export const DPICategory = {
-  STANDARD: 'standard', // 1x displays
-  HIGH_DPI: 'high-dpi', // 2x displays (MacBook, iPad)
-  ULTRA_HIGH_DPI: 'ultra-high-dpi', // 3x+ displays (iPhone Pro)
+  STANDARD: "standard", // 1x displays
+  HIGH_DPI: "high-dpi", // 2x displays (MacBook, iPad)
+  ULTRA_HIGH_DPI: "ultra-high-dpi", // 3x+ displays (iPhone Pro)
 } as const;
 export type DPICategory = (typeof DPICategory)[keyof typeof DPICategory];
 
@@ -43,10 +43,10 @@ export type DPICategory = (typeof DPICategory)[keyof typeof DPICategory];
  * Screen size categories for responsive selection
  */
 export const ScreenSize = {
-  SMALL: 'small', // < 640px (mobile)
-  MEDIUM: 'medium', // 640px - 1024px (tablet)
-  LARGE: 'large', // 1024px - 1536px (desktop)
-  XLARGE: 'xlarge', // > 1536px (large desktop)
+  SMALL: "small", // < 640px (mobile)
+  MEDIUM: "medium", // 640px - 1024px (tablet)
+  LARGE: "large", // 1024px - 1536px (desktop)
+  XLARGE: "xlarge", // > 1536px (large desktop)
 } as const;
 export type ScreenSize = (typeof ScreenSize)[keyof typeof ScreenSize];
 
@@ -54,11 +54,11 @@ export type ScreenSize = (typeof ScreenSize)[keyof typeof ScreenSize];
  * Image use cases with different quality requirements
  */
 export const ImageUseCase = {
-  THUMBNAIL: 'thumbnail', // Grid thumbnails, previews
-  GALLERY: 'gallery', // Main gallery display
-  LIGHTBOX: 'lightbox', // Full-screen viewing
-  HERO: 'hero', // Hero/banner images
-  ADMIN: 'admin', // Admin interface
+  THUMBNAIL: "thumbnail", // Grid thumbnails, previews
+  GALLERY: "gallery", // Main gallery display
+  LIGHTBOX: "lightbox", // Full-screen viewing
+  HERO: "hero", // Hero/banner images
+  ADMIN: "admin", // Admin interface
 } as const;
 export type ImageUseCase = (typeof ImageUseCase)[keyof typeof ImageUseCase];
 
@@ -66,13 +66,13 @@ export type ImageUseCase = (typeof ImageUseCase)[keyof typeof ImageUseCase];
  * Detects current device context
  */
 export const getDeviceContext = (): DeviceContext => {
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     // SSR fallback
     return {
       devicePixelRatio: 1,
       viewportWidth: 1200,
       viewportHeight: 800,
-      connectionSpeed: 'unknown',
+      connectionSpeed: "unknown",
     };
   }
 
@@ -87,24 +87,25 @@ export const getDeviceContext = (): DeviceContext => {
 /**
  * Detects network connection speed (simplified)
  */
-const getConnectionSpeed = (): 'slow' | 'fast' | 'unknown' => {
-  if (typeof navigator === 'undefined' || !('connection' in navigator)) {
-    return 'unknown';
+const getConnectionSpeed = (): "slow" | "fast" | "unknown" => {
+  if (typeof navigator === "undefined" || !("connection" in navigator)) {
+    return "unknown";
   }
 
-  const connection = (navigator as unknown as { connection?: { effectiveType?: string } })
-    .connection;
-  if (!connection) return 'unknown';
+  const connection = (
+    navigator as unknown as { connection?: { effectiveType?: string } }
+  ).connection;
+  if (!connection) return "unknown";
 
   // Simplified classification based on effective connection type
-  const slowConnections = ['slow-2g', '2g', '3g'];
+  const slowConnections = ["slow-2g", "2g", "3g"];
   const effectiveType = connection.effectiveType;
 
   if (effectiveType && slowConnections.includes(effectiveType)) {
-    return 'slow';
+    return "slow";
   }
 
-  return 'fast';
+  return "fast";
 };
 
 /**
@@ -132,7 +133,7 @@ export const getScreenSize = (viewportWidth: number): ScreenSize => {
 export const calculateTargetSize = (
   useCase: ImageUseCase,
   context: DeviceContext,
-  containerSize?: { width: number; height: number }
+  containerSize?: { width: number; height: number },
 ): number => {
   const { devicePixelRatio, viewportWidth } = context;
   const screenSize = getScreenSize(viewportWidth);
@@ -189,19 +190,21 @@ export const calculateTargetSize = (
 export const findOptimalVariant = (
   variants: Record<string, ImageVariant>,
   targetSize: number,
-  connectionSpeed: 'slow' | 'fast' | 'unknown' = 'unknown'
+  connectionSpeed: "slow" | "fast" | "unknown" = "unknown",
 ): string => {
   const variantEntries = Object.entries(variants);
 
   if (variantEntries.length === 0) {
-    return 'original';
+    return "original";
   }
 
   // Sort variants by width
-  const sortedVariants = variantEntries.sort(([, a], [, b]) => a.width - b.width);
+  const sortedVariants = variantEntries.sort(
+    ([, a], [, b]) => a.width - b.width,
+  );
 
   // For slow connections, prefer smaller images
-  if (connectionSpeed === 'slow') {
+  if (connectionSpeed === "slow") {
     targetSize = Math.min(targetSize, 800);
   }
 
@@ -223,13 +226,15 @@ export const findOptimalVariant = (
 /**
  * Generates srcset string for responsive images
  */
-export const generateSrcSet = (variants: Record<string, ImageVariant>): string => {
+export const generateSrcSet = (
+  variants: Record<string, ImageVariant>,
+): string => {
   const variantEntries = Object.entries(variants);
 
   return variantEntries
     .filter(([, variant]) => variant.url) // Only include variants with URLs
     .map(([, variant]) => `${variant.url} ${variant.width}w`)
-    .join(', ');
+    .join(", ");
 };
 
 /**
@@ -239,14 +244,15 @@ export const generateSizesAttribute = (useCase: ImageUseCase): string => {
   // Default sizes based on use case
   const defaultSizes = {
     [ImageUseCase.THUMBNAIL]:
-      '(max-width: 640px) 200px, (max-width: 1024px) 250px, (max-width: 1536px) 300px, 350px',
+      "(max-width: 640px) 200px, (max-width: 1024px) 250px, (max-width: 1536px) 300px, 350px",
     [ImageUseCase.GALLERY]:
-      '(max-width: 640px) 400px, (max-width: 1024px) 600px, (max-width: 1536px) 800px, 1000px',
+      "(max-width: 640px) 400px, (max-width: 1024px) 600px, (max-width: 1536px) 800px, 1000px",
     [ImageUseCase.LIGHTBOX]:
-      '(max-width: 640px) 100vw, (max-width: 1024px) 90vw, (max-width: 1536px) 80vw, 70vw',
+      "(max-width: 640px) 100vw, (max-width: 1024px) 90vw, (max-width: 1536px) 80vw, 70vw",
     [ImageUseCase.HERO]:
-      '(max-width: 640px) 100vw, (max-width: 1024px) 100vw, (max-width: 1536px) 90vw, 80vw',
-    [ImageUseCase.ADMIN]: '(max-width: 640px) 300px, (max-width: 1024px) 400px, 500px',
+      "(max-width: 640px) 100vw, (max-width: 1024px) 100vw, (max-width: 1536px) 90vw, 80vw",
+    [ImageUseCase.ADMIN]:
+      "(max-width: 640px) 300px, (max-width: 1024px) 400px, 500px",
   };
 
   return defaultSizes[useCase];
@@ -258,7 +264,7 @@ export const generateSizesAttribute = (useCase: ImageUseCase): string => {
 export const selectOptimalImage = (
   photo: Photo,
   useCase: ImageUseCase,
-  containerSize?: { width: number; height: number }
+  containerSize?: { width: number; height: number },
 ): OptimalImageSelection => {
   const context = getDeviceContext();
   const variants = photo.variants ?? {};
@@ -267,11 +273,17 @@ export const selectOptimalImage = (
   const targetSize = calculateTargetSize(useCase, context, containerSize);
 
   // Find optimal variant
-  const selectedVariant = findOptimalVariant(variants, targetSize, context.connectionSpeed);
+  const selectedVariant = findOptimalVariant(
+    variants,
+    targetSize,
+    context.connectionSpeed,
+  );
 
   // Get URLs with proper fallbacks
   const selectedUrl =
-    variants[selectedVariant]?.url ?? photo.original_url ?? `/uploads/${photo.filename}`;
+    variants[selectedVariant]?.url ??
+    photo.original_url ??
+    `/uploads/${photo.filename}`;
   const fallbackUrl =
     variants.small?.url ??
     variants.thumbnail?.url ??
@@ -279,8 +291,12 @@ export const selectOptimalImage = (
     `/uploads/${photo.filename}`;
 
   // Generate responsive attributes
-  const srcset = Object.keys(variants).length > 1 ? generateSrcSet(variants) : undefined;
-  const sizes = Object.keys(variants).length > 1 ? generateSizesAttribute(useCase) : undefined;
+  const srcset =
+    Object.keys(variants).length > 1 ? generateSrcSet(variants) : undefined;
+  const sizes =
+    Object.keys(variants).length > 1
+      ? generateSizesAttribute(useCase)
+      : undefined;
 
   return {
     selectedVariant,
@@ -297,7 +313,7 @@ export const selectOptimalImage = (
 export const getOptimalImageUrl = (
   photo: Photo,
   useCase: ImageUseCase,
-  containerSize?: { width: number; height: number }
+  containerSize?: { width: number; height: number },
 ): string => {
   return selectOptimalImage(photo, useCase, containerSize).url;
 };
@@ -308,7 +324,7 @@ export const getOptimalImageUrl = (
 export const useOptimalImage = (
   photo: Photo,
   useCase: ImageUseCase,
-  containerSize?: { width: number; height: number }
+  containerSize?: { width: number; height: number },
 ) => {
   // In a real implementation, this could be a proper React hook with state
   // For now, we'll just return the selection
@@ -321,7 +337,7 @@ export const useOptimalImage = (
 export const debugImageSelection = (
   photo: Photo,
   useCase: ImageUseCase,
-  containerSize?: { width: number; height: number }
+  containerSize?: { width: number; height: number },
 ): object => {
   const context = getDeviceContext();
   const targetSize = calculateTargetSize(useCase, context, containerSize);

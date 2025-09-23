@@ -1,9 +1,9 @@
-import React, { useRef, useState, useEffect, memo, forwardRef } from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
-import { useInView } from 'react-intersection-observer';
-import type { Photo } from '../types';
-import { formatDateSimple } from '../utils/dateFormat';
-import { selectOptimalImage, ImageUseCase } from '../utils/imageUtils';
+import React, { useRef, useState, useEffect, memo, forwardRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { useInView } from "react-intersection-observer";
+import type { Photo } from "../types";
+import { formatDateSimple } from "../utils/dateFormat";
+import { selectOptimalImage, ImageUseCase } from "../utils/imageUtils";
 
 interface PhotoGridProps {
   photos: Photo[];
@@ -76,8 +76,8 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
       className={`
         group relative bg-gray-100 rounded-lg overflow-hidden cursor-pointer
         transform transition-all duration-300 hover:scale-105 md:hover:scale-110
-        ${onClick ? 'hover:shadow-xl' : ''}
-        ${isHighlighted ? 'ring-4 ring-blue-500 ring-opacity-75 shadow-2xl scale-105' : ''}
+        ${onClick ? "hover:shadow-xl" : ""}
+        ${isHighlighted ? "ring-4 ring-blue-500 ring-opacity-75 shadow-2xl scale-105" : ""}
         opacity-0 animate-fade-in
       `}
       style={{
@@ -86,13 +86,13 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
         zIndex: isHighlighted ? 50 : 1, // Higher z-index for highlighted photos
         animationDelay: `${index * 20}ms`,
       }}
-      onMouseEnter={e => {
+      onMouseEnter={(e) => {
         // Ensure hovered element is always on top
-        (e.currentTarget as HTMLElement).style.zIndex = '100';
+        (e.currentTarget as HTMLElement).style.zIndex = "100";
       }}
-      onMouseLeave={e => {
+      onMouseLeave={(e) => {
         // Reset z-index when not hovered
-        (e.currentTarget as HTMLElement).style.zIndex = '1';
+        (e.currentTarget as HTMLElement).style.zIndex = "1";
       }}
       onClick={handleClick}
     >
@@ -111,10 +111,10 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
             src={imageUrl}
             srcSet={srcSet}
             sizes={sizes}
-            alt={photo.title || 'Photo'}
+            alt={photo.title || "Photo"}
             className={`
               w-full h-full object-cover transition-opacity duration-300
-              ${isLoaded ? 'opacity-100' : 'opacity-0'}
+              ${isLoaded ? "opacity-100" : "opacity-0"}
             `}
             onLoad={handleImageLoad}
             onError={handleImageError}
@@ -144,10 +144,15 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
               data-testid="metadata-overlay"
             >
               <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
-                <h3 className="font-medium text-sm truncate mb-1">{photo.title || 'Untitled'}</h3>
+                <h3 className="font-medium text-sm truncate mb-1">
+                  {photo.title || "Untitled"}
+                </h3>
 
                 {photo.location_name && (
-                  <p className="text-xs text-gray-300 truncate mb-1" data-testid="location-text">
+                  <p
+                    className="text-xs text-gray-300 truncate mb-1"
+                    data-testid="location-text"
+                  >
                     📍 {photo.location_name}
                   </p>
                 )}
@@ -198,13 +203,14 @@ const PhotoGrid = memo(
         columns,
         gap = 8,
         showMetadata = false,
-        className = '',
+        className = "",
         highlightedPhotoId = null,
       },
-      ref
+      ref,
     ) => {
       const parentRef = useRef<HTMLDivElement>(null);
-      const containerRef = (ref as React.RefObject<HTMLDivElement>) || parentRef;
+      const containerRef =
+        (ref as React.RefObject<HTMLDivElement>) || parentRef;
       const [containerWidth, setContainerWidth] = useState(0);
 
       // Auto-calculate columns based on container width - reduced for larger square photos
@@ -220,7 +226,7 @@ const PhotoGrid = memo(
       const numColumns = getColumns();
       const itemWidth = Math.max(
         300, // Reduced from 400px to 300px
-        Math.floor((containerWidth - gap * (numColumns - 1)) / numColumns)
+        Math.floor((containerWidth - gap * (numColumns - 1)) / numColumns),
       );
       const itemHeight = itemWidth; // 1:1 aspect ratio (square)
 
@@ -233,8 +239,8 @@ const PhotoGrid = memo(
         };
 
         updateWidth();
-        window.addEventListener('resize', updateWidth);
-        return () => window.removeEventListener('resize', updateWidth);
+        window.addEventListener("resize", updateWidth);
+        return () => window.removeEventListener("resize", updateWidth);
       }, [containerRef]);
 
       // Calculate rows for virtualization - add extra height for hover effects
@@ -283,7 +289,9 @@ const PhotoGrid = memo(
               />
             </svg>
             <p className="text-gray-600 text-lg font-medium">No photos found</p>
-            <p className="text-gray-500 text-sm mt-1">Upload some photos to see them here</p>
+            <p className="text-gray-500 text-sm mt-1">
+              Upload some photos to see them here
+            </p>
           </div>
         );
       }
@@ -293,16 +301,16 @@ const PhotoGrid = memo(
           ref={containerRef}
           data-testid="photo-grid-container"
           className={`h-full overflow-auto ${className}`}
-          style={{ height: '100%', width: '100%', padding: '24px' }}
+          style={{ height: "100%", width: "100%", padding: "24px" }}
         >
           <div
             style={{
               height: `${virtualizer.getTotalSize()}px`,
-              width: '100%',
-              position: 'relative',
+              width: "100%",
+              position: "relative",
             }}
           >
-            {virtualizer.getVirtualItems().map(virtualRow => {
+            {virtualizer.getVirtualItems().map((virtualRow) => {
               const startIndex = virtualRow.index * numColumns;
               const endIndex = Math.min(startIndex + numColumns, photos.length);
               const rowPhotos = photos.slice(startIndex, endIndex);
@@ -311,17 +319,17 @@ const PhotoGrid = memo(
                 <div
                   key={virtualRow.key}
                   style={{
-                    position: 'absolute',
+                    position: "absolute",
                     top: 0,
                     left: 0,
-                    width: '100%',
+                    width: "100%",
                     height: `${rowHeight}px`,
                     transform: `translateY(${virtualRow.start}px)`,
                   }}
                 >
                   <div
                     className="flex overflow-visible"
-                    style={{ gap: `${gap}px`, padding: '16px' }}
+                    style={{ gap: `${gap}px`, padding: "16px" }}
                   >
                     {rowPhotos.map((photo, colIndex) => {
                       const photoIndex = startIndex + colIndex;
@@ -341,9 +349,14 @@ const PhotoGrid = memo(
                     })}
                     {/* Fill remaining columns if the last row is incomplete */}
                     {rowPhotos.length < numColumns &&
-                      Array.from({ length: numColumns - rowPhotos.length }).map((_, i) => (
-                        <div key={`empty-${i}`} style={{ width: itemWidth, height: itemHeight }} />
-                      ))}
+                      Array.from({ length: numColumns - rowPhotos.length }).map(
+                        (_, i) => (
+                          <div
+                            key={`empty-${i}`}
+                            style={{ width: itemWidth, height: itemHeight }}
+                          />
+                        ),
+                      )}
                   </div>
                 </div>
               );
@@ -351,10 +364,10 @@ const PhotoGrid = memo(
           </div>
         </div>
       );
-    }
-  )
+    },
+  ),
 );
 
-PhotoGrid.displayName = 'PhotoGrid';
+PhotoGrid.displayName = "PhotoGrid";
 
 export default PhotoGrid;

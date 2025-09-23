@@ -9,15 +9,15 @@
  * - Error handling for private/missing repositories
  * - Content caching and refresh mechanisms
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import MockAdapter from 'axios-mock-adapter';
-import apiClient from '../../api/client';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import MockAdapter from "axios-mock-adapter";
+import apiClient from "../../api/client";
 import {
   parseRepositoryUrl,
   generateSlug,
   parseTechnologies,
   formatTechnologies,
-} from '../../hooks/useProjects';
+} from "../../hooks/useProjects";
 
 // Mock adapter for API calls
 let mockAdapter: MockAdapter;
@@ -110,7 +110,7 @@ Please read our contributing guidelines before submitting PRs.
 This project is licensed under the MIT License.
 `;
 
-describe('Repository Service Integration Tests', () => {
+describe("Repository Service Integration Tests", () => {
   beforeEach(() => {
     mockAdapter = new MockAdapter(apiClient);
     vi.clearAllMocks();
@@ -120,194 +120,216 @@ describe('Repository Service Integration Tests', () => {
     mockAdapter.restore();
   });
 
-  describe('Repository Validation Service', () => {
-    it('validates GitHub repository successfully', async () => {
-      const repoUrl = 'https://github.com/testuser/test-project';
+  describe("Repository Validation Service", () => {
+    it("validates GitHub repository successfully", async () => {
+      const repoUrl = "https://github.com/testuser/test-project";
       const expectedResponse = {
-        type: 'github',
-        owner: 'testuser',
-        name: 'test-project',
+        type: "github",
+        owner: "testuser",
+        name: "test-project",
         url: repoUrl,
         valid: true,
       };
 
-      mockAdapter.onPost('/projects/repository/validate').reply(200, expectedResponse);
+      mockAdapter
+        .onPost("/projects/repository/validate")
+        .reply(200, expectedResponse);
 
-      const response = await apiClient.post('/projects/repository/validate', {
+      const response = await apiClient.post("/projects/repository/validate", {
         repository_url: repoUrl,
       });
 
       expect(response.data).toEqual(expectedResponse);
-      expect(mockAdapter.history.post[0].data).toBe(JSON.stringify({ repository_url: repoUrl }));
+      expect(mockAdapter.history.post[0].data).toBe(
+        JSON.stringify({ repository_url: repoUrl }),
+      );
     });
 
-    it('validates GitLab repository successfully', async () => {
-      const repoUrl = 'https://gitlab.com/testuser/test-project';
+    it("validates GitLab repository successfully", async () => {
+      const repoUrl = "https://gitlab.com/testuser/test-project";
       const expectedResponse = {
-        type: 'gitlab',
-        owner: 'testuser',
-        name: 'test-project',
+        type: "gitlab",
+        owner: "testuser",
+        name: "test-project",
         url: repoUrl,
         valid: true,
       };
 
-      mockAdapter.onPost('/projects/repository/validate').reply(200, expectedResponse);
+      mockAdapter
+        .onPost("/projects/repository/validate")
+        .reply(200, expectedResponse);
 
-      const response = await apiClient.post('/projects/repository/validate', {
+      const response = await apiClient.post("/projects/repository/validate", {
         repository_url: repoUrl,
       });
 
       expect(response.data).toEqual(expectedResponse);
     });
 
-    it('handles private repository validation', async () => {
-      const repoUrl = 'https://github.com/testuser/private-project';
+    it("handles private repository validation", async () => {
+      const repoUrl = "https://github.com/testuser/private-project";
 
-      mockAdapter.onPost('/projects/repository/validate').reply(403, {
-        detail: 'Repository is private or does not exist',
+      mockAdapter.onPost("/projects/repository/validate").reply(403, {
+        detail: "Repository is private or does not exist",
       });
 
       await expect(
-        apiClient.post('/projects/repository/validate', {
+        apiClient.post("/projects/repository/validate", {
           repository_url: repoUrl,
-        })
+        }),
       ).rejects.toMatchObject({
         response: {
           status: 403,
-          data: { detail: 'Repository is private or does not exist' },
+          data: { detail: "Repository is private or does not exist" },
         },
       });
     });
 
-    it('handles invalid repository URLs', async () => {
-      const invalidUrl = 'not-a-repository-url';
+    it("handles invalid repository URLs", async () => {
+      const invalidUrl = "not-a-repository-url";
 
-      mockAdapter.onPost('/projects/repository/validate').reply(400, {
-        detail: 'Invalid repository URL format',
+      mockAdapter.onPost("/projects/repository/validate").reply(400, {
+        detail: "Invalid repository URL format",
       });
 
       await expect(
-        apiClient.post('/projects/repository/validate', {
+        apiClient.post("/projects/repository/validate", {
           repository_url: invalidUrl,
-        })
+        }),
       ).rejects.toMatchObject({
         response: {
           status: 400,
-          data: { detail: 'Invalid repository URL format' },
+          data: { detail: "Invalid repository URL format" },
         },
       });
     });
 
-    it('handles repository not found errors', async () => {
-      const nonExistentUrl = 'https://github.com/nonexistent/repository';
+    it("handles repository not found errors", async () => {
+      const nonExistentUrl = "https://github.com/nonexistent/repository";
 
-      mockAdapter.onPost('/projects/repository/validate').reply(404, {
-        detail: 'Repository not found',
+      mockAdapter.onPost("/projects/repository/validate").reply(404, {
+        detail: "Repository not found",
       });
 
       await expect(
-        apiClient.post('/projects/repository/validate', {
+        apiClient.post("/projects/repository/validate", {
           repository_url: nonExistentUrl,
-        })
+        }),
       ).rejects.toMatchObject({
         response: {
           status: 404,
-          data: { detail: 'Repository not found' },
+          data: { detail: "Repository not found" },
         },
       });
     });
 
-    it('handles rate limiting from Git providers', async () => {
-      const repoUrl = 'https://github.com/testuser/test-project';
+    it("handles rate limiting from Git providers", async () => {
+      const repoUrl = "https://github.com/testuser/test-project";
 
-      mockAdapter.onPost('/projects/repository/validate').reply(429, {
-        detail: 'Rate limit exceeded',
+      mockAdapter.onPost("/projects/repository/validate").reply(429, {
+        detail: "Rate limit exceeded",
         retry_after: 3600,
       });
 
       await expect(
-        apiClient.post('/projects/repository/validate', {
+        apiClient.post("/projects/repository/validate", {
           repository_url: repoUrl,
-        })
+        }),
       ).rejects.toMatchObject({
         response: {
           status: 429,
-          data: { detail: 'Rate limit exceeded', retry_after: 3600 },
+          data: { detail: "Rate limit exceeded", retry_after: 3600 },
         },
       });
     });
   });
 
-  describe('README Content Service', () => {
-    it('fetches README content from GitHub', async () => {
-      const projectId = 'project-1';
-      const repoUrl = 'https://github.com/testuser/test-project';
+  describe("README Content Service", () => {
+    it("fetches README content from GitHub", async () => {
+      const projectId = "project-1";
+      const repoUrl = "https://github.com/testuser/test-project";
       const expectedResponse = {
         content: mockReadmeContent,
-        source: 'github',
-        last_updated: '2023-01-25T09:15:00Z',
+        source: "github",
+        last_updated: "2023-01-25T09:15:00Z",
       };
 
-      mockAdapter.onPost(`/projects/${projectId}/fetch-readme`).reply(200, expectedResponse);
+      mockAdapter
+        .onPost(`/projects/${projectId}/fetch-readme`)
+        .reply(200, expectedResponse);
 
-      const response = await apiClient.post(`/projects/${projectId}/fetch-readme`, {
-        repo_url: repoUrl,
-      });
+      const response = await apiClient.post(
+        `/projects/${projectId}/fetch-readme`,
+        {
+          repo_url: repoUrl,
+        },
+      );
 
       expect(response.data).toEqual(expectedResponse);
-      expect((response.data as { content: string }).content).toContain('# Test Project');
-      expect((response.data as { content: string }).content).toContain('## Features');
+      expect((response.data as { content: string }).content).toContain(
+        "# Test Project",
+      );
+      expect((response.data as { content: string }).content).toContain(
+        "## Features",
+      );
     });
 
-    it('fetches README content from GitLab', async () => {
-      const projectId = 'project-1';
-      const repoUrl = 'https://gitlab.com/testuser/test-project';
+    it("fetches README content from GitLab", async () => {
+      const projectId = "project-1";
+      const repoUrl = "https://gitlab.com/testuser/test-project";
       const expectedResponse = {
         content: mockReadmeContent,
-        source: 'gitlab',
-        last_updated: '2023-01-25T09:15:00Z',
+        source: "gitlab",
+        last_updated: "2023-01-25T09:15:00Z",
       };
 
-      mockAdapter.onPost(`/projects/${projectId}/fetch-readme`).reply(200, expectedResponse);
+      mockAdapter
+        .onPost(`/projects/${projectId}/fetch-readme`)
+        .reply(200, expectedResponse);
 
-      const response = await apiClient.post(`/projects/${projectId}/fetch-readme`, {
-        repo_url: repoUrl,
-      });
+      const response = await apiClient.post(
+        `/projects/${projectId}/fetch-readme`,
+        {
+          repo_url: repoUrl,
+        },
+      );
 
       expect(response.data).toEqual(expectedResponse);
-      expect((response.data as { source: string }).source).toBe('gitlab');
+      expect((response.data as { source: string }).source).toBe("gitlab");
     });
 
-    it('handles README not found in repository', async () => {
-      const projectId = 'project-1';
-      const repoUrl = 'https://github.com/testuser/no-readme-project';
+    it("handles README not found in repository", async () => {
+      const projectId = "project-1";
+      const repoUrl = "https://github.com/testuser/no-readme-project";
 
       mockAdapter.onPost(`/projects/${projectId}/fetch-readme`).reply(404, {
-        detail: 'README.md not found in repository',
+        detail: "README.md not found in repository",
       });
 
       await expect(
         apiClient.post(`/projects/${projectId}/fetch-readme`, {
           repo_url: repoUrl,
-        })
+        }),
       ).rejects.toMatchObject({
         response: {
           status: 404,
-          data: { detail: 'README.md not found in repository' },
+          data: { detail: "README.md not found in repository" },
         },
       });
     });
 
-    it('retrieves cached README content', async () => {
-      const projectId = 'project-1';
+    it("retrieves cached README content", async () => {
+      const projectId = "project-1";
       const cachedResponse = {
         content: mockReadmeContent,
-        source: 'github',
-        last_updated: '2023-01-20T10:00:00Z',
+        source: "github",
+        last_updated: "2023-01-20T10:00:00Z",
         cached: true,
       };
 
-      mockAdapter.onGet(`/projects/${projectId}/readme`).reply(200, cachedResponse);
+      mockAdapter
+        .onGet(`/projects/${projectId}/readme`)
+        .reply(200, cachedResponse);
 
       const response = await apiClient.get(`/projects/${projectId}/readme`);
 
@@ -315,59 +337,68 @@ describe('Repository Service Integration Tests', () => {
       expect((response.data as { cached: boolean }).cached).toBe(true);
     });
 
-    it('refreshes README content when requested', async () => {
-      const projectId = 'project-1';
-      const repoUrl = 'https://github.com/testuser/test-project';
+    it("refreshes README content when requested", async () => {
+      const projectId = "project-1";
+      const repoUrl = "https://github.com/testuser/test-project";
       const refreshedResponse = {
         content: `${mockReadmeContent}\n\n## Updates\n\nNew content added.`,
-        source: 'github',
-        last_updated: '2023-01-25T15:30:00Z',
+        source: "github",
+        last_updated: "2023-01-25T15:30:00Z",
         refreshed: true,
       };
 
-      mockAdapter.onPost(`/projects/${projectId}/refresh-readme`).reply(200, refreshedResponse);
+      mockAdapter
+        .onPost(`/projects/${projectId}/refresh-readme`)
+        .reply(200, refreshedResponse);
 
-      const response = await apiClient.post(`/projects/${projectId}/refresh-readme`, {
-        repo_url: repoUrl,
-      });
+      const response = await apiClient.post(
+        `/projects/${projectId}/refresh-readme`,
+        {
+          repo_url: repoUrl,
+        },
+      );
 
       expect(response.data).toEqual(refreshedResponse);
-      expect((response.data as { content: string }).content).toContain('## Updates');
+      expect((response.data as { content: string }).content).toContain(
+        "## Updates",
+      );
     });
 
-    it('handles README parsing errors', async () => {
-      const projectId = 'project-1';
-      const repoUrl = 'https://github.com/testuser/malformed-readme';
+    it("handles README parsing errors", async () => {
+      const projectId = "project-1";
+      const repoUrl = "https://github.com/testuser/malformed-readme";
 
       mockAdapter.onPost(`/projects/${projectId}/fetch-readme`).reply(422, {
-        detail: 'Unable to parse README content',
+        detail: "Unable to parse README content",
       });
 
       await expect(
         apiClient.post(`/projects/${projectId}/fetch-readme`, {
           repo_url: repoUrl,
-        })
+        }),
       ).rejects.toMatchObject({
         response: {
           status: 422,
-          data: { detail: 'Unable to parse README content' },
+          data: { detail: "Unable to parse README content" },
         },
       });
     });
   });
 
-  describe('README Preview Service', () => {
-    it('previews README without saving to project', async () => {
-      const repoUrl = 'https://github.com/testuser/preview-project';
+  describe("README Preview Service", () => {
+    it("previews README without saving to project", async () => {
+      const repoUrl = "https://github.com/testuser/preview-project";
       const previewResponse = {
         content: mockReadmeContent,
-        source: 'github',
+        source: "github",
         preview: true,
       };
 
-      mockAdapter.onPost('/projects/preview-readme').reply(200, previewResponse);
+      mockAdapter
+        .onPost("/projects/preview-readme")
+        .reply(200, previewResponse);
 
-      const response = await apiClient.post('/projects/preview-readme', {
+      const response = await apiClient.post("/projects/preview-readme", {
         repo_url: repoUrl,
       });
 
@@ -375,8 +406,8 @@ describe('Repository Service Integration Tests', () => {
       expect((response.data as { preview: boolean }).preview).toBe(true);
     });
 
-    it('handles preview for different README formats', async () => {
-      const repoUrl = 'https://github.com/testuser/rst-readme';
+    it("handles preview for different README formats", async () => {
+      const repoUrl = "https://github.com/testuser/rst-readme";
       const rstReadme = `Test Project
 ============
 
@@ -399,50 +430,52 @@ Installation
 
       const previewResponse = {
         content: rstReadme,
-        source: 'github',
-        format: 'rst',
+        source: "github",
+        format: "rst",
         preview: true,
       };
 
-      mockAdapter.onPost('/projects/preview-readme').reply(200, previewResponse);
+      mockAdapter
+        .onPost("/projects/preview-readme")
+        .reply(200, previewResponse);
 
-      const response = await apiClient.post('/projects/preview-readme', {
+      const response = await apiClient.post("/projects/preview-readme", {
         repo_url: repoUrl,
       });
 
       expect(response.data).toEqual(previewResponse);
-      expect((response.data as { format: string }).format).toBe('rst');
+      expect((response.data as { format: string }).format).toBe("rst");
     });
 
-    it('handles preview timeouts gracefully', async () => {
-      const repoUrl = 'https://github.com/testuser/slow-repo';
+    it("handles preview timeouts gracefully", async () => {
+      const repoUrl = "https://github.com/testuser/slow-repo";
 
-      mockAdapter.onPost('/projects/preview-readme').timeout();
+      mockAdapter.onPost("/projects/preview-readme").timeout();
 
       await expect(
-        apiClient.post('/projects/preview-readme', {
+        apiClient.post("/projects/preview-readme", {
           repo_url: repoUrl,
-        })
+        }),
       ).rejects.toMatchObject({
-        code: 'ECONNABORTED',
+        code: "ECONNABORTED",
       });
     });
   });
 
-  describe('Repository URL Parsing Utilities', () => {
-    it('parses GitHub URLs correctly', () => {
+  describe("Repository URL Parsing Utilities", () => {
+    it("parses GitHub URLs correctly", () => {
       const testCases = [
         {
-          url: 'https://github.com/facebook/react',
-          expected: { type: 'github', owner: 'facebook', repo: 'react' },
+          url: "https://github.com/facebook/react",
+          expected: { type: "github", owner: "facebook", repo: "react" },
         },
         {
-          url: 'https://github.com/microsoft/vscode/',
-          expected: { type: 'github', owner: 'microsoft', repo: 'vscode' },
+          url: "https://github.com/microsoft/vscode/",
+          expected: { type: "github", owner: "microsoft", repo: "vscode" },
         },
         {
-          url: 'http://github.com/nodejs/node',
-          expected: { type: 'github', owner: 'nodejs', repo: 'node' },
+          url: "http://github.com/nodejs/node",
+          expected: { type: "github", owner: "nodejs", repo: "node" },
         },
       ];
 
@@ -452,15 +485,15 @@ Installation
       });
     });
 
-    it('parses GitLab URLs correctly', () => {
+    it("parses GitLab URLs correctly", () => {
       const testCases = [
         {
-          url: 'https://gitlab.com/gitlab-org/gitlab',
-          expected: { type: 'gitlab', owner: 'gitlab-org', repo: 'gitlab' },
+          url: "https://gitlab.com/gitlab-org/gitlab",
+          expected: { type: "gitlab", owner: "gitlab-org", repo: "gitlab" },
         },
         {
-          url: 'https://gitlab.com/fdroid/fdroidclient/',
-          expected: { type: 'gitlab', owner: 'fdroid', repo: 'fdroidclient' },
+          url: "https://gitlab.com/fdroid/fdroidclient/",
+          expected: { type: "gitlab", owner: "fdroid", repo: "fdroidclient" },
         },
       ];
 
@@ -470,15 +503,15 @@ Installation
       });
     });
 
-    it('parses custom Git server URLs', () => {
+    it("parses custom Git server URLs", () => {
       const testCases = [
         {
-          url: 'https://git.example.com/user/project',
-          expected: { type: 'unknown', owner: 'user', repo: 'project' },
+          url: "https://git.example.com/user/project",
+          expected: { type: "unknown", owner: "user", repo: "project" },
         },
         {
-          url: 'https://source.company.com/team/application',
-          expected: { type: 'unknown', owner: 'team', repo: 'application' },
+          url: "https://source.company.com/team/application",
+          expected: { type: "unknown", owner: "team", repo: "application" },
         },
       ];
 
@@ -488,37 +521,37 @@ Installation
       });
     });
 
-    it('handles invalid URLs gracefully', () => {
+    it("handles invalid URLs gracefully", () => {
       const invalidUrls = [
-        'not-a-url',
-        'https://example.com',
-        'https://github.com',
-        'https://github.com/user',
-        'ftp://github.com/user/repo',
-        '',
+        "not-a-url",
+        "https://example.com",
+        "https://github.com",
+        "https://github.com/user",
+        "ftp://github.com/user/repo",
+        "",
         null,
         undefined,
       ];
 
-      invalidUrls.forEach(url => {
+      invalidUrls.forEach((url) => {
         const result = parseRepositoryUrl(url as string);
         expect(result).toBeNull();
       });
     });
 
-    it('handles edge cases in URL parsing', () => {
+    it("handles edge cases in URL parsing", () => {
       const edgeCases = [
         {
-          url: 'https://github.com/user/repo/tree/main',
-          expected: { type: 'github', owner: 'user', repo: 'repo' },
+          url: "https://github.com/user/repo/tree/main",
+          expected: { type: "github", owner: "user", repo: "repo" },
         },
         {
-          url: 'https://github.com/user/repo.git',
-          expected: { type: 'github', owner: 'user', repo: 'repo.git' },
+          url: "https://github.com/user/repo.git",
+          expected: { type: "github", owner: "user", repo: "repo.git" },
         },
         {
-          url: 'https://github.com/user-name/repo-name',
-          expected: { type: 'github', owner: 'user-name', repo: 'repo-name' },
+          url: "https://github.com/user-name/repo-name",
+          expected: { type: "github", owner: "user-name", repo: "repo-name" },
         },
       ];
 
@@ -529,32 +562,32 @@ Installation
     });
   });
 
-  describe('Content Processing Utilities', () => {
-    it('generates slugs from project titles', () => {
+  describe("Content Processing Utilities", () => {
+    it("generates slugs from project titles", () => {
       const testCases = [
         {
-          title: 'My Awesome Project',
-          expected: 'my-awesome-project',
+          title: "My Awesome Project",
+          expected: "my-awesome-project",
         },
         {
-          title: 'React + TypeScript Starter',
-          expected: 'react-typescript-starter',
+          title: "React + TypeScript Starter",
+          expected: "react-typescript-starter",
         },
         {
-          title: 'Project with (Special) Characters!',
-          expected: 'project-with-special-characters',
+          title: "Project with (Special) Characters!",
+          expected: "project-with-special-characters",
         },
         {
-          title: '   Multiple   Spaces   Project   ',
-          expected: 'multiple-spaces-project',
+          title: "   Multiple   Spaces   Project   ",
+          expected: "multiple-spaces-project",
         },
         {
-          title: 'UPPERCASE PROJECT NAME',
-          expected: 'uppercase-project-name',
+          title: "UPPERCASE PROJECT NAME",
+          expected: "uppercase-project-name",
         },
         {
-          title: '',
-          expected: '',
+          title: "",
+          expected: "",
         },
       ];
 
@@ -564,26 +597,26 @@ Installation
       });
     });
 
-    it('parses technology strings correctly', () => {
+    it("parses technology strings correctly", () => {
       const testCases = [
         {
           input: '["React", "TypeScript", "Node.js"]',
-          expected: ['React', 'TypeScript', 'Node.js'],
+          expected: ["React", "TypeScript", "Node.js"],
         },
         {
-          input: 'React, TypeScript, Node.js',
-          expected: ['React', 'TypeScript', 'Node.js'],
+          input: "React, TypeScript, Node.js",
+          expected: ["React", "TypeScript", "Node.js"],
         },
         {
-          input: '  React  ,  TypeScript  ,  Node.js  ',
-          expected: ['React', 'TypeScript', 'Node.js'],
+          input: "  React  ,  TypeScript  ,  Node.js  ",
+          expected: ["React", "TypeScript", "Node.js"],
         },
         {
-          input: 'Single Technology',
-          expected: ['Single Technology'],
+          input: "Single Technology",
+          expected: ["Single Technology"],
         },
         {
-          input: '',
+          input: "",
           expected: [],
         },
         {
@@ -598,19 +631,19 @@ Installation
       });
     });
 
-    it('formats technology arrays correctly', () => {
+    it("formats technology arrays correctly", () => {
       const testCases = [
         {
-          input: ['React', 'TypeScript', 'Node.js'],
+          input: ["React", "TypeScript", "Node.js"],
           expected: '["React","TypeScript","Node.js"]',
         },
         {
-          input: ['Single Tech'],
+          input: ["Single Tech"],
           expected: '["Single Tech"]',
         },
         {
           input: [],
-          expected: '[]',
+          expected: "[]",
         },
       ];
 
@@ -620,19 +653,19 @@ Installation
       });
     });
 
-    it('handles technology parsing edge cases', () => {
+    it("handles technology parsing edge cases", () => {
       const edgeCases = [
         {
-          input: 'React, , TypeScript, ',
-          expected: ['React', 'TypeScript'],
+          input: "React, , TypeScript, ",
+          expected: ["React", "TypeScript"],
         },
         {
           input: '["React", "TypeScript"',
           expected: ['["React"', '"TypeScript"'],
         },
         {
-          input: 'React,,TypeScript',
-          expected: ['React', 'TypeScript'],
+          input: "React,,TypeScript",
+          expected: ["React", "TypeScript"],
         },
       ];
 
@@ -643,35 +676,35 @@ Installation
     });
   });
 
-  describe('Error Recovery and Resilience', () => {
-    it('handles intermittent network failures', async () => {
-      const repoUrl = 'https://github.com/testuser/flaky-repo';
+  describe("Error Recovery and Resilience", () => {
+    it("handles intermittent network failures", async () => {
+      const repoUrl = "https://github.com/testuser/flaky-repo";
 
       // First request fails
-      mockAdapter.onPost('/projects/repository/validate').replyOnce(500, {
-        detail: 'Internal server error',
+      mockAdapter.onPost("/projects/repository/validate").replyOnce(500, {
+        detail: "Internal server error",
       });
 
       // Second request succeeds
-      mockAdapter.onPost('/projects/repository/validate').reply(200, {
-        type: 'github',
-        owner: 'testuser',
-        name: 'flaky-repo',
+      mockAdapter.onPost("/projects/repository/validate").reply(200, {
+        type: "github",
+        owner: "testuser",
+        name: "flaky-repo",
         url: repoUrl,
         valid: true,
       });
 
       // First attempt should fail
       await expect(
-        apiClient.post('/projects/repository/validate', {
+        apiClient.post("/projects/repository/validate", {
           repository_url: repoUrl,
-        })
+        }),
       ).rejects.toMatchObject({
         response: { status: 500 },
       });
 
       // Second attempt should succeed
-      const response = await apiClient.post('/projects/repository/validate', {
+      const response = await apiClient.post("/projects/repository/validate", {
         repository_url: repoUrl,
       });
 
@@ -679,59 +712,66 @@ Installation
       expect((response.data as { valid: boolean }).valid).toBe(true);
     });
 
-    it('handles partial service degradation gracefully', async () => {
-      const projectId = 'project-1';
+    it("handles partial service degradation gracefully", async () => {
+      const projectId = "project-1";
 
       // README service is down but validation works
       mockAdapter.onGet(`/projects/${projectId}/readme`).reply(503, {
-        detail: 'README service temporarily unavailable',
+        detail: "README service temporarily unavailable",
       });
 
-      mockAdapter.onPost('/projects/repository/validate').reply(200, {
-        type: 'github',
-        owner: 'testuser',
-        name: 'test-project',
-        url: 'https://github.com/testuser/test-project',
+      mockAdapter.onPost("/projects/repository/validate").reply(200, {
+        type: "github",
+        owner: "testuser",
+        name: "test-project",
+        url: "https://github.com/testuser/test-project",
         valid: true,
       });
 
       // Validation should still work
-      const validateResponse = await apiClient.post('/projects/repository/validate', {
-        repository_url: 'https://github.com/testuser/test-project',
-      });
+      const validateResponse = await apiClient.post(
+        "/projects/repository/validate",
+        {
+          repository_url: "https://github.com/testuser/test-project",
+        },
+      );
       expect(validateResponse.status).toBe(200);
 
       // README should fail gracefully
-      await expect(apiClient.get(`/projects/${projectId}/readme`)).rejects.toMatchObject({
+      await expect(
+        apiClient.get(`/projects/${projectId}/readme`),
+      ).rejects.toMatchObject({
         response: { status: 503 },
       });
     });
 
-    it('handles malformed service responses', async () => {
-      const repoUrl = 'https://github.com/testuser/bad-response';
+    it("handles malformed service responses", async () => {
+      const repoUrl = "https://github.com/testuser/bad-response";
 
-      mockAdapter.onPost('/projects/repository/validate').reply(200, 'not-json', {
-        'content-type': 'application/json',
-      });
+      mockAdapter
+        .onPost("/projects/repository/validate")
+        .reply(200, "not-json", {
+          "content-type": "application/json",
+        });
 
-      const resp = await apiClient.post('/projects/repository/validate', {
+      const resp = await apiClient.post("/projects/repository/validate", {
         repository_url: repoUrl,
       });
-      expect(resp.data).toBe('not-json');
+      expect(resp.data).toBe("not-json");
     });
 
-    it('handles service timeouts with appropriate messages', async () => {
-      const repoUrl = 'https://github.com/testuser/timeout-repo';
+    it("handles service timeouts with appropriate messages", async () => {
+      const repoUrl = "https://github.com/testuser/timeout-repo";
 
-      mockAdapter.onPost('/projects/repository/validate').timeout();
+      mockAdapter.onPost("/projects/repository/validate").timeout();
 
       await expect(
-        apiClient.post('/projects/repository/validate', {
+        apiClient.post("/projects/repository/validate", {
           repository_url: repoUrl,
-        })
+        }),
       ).rejects.toMatchObject({
-        code: 'ECONNABORTED',
-        message: expect.stringContaining('timeout') as string,
+        code: "ECONNABORTED",
+        message: expect.stringContaining("timeout") as string,
       });
     });
   });

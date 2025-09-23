@@ -1,56 +1,56 @@
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   PhotoIcon,
   FolderIcon,
   PencilSquareIcon,
   DocumentTextIcon,
   EyeIcon,
-} from '@heroicons/react/24/outline';
+} from "@heroicons/react/24/outline";
 
-import { photos, projects, blog } from '../../api/client';
-import type { PhotoStatsSummary, ProjectStatsSummary } from '../../types';
+import { photos, projects, blog } from "../../api/client";
+import type { PhotoStatsSummary, ProjectStatsSummary } from "../../types";
 
 const AdminDashboard: React.FC = () => {
   const { data: photoStats } = useQuery<PhotoStatsSummary>({
-    queryKey: ['admin', 'photo-stats'],
+    queryKey: ["admin", "photo-stats"],
     queryFn: photos.getStats,
   });
 
   const { data: projectStats } = useQuery<ProjectStatsSummary>({
-    queryKey: ['admin', 'project-stats'],
+    queryKey: ["admin", "project-stats"],
     queryFn: projects.getStats,
   });
 
   const { data: blogStats } = useQuery<{ total_posts: number }>({
-    queryKey: ['admin', 'blog-stats'],
+    queryKey: ["admin", "blog-stats"],
     queryFn: blog.getStats,
   });
 
   const stats = [
     {
-      name: 'Total Photos',
+      name: "Total Photos",
       stat: photoStats?.total_photos ?? 0,
       icon: PhotoIcon,
-      color: 'bg-blue-500',
+      color: "bg-blue-500",
     },
     {
-      name: 'Featured Photos',
+      name: "Featured Photos",
       stat: photoStats?.featured_photos ?? 0,
       icon: EyeIcon,
-      color: 'bg-green-500',
+      color: "bg-green-500",
     },
     {
-      name: 'Projects',
+      name: "Projects",
       stat: projectStats?.total_projects ?? 0,
       icon: FolderIcon,
-      color: 'bg-purple-500',
+      color: "bg-purple-500",
     },
     {
-      name: 'Blog Posts',
+      name: "Blog Posts",
       stat: blogStats?.total_posts ?? 0,
       icon: PencilSquareIcon,
-      color: 'bg-orange-500',
+      color: "bg-orange-500",
     },
   ];
 
@@ -63,7 +63,7 @@ const AdminDashboard: React.FC = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map(item => {
+        {stats.map((item) => {
           const Icon = item.icon;
           return (
             <div key={item.name} className="bg-white rounded-lg shadow p-6">
@@ -73,8 +73,12 @@ const AdminDashboard: React.FC = () => {
                 </div>
                 <div className="ml-5 w-0 flex-1">
                   <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">{item.name}</dt>
-                    <dd className="text-lg font-medium text-gray-900">{item.stat}</dd>
+                    <dt className="text-sm font-medium text-gray-500 truncate">
+                      {item.name}
+                    </dt>
+                    <dd className="text-lg font-medium text-gray-900">
+                      {item.stat}
+                    </dd>
                   </dl>
                 </div>
               </div>
@@ -96,8 +100,12 @@ const AdminDashboard: React.FC = () => {
             >
               <PhotoIcon className="h-8 w-8 text-primary-600 mr-3" />
               <div>
-                <h3 className="text-sm font-medium text-gray-900">Upload Photos</h3>
-                <p className="text-sm text-gray-500">Add new photos to gallery</p>
+                <h3 className="text-sm font-medium text-gray-900">
+                  Upload Photos
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Add new photos to gallery
+                </p>
               </div>
             </a>
 
@@ -107,7 +115,9 @@ const AdminDashboard: React.FC = () => {
             >
               <FolderIcon className="h-8 w-8 text-primary-600 mr-3" />
               <div>
-                <h3 className="text-sm font-medium text-gray-900">Manage Projects</h3>
+                <h3 className="text-sm font-medium text-gray-900">
+                  Manage Projects
+                </h3>
                 <p className="text-sm text-gray-500">Add or edit projects</p>
               </div>
             </a>
@@ -118,7 +128,9 @@ const AdminDashboard: React.FC = () => {
             >
               <PencilSquareIcon className="h-8 w-8 text-primary-600 mr-3" />
               <div>
-                <h3 className="text-sm font-medium text-gray-900">Write Blog Post</h3>
+                <h3 className="text-sm font-medium text-gray-900">
+                  Write Blog Post
+                </h3>
                 <p className="text-sm text-gray-500">Create new blog content</p>
               </div>
             </a>
@@ -129,8 +141,12 @@ const AdminDashboard: React.FC = () => {
             >
               <DocumentTextIcon className="h-8 w-8 text-primary-600 mr-3" />
               <div>
-                <h3 className="text-sm font-medium text-gray-900">Edit Content</h3>
-                <p className="text-sm text-gray-500">Update website text content</p>
+                <h3 className="text-sm font-medium text-gray-900">
+                  Edit Content
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Update website text content
+                </p>
               </div>
             </a>
           </div>

@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
-import MiniMap from './MiniMap';
-import MapModal from './MapModal';
-import type { Photo } from '../types';
-import { formatDate } from '../utils/dateFormat';
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
+import MiniMap from "./MiniMap";
+import MapModal from "./MapModal";
+import type { Photo } from "../types";
+import { formatDate } from "../utils/dateFormat";
 
 interface PhotoSwipeMetadataSidebarProps {
   photo: Photo;
@@ -48,7 +48,7 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
         {isOpen && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
+            animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
@@ -76,7 +76,8 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
     photo.camera_make ??
     photo.camera_model ??
     photo.lens;
-  const hasTechnicalData = photo.aperture ?? photo.shutter_speed ?? photo.iso ?? photo.focal_length;
+  const hasTechnicalData =
+    photo.aperture ?? photo.shutter_speed ?? photo.iso ?? photo.focal_length;
 
   return (
     <AnimatePresence>
@@ -95,15 +96,15 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
 
           {/* Sidebar */}
           <motion.div
-            initial={{ x: '100%' }}
+            initial={{ x: "100%" }}
             animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'tween', duration: 0.3 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "tween", duration: 0.3 }}
             className="fixed top-0 right-0 h-full w-full lg:w-96 bg-gray-900 shadow-2xl overflow-y-auto lg:!w-[24rem] lg:max-w-[24rem]"
             style={{ zIndex: 2080 }}
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
-            {process.env.NODE_ENV !== 'production' ? (
+            {process.env.NODE_ENV !== "production" ? (
               <div className="hidden" aria-hidden>
                 {/* debug: sidebar render */}
               </div>
@@ -111,9 +112,11 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
             {/* Header */}
             <div className="sticky top-0 bg-gray-900 border-b border-gray-700 px-4 py-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-white">Photo Details</h2>
+                <h2 className="text-lg font-semibold text-white">
+                  Photo Details
+                </h2>
                 <button
-                  onClick={e => {
+                  onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     (onSidebarClose ?? onClose)?.();
@@ -170,7 +173,8 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
                   <div>
                     <span className="text-gray-400">File size:</span>
                     <p className="text-gray-300">
-                      {Math.round((photo.file_size / 1024 / 1024) * 100) / 100} MB
+                      {Math.round((photo.file_size / 1024 / 1024) * 100) / 100}{" "}
+                      MB
                     </p>
                   </div>
 
@@ -211,25 +215,31 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
                   }
                 >
                   <div className="space-y-2 text-sm">
-                    {(photo.camera_display_name ?? photo.camera_make ?? photo.camera_model) && (
+                    {(photo.camera_display_name ??
+                      photo.camera_make ??
+                      photo.camera_model) && (
                       <div>
                         <span className="text-gray-400">Camera:</span>
                         <p className="text-gray-300">
                           {photo.camera_display_name ??
-                            `${photo.camera_make ?? ''} ${photo.camera_model ?? ''}`.trim()}
+                            `${photo.camera_make ?? ""} ${photo.camera_model ?? ""}`.trim()}
                         </p>
                       </div>
                     )}
                     {(photo.lens_display_name ?? photo.lens) && (
                       <div>
                         <span className="text-gray-400">Lens:</span>
-                        <p className="text-gray-300">{photo.lens_display_name ?? photo.lens}</p>
+                        <p className="text-gray-300">
+                          {photo.lens_display_name ?? photo.lens}
+                        </p>
                       </div>
                     )}
                     {photo.date_taken && (
                       <div>
                         <span className="text-gray-400">Date taken:</span>
-                        <p className="text-gray-300">{formatDate(photo.date_taken)}</p>
+                        <p className="text-gray-300">
+                          {formatDate(photo.date_taken)}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -327,9 +337,12 @@ const PhotoSwipeMetadataSidebar: React.FC<PhotoSwipeMetadataSidebarProps> = ({
                     )}
 
                     <div>
-                      <span className="text-gray-400 text-sm">Coordinates:</span>
+                      <span className="text-gray-400 text-sm">
+                        Coordinates:
+                      </span>
                       <p className="text-gray-300 text-xs font-mono">
-                        {photo.location_lat?.toFixed(6)}, {photo.location_lon?.toFixed(6)}
+                        {photo.location_lat?.toFixed(6)},{" "}
+                        {photo.location_lon?.toFixed(6)}
                       </p>
                     </div>
 

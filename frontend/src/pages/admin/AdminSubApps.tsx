@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 
-import SubAppForm from '../../components/SubAppForm';
-import SubAppList from '../../components/SubAppList';
+import SubAppForm from "../../components/SubAppForm";
+import SubAppList from "../../components/SubAppList";
 import {
   useSubApps,
   useSubAppStats,
@@ -11,8 +11,8 @@ import {
   useUpdateSubApp,
   useDeleteSubApp,
   useToggleSubAppEnabled,
-} from '../../hooks/useSubApps';
-import type { SubApp } from '../../types';
+} from "../../hooks/useSubApps";
+import type { SubApp } from "../../types";
 
 interface SubAppFormData {
   name: string;
@@ -33,7 +33,11 @@ const AdminSubApps: React.FC = () => {
   const [editingSubApp, setEditingSubApp] = useState<SubApp | null>(null);
 
   // Query hooks
-  const { data: subappsData, isLoading: isLoadingSubApps, error: subappsError } = useSubApps();
+  const {
+    data: subappsData,
+    isLoading: isLoadingSubApps,
+    error: subappsError,
+  } = useSubApps();
   const { data: statsData, isLoading: isLoadingStats } = useSubAppStats();
 
   // Mutation hooks
@@ -73,7 +77,7 @@ const AdminSubApps: React.FC = () => {
       setEditingSubApp(null);
     } catch (error) {
       // Error handling is done in the mutation hooks
-      console.error('Form submission error:', error);
+      console.error("Form submission error:", error);
     }
   };
 
@@ -87,7 +91,7 @@ const AdminSubApps: React.FC = () => {
       await deleteMutation.mutateAsync(subappId);
     } catch (error) {
       // Error handling is done in the mutation hook
-      console.error('Delete error:', error);
+      console.error("Delete error:", error);
     }
   };
 
@@ -96,7 +100,7 @@ const AdminSubApps: React.FC = () => {
       await toggleEnabledMutation.mutateAsync({ id: subappId, enabled });
     } catch (error) {
       // Error handling is done in the mutation hook
-      console.error('Toggle enabled error:', error);
+      console.error("Toggle enabled error:", error);
     }
   };
 
@@ -138,8 +142,12 @@ const AdminSubApps: React.FC = () => {
       <div className="mb-8">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Sub-Applications</h1>
-            <p className="mt-2 text-gray-600">Manage external and internal sub-applications</p>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Sub-Applications
+            </h1>
+            <p className="mt-2 text-gray-600">
+              Manage external and internal sub-applications
+            </p>
           </div>
           <div className="flex gap-3">
             <Link
@@ -147,7 +155,12 @@ const AdminSubApps: React.FC = () => {
               className="px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 rounded-lg transition-colors"
             >
               <span className="flex items-center">
-                <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="h-4 w-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -164,7 +177,12 @@ const AdminSubApps: React.FC = () => {
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
             >
               <span className="flex items-center">
-                <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="h-4 w-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -201,8 +219,12 @@ const AdminSubApps: React.FC = () => {
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-900">Total Sub-Apps</p>
-                  <p className="text-2xl font-bold text-blue-600">{stats.total_subapps}</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    Total Sub-Apps
+                  </p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {stats.total_subapps}
+                  </p>
                 </div>
               </div>
             </div>
@@ -228,7 +250,9 @@ const AdminSubApps: React.FC = () => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-900">Enabled</p>
-                  <p className="text-2xl font-bold text-green-600">{stats.enabled_subapps}</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {stats.enabled_subapps}
+                  </p>
                 </div>
               </div>
             </div>
@@ -254,7 +278,9 @@ const AdminSubApps: React.FC = () => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-900">Disabled</p>
-                  <p className="text-2xl font-bold text-orange-600">{stats.disabled_subapps}</p>
+                  <p className="text-2xl font-bold text-orange-600">
+                    {stats.disabled_subapps}
+                  </p>
                 </div>
               </div>
             </div>
@@ -270,7 +296,7 @@ const AdminSubApps: React.FC = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
-            onClick={e => {
+            onClick={(e) => {
               if (e.target === e.currentTarget) {
                 handleFormCancel();
               }
@@ -281,18 +307,25 @@ const AdminSubApps: React.FC = () => {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
-              onClick={e => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
             >
               <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl font-bold text-gray-900">
-                    {editingSubApp ? 'Edit Sub-Application' : 'Create New Sub-Application'}
+                    {editingSubApp
+                      ? "Edit Sub-Application"
+                      : "Create New Sub-Application"}
                   </h2>
                   <button
                     onClick={handleFormCancel}
                     className="text-gray-400 hover:text-gray-600 transition-colors"
                   >
-                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      className="h-6 w-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -305,7 +338,7 @@ const AdminSubApps: React.FC = () => {
 
                 <SubAppForm
                   subapp={editingSubApp ?? undefined}
-                  onSubmit={async data => {
+                  onSubmit={async (data) => {
                     await handleFormSubmit(data);
                   }}
                   onCancel={() => handleFormCancel()}
@@ -326,7 +359,7 @@ const AdminSubApps: React.FC = () => {
         <SubAppList
           subapps={subapps}
           onEdit={handleEditSubApp}
-          onDelete={id => {
+          onDelete={(id) => {
             void handleDeleteSubApp(id);
           }}
           onToggleEnabled={(id, enabled) => {

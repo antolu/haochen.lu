@@ -1,6 +1,6 @@
-import '@testing-library/jest-dom';
-import { cleanup } from '@testing-library/react';
-import { afterEach, beforeAll, afterAll, vi } from 'vitest';
+import "@testing-library/jest-dom";
+import { cleanup } from "@testing-library/react";
+import { afterEach, beforeAll, afterAll, vi } from "vitest";
 
 // Mock IntersectionObserver
 global.IntersectionObserver = vi.fn().mockImplementation(() => ({
@@ -17,9 +17,9 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
 }));
 
 // Mock matchMedia
-Object.defineProperty(window, 'matchMedia', {
+Object.defineProperty(window, "matchMedia", {
   writable: true,
-  value: vi.fn().mockImplementation(query => ({
+  value: vi.fn().mockImplementation((query) => ({
     matches: false,
     media: query as string,
     onchange: null,
@@ -32,23 +32,27 @@ Object.defineProperty(window, 'matchMedia', {
 });
 
 // Mock scrollTo
-Object.defineProperty(window, 'scrollTo', {
+Object.defineProperty(window, "scrollTo", {
   writable: true,
   value: vi.fn(),
 });
 
 // Ensure window.location exists for React Router in JSDOM
-if (!window.location || !(window.location as unknown as { href?: string }).href) {
-  Object.defineProperty(window, 'location', {
+if (
+  !window.location ||
+  !(window.location as unknown as { href?: string }).href
+) {
+  Object.defineProperty(window, "location", {
     writable: true,
     value: {
-      href: 'http://localhost:3000',
-      origin: 'http://localhost:3000',
-      pathname: '/',
-      search: '',
-      hash: '',
+      href: "http://localhost:3000",
+      origin: "http://localhost:3000",
+      pathname: "/",
+      search: "",
+      hash: "",
       assign: vi.fn((url: string) => {
-        (window as unknown as { location: { href: string } }).location.href = url;
+        (window as unknown as { location: { href: string } }).location.href =
+          url;
       }),
       replace: vi.fn(),
     },
@@ -62,7 +66,7 @@ const localStorageMock = {
   removeItem: vi.fn(),
   clear: vi.fn(),
 };
-Object.defineProperty(window, 'localStorage', {
+Object.defineProperty(window, "localStorage", {
   value: localStorageMock,
 });
 
@@ -73,17 +77,17 @@ const sessionStorageMock = {
   removeItem: vi.fn(),
   clear: vi.fn(),
 };
-Object.defineProperty(window, 'sessionStorage', {
+Object.defineProperty(window, "sessionStorage", {
   value: sessionStorageMock,
 });
 
 // Mock URL.createObjectURL
-Object.defineProperty(window.URL, 'createObjectURL', {
+Object.defineProperty(window.URL, "createObjectURL", {
   writable: true,
-  value: vi.fn(() => 'mocked-url'),
+  value: vi.fn(() => "mocked-url"),
 });
 
-Object.defineProperty(window.URL, 'revokeObjectURL', {
+Object.defineProperty(window.URL, "revokeObjectURL", {
   writable: true,
   value: vi.fn(),
 });
@@ -97,8 +101,8 @@ Object.defineProperty(window.URL, 'revokeObjectURL', {
   }
   onload: (() => void) | null = null;
   onerror: (() => void) | null = null;
-  src = '';
-  alt = '';
+  src = "";
+  alt = "";
   width = 0;
   height = 0;
 } as any;
@@ -108,15 +112,15 @@ Object.defineProperty(window.URL, 'revokeObjectURL', {
   constructor(
     chunks: (string | ArrayBuffer | ArrayBufferView | Blob)[],
     filename: string,
-    options?: { type?: string }
+    options?: { type?: string },
   ) {
     this.name = filename;
     this.size = chunks.reduce(
       (acc: number, chunk: string | ArrayBuffer | ArrayBufferView | Blob) =>
         acc + (chunk as { length: number }).length,
-      0
+      0,
     );
-    this.type = options?.type ?? '';
+    this.type = options?.type ?? "";
     this.lastModified = Date.now();
   }
   name: string;
@@ -127,7 +131,7 @@ Object.defineProperty(window.URL, 'revokeObjectURL', {
     return new ReadableStream();
   }
   text() {
-    return Promise.resolve('');
+    return Promise.resolve("");
   }
   arrayBuffer() {
     return Promise.resolve(new ArrayBuffer(0));
@@ -139,19 +143,30 @@ Object.defineProperty(window.URL, 'revokeObjectURL', {
 
 // Mock FileReader
 (global as unknown as { FileReader: unknown }).FileReader = class FileReader {
+  private listeners: Record<string, Array<() => void>> = {};
   readAsDataURL() {
     setTimeout(() => {
       this.onload?.({
-        target: { result: 'data:image/jpeg;base64,mock-image-data' },
+        target: { result: "data:image/jpeg;base64,mock-image-data" },
       } as any);
+      (this.listeners["load"] || []).forEach((cb) => cb());
     }, 0);
   }
   readAsText() {
     setTimeout(() => {
       this.onload?.({
-        target: { result: 'mock text content' },
+        target: { result: "mock text content" },
       } as any);
+      (this.listeners["load"] || []).forEach((cb) => cb());
     }, 0);
+  }
+  addEventListener(type: string, cb: () => void) {
+    if (!this.listeners[type]) this.listeners[type] = [];
+    this.listeners[type].push(cb);
+  }
+  removeEventListener(type: string, cb: () => void) {
+    if (!this.listeners[type]) return;
+    this.listeners[type] = this.listeners[type].filter((fn) => fn !== cb);
   }
   onload: ((event: any) => void) | null = null;
   onerror: (() => void) | null = null;
@@ -159,9 +174,9 @@ Object.defineProperty(window.URL, 'revokeObjectURL', {
 } as any;
 
 // Mock crypto.randomUUID
-Object.defineProperty(window, 'crypto', {
+Object.defineProperty(window, "crypto", {
   value: {
-    randomUUID: vi.fn(() => 'mock-uuid-1234-5678-9abc-def0'),
+    randomUUID: vi.fn(() => "mock-uuid-1234-5678-9abc-def0"),
   },
 });
 
@@ -182,7 +197,7 @@ afterAll(() => {
   // Cleanup any global test state
 
   // Force cleanup of any hanging processes
-  if (typeof global.gc === 'function') {
+  if (typeof global.gc === "function") {
     global.gc();
   }
 
@@ -192,4 +207,4 @@ afterAll(() => {
 });
 
 // Avoid failing tests due to expected unhandled promise rejections inside tests
-process.on('unhandledRejection', () => {});
+process.on("unhandledRejection", () => {});

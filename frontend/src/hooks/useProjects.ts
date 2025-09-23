@@ -1,6 +1,11 @@
-import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient, projects as projectsApi } from '../api/client';
-import type { ProjectStatsSummary } from '../types';
+import {
+  useQuery,
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { apiClient, projects as projectsApi } from "../api/client";
+import type { ProjectStatsSummary } from "../types";
 
 interface ProjectReadmeResponse {
   content: string;
@@ -25,7 +30,7 @@ export interface Project {
   image_url?: string;
   technologies?: string;
   featured: boolean;
-  status: 'active' | 'archived' | 'in_progress';
+  status: "active" | "archived" | "in_progress";
   created_at: string;
   updated_at: string;
   // Repository integration fields
@@ -39,7 +44,7 @@ export interface Project {
 
 export interface ProjectFilters {
   featured?: boolean;
-  status?: 'active' | 'archived' | 'in_progress';
+  status?: "active" | "archived" | "in_progress";
   technologies?: string[];
   category?: string;
   search?: string;
@@ -55,7 +60,7 @@ export interface ProjectCreate {
   image_url?: string;
   technologies?: string;
   featured?: boolean;
-  status?: 'active' | 'archived' | 'in_progress';
+  status?: "active" | "archived" | "in_progress";
   repository_type?: string;
   repository_owner?: string;
   repository_name?: string;
@@ -71,7 +76,7 @@ export interface ProjectUpdate {
   image_url?: string;
   technologies?: string;
   featured?: boolean;
-  status?: 'active' | 'archived' | 'in_progress';
+  status?: "active" | "archived" | "in_progress";
   repository_type?: string;
   repository_owner?: string;
   repository_name?: string;
@@ -88,14 +93,15 @@ export interface ProjectListResponse {
 
 // Query key factory for consistent cache management
 export const projectKeys = {
-  all: ['projects'] as const,
-  lists: () => [...projectKeys.all, 'list'] as const,
+  all: ["projects"] as const,
+  lists: () => [...projectKeys.all, "list"] as const,
   list: (filters: ProjectFilters) => [...projectKeys.lists(), filters] as const,
-  details: () => [...projectKeys.all, 'detail'] as const,
+  details: () => [...projectKeys.all, "detail"] as const,
   detail: (idOrSlug: string) => [...projectKeys.details(), idOrSlug] as const,
-  featured: () => [...projectKeys.all, 'featured'] as const,
-  readme: (projectId: string) => [...projectKeys.all, 'readme', projectId] as const,
-  stats: () => [...projectKeys.all, 'stats'] as const,
+  featured: () => [...projectKeys.all, "featured"] as const,
+  readme: (projectId: string) =>
+    [...projectKeys.all, "readme", projectId] as const,
+  stats: () => [...projectKeys.all, "stats"] as const,
 };
 
 // Hooks for project data management
@@ -110,13 +116,13 @@ export function useProjects(filters: ProjectFilters = {}) {
       const params = new URLSearchParams();
 
       if (filters.featured !== undefined) {
-        params.append('featured_only', filters.featured.toString());
+        params.append("featured_only", filters.featured.toString());
       }
       if (filters.status) {
-        params.append('status', filters.status);
+        params.append("status", filters.status);
       }
       if (filters.search) {
-        params.append('search', filters.search);
+        params.append("search", filters.search);
       }
 
       const response = await apiClient.get(`/projects?${params.toString()}`);
@@ -131,20 +137,20 @@ export function useProjects(filters: ProjectFilters = {}) {
  */
 export function useInfiniteProjects(filters: ProjectFilters = {}) {
   return useInfiniteQuery({
-    queryKey: [...projectKeys.list(filters), 'infinite'],
+    queryKey: [...projectKeys.list(filters), "infinite"],
     queryFn: async ({ pageParam = 1 }) => {
       const params = new URLSearchParams();
-      params.append('page', pageParam.toString());
-      params.append('per_page', '12');
+      params.append("page", pageParam.toString());
+      params.append("per_page", "12");
 
       if (filters.featured !== undefined) {
-        params.append('featured_only', filters.featured.toString());
+        params.append("featured_only", filters.featured.toString());
       }
       if (filters.status) {
-        params.append('status', filters.status);
+        params.append("status", filters.status);
       }
       if (filters.search) {
-        params.append('search', filters.search);
+        params.append("search", filters.search);
       }
 
       const response = await apiClient.get(`/projects?${params.toString()}`);
@@ -181,7 +187,7 @@ export function useFeaturedProjects() {
   return useQuery({
     queryKey: projectKeys.featured(),
     queryFn: async () => {
-      const response = await apiClient.get('/projects/featured');
+      const response = await apiClient.get("/projects/featured");
       return response.data as Project[];
     },
     staleTime: 15 * 60 * 1000, // 15 minutes
@@ -198,7 +204,7 @@ export function useProjectReadme(projectId: string, repoUrl?: string) {
       // First check if we have cached README
       try {
         const response = await apiClient.get<ProjectReadmeResponse>(
-          `/projects/${projectId}/readme`
+          `/projects/${projectId}/readme`,
         );
         return response.data;
       } catch (error) {
@@ -208,7 +214,7 @@ export function useProjectReadme(projectId: string, repoUrl?: string) {
             `/projects/${projectId}/fetch-readme`,
             {
               repo_url: repoUrl,
-            }
+            },
           );
           return fetchResponse.data;
         }
@@ -228,7 +234,9 @@ export function useProjectStats() {
   return useQuery<ProjectStatsSummary>({
     queryKey: projectKeys.stats(),
     queryFn: async () => {
-      const response = await apiClient.get<ProjectStatsSummary>('/projects/stats/summary');
+      const response = await apiClient.get<ProjectStatsSummary>(
+        "/projects/stats/summary",
+      );
       return response.data;
     },
     staleTime: 5 * 60 * 1000,
@@ -237,7 +245,7 @@ export function useProjectStats() {
 
 export function useProjectTechnologies() {
   return useQuery({
-    queryKey: [...projectKeys.all, 'technologies'],
+    queryKey: [...projectKeys.all, "technologies"],
     queryFn: () => projectsApi.getTechnologies(),
     staleTime: 5 * 60 * 1000,
   });
@@ -253,10 +261,10 @@ export function useCreateProject() {
 
   return useMutation({
     mutationFn: async (projectData: ProjectCreate) => {
-      const response = await apiClient.post('/projects', projectData);
+      const response = await apiClient.post("/projects", projectData);
       return response.data as Project;
     },
-    onSuccess: newProject => {
+    onSuccess: (newProject) => {
       // Invalidate and refetch project lists
       void queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
       void queryClient.invalidateQueries({ queryKey: projectKeys.featured() });
@@ -280,10 +288,16 @@ export function useUpdateProject() {
       const response = await apiClient.put(`/projects/${id}`, data);
       return response.data as Project;
     },
-    onSuccess: updatedProject => {
+    onSuccess: (updatedProject) => {
       // Update the project in all relevant caches
-      queryClient.setQueryData(projectKeys.detail(updatedProject.id), updatedProject);
-      queryClient.setQueryData(projectKeys.detail(updatedProject.slug), updatedProject);
+      queryClient.setQueryData(
+        projectKeys.detail(updatedProject.id),
+        updatedProject,
+      );
+      queryClient.setQueryData(
+        projectKeys.detail(updatedProject.slug),
+        updatedProject,
+      );
 
       // Invalidate lists to reflect changes
       void queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
@@ -321,9 +335,12 @@ export function useDeleteProject() {
 export function usePreviewReadme() {
   return useMutation<ProjectPreviewResponse, Error, string>({
     mutationFn: async (repoUrl: string): Promise<ProjectPreviewResponse> => {
-      const response = await apiClient.post<ProjectPreviewResponse>('/projects/preview-readme', {
-        repo_url: repoUrl,
-      });
+      const response = await apiClient.post<ProjectPreviewResponse>(
+        "/projects/preview-readme",
+        {
+          repo_url: repoUrl,
+        },
+      );
       return response.data;
     },
   });
@@ -335,7 +352,11 @@ export function usePreviewReadme() {
 export function useRefreshReadme() {
   const queryClient = useQueryClient();
 
-  return useMutation<ProjectReadmeResponse, Error, { projectId: string; repoUrl: string }>({
+  return useMutation<
+    ProjectReadmeResponse,
+    Error,
+    { projectId: string; repoUrl: string }
+  >({
     mutationFn: async ({
       projectId,
       repoUrl,
@@ -347,7 +368,7 @@ export function useRefreshReadme() {
         `/projects/${projectId}/refresh-readme`,
         {
           repo_url: repoUrl,
-        }
+        },
       );
       return response.data;
     },
@@ -372,8 +393,8 @@ export function parseTechnologies(technologies?: string): string[] {
   } catch {
     // Fallback to comma-separated parsing
     return technologies
-      .split(',')
-      .map(tech => tech.trim())
+      .split(",")
+      .map((tech) => tech.trim())
       .filter(Boolean);
   }
 }
@@ -389,29 +410,39 @@ export function formatTechnologies(technologies: string[]): string {
  * Extract repository info from URL
  */
 export function parseRepositoryUrl(url: string): {
-  type: 'github' | 'gitlab' | 'unknown';
+  type: "github" | "gitlab" | "unknown";
   owner: string;
   repo: string;
 } | null {
   try {
     const urlObj = new URL(url);
-    if (!(urlObj.protocol === 'http:' || urlObj.protocol === 'https:')) {
+    if (!(urlObj.protocol === "http:" || urlObj.protocol === "https:")) {
       return null;
     }
-    const pathname = urlObj.pathname.replace(/^\//, '').replace(/\/$/, '');
-    const parts = pathname.split('/');
+    const pathname = urlObj.pathname.replace(/^\//, "").replace(/\/$/, "");
+    const parts = pathname.split("/");
 
-    if (urlObj.hostname === 'github.com' && parts.length >= 2 && parts[0] && parts[1]) {
+    if (
+      urlObj.hostname === "github.com" &&
+      parts.length >= 2 &&
+      parts[0] &&
+      parts[1]
+    ) {
       return {
-        type: 'github',
+        type: "github",
         owner: parts[0],
         repo: parts[1],
       };
     }
 
-    if (urlObj.hostname.includes('gitlab') && parts.length >= 2 && parts[0] && parts[1]) {
+    if (
+      urlObj.hostname.includes("gitlab") &&
+      parts.length >= 2 &&
+      parts[0] &&
+      parts[1]
+    ) {
       return {
-        type: 'gitlab',
+        type: "gitlab",
         owner: parts[0],
         repo: parts[1],
       };
@@ -420,7 +451,7 @@ export function parseRepositoryUrl(url: string): {
     // Unknown git servers: return owner/repo when present
     if (parts.length >= 2 && parts[0] && parts[1]) {
       return {
-        type: 'unknown',
+        type: "unknown",
         owner: parts[0],
         repo: parts[1],
       };
@@ -438,10 +469,10 @@ export function parseRepositoryUrl(url: string): {
 export function generateSlug(title: string): string {
   return title
     .toLowerCase()
-    .replace(/[^\w\s-]/g, '') // Remove special characters
-    .replace(/\s+/g, '-') // Replace spaces with hyphens
-    .replace(/-+/g, '-') // Replace multiple hyphens with single
+    .replace(/[^\w\s-]/g, "") // Remove special characters
+    .replace(/\s+/g, "-") // Replace spaces with hyphens
+    .replace(/-+/g, "-") // Replace multiple hyphens with single
     .trim()
-    .replace(/^-/g, '')
-    .replace(/-$/g, '');
+    .replace(/^-/g, "")
+    .replace(/-$/g, "");
 }

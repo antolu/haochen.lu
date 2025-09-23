@@ -32,7 +32,8 @@ async def get_public_content(
 ):
     """
     Retrieve public (active) content items by keys or category.
-    Returns a dictionary where keys are content keys and values are ContentKeyValue objects.
+    Returns a dictionary where keys are content keys and values are
+    ContentKeyValue objects.
     """
     if keys:
         key_list = [k.strip() for k in keys.split(",")]

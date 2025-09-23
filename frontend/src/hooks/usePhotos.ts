@@ -1,23 +1,28 @@
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
-import { photos } from '../api/client';
-import type { Photo, PhotoListResponse, PhotoStatsSummary } from '../types';
-import toast from 'react-hot-toast';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  useInfiniteQuery,
+} from "@tanstack/react-query";
+import { photos } from "../api/client";
+import type { Photo, PhotoListResponse, PhotoStatsSummary } from "../types";
+import toast from "react-hot-toast";
 
 // Query Keys
 export const photoKeys = {
-  all: ['photos'] as const,
-  lists: () => [...photoKeys.all, 'list'] as const,
+  all: ["photos"] as const,
+  lists: () => [...photoKeys.all, "list"] as const,
   list: (filters: string) => [...photoKeys.lists(), { filters }] as const,
-  details: () => [...photoKeys.all, 'detail'] as const,
+  details: () => [...photoKeys.all, "detail"] as const,
   detail: (id: string) => [...photoKeys.details(), id] as const,
-  featured: () => [...photoKeys.all, 'featured'] as const,
-  stats: () => [...photoKeys.all, 'stats'] as const,
+  featured: () => [...photoKeys.all, "featured"] as const,
+  stats: () => [...photoKeys.all, "stats"] as const,
 };
 
 // Hook to get all photos (admin view)
 export const usePhotos = () => {
   return useQuery({
-    queryKey: photoKeys.list('admin'),
+    queryKey: photoKeys.list("admin"),
     queryFn: () => photos.list(),
     staleTime: 1000 * 60 * 5, // 5 minutes
     select: (data: PhotoListResponse) => ({
@@ -40,7 +45,7 @@ export const useInfinitePhotos = (
     category?: string;
     featured?: boolean;
     order_by?: string;
-  } = {}
+  } = {},
 ) => {
   return useInfiniteQuery({
     queryKey: photoKeys.list(`infinite-${JSON.stringify(params)}`),
@@ -90,7 +95,7 @@ export const usePhotoStats = () => {
 // Hook to load distinct tags
 export const usePhotoTags = () => {
   return useQuery({
-    queryKey: [...photoKeys.all, 'tags'],
+    queryKey: [...photoKeys.all, "tags"],
     queryFn: () => photos.getTags(),
     staleTime: 1000 * 60 * 5,
   });
@@ -121,34 +126,39 @@ export const useUploadPhoto = () => {
       await queryClient.cancelQueries({ queryKey: photoKeys.lists() });
 
       // Snapshot the previous value
-      const previousData = queryClient.getQueryData<PhotoListResponse>(photoKeys.list('admin'));
+      const previousData = queryClient.getQueryData<PhotoListResponse>(
+        photoKeys.list("admin"),
+      );
 
       // Optimistically update with placeholder
-      queryClient.setQueryData<PhotoListResponse>(photoKeys.list('admin'), old => {
-        if (!old) return { photos: [], total: 0 } as PhotoListResponse;
+      queryClient.setQueryData<PhotoListResponse>(
+        photoKeys.list("admin"),
+        (old) => {
+          if (!old) return { photos: [], total: 0 } as PhotoListResponse;
 
-        const optimisticPhoto: Partial<Photo> = {
-          id: `temp-${Date.now()}`,
-          title: metadata.title ?? file.name,
-          description: metadata.description,
-          category: metadata.category,
-          tags: metadata.tags,
-          featured: metadata.featured ?? false,
-          filename: file.name,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          // Placeholder paths
-          webp_path: '',
-          thumbnail_path: '',
-          original_path: '',
-        };
+          const optimisticPhoto: Partial<Photo> = {
+            id: `temp-${Date.now()}`,
+            title: metadata.title ?? file.name,
+            description: metadata.description,
+            category: metadata.category,
+            tags: metadata.tags,
+            featured: metadata.featured ?? false,
+            filename: file.name,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            // Placeholder paths
+            webp_path: "",
+            thumbnail_path: "",
+            original_path: "",
+          };
 
-        return {
-          ...old,
-          photos: [optimisticPhoto as Photo, ...old.photos],
-          total: old.total + 1,
-        };
-      });
+          return {
+            ...old,
+            photos: [optimisticPhoto as Photo, ...old.photos],
+            total: old.total + 1,
+          };
+        },
+      );
 
       return { previousData };
     },
@@ -156,12 +166,12 @@ export const useUploadPhoto = () => {
     onError: (_err, _variables, context) => {
       // If the mutation fails, use the context returned from onMutate to roll back
       if (context?.previousData) {
-        queryClient.setQueryData(photoKeys.list('admin'), context.previousData);
+        queryClient.setQueryData(photoKeys.list("admin"), context.previousData);
       }
-      toast.error('Failed to upload photo. Please try again.');
+      toast.error("Failed to upload photo. Please try again.");
     },
 
-    onSuccess: newPhoto => {
+    onSuccess: (newPhoto) => {
       // Invalidate and refetch
       void queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
       void queryClient.invalidateQueries({ queryKey: photoKeys.stats() });
@@ -182,7 +192,8 @@ export const useUpdatePhoto = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Photo> }) => photos.update(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<Photo> }) =>
+      photos.update(id, data),
 
     onMutate: async ({ id, data }) => {
       // Cancel any outgoing refetches
@@ -190,24 +201,37 @@ export const useUpdatePhoto = () => {
       await queryClient.cancelQueries({ queryKey: photoKeys.detail(id) });
 
       // Snapshot the previous values
-      const previousListData = queryClient.getQueryData<PhotoListResponse>(photoKeys.list('admin'));
-      const previousDetailData = queryClient.getQueryData<Photo>(photoKeys.detail(id));
+      const previousListData = queryClient.getQueryData<PhotoListResponse>(
+        photoKeys.list("admin"),
+      );
+      const previousDetailData = queryClient.getQueryData<Photo>(
+        photoKeys.detail(id),
+      );
 
       // Optimistically update the list
-      queryClient.setQueryData<PhotoListResponse>(photoKeys.list('admin'), old => {
-        if (!old) return old as unknown as PhotoListResponse;
-        return {
-          ...old,
-          photos: old.photos.map((photo: Photo) =>
-            photo.id === id ? { ...photo, ...data, updated_at: new Date().toISOString() } : photo
-          ),
-        };
-      });
+      queryClient.setQueryData<PhotoListResponse>(
+        photoKeys.list("admin"),
+        (old) => {
+          if (!old) return old as unknown as PhotoListResponse;
+          return {
+            ...old,
+            photos: old.photos.map((photo: Photo) =>
+              photo.id === id
+                ? { ...photo, ...data, updated_at: new Date().toISOString() }
+                : photo,
+            ),
+          };
+        },
+      );
 
       // Optimistically update the detail
-      queryClient.setQueryData<Photo>(photoKeys.detail(id), old => {
+      queryClient.setQueryData<Photo>(photoKeys.detail(id), (old) => {
         if (!old) return old as unknown as Photo;
-        return { ...old, ...data, updated_at: new Date().toISOString() } as Photo;
+        return {
+          ...old,
+          ...data,
+          updated_at: new Date().toISOString(),
+        } as Photo;
       });
 
       return { previousListData, previousDetailData };
@@ -216,15 +240,21 @@ export const useUpdatePhoto = () => {
     onError: (_err, { id }, context) => {
       // If the mutation fails, roll back
       if (context?.previousListData) {
-        queryClient.setQueryData(photoKeys.list('admin'), context.previousListData);
+        queryClient.setQueryData(
+          photoKeys.list("admin"),
+          context.previousListData,
+        );
       }
       if (context?.previousDetailData) {
-        queryClient.setQueryData(photoKeys.detail(id), context.previousDetailData);
+        queryClient.setQueryData(
+          photoKeys.detail(id),
+          context.previousDetailData,
+        );
       }
-      toast.error('Failed to update photo. Please try again.');
+      toast.error("Failed to update photo. Please try again.");
     },
 
-    onSuccess: updatedPhoto => {
+    onSuccess: (updatedPhoto) => {
       // Invalidate related queries
       void queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
       void queryClient.invalidateQueries({
@@ -248,22 +278,27 @@ export const useDeletePhoto = () => {
   return useMutation({
     mutationFn: (id: string) => photos.delete(id),
 
-    onMutate: async id => {
+    onMutate: async (id) => {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: photoKeys.lists() });
 
       // Snapshot the previous value
-      const previousData = queryClient.getQueryData<PhotoListResponse>(photoKeys.list('admin'));
+      const previousData = queryClient.getQueryData<PhotoListResponse>(
+        photoKeys.list("admin"),
+      );
 
       // Optimistically update by removing the photo
-      queryClient.setQueryData<PhotoListResponse>(photoKeys.list('admin'), old => {
-        if (!old) return old as unknown as PhotoListResponse;
-        return {
-          ...old,
-          photos: old.photos.filter((photo: Photo) => photo.id !== id),
-          total: old.total - 1,
-        };
-      });
+      queryClient.setQueryData<PhotoListResponse>(
+        photoKeys.list("admin"),
+        (old) => {
+          if (!old) return old as unknown as PhotoListResponse;
+          return {
+            ...old,
+            photos: old.photos.filter((photo: Photo) => photo.id !== id),
+            total: old.total - 1,
+          };
+        },
+      );
 
       return { previousData };
     },
@@ -271,9 +306,9 @@ export const useDeletePhoto = () => {
     onError: (_err, _variables, context) => {
       // If the mutation fails, roll back
       if (context?.previousData) {
-        queryClient.setQueryData(photoKeys.list('admin'), context.previousData);
+        queryClient.setQueryData(photoKeys.list("admin"), context.previousData);
       }
-      toast.error('Failed to delete photo. Please try again.');
+      toast.error("Failed to delete photo. Please try again.");
     },
 
     onSuccess: () => {
@@ -282,7 +317,7 @@ export const useDeletePhoto = () => {
       void queryClient.invalidateQueries({ queryKey: photoKeys.stats() });
       void queryClient.invalidateQueries({ queryKey: photoKeys.featured() });
 
-      toast.success('Photo deleted successfully!');
+      toast.success("Photo deleted successfully!");
     },
   });
 };
@@ -300,18 +335,25 @@ export const useTogglePhotoFeatured = () => {
       await queryClient.cancelQueries({ queryKey: photoKeys.lists() });
 
       // Snapshot the previous value
-      const previousData = queryClient.getQueryData<PhotoListResponse>(photoKeys.list('admin'));
+      const previousData = queryClient.getQueryData<PhotoListResponse>(
+        photoKeys.list("admin"),
+      );
 
       // Optimistically update
-      queryClient.setQueryData<PhotoListResponse>(photoKeys.list('admin'), old => {
-        if (!old) return old as unknown as PhotoListResponse;
-        return {
-          ...old,
-          photos: old.photos.map((photo: Photo) =>
-            photo.id === id ? { ...photo, featured, updated_at: new Date().toISOString() } : photo
-          ),
-        };
-      });
+      queryClient.setQueryData<PhotoListResponse>(
+        photoKeys.list("admin"),
+        (old) => {
+          if (!old) return old as unknown as PhotoListResponse;
+          return {
+            ...old,
+            photos: old.photos.map((photo: Photo) =>
+              photo.id === id
+                ? { ...photo, featured, updated_at: new Date().toISOString() }
+                : photo,
+            ),
+          };
+        },
+      );
 
       return { previousData };
     },
@@ -319,9 +361,9 @@ export const useTogglePhotoFeatured = () => {
     onError: (_err, _variables, context) => {
       // If the mutation fails, roll back
       if (context?.previousData) {
-        queryClient.setQueryData(photoKeys.list('admin'), context.previousData);
+        queryClient.setQueryData(photoKeys.list("admin"), context.previousData);
       }
-      toast.error('Failed to update photo status. Please try again.');
+      toast.error("Failed to update photo status. Please try again.");
     },
 
     onSuccess: ({ featured }) => {
@@ -330,7 +372,9 @@ export const useTogglePhotoFeatured = () => {
       void queryClient.invalidateQueries({ queryKey: photoKeys.featured() });
       void queryClient.invalidateQueries({ queryKey: photoKeys.stats() });
 
-      toast.success(featured ? 'Photo added to featured!' : 'Photo removed from featured!');
+      toast.success(
+        featured ? "Photo added to featured!" : "Photo removed from featured!",
+      );
     },
   });
 };
@@ -351,34 +395,41 @@ export const useReorderPhotos = () => {
     onMutate: async ({ items }) => {
       await queryClient.cancelQueries({ queryKey: photoKeys.lists() });
 
-      const previousData = queryClient.getQueryData<PhotoListResponse>(photoKeys.list('admin'));
+      const previousData = queryClient.getQueryData<PhotoListResponse>(
+        photoKeys.list("admin"),
+      );
 
       // Optimistically apply new order
-      queryClient.setQueryData<PhotoListResponse>(photoKeys.list('admin'), old => {
-        if (!old) return old as unknown as PhotoListResponse;
-        const orderMap = new Map(items.map(i => [i.id, i.order]));
-        const updated = old.photos.map((p: Photo) =>
-          orderMap.has(p.id) ? { ...p, order: orderMap.get(p.id) ?? p.order } : p
-        );
-        // Keep list sorted by order then date
-        updated.sort((a: Photo, b: Photo) => {
-          if (a.order !== b.order) return a.order - b.order;
-          return (
-            new Date(b.date_taken ?? b.created_at).getTime() -
-            new Date(a.date_taken ?? a.created_at).getTime()
+      queryClient.setQueryData<PhotoListResponse>(
+        photoKeys.list("admin"),
+        (old) => {
+          if (!old) return old as unknown as PhotoListResponse;
+          const orderMap = new Map(items.map((i) => [i.id, i.order]));
+          const updated = old.photos.map((p: Photo) =>
+            orderMap.has(p.id)
+              ? { ...p, order: orderMap.get(p.id) ?? p.order }
+              : p,
           );
-        });
-        return { ...old, photos: updated };
-      });
+          // Keep list sorted by order then date
+          updated.sort((a: Photo, b: Photo) => {
+            if (a.order !== b.order) return a.order - b.order;
+            return (
+              new Date(b.date_taken ?? b.created_at).getTime() -
+              new Date(a.date_taken ?? a.created_at).getTime()
+            );
+          });
+          return { ...old, photos: updated };
+        },
+      );
 
       return { previousData };
     },
 
     onError: (_err, _vars, context) => {
       if (context?.previousData) {
-        queryClient.setQueryData(photoKeys.list('admin'), context.previousData);
+        queryClient.setQueryData(photoKeys.list("admin"), context.previousData);
       }
-      toast.error('Failed to reorder photos. Please try again.');
+      toast.error("Failed to reorder photos. Please try again.");
     },
 
     onSuccess: () => {

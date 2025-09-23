@@ -2,9 +2,9 @@
  * TanStack Query integration for authentication
  * Provides automatic token refresh and error handling
  */
-import { QueryClient } from '@tanstack/react-query';
-import { useAuthStore } from '@/stores/authStore';
-import type { AxiosError } from 'axios';
+import { QueryClient } from "@tanstack/react-query";
+import { useAuthStore } from "@/stores/authStore";
+import type { AxiosError } from "axios";
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -42,7 +42,10 @@ export const createAuthQueryClient = () => {
 };
 
 // Auth-aware query retry function
-export const authAwareRetry = async (failureCount: number, error: AxiosError) => {
+export const authAwareRetry = async (
+  failureCount: number,
+  error: AxiosError,
+) => {
   const authStore = useAuthStore.getState();
 
   // If it's a 401 error, try to refresh the token
@@ -72,7 +75,7 @@ export const useAuthMutation = () => {
     if (isTokenExpired()) {
       const refreshSuccess = await refreshToken();
       if (!refreshSuccess) {
-        throw new Error('Authentication required');
+        throw new Error("Authentication required");
       }
     }
 
@@ -107,10 +110,12 @@ export const syncAuthState = (queryClient: QueryClient) => {
     // If user logged in, invalidate auth-dependent queries
     if (!prevState.isAuthenticated && state.isAuthenticated) {
       void queryClient.invalidateQueries({
-        predicate: query => {
+        predicate: (query) => {
           // Invalidate queries that might need authentication
           const queryKey = query.queryKey[0] as string;
-          return ['projects', 'photos', 'blog', 'subapps'].some(key => queryKey?.includes(key));
+          return ["projects", "photos", "blog", "subapps"].some((key) =>
+            queryKey?.includes(key),
+          );
         },
       });
     }
@@ -133,8 +138,8 @@ export const withTokenCheck = <T>(queryFn: () => Promise<T>) => {
 
 // Query key factory for auth-dependent queries
 export const authQueryKeys = {
-  all: ['auth'] as const,
-  user: () => [...authQueryKeys.all, 'user'] as const,
+  all: ["auth"] as const,
+  user: () => [...authQueryKeys.all, "user"] as const,
   userProfile: (userId: string) => [...authQueryKeys.user(), userId] as const,
-  sessions: () => [...authQueryKeys.all, 'sessions'] as const,
+  sessions: () => [...authQueryKeys.all, "sessions"] as const,
 } as const;

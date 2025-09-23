@@ -9,11 +9,20 @@
  * - Request/response interceptors and retry logic
  * - API endpoint integration with backend
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 // import axios from 'axios';  // Unused but kept for future API mocking
-import MockAdapter from 'axios-mock-adapter';
-import apiClient, { projects, photos, blog, subapps, auth } from '../../api/client';
-import { createMockProject, mockProjectsListResponse } from '../fixtures/projects';
+import MockAdapter from "axios-mock-adapter";
+import apiClient, {
+  projects,
+  photos,
+  blog,
+  subapps,
+  auth,
+} from "../../api/client";
+import {
+  createMockProject,
+  mockProjectsListResponse,
+} from "../fixtures/projects";
 import type {
   // Project,  // Unused in current tests
   // ProjectListResponse,  // Unused in current tests
@@ -26,7 +35,7 @@ import type {
   User,
   LoginRequest,
   TokenResponse,
-} from '../../types';
+} from "../../types";
 
 // Create mock adapter
 let mockAdapter: MockAdapter;
@@ -38,14 +47,14 @@ const localStorageMock = {
   removeItem: vi.fn(),
   clear: vi.fn(),
 };
-Object.defineProperty(window, 'localStorage', {
+Object.defineProperty(window, "localStorage", {
   value: localStorageMock,
 });
 
 // Mock window.location
-Object.defineProperty(window, 'location', {
+Object.defineProperty(window, "location", {
   value: {
-    href: 'http://localhost:3000',
+    href: "http://localhost:3000",
     assign: vi.fn(),
     replace: vi.fn(),
     reload: vi.fn(),
@@ -53,14 +62,14 @@ Object.defineProperty(window, 'location', {
   writable: true,
 });
 
-describe('API Integration Tests', () => {
+describe("API Integration Tests", () => {
   beforeEach(() => {
     mockAdapter = new MockAdapter(apiClient);
     vi.clearAllMocks();
     // Provide a default auth store for apiClient interceptors
     (window as unknown as { __authStore: unknown }).__authStore = {
       getState: () => ({
-        accessToken: 'mock-token',
+        accessToken: "mock-token",
         clearAuth: vi.fn(),
         refreshToken: vi.fn(),
       }),
@@ -72,257 +81,279 @@ describe('API Integration Tests', () => {
     localStorageMock.clear();
   });
 
-  describe('HTTP Client Configuration', () => {
-    it('uses configured base URL (defaults to /api)', () => {
+  describe("HTTP Client Configuration", () => {
+    it("uses configured base URL (defaults to /api)", () => {
       // Accept either default '/api' or env override
-      const base = apiClient.defaults.baseURL ?? '';
-      expect(['/api', ''].includes(base)).toBe(true);
+      const base = apiClient.defaults.baseURL ?? "";
+      expect(["/api", ""].includes(base)).toBe(true);
     });
 
-    it('sets default headers', () => {
-      expect(apiClient.defaults.headers['Content-Type']).toBe('application/json');
+    it("sets default headers", () => {
+      expect(apiClient.defaults.headers["Content-Type"]).toBe(
+        "application/json",
+      );
     });
 
-    it('includes authorization header when token exists', async () => {
+    it("includes authorization header when token exists", async () => {
       // apiClient reads token from window.__authStore, not localStorage
       (window as unknown as { __authStore: unknown }).__authStore = {
-        getState: () => ({ accessToken: 'test-token' }),
+        getState: () => ({ accessToken: "test-token" }),
       };
-      mockAdapter.onGet('/test').reply(200, {});
+      mockAdapter.onGet("/test").reply(200, {});
 
-      await apiClient.get('/test');
+      await apiClient.get("/test");
 
-      expect(mockAdapter.history.get[0].headers?.Authorization).toBe('Bearer test-token');
+      expect(mockAdapter.history.get[0].headers?.Authorization).toBe(
+        "Bearer test-token",
+      );
     });
 
-    it('works without authorization header when no token', async () => {
+    it("works without authorization header when no token", async () => {
       (window as unknown as { __authStore: unknown }).__authStore = {
         getState: () => ({ accessToken: undefined }),
       };
-      mockAdapter.onGet('/test').reply(200, {});
+      mockAdapter.onGet("/test").reply(200, {});
 
-      await apiClient.get('/test');
+      await apiClient.get("/test");
 
       expect(mockAdapter.history.get[0].headers?.Authorization).toBeUndefined();
     });
 
-    it('handles 401 responses by clearing token and redirecting', async () => {
+    it("handles 401 responses by clearing token and redirecting", async () => {
       // Navigate to a non-public page to trigger redirect behavior and set location
-      window.history.pushState({}, '', '/admin');
-      (window as unknown as { location: { pathname: string } }).location.pathname = '/admin';
-      mockAdapter.onGet('/protected').reply(401, { message: 'Unauthorized' });
+      window.history.pushState({}, "", "/admin");
+      (
+        window as unknown as { location: { pathname: string } }
+      ).location.pathname = "/admin";
+      mockAdapter.onGet("/protected").reply(401, { message: "Unauthorized" });
 
       try {
-        await apiClient.get('/protected');
+        await apiClient.get("/protected");
       } catch {
         // Expected to throw
       }
 
       // apiClient clears auth via authStore and may redirect; allow either
-      expect(['/login', '/admin']).toContain(window.location.pathname);
+      expect(["/login", "/admin"]).toContain(window.location.pathname);
     });
 
-    it('passes through other error responses', async () => {
-      mockAdapter.onGet('/error').reply(500, { message: 'Server Error' });
+    it("passes through other error responses", async () => {
+      mockAdapter.onGet("/error").reply(500, { message: "Server Error" });
 
-      await expect(apiClient.get('/error')).rejects.toMatchObject({
+      await expect(apiClient.get("/error")).rejects.toMatchObject({
         response: {
           status: 500,
-          data: { message: 'Server Error' },
+          data: { message: "Server Error" },
         },
       });
     });
   });
 
-  describe('Authentication API', () => {
+  describe("Authentication API", () => {
     const mockLoginRequest: LoginRequest = {
-      username: 'admin',
-      password: 'admin',
+      username: "admin",
+      password: "admin",
     };
 
     const mockTokenResponse: TokenResponse = {
-      access_token: 'mock-access-token',
-      token_type: 'bearer',
+      access_token: "mock-access-token",
+      token_type: "bearer",
       expires_in: 3600,
     };
 
     const mockUser: User = {
-      id: 'user-1',
-      username: 'admin',
-      email: 'admin@example.com',
+      id: "user-1",
+      username: "admin",
+      email: "admin@example.com",
       is_active: true,
-      created_at: '2023-01-01T00:00:00Z',
-      updated_at: '2023-01-01T00:00:00Z',
+      created_at: "2023-01-01T00:00:00Z",
+      updated_at: "2023-01-01T00:00:00Z",
     };
 
-    it('logs in user successfully', async () => {
-      mockAdapter.onPost('/auth/login').reply(200, mockTokenResponse);
+    it("logs in user successfully", async () => {
+      mockAdapter.onPost("/auth/login").reply(200, mockTokenResponse);
 
       const result = await auth.login(mockLoginRequest);
 
       expect(result).toEqual(mockTokenResponse);
-      expect(mockAdapter.history.post[0].data).toBe(JSON.stringify(mockLoginRequest));
+      expect(mockAdapter.history.post[0].data).toBe(
+        JSON.stringify(mockLoginRequest),
+      );
     });
 
-    it('gets current user info', async () => {
-      mockAdapter.onGet('/auth/me').reply(200, mockUser);
+    it("gets current user info", async () => {
+      mockAdapter.onGet("/auth/me").reply(200, mockUser);
 
       const result = await auth.getMe();
 
       expect(result).toEqual(mockUser);
     });
 
-    it('logs out user successfully', async () => {
-      mockAdapter.onPost('/auth/logout').reply(200, {});
+    it("logs out user successfully", async () => {
+      mockAdapter.onPost("/auth/logout").reply(200, {});
 
       await expect(auth.logout()).resolves.toBeUndefined();
-      expect(mockAdapter.history.post.some(req => req.url === '/auth/logout')).toBe(true);
+      expect(
+        mockAdapter.history.post.some((req) => req.url === "/auth/logout"),
+      ).toBe(true);
     });
 
-    it('handles login errors', async () => {
-      mockAdapter.onPost('/auth/login').reply(401, { detail: 'Invalid credentials' });
+    it("handles login errors", async () => {
+      mockAdapter
+        .onPost("/auth/login")
+        .reply(401, { detail: "Invalid credentials" });
 
       await expect(auth.login(mockLoginRequest)).rejects.toBeTruthy();
     });
   });
 
-  describe('Projects API', () => {
+  describe("Projects API", () => {
     const mockProject = createMockProject();
 
-    it('fetches projects list successfully', async () => {
-      mockAdapter.onGet('/projects').reply(200, mockProjectsListResponse);
+    it("fetches projects list successfully", async () => {
+      mockAdapter.onGet("/projects").reply(200, mockProjectsListResponse);
 
       const result = await projects.list();
 
       expect(result).toEqual(mockProjectsListResponse);
     });
 
-    it('fetches projects with filters', async () => {
-      mockAdapter.onGet('/projects').reply(200, mockProjectsListResponse);
+    it("fetches projects with filters", async () => {
+      mockAdapter.onGet("/projects").reply(200, mockProjectsListResponse);
 
-      await projects.list({ featured_only: true, status: 'active' });
+      await projects.list({ featured_only: true, status: "active" });
 
       expect(mockAdapter.history.get[0].params).toEqual({
         featured_only: true,
-        status: 'active',
+        status: "active",
       });
     });
 
-    it('fetches featured projects', async () => {
+    it("fetches featured projects", async () => {
       const featuredProjects = [createMockProject({ featured: true })];
-      mockAdapter.onGet('/projects/featured').reply(200, featuredProjects);
+      mockAdapter.onGet("/projects/featured").reply(200, featuredProjects);
 
       const result = await projects.getFeatured();
 
       expect(result).toEqual(featuredProjects);
     });
 
-    it('handles featured projects API errors gracefully', async () => {
-      mockAdapter.onGet('/projects/featured').reply(500, { message: 'Server error' });
+    it("handles featured projects API errors gracefully", async () => {
+      mockAdapter
+        .onGet("/projects/featured")
+        .reply(500, { message: "Server error" });
 
       const result = await projects.getFeatured();
 
       expect(result).toEqual([]); // Should return empty array on error
     });
 
-    it('fetches single project by ID or slug', async () => {
-      mockAdapter.onGet('/projects/test-project').reply(200, mockProject);
+    it("fetches single project by ID or slug", async () => {
+      mockAdapter.onGet("/projects/test-project").reply(200, mockProject);
 
-      const result = await projects.getByIdOrSlug('test-project');
+      const result = await projects.getByIdOrSlug("test-project");
 
       expect(result).toEqual(mockProject);
     });
 
-    it('creates new project', async () => {
+    it("creates new project", async () => {
       const newProject = { ...mockProject };
       delete (newProject as Record<string, unknown>).id;
       delete (newProject as Record<string, unknown>).slug;
       delete (newProject as Record<string, unknown>).created_at;
       delete (newProject as Record<string, unknown>).updated_at;
 
-      mockAdapter.onPost('/projects').reply(201, mockProject);
+      mockAdapter.onPost("/projects").reply(201, mockProject);
 
       const result = await projects.create(newProject);
 
       expect(result).toEqual(mockProject);
-      expect(JSON.parse(mockAdapter.history.post[0].data as string)).toMatchObject(newProject);
+      expect(
+        JSON.parse(mockAdapter.history.post[0].data as string),
+      ).toMatchObject(newProject);
     });
 
-    it('updates existing project', async () => {
+    it("updates existing project", async () => {
       const updates = {
-        title: 'Updated Title',
-        description: 'Updated description',
+        title: "Updated Title",
+        description: "Updated description",
       };
       const updatedProject = { ...mockProject, ...updates };
 
-      mockAdapter.onPut('/projects/project-1').reply(200, updatedProject);
+      mockAdapter.onPut("/projects/project-1").reply(200, updatedProject);
 
-      const result = await projects.update('project-1', updates);
+      const result = await projects.update("project-1", updates);
 
       expect(result).toEqual(updatedProject);
-      expect(JSON.parse(mockAdapter.history.put[0].data as string)).toEqual(updates);
+      expect(JSON.parse(mockAdapter.history.put[0].data as string)).toEqual(
+        updates,
+      );
     });
 
-    it('deletes project', async () => {
-      mockAdapter.onDelete('/projects/project-1').reply(204);
+    it("deletes project", async () => {
+      mockAdapter.onDelete("/projects/project-1").reply(204);
 
-      await projects.delete('project-1');
+      await projects.delete("project-1");
 
       expect(mockAdapter.history.delete).toHaveLength(1);
-      expect(mockAdapter.history.delete[0].url).toBe('/projects/project-1');
+      expect(mockAdapter.history.delete[0].url).toBe("/projects/project-1");
     });
 
-    it('fetches project statistics', async () => {
+    it("fetches project statistics", async () => {
       const stats = { total: 10, active: 7, featured: 3 };
-      mockAdapter.onGet('/projects/stats/summary').reply(200, stats);
+      mockAdapter.onGet("/projects/stats/summary").reply(200, stats);
 
       const result = await projects.getStats();
 
       expect(result).toEqual(stats);
     });
 
-    it('handles project API errors appropriately', async () => {
-      mockAdapter.onGet('/projects/nonexistent').reply(404, { detail: 'Project not found' });
+    it("handles project API errors appropriately", async () => {
+      mockAdapter
+        .onGet("/projects/nonexistent")
+        .reply(404, { detail: "Project not found" });
 
-      await expect(projects.getByIdOrSlug('nonexistent')).rejects.toMatchObject({
-        response: {
-          status: 404,
-          data: { detail: 'Project not found' },
+      await expect(projects.getByIdOrSlug("nonexistent")).rejects.toMatchObject(
+        {
+          response: {
+            status: 404,
+            data: { detail: "Project not found" },
+          },
         },
-      });
+      );
     });
   });
 
-  describe('Photos API', () => {
+  describe("Photos API", () => {
     const mockPhoto: Photo = {
-      id: 'photo-1',
-      filename: 'test-photo.jpg',
-      original_filename: 'original-test.jpg',
-      title: 'Test Photo',
-      description: 'A test photo',
-      category: 'test',
-      tags: 'nature, landscape',
-      comments: 'Beautiful shot',
+      id: "photo-1",
+      filename: "test-photo.jpg",
+      original_filename: "original-test.jpg",
+      title: "Test Photo",
+      description: "A test photo",
+      category: "test",
+      tags: "nature, landscape",
+      comments: "Beautiful shot",
       featured: true,
       file_size: 1024000,
-      image_url: '/photos/test-photo.jpg',
-      thumbnail_url: '/thumbnails/test-photo.jpg',
-      camera_make: 'Canon',
-      camera_model: 'EOS R5',
-      focal_length: '85mm',
-      aperture: 'f/2.8',
-      shutter_speed: '1/200',
-      iso: '400',
-      taken_at: '2023-01-15T12:00:00Z',
-      location: 'Test Location',
+      image_url: "/photos/test-photo.jpg",
+      thumbnail_url: "/thumbnails/test-photo.jpg",
+      camera_make: "Canon",
+      camera_model: "EOS R5",
+      focal_length: "85mm",
+      aperture: "f/2.8",
+      shutter_speed: "1/200",
+      iso: "400",
+      taken_at: "2023-01-15T12:00:00Z",
+      location: "Test Location",
       latitude: 40.7128,
       longitude: -74.006,
       view_count: 42,
-      created_at: '2023-01-15T10:00:00Z',
-      updated_at: '2023-01-15T10:00:00Z',
+      created_at: "2023-01-15T10:00:00Z",
+      updated_at: "2023-01-15T10:00:00Z",
     };
 
-    it('fetches photos list with pagination', async () => {
+    it("fetches photos list with pagination", async () => {
       const photoListResponse: PhotoListResponse = {
         photos: [mockPhoto],
         total: 1,
@@ -331,49 +362,53 @@ describe('API Integration Tests', () => {
         pages: 1,
       };
 
-      mockAdapter.onGet('/photos').reply(200, photoListResponse);
+      mockAdapter.onGet("/photos").reply(200, photoListResponse);
 
       const result = await photos.list({ page: 1, per_page: 10 });
 
       expect(result).toEqual(photoListResponse);
     });
 
-    it('fetches featured photos', async () => {
-      mockAdapter.onGet('/photos/featured?limit=5').reply(200, [mockPhoto]);
+    it("fetches featured photos", async () => {
+      mockAdapter.onGet("/photos/featured?limit=5").reply(200, [mockPhoto]);
 
       const result = await photos.getFeatured(5);
 
       expect(result).toEqual([mockPhoto]);
     });
 
-    it('handles featured photos errors gracefully', async () => {
-      mockAdapter.onGet('/photos/featured?limit=10').reply(500, { message: 'Server error' });
+    it("handles featured photos errors gracefully", async () => {
+      mockAdapter
+        .onGet("/photos/featured?limit=10")
+        .reply(500, { message: "Server error" });
 
       const result = await photos.getFeatured();
 
       expect(result).toEqual([]); // Should return empty array on error
     });
 
-    it('fetches single photo by ID', async () => {
-      mockAdapter.onGet('/photos/photo-1?increment_views=true').reply(200, mockPhoto);
+    it("fetches single photo by ID", async () => {
+      mockAdapter
+        .onGet("/photos/photo-1?increment_views=true")
+        .reply(200, mockPhoto);
 
-      const result = await photos.getById('photo-1');
+      const result = await photos.getById("photo-1");
 
       expect(result).toEqual(mockPhoto);
     });
 
-    it('uploads photo with metadata', async () => {
-      const file = new File(['photo content'], 'test.jpg', {
-        type: 'image/jpeg',
+    it("uploads photo with metadata", async () => {
+      const file = new File(["photo content"], "test.jpg", {
+        type: "image/jpeg",
       });
       const metadata = {
-        title: 'New Photo',
-        description: 'Uploaded photo',
-        category: 'test',
+        title: "New Photo",
+        description: "Uploaded photo",
+        category: "test",
         featured: true,
       };
 
-      mockAdapter.onPost('/photos').reply(201, mockPhoto);
+      mockAdapter.onPost("/photos").reply(201, mockPhoto);
 
       const result = await photos.upload(file, metadata);
 
@@ -381,31 +416,31 @@ describe('API Integration Tests', () => {
 
       // Check that FormData was sent
       const request = mockAdapter.history.post[0];
-      expect(request.headers?.['Content-Type']).toMatch(/multipart\/form-data/);
+      expect(request.headers?.["Content-Type"]).toMatch(/multipart\/form-data/);
     });
 
-    it('updates photo metadata', async () => {
-      const updates = { title: 'Updated Photo', featured: false };
+    it("updates photo metadata", async () => {
+      const updates = { title: "Updated Photo", featured: false };
       const updatedPhoto = { ...mockPhoto, ...updates };
 
-      mockAdapter.onPut('/photos/photo-1').reply(200, updatedPhoto);
+      mockAdapter.onPut("/photos/photo-1").reply(200, updatedPhoto);
 
-      const result = await photos.update('photo-1', updates);
+      const result = await photos.update("photo-1", updates);
 
       expect(result).toEqual(updatedPhoto);
     });
 
-    it('deletes photo', async () => {
-      mockAdapter.onDelete('/photos/photo-1').reply(204);
+    it("deletes photo", async () => {
+      mockAdapter.onDelete("/photos/photo-1").reply(204);
 
-      await photos.delete('photo-1');
+      await photos.delete("photo-1");
 
       expect(mockAdapter.history.delete).toHaveLength(1);
     });
 
-    it('fetches photo statistics', async () => {
+    it("fetches photo statistics", async () => {
       const stats = { total: 150, featured: 25, categories: 8 };
-      mockAdapter.onGet('/photos/stats/summary').reply(200, stats);
+      mockAdapter.onGet("/photos/stats/summary").reply(200, stats);
 
       const result = await photos.getStats();
 
@@ -413,23 +448,23 @@ describe('API Integration Tests', () => {
     });
   });
 
-  describe('Blog API', () => {
+  describe("Blog API", () => {
     const mockBlogPost: BlogPost = {
-      id: 'post-1',
-      title: 'Test Blog Post',
-      slug: 'test-blog-post',
-      content: '# Test Post\n\nThis is a test blog post.',
-      excerpt: 'This is a test blog post.',
+      id: "post-1",
+      title: "Test Blog Post",
+      slug: "test-blog-post",
+      content: "# Test Post\n\nThis is a test blog post.",
+      excerpt: "This is a test blog post.",
       published: true,
       featured: false,
-      tags: 'test, blog',
+      tags: "test, blog",
       view_count: 42,
       read_time: 5,
-      created_at: '2023-01-15T10:00:00Z',
-      updated_at: '2023-01-15T10:00:00Z',
+      created_at: "2023-01-15T10:00:00Z",
+      updated_at: "2023-01-15T10:00:00Z",
     };
 
-    it('fetches published blog posts', async () => {
+    it("fetches published blog posts", async () => {
       const blogListResponse: BlogPostListResponse = {
         posts: [mockBlogPost],
         total: 1,
@@ -438,15 +473,18 @@ describe('API Integration Tests', () => {
         pages: 1,
       };
 
-      mockAdapter.onGet('/blog').reply(200, blogListResponse);
+      mockAdapter.onGet("/blog").reply(200, blogListResponse);
 
       const result = await blog.list({ published_only: true });
 
       expect(result).toEqual(blogListResponse);
     });
 
-    it('fetches all blog posts for admin', async () => {
-      const allPosts = [mockBlogPost, { ...mockBlogPost, id: 'draft-1', published: false }];
+    it("fetches all blog posts for admin", async () => {
+      const allPosts = [
+        mockBlogPost,
+        { ...mockBlogPost, id: "draft-1", published: false },
+      ];
       const blogListResponse: BlogPostListResponse = {
         posts: allPosts,
         total: 2,
@@ -455,22 +493,24 @@ describe('API Integration Tests', () => {
         pages: 1,
       };
 
-      mockAdapter.onGet('/blog/admin').reply(200, blogListResponse);
+      mockAdapter.onGet("/blog/admin").reply(200, blogListResponse);
 
       const result = await blog.listAll();
 
       expect(result).toEqual(blogListResponse);
     });
 
-    it('fetches single blog post by ID or slug', async () => {
-      mockAdapter.onGet('/blog/test-post?increment_views=true').reply(200, mockBlogPost);
+    it("fetches single blog post by ID or slug", async () => {
+      mockAdapter
+        .onGet("/blog/test-post?increment_views=true")
+        .reply(200, mockBlogPost);
 
-      const result = await blog.getByIdOrSlug('test-post');
+      const result = await blog.getByIdOrSlug("test-post");
 
       expect(result).toEqual(mockBlogPost);
     });
 
-    it('creates new blog post', async () => {
+    it("creates new blog post", async () => {
       const newPost = { ...mockBlogPost };
       delete (newPost as Record<string, unknown>).id;
       delete (newPost as Record<string, unknown>).slug;
@@ -479,35 +519,35 @@ describe('API Integration Tests', () => {
       delete (newPost as Record<string, unknown>).created_at;
       delete (newPost as Record<string, unknown>).updated_at;
 
-      mockAdapter.onPost('/blog').reply(201, mockBlogPost);
+      mockAdapter.onPost("/blog").reply(201, mockBlogPost);
 
       const result = await blog.create(newPost);
 
       expect(result).toEqual(mockBlogPost);
     });
 
-    it('updates blog post', async () => {
-      const updates = { title: 'Updated Post', published: false };
+    it("updates blog post", async () => {
+      const updates = { title: "Updated Post", published: false };
       const updatedPost = { ...mockBlogPost, ...updates };
 
-      mockAdapter.onPut('/blog/post-1').reply(200, updatedPost);
+      mockAdapter.onPut("/blog/post-1").reply(200, updatedPost);
 
-      const result = await blog.update('post-1', updates);
+      const result = await blog.update("post-1", updates);
 
       expect(result).toEqual(updatedPost);
     });
 
-    it('deletes blog post', async () => {
-      mockAdapter.onDelete('/blog/post-1').reply(204);
+    it("deletes blog post", async () => {
+      mockAdapter.onDelete("/blog/post-1").reply(204);
 
-      await blog.delete('post-1');
+      await blog.delete("post-1");
 
       expect(mockAdapter.history.delete).toHaveLength(1);
     });
 
-    it('fetches blog statistics', async () => {
+    it("fetches blog statistics", async () => {
       const stats = { total: 25, published: 20, drafts: 5 };
-      mockAdapter.onGet('/blog/stats/summary').reply(200, stats);
+      mockAdapter.onGet("/blog/stats/summary").reply(200, stats);
 
       const result = await blog.getStats();
 
@@ -515,29 +555,29 @@ describe('API Integration Tests', () => {
     });
   });
 
-  describe('Sub-apps API', () => {
+  describe("Sub-apps API", () => {
     const mockSubApp: SubApp = {
-      id: 'subapp-1',
-      name: 'Test SubApp',
-      slug: 'test-subapp',
-      description: 'A test sub-application',
-      url: 'https://subapp.example.com',
-      icon: 'test-icon',
+      id: "subapp-1",
+      name: "Test SubApp",
+      slug: "test-subapp",
+      description: "A test sub-application",
+      url: "https://subapp.example.com",
+      icon: "test-icon",
       enabled: true,
       show_in_menu: true,
       require_auth: false,
       order_index: 1,
-      created_at: '2023-01-15T10:00:00Z',
-      updated_at: '2023-01-15T10:00:00Z',
+      created_at: "2023-01-15T10:00:00Z",
+      updated_at: "2023-01-15T10:00:00Z",
     };
 
-    it('fetches public sub-apps for menu', async () => {
+    it("fetches public sub-apps for menu", async () => {
       const subappListResponse: SubAppListResponse = {
         subapps: [mockSubApp],
         total: 1,
       };
 
-      mockAdapter.onGet('/subapps').reply(200, subappListResponse);
+      mockAdapter.onGet("/subapps").reply(200, subappListResponse);
 
       const result = await subapps.list(true);
 
@@ -545,84 +585,86 @@ describe('API Integration Tests', () => {
       expect(mockAdapter.history.get[0].params).toEqual({ menu_only: true });
     });
 
-    it('handles sub-apps API errors gracefully', async () => {
-      mockAdapter.onGet('/subapps').reply(500, { message: 'Server error' });
+    it("handles sub-apps API errors gracefully", async () => {
+      mockAdapter.onGet("/subapps").reply(500, { message: "Server error" });
 
       const result = await subapps.list();
 
       expect(result).toEqual({ subapps: [], total: 0 }); // Should return empty response on error
     });
 
-    it('fetches authenticated sub-apps', async () => {
+    it("fetches authenticated sub-apps", async () => {
       const authSubappResponse: SubAppListResponse = {
         subapps: [{ ...mockSubApp, require_auth: true }],
         total: 1,
       };
 
-      mockAdapter.onGet('/subapps/authenticated').reply(200, authSubappResponse);
+      mockAdapter
+        .onGet("/subapps/authenticated")
+        .reply(200, authSubappResponse);
 
       const result = await subapps.listAuthenticated();
 
       expect(result).toEqual(authSubappResponse);
     });
 
-    it('fetches all sub-apps for admin', async () => {
+    it("fetches all sub-apps for admin", async () => {
       const allSubappsResponse: SubAppListResponse = {
         subapps: [mockSubApp],
         total: 1,
       };
 
-      mockAdapter.onGet('/subapps/admin').reply(200, allSubappsResponse);
+      mockAdapter.onGet("/subapps/admin").reply(200, allSubappsResponse);
 
       const result = await subapps.listAll();
 
       expect(result).toEqual(allSubappsResponse);
     });
 
-    it('fetches single sub-app by ID or slug', async () => {
-      mockAdapter.onGet('/subapps/test-subapp').reply(200, mockSubApp);
+    it("fetches single sub-app by ID or slug", async () => {
+      mockAdapter.onGet("/subapps/test-subapp").reply(200, mockSubApp);
 
-      const result = await subapps.getByIdOrSlug('test-subapp');
+      const result = await subapps.getByIdOrSlug("test-subapp");
 
       expect(result).toEqual(mockSubApp);
     });
 
-    it('creates new sub-app', async () => {
+    it("creates new sub-app", async () => {
       const newSubApp = { ...mockSubApp };
       delete (newSubApp as Record<string, unknown>).id;
       delete (newSubApp as Record<string, unknown>).slug;
       delete (newSubApp as Record<string, unknown>).created_at;
       delete (newSubApp as Record<string, unknown>).updated_at;
 
-      mockAdapter.onPost('/subapps').reply(201, mockSubApp);
+      mockAdapter.onPost("/subapps").reply(201, mockSubApp);
 
       const result = await subapps.create(newSubApp);
 
       expect(result).toEqual(mockSubApp);
     });
 
-    it('updates sub-app', async () => {
-      const updates = { name: 'Updated SubApp', enabled: false };
+    it("updates sub-app", async () => {
+      const updates = { name: "Updated SubApp", enabled: false };
       const updatedSubApp = { ...mockSubApp, ...updates };
 
-      mockAdapter.onPut('/subapps/subapp-1').reply(200, updatedSubApp);
+      mockAdapter.onPut("/subapps/subapp-1").reply(200, updatedSubApp);
 
-      const result = await subapps.update('subapp-1', updates);
+      const result = await subapps.update("subapp-1", updates);
 
       expect(result).toEqual(updatedSubApp);
     });
 
-    it('deletes sub-app', async () => {
-      mockAdapter.onDelete('/subapps/subapp-1').reply(204);
+    it("deletes sub-app", async () => {
+      mockAdapter.onDelete("/subapps/subapp-1").reply(204);
 
-      await subapps.delete('subapp-1');
+      await subapps.delete("subapp-1");
 
       expect(mockAdapter.history.delete).toHaveLength(1);
     });
 
-    it('fetches sub-app statistics', async () => {
+    it("fetches sub-app statistics", async () => {
       const stats = { total: 5, enabled: 4, public: 3 };
-      mockAdapter.onGet('/subapps/stats/summary').reply(200, stats);
+      mockAdapter.onGet("/subapps/stats/summary").reply(200, stats);
 
       const result = await subapps.getStats();
 
@@ -630,92 +672,94 @@ describe('API Integration Tests', () => {
     });
   });
 
-  describe('Network and Error Handling', () => {
-    it('handles network timeouts', async () => {
-      mockAdapter.onGet('/timeout').timeout();
+  describe("Network and Error Handling", () => {
+    it("handles network timeouts", async () => {
+      mockAdapter.onGet("/timeout").timeout();
 
-      await expect(apiClient.get('/timeout')).rejects.toMatchObject({
-        code: 'ECONNABORTED',
+      await expect(apiClient.get("/timeout")).rejects.toMatchObject({
+        code: "ECONNABORTED",
       });
     });
 
-    it('handles network errors', async () => {
-      mockAdapter.onGet('/network-error').networkError();
+    it("handles network errors", async () => {
+      mockAdapter.onGet("/network-error").networkError();
 
-      await expect(apiClient.get('/network-error')).rejects.toMatchObject({
-        message: 'Network Error',
+      await expect(apiClient.get("/network-error")).rejects.toMatchObject({
+        message: "Network Error",
       });
     });
 
-    it('handles malformed JSON responses', async () => {
-      mockAdapter.onGet('/bad-json').reply(200, 'not-json', {
-        'content-type': 'application/json',
+    it("handles malformed JSON responses", async () => {
+      mockAdapter.onGet("/bad-json").reply(200, "not-json", {
+        "content-type": "application/json",
       });
 
-      const response = await apiClient.get('/bad-json');
-      expect(response.data).toBe('not-json');
+      const response = await apiClient.get("/bad-json");
+      expect(response.data).toBe("not-json");
     });
 
-    it('handles empty responses correctly', async () => {
-      mockAdapter.onDelete('/empty').reply(204, '');
+    it("handles empty responses correctly", async () => {
+      mockAdapter.onDelete("/empty").reply(204, "");
 
-      const response = await apiClient.delete('/empty');
+      const response = await apiClient.delete("/empty");
 
       expect(response.status).toBe(204);
-      expect(response.data).toBe('');
+      expect(response.data).toBe("");
     });
 
-    it('preserves response headers', async () => {
-      const customHeaders = { 'x-custom-header': 'test-value' };
-      mockAdapter.onGet('/headers').reply(200, { data: 'test' }, customHeaders);
+    it("preserves response headers", async () => {
+      const customHeaders = { "x-custom-header": "test-value" };
+      mockAdapter.onGet("/headers").reply(200, { data: "test" }, customHeaders);
 
-      const response = await apiClient.get('/headers');
+      const response = await apiClient.get("/headers");
 
-      expect(response.headers['x-custom-header']).toBe('test-value');
+      expect(response.headers["x-custom-header"]).toBe("test-value");
     });
   });
 
-  describe('Request/Response Transformation', () => {
-    it('automatically stringifies request data', async () => {
-      const requestData = { name: 'test', value: 123 };
-      mockAdapter.onPost('/json').reply(200, {});
+  describe("Request/Response Transformation", () => {
+    it("automatically stringifies request data", async () => {
+      const requestData = { name: "test", value: 123 };
+      mockAdapter.onPost("/json").reply(200, {});
 
-      await apiClient.post('/json', requestData);
+      await apiClient.post("/json", requestData);
 
-      expect(mockAdapter.history.post[0].data).toBe(JSON.stringify(requestData));
+      expect(mockAdapter.history.post[0].data).toBe(
+        JSON.stringify(requestData),
+      );
     });
 
-    it('handles FormData requests correctly', async () => {
+    it("handles FormData requests correctly", async () => {
       const formData = new FormData();
-      formData.append('file', new File(['content'], 'test.txt'));
-      formData.append('title', 'Test File');
+      formData.append("file", new File(["content"], "test.txt"));
+      formData.append("title", "Test File");
 
-      mockAdapter.onPost('/upload').reply(200, {});
+      mockAdapter.onPost("/upload").reply(200, {});
 
-      await apiClient.post('/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      await apiClient.post("/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
       const request = mockAdapter.history.post[0];
-      expect(request.headers?.['Content-Type']).toMatch(/multipart\/form-data/);
+      expect(request.headers?.["Content-Type"]).toMatch(/multipart\/form-data/);
     });
 
-    it('handles query parameters correctly', async () => {
-      mockAdapter.onGet('/search').reply(200, {});
+    it("handles query parameters correctly", async () => {
+      mockAdapter.onGet("/search").reply(200, {});
 
-      await apiClient.get('/search', {
-        params: { q: 'test query', page: 1, limit: 10 },
+      await apiClient.get("/search", {
+        params: { q: "test query", page: 1, limit: 10 },
       });
 
       expect(mockAdapter.history.get[0].params).toEqual({
-        q: 'test query',
+        q: "test query",
         page: 1,
         limit: 10,
       });
     });
 
-    it('handles URL encoding in paths', async () => {
-      const encodedPath = encodeURIComponent('test project with spaces');
+    it("handles URL encoding in paths", async () => {
+      const encodedPath = encodeURIComponent("test project with spaces");
       mockAdapter.onGet(`/projects/${encodedPath}`).reply(200, {});
 
       await apiClient.get(`/projects/${encodedPath}`);
@@ -724,16 +768,16 @@ describe('API Integration Tests', () => {
     });
   });
 
-  describe('Concurrent Requests', () => {
-    it('handles multiple concurrent requests', async () => {
-      mockAdapter.onGet('/endpoint1').reply(200, { id: 1 });
-      mockAdapter.onGet('/endpoint2').reply(200, { id: 2 });
-      mockAdapter.onGet('/endpoint3').reply(200, { id: 3 });
+  describe("Concurrent Requests", () => {
+    it("handles multiple concurrent requests", async () => {
+      mockAdapter.onGet("/endpoint1").reply(200, { id: 1 });
+      mockAdapter.onGet("/endpoint2").reply(200, { id: 2 });
+      mockAdapter.onGet("/endpoint3").reply(200, { id: 3 });
 
       const promises = [
-        apiClient.get('/endpoint1'),
-        apiClient.get('/endpoint2'),
-        apiClient.get('/endpoint3'),
+        apiClient.get("/endpoint1"),
+        apiClient.get("/endpoint2"),
+        apiClient.get("/endpoint3"),
       ];
 
       const results = await Promise.all(promises);
@@ -744,17 +788,17 @@ describe('API Integration Tests', () => {
       expect(results[2].data).toEqual({ id: 3 });
     });
 
-    it('handles mixed success and failure in concurrent requests', async () => {
-      mockAdapter.onGet('/success').reply(200, { status: 'ok' });
-      mockAdapter.onGet('/failure').reply(500, { message: 'error' });
+    it("handles mixed success and failure in concurrent requests", async () => {
+      mockAdapter.onGet("/success").reply(200, { status: "ok" });
+      mockAdapter.onGet("/failure").reply(500, { message: "error" });
 
       const results = await Promise.allSettled([
-        apiClient.get('/success'),
-        apiClient.get('/failure'),
+        apiClient.get("/success"),
+        apiClient.get("/failure"),
       ]);
 
-      expect(results[0].status).toBe('fulfilled');
-      expect(results[1].status).toBe('rejected');
+      expect(results[0].status).toBe("fulfilled");
+      expect(results[1].status).toBe("rejected");
     });
   });
 });

@@ -1,21 +1,21 @@
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { profilePictures } from '../api/client';
-import { selectOptimalImage, ImageUseCase } from '../utils/imageUtils';
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
+import { profilePictures } from "../api/client";
+import { selectOptimalImage, ImageUseCase } from "../utils/imageUtils";
 
 export interface ProfilePictureDisplayProps {
   className?: string;
   fallback?: string;
-  size?: 'small' | 'medium' | 'large';
+  size?: "small" | "medium" | "large";
 }
 
 const ProfilePictureDisplay: React.FC<ProfilePictureDisplayProps> = ({
-  className = '',
-  fallback = 'AL',
-  size = 'large',
+  className = "",
+  fallback = "AL",
+  size = "large",
 }) => {
   const { data: activeProfilePicture, isLoading } = useQuery({
-    queryKey: ['profile-pictures', 'active'],
+    queryKey: ["profile-pictures", "active"],
     queryFn: profilePictures.getActive,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
@@ -29,7 +29,7 @@ const ProfilePictureDisplay: React.FC<ProfilePictureDisplayProps> = ({
         className={`flex items-center justify-center bg-gradient-to-br from-primary-600 to-primary-800 text-white font-light ${className}`}
       >
         <span
-          className={`${size === 'small' ? 'text-2xl' : size === 'medium' ? 'text-4xl' : 'text-6xl'}`}
+          className={`${size === "small" ? "text-2xl" : size === "medium" ? "text-4xl" : "text-6xl"}`}
         >
           {fallback}
         </span>
@@ -39,9 +39,9 @@ const ProfilePictureDisplay: React.FC<ProfilePictureDisplayProps> = ({
 
   // Select optimal image variant based on display size
   const useCase =
-    size === 'small'
+    size === "small"
       ? ImageUseCase.THUMBNAIL
-      : size === 'medium'
+      : size === "medium"
         ? ImageUseCase.GALLERY
         : ImageUseCase.HERO;
 
@@ -53,7 +53,7 @@ const ProfilePictureDisplay: React.FC<ProfilePictureDisplayProps> = ({
         src={optimalImage.url}
         srcSet={optimalImage.srcset}
         sizes={optimalImage.sizes}
-        alt={profilePicture.title ?? 'Profile Picture'}
+        alt={profilePicture.title ?? "Profile Picture"}
         className="w-full h-full object-cover"
         loading="lazy"
       />

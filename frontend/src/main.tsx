@@ -1,13 +1,13 @@
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import './index.css';
-import './colors.css';
-import 'leaflet/dist/leaflet.css';
-import App from './App.tsx';
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import "./index.css";
+import "./colors.css";
+import "leaflet/dist/leaflet.css";
+import App from "./App.tsx";
 
-const rootEl = document.getElementById('root');
+const rootEl = document.getElementById("root");
 if (!rootEl) {
-  throw new Error('Root element not found');
+  throw new Error("Root element not found");
 }
 
 if (import.meta.env.DEV) {
@@ -17,6 +17,6 @@ if (import.meta.env.DEV) {
   createRoot(rootEl).render(
     <StrictMode>
       <App />
-    </StrictMode>
+    </StrictMode>,
   );
 }

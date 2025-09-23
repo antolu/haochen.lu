@@ -1,6 +1,6 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import MapPicker from './MapPicker';
+import React, { useState, useCallback, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
+import MapPicker from "./MapPicker";
 
 interface LocationInputProps {
   latitude?: number;
@@ -17,11 +17,13 @@ const LocationInput: React.FC<LocationInputProps> = ({
   locationName,
   onLocationChange,
   disabled = false,
-  className = '',
+  className = "",
 }) => {
   const [showMap, setShowMap] = useState(false);
-  const [manualLocationName, setManualLocationName] = useState(locationName ?? '');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [manualLocationName, setManualLocationName] = useState(
+    locationName ?? "",
+  );
+  const [searchQuery, setSearchQuery] = useState("");
   type SearchResult = {
     location_name: string;
     location_address?: string;
@@ -58,12 +60,12 @@ const LocationInput: React.FC<LocationInputProps> = ({
       }
     };
 
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('scroll', handleResize);
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("scroll", handleResize);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('scroll', handleResize);
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("scroll", handleResize);
     };
   }, [showSearchResults, updateDropdownPosition]);
 
@@ -71,20 +73,22 @@ const LocationInput: React.FC<LocationInputProps> = ({
     async (lat: number, lng: number): Promise<void> => {
       // Try to get location name from coordinates
       try {
-        const response = await fetch(`/api/locations/reverse?lat=${lat}&lng=${lng}`);
+        const response = await fetch(
+          `/api/locations/reverse?lat=${lat}&lng=${lng}`,
+        );
         if (response.ok) {
           const data = (await response.json()) as { location_name?: string };
-          setManualLocationName(data.location_name ?? '');
+          setManualLocationName(data.location_name ?? "");
           onLocationChange?.(lat, lng, data.location_name);
         } else {
           onLocationChange?.(lat, lng);
         }
       } catch (error) {
-        console.error('Error reverse geocoding:', error);
+        console.error("Error reverse geocoding:", error);
         onLocationChange?.(lat, lng);
       }
     },
-    [onLocationChange]
+    [onLocationChange],
   );
 
   const searchLocations = useCallback(
@@ -98,7 +102,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
       setIsSearching(true);
       try {
         const response = await fetch(
-          `/api/locations/search?q=${encodeURIComponent(query)}&limit=5`
+          `/api/locations/search?q=${encodeURIComponent(query)}&limit=5`,
         );
         if (response.ok) {
           const data = (await response.json()) as SearchResult[];
@@ -107,13 +111,13 @@ const LocationInput: React.FC<LocationInputProps> = ({
           setShowSearchResults(true);
         }
       } catch (error) {
-        console.error('Error searching locations:', error);
+        console.error("Error searching locations:", error);
         setSearchResults([]);
       } finally {
         setIsSearching(false);
       }
     },
-    [updateDropdownPosition]
+    [updateDropdownPosition],
   );
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -148,7 +152,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
 
   const handleKeyDown = (e: React.KeyboardEvent): void => {
     // Prevent form submission on Enter
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       e.stopPropagation();
 
@@ -159,7 +163,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
     }
 
     // Handle Escape to close search results
-    if (e.key === 'Escape') {
+    if (e.key === "Escape") {
       setShowSearchResults(false);
     }
   };
@@ -220,7 +224,8 @@ const LocationInput: React.FC<LocationInputProps> = ({
           </div>
 
           <p className="text-xs text-gray-500 mt-1">
-            Type to search for locations and GPS coordinates will be set automatically
+            Type to search for locations and GPS coordinates will be set
+            automatically
           </p>
         </div>
 
@@ -236,7 +241,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
             id="location-name-input"
             type="text"
             value={manualLocationName}
-            onChange={e => {
+            onChange={(e) => {
               setManualLocationName(e.target.value);
               if (latitude !== undefined && longitude !== undefined) {
                 onLocationChange?.(latitude, longitude, e.target.value);
@@ -265,8 +270,8 @@ const LocationInput: React.FC<LocationInputProps> = ({
               id="latitude-input"
               type="number"
               step="any"
-              value={latitude ?? ''}
-              onChange={e => {
+              value={latitude ?? ""}
+              onChange={(e) => {
                 const lat = parseFloat(e.target.value);
                 if (!isNaN(lat) && longitude !== undefined) {
                   void handleLocationSelect(lat, longitude);
@@ -289,8 +294,8 @@ const LocationInput: React.FC<LocationInputProps> = ({
               id="longitude-input"
               type="number"
               step="any"
-              value={longitude ?? ''}
-              onChange={e => {
+              value={longitude ?? ""}
+              onChange={(e) => {
                 const lng = parseFloat(e.target.value);
                 if (!isNaN(lng) && latitude !== undefined) {
                   void handleLocationSelect(latitude, lng);
@@ -312,7 +317,12 @@ const LocationInput: React.FC<LocationInputProps> = ({
             disabled={disabled}
             className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="h-4 w-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -326,7 +336,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
                 d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
               />
             </svg>
-            {showMap ? 'Hide Map' : 'Pick from Map'}
+            {showMap ? "Hide Map" : "Pick from Map"}
           </button>
 
           {hasCoordinates && (
@@ -359,23 +369,31 @@ const LocationInput: React.FC<LocationInputProps> = ({
             onClick={() => {
               if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
-                  position => {
-                    void handleLocationSelect(position.coords.latitude, position.coords.longitude);
-                  },
-                  error => {
-                    console.error('Error getting current location:', error);
-                    alert(
-                      'Unable to get your current location. Please check your browser permissions.'
+                  (position) => {
+                    void handleLocationSelect(
+                      position.coords.latitude,
+                      position.coords.longitude,
                     );
-                  }
+                  },
+                  (error) => {
+                    console.error("Error getting current location:", error);
+                    alert(
+                      "Unable to get your current location. Please check your browser permissions.",
+                    );
+                  },
                 );
               } else {
-                alert('Geolocation is not supported by this browser.');
+                alert("Geolocation is not supported by this browser.");
               }
             }}
             className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
-            <svg className="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="h-4 w-4 mr-1.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -420,14 +438,18 @@ const LocationInput: React.FC<LocationInputProps> = ({
                     className="w-full px-3 py-2 text-left hover:bg-gray-50 focus:bg-gray-50 focus:outline-none first:rounded-t-lg last:rounded-b-lg"
                     onClick={() => handleSearchResultSelect(result)}
                   >
-                    <div className="font-medium text-gray-900">{result.location_name}</div>
-                    <div className="text-sm text-gray-500 truncate">{result.location_address}</div>
+                    <div className="font-medium text-gray-900">
+                      {result.location_name}
+                    </div>
+                    <div className="text-sm text-gray-500 truncate">
+                      {result.location_address}
+                    </div>
                   </button>
                 ))
               )}
             </div>
           </>,
-          document.body
+          document.body,
         )}
     </div>
   );

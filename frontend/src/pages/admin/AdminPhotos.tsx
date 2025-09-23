@@ -1,28 +1,32 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 // photoswipe not used in admin (editor replaces lightbox)
 
-import PhotoUpload from '../../components/PhotoUpload';
-import PhotoGrid from '../../components/PhotoGrid';
-import PhotoListTable from '../../components/admin/PhotoListTable';
-import PhotoEditorDrawer from '../../components/admin/PhotoEditorDrawer';
-import PhotoForm from '../../components/admin/PhotoForm';
+import PhotoUpload from "../../components/PhotoUpload";
+import PhotoGrid from "../../components/PhotoGrid";
+import PhotoListTable from "../../components/admin/PhotoListTable";
+import PhotoEditorDrawer from "../../components/admin/PhotoEditorDrawer";
+import PhotoForm from "../../components/admin/PhotoForm";
 import {
   usePhotos,
   usePhotoStats,
   useDeletePhoto,
   useTogglePhotoFeatured,
-} from '../../hooks/usePhotos';
-import type { Photo } from '../../types';
+} from "../../hooks/usePhotos";
+import type { Photo } from "../../types";
 
 const AdminPhotos: React.FC = () => {
   const [showUpload, setShowUpload] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [editingPhoto, setEditingPhoto] = useState<Photo | null>(null);
 
   // Query hooks
-  const { data: photosData, isLoading: isLoadingPhotos, error: photosError } = usePhotos();
+  const {
+    data: photosData,
+    isLoading: isLoadingPhotos,
+    error: photosError,
+  } = usePhotos();
   const { data: statsData, isLoading: isLoadingStats } = usePhotoStats();
 
   // Mutation hooks
@@ -51,14 +55,14 @@ const AdminPhotos: React.FC = () => {
     if (selectedPhotos.size === photos.length) {
       setSelectedPhotos(new Set());
     } else {
-      setSelectedPhotos(new Set(photos.map(p => p.id)));
+      setSelectedPhotos(new Set(photos.map((p) => p.id)));
     }
   };
 
   const handleBulkDelete = async () => {
     if (selectedPhotos.size === 0) return;
 
-    const confirmMessage = `Are you sure you want to delete ${selectedPhotos.size} photo${selectedPhotos.size > 1 ? 's' : ''}? This action cannot be undone.`;
+    const confirmMessage = `Are you sure you want to delete ${selectedPhotos.size} photo${selectedPhotos.size > 1 ? "s" : ""}? This action cannot be undone.`;
     if (!window.confirm(confirmMessage)) return;
 
     const photoIds = Array.from(selectedPhotos);
@@ -86,9 +90,9 @@ const AdminPhotos: React.FC = () => {
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 B';
+    if (bytes === 0) return "0 B";
     const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const sizes = ["B", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
   };
@@ -136,21 +140,21 @@ const AdminPhotos: React.FC = () => {
             {/* View Mode Toggle */}
             <div className="flex bg-gray-100 rounded-lg p-1">
               <button
-                onClick={() => setViewMode('grid')}
+                onClick={() => setViewMode("grid")}
                 className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                  viewMode === 'grid'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                  viewMode === "grid"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-600 hover:text-gray-900"
                 }`}
               >
                 Grid
               </button>
               <button
-                onClick={() => setViewMode('list')}
+                onClick={() => setViewMode("list")}
                 className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                  viewMode === 'list'
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                  viewMode === "list"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-600 hover:text-gray-900"
                 }`}
               >
                 List
@@ -164,7 +168,12 @@ const AdminPhotos: React.FC = () => {
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
             >
               <span className="flex items-center">
-                <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="h-4 w-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -201,7 +210,9 @@ const AdminPhotos: React.FC = () => {
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-900">Total Photos</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    Total Photos
+                  </p>
                   <p className="text-2xl font-bold text-blue-600">
                     {stats.total_photos || photos.length}
                   </p>
@@ -225,7 +236,8 @@ const AdminPhotos: React.FC = () => {
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-900">Featured</p>
                   <p className="text-2xl font-bold text-yellow-600">
-                    {stats.featured_photos || photos.filter(p => p.featured).length}
+                    {stats.featured_photos ||
+                      photos.filter((p) => p.featured).length}
                   </p>
                 </div>
               </div>
@@ -251,10 +263,13 @@ const AdminPhotos: React.FC = () => {
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-900">Storage Used</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    Storage Used
+                  </p>
                   <p className="text-2xl font-bold text-green-600">
                     {formatFileSize(
-                      stats.total_size || photos.reduce((sum, p) => sum + (p.file_size || 0), 0)
+                      stats.total_size ||
+                        photos.reduce((sum, p) => sum + (p.file_size || 0), 0),
                     )}
                   </p>
                 </div>
@@ -288,7 +303,9 @@ const AdminPhotos: React.FC = () => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-900">Selected</p>
-                  <p className="text-2xl font-bold text-purple-600">{selectedPhotos.size}</p>
+                  <p className="text-2xl font-bold text-purple-600">
+                    {selectedPhotos.size}
+                  </p>
                 </div>
               </div>
             </div>
@@ -301,7 +318,8 @@ const AdminPhotos: React.FC = () => {
         <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <div className="flex items-center justify-between">
             <div className="text-sm text-blue-800">
-              {selectedPhotos.size} photo{selectedPhotos.size > 1 ? 's' : ''} selected
+              {selectedPhotos.size} photo{selectedPhotos.size > 1 ? "s" : ""}{" "}
+              selected
             </div>
             <div className="flex space-x-2">
               <button
@@ -347,7 +365,7 @@ const AdminPhotos: React.FC = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
-            onClick={e => {
+            onClick={(e) => {
               if (e.target === e.currentTarget) {
                 setShowUpload(false);
               }
@@ -358,16 +376,23 @@ const AdminPhotos: React.FC = () => {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
-              onClick={e => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
             >
               <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-bold text-gray-900">Upload Photos</h2>
+                  <h2 className="text-xl font-bold text-gray-900">
+                    Upload Photos
+                  </h2>
                   <button
                     onClick={() => setShowUpload(false)}
                     className="text-gray-400 hover:text-gray-600 transition-colors"
                   >
-                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      className="h-6 w-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -392,19 +417,23 @@ const AdminPhotos: React.FC = () => {
       {/* Photos Display */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-medium text-gray-900">All Photos ({photos.length})</h2>
+          <h2 className="text-lg font-medium text-gray-900">
+            All Photos ({photos.length})
+          </h2>
 
           {photos.length > 0 && !editingPhoto && (
             <button
               onClick={() => handleSelectAll()}
               className="text-sm text-blue-600 hover:text-blue-800 font-medium"
             >
-              {selectedPhotos.size === photos.length ? 'Deselect All' : 'Select All'}
+              {selectedPhotos.size === photos.length
+                ? "Deselect All"
+                : "Select All"}
             </button>
           )}
         </div>
 
-        {viewMode === 'grid' ? (
+        {viewMode === "grid" ? (
           editingPhoto ? (
             <PhotoForm
               photo={editingPhoto}
@@ -423,13 +452,20 @@ const AdminPhotos: React.FC = () => {
             </div>
           )
         ) : (
-          <PhotoListTable photos={photos} isLoading={isLoadingPhotos} onEdit={setEditingPhoto} />
+          <PhotoListTable
+            photos={photos}
+            isLoading={isLoadingPhotos}
+            onEdit={setEditingPhoto}
+          />
         )}
       </div>
       {/* Drawer for list view edits */}
       <AnimatePresence>
-        {viewMode === 'list' && editingPhoto && (
-          <PhotoEditorDrawer photo={editingPhoto} onClose={() => setEditingPhoto(null)} />
+        {viewMode === "list" && editingPhoto && (
+          <PhotoEditorDrawer
+            photo={editingPhoto}
+            onClose={() => setEditingPhoto(null)}
+          />
         )}
       </AnimatePresence>
     </div>

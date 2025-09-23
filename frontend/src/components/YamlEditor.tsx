@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from "react";
 
 interface ValidationResult {
   valid: boolean;
@@ -20,11 +20,12 @@ const YamlEditor: React.FC<YamlEditorProps> = ({
   value,
   onChange,
   onValidationChange,
-  placeholder = 'Paste your subapp configuration YAML here...',
-  className = '',
+  placeholder = "Paste your subapp configuration YAML here...",
+  className = "",
   disabled = false,
 }) => {
-  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
+  const [validationResult, setValidationResult] =
+    useState<ValidationResult | null>(null);
   const [isValidating, setIsValidating] = useState(false);
 
   // Validation function
@@ -45,11 +46,11 @@ const YamlEditor: React.FC<YamlEditorProps> = ({
       setIsValidating(true);
 
       try {
-        const response = await fetch('/api/subapp-integration/validate', {
-          method: 'POST',
+        const response = await fetch("/api/subapp-integration/validate", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
           },
           body: JSON.stringify({
             yaml_content: yamlContent,
@@ -68,7 +69,7 @@ const YamlEditor: React.FC<YamlEditorProps> = ({
         const errorResult: ValidationResult = {
           valid: false,
           errors: [
-            `Validation request failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            `Validation request failed: ${error instanceof Error ? error.message : "Unknown error"}`,
           ],
           warnings: [],
         };
@@ -78,7 +79,7 @@ const YamlEditor: React.FC<YamlEditorProps> = ({
         setIsValidating(false);
       }
     },
-    [onValidationChange]
+    [onValidationChange],
   );
 
   // Trigger validation when value changes
@@ -92,7 +93,9 @@ const YamlEditor: React.FC<YamlEditorProps> = ({
 
   const getValidationIcon = () => {
     if (isValidating) {
-      return <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>;
+      return (
+        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+      );
     }
 
     if (!validationResult) {
@@ -101,7 +104,11 @@ const YamlEditor: React.FC<YamlEditorProps> = ({
 
     if (validationResult.valid) {
       return (
-        <svg className="h-4 w-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+        <svg
+          className="h-4 w-4 text-green-600"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
           <path
             fillRule="evenodd"
             d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
@@ -111,7 +118,11 @@ const YamlEditor: React.FC<YamlEditorProps> = ({
       );
     } else {
       return (
-        <svg className="h-4 w-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+        <svg
+          className="h-4 w-4 text-red-600"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
           <path
             fillRule="evenodd"
             d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
@@ -123,32 +134,35 @@ const YamlEditor: React.FC<YamlEditorProps> = ({
   };
 
   const getValidationStatus = () => {
-    if (isValidating) return 'Validating...';
-    if (!validationResult) return 'No validation performed';
-    if (validationResult.valid) return 'Configuration is valid';
+    if (isValidating) return "Validating...";
+    if (!validationResult) return "No validation performed";
+    if (validationResult.valid) return "Configuration is valid";
     return `${validationResult.errors.length} error(s) found`;
   };
 
   const getEditorBorderColor = () => {
-    if (!validationResult) return 'border-gray-300 focus:border-blue-500';
-    if (validationResult.valid) return 'border-green-500 focus:border-green-600';
-    return 'border-red-500 focus:border-red-600';
+    if (!validationResult) return "border-gray-300 focus:border-blue-500";
+    if (validationResult.valid)
+      return "border-green-500 focus:border-green-600";
+    return "border-red-500 focus:border-red-600";
   };
 
   return (
     <div className={`space-y-2 ${className}`}>
       {/* Header with validation status */}
       <div className="flex items-center justify-between">
-        <label className="block text-sm font-medium text-gray-700">Subapp Configuration</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Subapp Configuration
+        </label>
         <div className="flex items-center space-x-2 text-sm">
           {getValidationIcon()}
           <span
             className={`${
               !validationResult
-                ? 'text-gray-500'
+                ? "text-gray-500"
                 : validationResult.valid
-                  ? 'text-green-600'
-                  : 'text-red-600'
+                  ? "text-green-600"
+                  : "text-red-600"
             }`}
           >
             {getValidationStatus()}
@@ -171,12 +185,12 @@ const YamlEditor: React.FC<YamlEditorProps> = ({
             focus:outline-none focus:ring-2 focus:ring-opacity-50
             ${
               !validationResult
-                ? 'focus:ring-blue-500'
+                ? "focus:ring-blue-500"
                 : validationResult.valid
-                  ? 'focus:ring-green-500'
-                  : 'focus:ring-red-500'
+                  ? "focus:ring-green-500"
+                  : "focus:ring-red-500"
             }
-            ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}
+            ${disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"}
           `}
           spellCheck={false}
         />
@@ -188,7 +202,9 @@ const YamlEditor: React.FC<YamlEditorProps> = ({
           {/* Errors */}
           {validationResult.errors.length > 0 && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <h4 className="text-sm font-medium text-red-800 mb-2">Validation Errors:</h4>
+              <h4 className="text-sm font-medium text-red-800 mb-2">
+                Validation Errors:
+              </h4>
               <ul className="text-sm text-red-700 space-y-1">
                 {validationResult.errors.map((error, index) => (
                   <li key={index} className="flex items-start">
@@ -203,11 +219,15 @@ const YamlEditor: React.FC<YamlEditorProps> = ({
           {/* Warnings */}
           {validationResult.warnings.length > 0 && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-              <h4 className="text-sm font-medium text-yellow-800 mb-2">Warnings:</h4>
+              <h4 className="text-sm font-medium text-yellow-800 mb-2">
+                Warnings:
+              </h4>
               <ul className="text-sm text-yellow-700 space-y-1">
                 {validationResult.warnings.map((warning, index) => (
                   <li key={index} className="flex items-start">
-                    <span className="flex-shrink-0 w-4 h-4 mt-0.5 mr-2">⚠</span>
+                    <span className="flex-shrink-0 w-4 h-4 mt-0.5 mr-2">
+                      ⚠
+                    </span>
                     <span>{warning}</span>
                   </li>
                 ))}
@@ -243,7 +263,7 @@ const YamlEditor: React.FC<YamlEditorProps> = ({
                     <strong>Slug:</strong> {validationResult.config.meta.slug}
                   </p>
                   <p>
-                    <strong>Frontend Path:</strong>{' '}
+                    <strong>Frontend Path:</strong>{" "}
                     {validationResult.config.integration.frontend_path}
                   </p>
                 </div>

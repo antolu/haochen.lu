@@ -1,10 +1,10 @@
 /**
  * Test utilities for project components
  */
-import React from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter } from 'react-router-dom';
-import { render, RenderOptions } from '@testing-library/react';
+import React from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter } from "react-router-dom";
+import { render, RenderOptions } from "@testing-library/react";
 
 // Create a test query client with disabled retries for faster tests
 export const createTestQueryClient = () =>
@@ -42,16 +42,19 @@ const AllProviders: React.FC<ProvidersProps> = ({
   );
 };
 
-interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
+interface CustomRenderOptions extends Omit<RenderOptions, "wrapper"> {
   queryClient?: QueryClient;
   initialRoute?: string;
 }
 
-export const renderWithProviders = (ui: React.ReactElement, options: CustomRenderOptions = {}) => {
+export const renderWithProviders = (
+  ui: React.ReactElement,
+  options: CustomRenderOptions = {},
+) => {
   const { queryClient, initialRoute, ...renderOptions } = options;
 
   if (initialRoute) {
-    window.history.pushState({}, 'Test', initialRoute);
+    window.history.pushState({}, "Test", initialRoute);
   }
 
   const Wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -78,7 +81,8 @@ export const triggerIntersectionObserver = (isIntersecting: boolean = true) => {
   const mockObserver = window.IntersectionObserver as unknown as {
     mock: { calls: [IntersectionObserverCallback, ...unknown[]][] };
   };
-  const callback = mockObserver.mock.calls[mockObserver.mock.calls.length - 1]?.[0];
+  const callback =
+    mockObserver.mock.calls[mockObserver.mock.calls.length - 1]?.[0];
   if (callback) {
     callback([{ isIntersecting } as IntersectionObserverEntry]);
   }
@@ -86,9 +90,9 @@ export const triggerIntersectionObserver = (isIntersecting: boolean = true) => {
 
 // Mock window.matchMedia for responsive tests
 export const mockMatchMedia = (matches: boolean = false) => {
-  Object.defineProperty(window, 'matchMedia', {
+  Object.defineProperty(window, "matchMedia", {
     writable: true,
-    value: vi.fn().mockImplementation(query => ({
+    value: vi.fn().mockImplementation((query) => ({
       matches,
       media: query as string,
       onchange: null,
@@ -103,5 +107,5 @@ export const mockMatchMedia = (matches: boolean = false) => {
 
 // Helper to wait for async operations
 export const waitForLoadingToFinish = () => {
-  return new Promise(resolve => setTimeout(resolve, 0));
+  return new Promise((resolve) => setTimeout(resolve, 0));
 };

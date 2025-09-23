@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { Outlet, Link, useLocation, Navigate } from 'react-router-dom';
+import React, { useEffect } from "react";
+import { Outlet, Link, useLocation, Navigate } from "react-router-dom";
 import {
   HomeIcon,
   PhotoIcon,
@@ -10,9 +10,9 @@ import {
   ArrowRightOnRectangleIcon,
   CameraIcon,
   UserCircleIcon,
-} from '@heroicons/react/24/outline';
+} from "@heroicons/react/24/outline";
 
-import { useAuthStore } from '../stores/authStore';
+import { useAuthStore } from "../stores/authStore";
 
 const AdminLayout: React.FC = () => {
   const location = useLocation();
@@ -29,23 +29,23 @@ const AdminLayout: React.FC = () => {
   }
 
   const navigation = [
-    { name: 'Dashboard', href: '/admin', icon: HomeIcon },
-    { name: 'Photos', href: '/admin/photos', icon: PhotoIcon },
+    { name: "Dashboard", href: "/admin", icon: HomeIcon },
+    { name: "Photos", href: "/admin/photos", icon: PhotoIcon },
     {
-      name: 'Profile Pictures',
-      href: '/admin/profile-pictures',
+      name: "Profile Pictures",
+      href: "/admin/profile-pictures",
       icon: UserCircleIcon,
     },
-    { name: 'Projects', href: '/admin/projects', icon: FolderIcon },
-    { name: 'Blog', href: '/admin/blog', icon: PencilSquareIcon },
-    { name: 'Camera Aliases', href: '/admin/camera-aliases', icon: CameraIcon },
-    { name: 'Lens Aliases', href: '/admin/lens-aliases', icon: CameraIcon },
-    { name: 'Content', href: '/admin/content', icon: DocumentTextIcon },
-    { name: 'Sub-Apps', href: '/admin/subapps', icon: RectangleStackIcon },
+    { name: "Projects", href: "/admin/projects", icon: FolderIcon },
+    { name: "Blog", href: "/admin/blog", icon: PencilSquareIcon },
+    { name: "Camera Aliases", href: "/admin/camera-aliases", icon: CameraIcon },
+    { name: "Lens Aliases", href: "/admin/lens-aliases", icon: CameraIcon },
+    { name: "Content", href: "/admin/content", icon: DocumentTextIcon },
+    { name: "Sub-Apps", href: "/admin/subapps", icon: RectangleStackIcon },
   ];
 
   const isActive = (path: string) => {
-    if (path === '/admin') return location.pathname === '/admin';
+    if (path === "/admin") return location.pathname === "/admin";
     return location.pathname.startsWith(path);
   };
 
@@ -62,13 +62,15 @@ const AdminLayout: React.FC = () => {
             {/* Header */}
             <div className="flex items-center h-16 px-6 border-b border-gray-200">
               <Link to="/" className="flex items-center">
-                <h1 className="text-xl font-serif font-bold text-gray-900">Admin Panel</h1>
+                <h1 className="text-xl font-serif font-bold text-gray-900">
+                  Admin Panel
+                </h1>
               </Link>
             </div>
 
             {/* Navigation */}
             <nav className="flex-1 px-4 py-6 space-y-2">
-              {navigation.map(item => {
+              {navigation.map((item) => {
                 const Icon = item.icon;
                 return (
                   <Link
@@ -76,8 +78,8 @@ const AdminLayout: React.FC = () => {
                     to={item.href}
                     className={`flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
                       isActive(item.href)
-                        ? 'bg-primary-100 text-primary-700 border-r-2 border-primary-600'
-                        : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                        ? "bg-primary-100 text-primary-700 border-r-2 border-primary-600"
+                        : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                     }`}
                   >
                     <Icon className="mr-3 h-5 w-5" />
@@ -99,7 +101,9 @@ const AdminLayout: React.FC = () => {
                     </div>
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-700">{user.username}</p>
+                    <p className="text-sm font-medium text-gray-700">
+                      {user.username}
+                    </p>
                     <p className="text-xs text-gray-500">Administrator</p>
                   </div>
                 </div>

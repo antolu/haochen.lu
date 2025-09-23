@@ -1,4 +1,4 @@
-import axios, { type AxiosError, type AxiosRequestConfig } from 'axios';
+import axios, { type AxiosError, type AxiosRequestConfig } from "axios";
 import type {
   Photo,
   PhotoListResponse,
@@ -23,9 +23,10 @@ import type {
   ProfilePictureListResponse,
   ActiveProfilePictureResponse,
   ProfilePictureUploadData,
-} from '../types';
+} from "../types";
 
-const API_BASE_URL: string = (import.meta.env.VITE_API_URL as string | undefined) ?? '/api';
+const API_BASE_URL: string =
+  (import.meta.env.VITE_API_URL as string | undefined) ?? "/api";
 
 // Flag to track if we're already refreshing to prevent multiple refresh attempts
 let isRefreshing = false;
@@ -49,13 +50,13 @@ const processQueue = (error?: unknown, token?: string) => {
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
   withCredentials: true, // This ensures cookies are sent with requests
 });
 
 // Request interceptor to add auth token from store
-apiClient.interceptors.request.use(config => {
+apiClient.interceptors.request.use((config) => {
   // Get token from store dynamically
   const authStore = (
     window as unknown as {
@@ -80,7 +81,7 @@ apiClient.interceptors.request.use(config => {
 
 // Response interceptor for automatic token refresh
 apiClient.interceptors.response.use(
-  response => response,
+  (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as AxiosRequestConfig & {
       _retry?: boolean;
@@ -127,7 +128,7 @@ apiClient.interceptors.response.use(
         }
 
         // If refresh fails, process queue with error and redirect
-        throw new Error('Token refresh failed');
+        throw new Error("Token refresh failed");
       } catch (refreshError) {
         processQueue(refreshError);
         isRefreshing = false;
@@ -142,46 +143,58 @@ apiClient.interceptors.response.use(
 
         // Only redirect if not already on login page and if this was an authenticated request
         // Don't redirect for public pages or failed auth refresh attempts
-        const isPublicPage = ['/', '/photography', '/projects', '/blog'].some(
-          path => window.location.pathname === path || window.location.pathname.startsWith(path)
+        const isPublicPage = ["/", "/photography", "/projects", "/blog"].some(
+          (path) =>
+            window.location.pathname === path ||
+            window.location.pathname.startsWith(path),
         );
-        const isAuthRefresh = originalRequest?.url?.includes('/auth/refresh') ?? false;
+        const isAuthRefresh =
+          originalRequest?.url?.includes("/auth/refresh") ?? false;
 
-        if (window.location.pathname !== '/login' && !isPublicPage && !isAuthRefresh) {
-          window.location.href = '/login';
+        if (
+          window.location.pathname !== "/login" &&
+          !isPublicPage &&
+          !isAuthRefresh
+        ) {
+          window.location.href = "/login";
         }
 
-        return Promise.reject(new Error('Refresh failed'));
+        return Promise.reject(new Error("Refresh failed"));
       }
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 // Auth API
 export const auth = {
-  login: async (credentials: LoginRequest & { remember_me?: boolean }): Promise<TokenResponse> => {
-    const response = await apiClient.post<TokenResponse>('/auth/login', credentials);
+  login: async (
+    credentials: LoginRequest & { remember_me?: boolean },
+  ): Promise<TokenResponse> => {
+    const response = await apiClient.post<TokenResponse>(
+      "/auth/login",
+      credentials,
+    );
     return response.data;
   },
 
   refresh: async (): Promise<TokenResponse> => {
-    const response = await apiClient.post<TokenResponse>('/auth/refresh');
+    const response = await apiClient.post<TokenResponse>("/auth/refresh");
     return response.data;
   },
 
   getMe: async (): Promise<User> => {
-    const response = await apiClient.get<User>('/auth/me');
+    const response = await apiClient.get<User>("/auth/me");
     return response.data;
   },
 
   logout: async (): Promise<void> => {
-    await apiClient.post('/auth/logout');
+    await apiClient.post("/auth/logout");
   },
 
   revokeAllSessions: async (): Promise<void> => {
-    await apiClient.post('/auth/revoke-all-sessions');
+    await apiClient.post("/auth/revoke-all-sessions");
   },
 };
 
@@ -194,9 +207,9 @@ export const photos = {
       category?: string;
       featured?: boolean;
       order_by?: string;
-    } = {}
+    } = {},
   ): Promise<PhotoListResponse> => {
-    const response = await apiClient.get<PhotoListResponse>('/photos', {
+    const response = await apiClient.get<PhotoListResponse>("/photos", {
       params,
     });
     return response.data;
@@ -204,7 +217,9 @@ export const photos = {
 
   getFeatured: async (limit = 10): Promise<Photo[]> => {
     try {
-      const response = await apiClient.get<Photo[]>(`/photos/featured?limit=${limit}`);
+      const response = await apiClient.get<Photo[]>(
+        `/photos/featured?limit=${limit}`,
+      );
       return response.data;
     } catch {
       // Return empty array as fallback
@@ -213,12 +228,14 @@ export const photos = {
   },
 
   getTags: async (): Promise<string[]> => {
-    const response = await apiClient.get<string[]>('/photos/tags');
+    const response = await apiClient.get<string[]>("/photos/tags");
     return response.data;
   },
 
   getById: async (id: string, incrementViews = true): Promise<Photo> => {
-    const response = await apiClient.get<Photo>(`/photos/${id}?increment_views=${incrementViews}`);
+    const response = await apiClient.get<Photo>(
+      `/photos/${id}?increment_views=${incrementViews}`,
+    );
     return response.data;
   },
 
@@ -231,19 +248,19 @@ export const photos = {
       tags?: string;
       comments?: string;
       featured?: boolean;
-    }
+    },
   ): Promise<Photo> => {
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append("file", file);
 
     Object.entries(metadata).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         // Handle boolean values properly
-        if (typeof value === 'boolean') {
+        if (typeof value === "boolean") {
           formData.append(key, value.toString());
         }
         // Handle string values, ensuring they're not empty strings unless intentional
-        else if (typeof value === 'string') {
+        else if (typeof value === "string") {
           formData.append(key, value);
         }
         // Handle other types
@@ -253,9 +270,9 @@ export const photos = {
       }
     });
 
-    const response = await apiClient.post<Photo>('/photos', formData, {
+    const response = await apiClient.post<Photo>("/photos", formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        "Content-Type": "multipart/form-data",
       },
     });
     return response.data;
@@ -268,12 +285,15 @@ export const photos = {
 
   reorder: async (
     items: { id: string; order: number }[],
-    normalize = true
+    normalize = true,
   ): Promise<{ message: string }> => {
-    const response = await apiClient.post<{ message: string }>(`/photos/reorder`, {
-      items,
-      normalize,
-    });
+    const response = await apiClient.post<{ message: string }>(
+      `/photos/reorder`,
+      {
+        items,
+        normalize,
+      },
+    );
     return response.data;
   },
 
@@ -282,7 +302,9 @@ export const photos = {
   },
 
   getStats: async (): Promise<PhotoStatsSummary> => {
-    const response = await apiClient.get<PhotoStatsSummary>('/photos/stats/summary');
+    const response = await apiClient.get<PhotoStatsSummary>(
+      "/photos/stats/summary",
+    );
     return response.data;
   },
 };
@@ -293,9 +315,9 @@ export const projects = {
     params: {
       featured_only?: boolean;
       status?: string;
-    } = {}
+    } = {},
   ): Promise<ProjectListResponse> => {
-    const response = await apiClient.get<ProjectListResponse>('/projects', {
+    const response = await apiClient.get<ProjectListResponse>("/projects", {
       params,
     });
     return response.data;
@@ -303,7 +325,7 @@ export const projects = {
 
   getFeatured: async (): Promise<Project[]> => {
     try {
-      const response = await apiClient.get<Project[]>('/projects/featured');
+      const response = await apiClient.get<Project[]>("/projects/featured");
       return response.data;
     } catch {
       // Return empty array as fallback
@@ -317,9 +339,9 @@ export const projects = {
   },
 
   create: async (
-    project: Omit<Project, 'id' | 'slug' | 'created_at' | 'updated_at'>
+    project: Omit<Project, "id" | "slug" | "created_at" | "updated_at">,
   ): Promise<Project> => {
-    const response = await apiClient.post<Project>('/projects', project);
+    const response = await apiClient.post<Project>("/projects", project);
     return response.data;
   },
 
@@ -333,12 +355,14 @@ export const projects = {
   },
 
   getStats: async (): Promise<ProjectStatsSummary> => {
-    const response = await apiClient.get<ProjectStatsSummary>('/projects/stats/summary');
+    const response = await apiClient.get<ProjectStatsSummary>(
+      "/projects/stats/summary",
+    );
     return response.data;
   },
 
   getTechnologies: async (): Promise<string[]> => {
-    const response = await apiClient.get<string[]>('/projects/technologies');
+    const response = await apiClient.get<string[]>("/projects/technologies");
     return response.data;
   },
 };
@@ -350,9 +374,9 @@ export const blog = {
       page?: number;
       per_page?: number;
       published_only?: boolean;
-    } = {}
+    } = {},
   ): Promise<BlogPostListResponse> => {
-    const response = await apiClient.get<BlogPostListResponse>('/blog', {
+    const response = await apiClient.get<BlogPostListResponse>("/blog", {
       params,
     });
     return response.data;
@@ -362,25 +386,31 @@ export const blog = {
     params: {
       page?: number;
       per_page?: number;
-    } = {}
+    } = {},
   ): Promise<BlogPostListResponse> => {
-    const response = await apiClient.get<BlogPostListResponse>('/blog/admin', {
+    const response = await apiClient.get<BlogPostListResponse>("/blog/admin", {
       params,
     });
     return response.data;
   },
 
-  getByIdOrSlug: async (identifier: string, incrementViews = true): Promise<BlogPost> => {
+  getByIdOrSlug: async (
+    identifier: string,
+    incrementViews = true,
+  ): Promise<BlogPost> => {
     const response = await apiClient.get<BlogPost>(
-      `/blog/${identifier}?increment_views=${incrementViews}`
+      `/blog/${identifier}?increment_views=${incrementViews}`,
     );
     return response.data;
   },
 
   create: async (
-    post: Omit<BlogPost, 'id' | 'slug' | 'view_count' | 'read_time' | 'created_at' | 'updated_at'>
+    post: Omit<
+      BlogPost,
+      "id" | "slug" | "view_count" | "read_time" | "created_at" | "updated_at"
+    >,
   ): Promise<BlogPost> => {
-    const response = await apiClient.post<BlogPost>('/blog', post);
+    const response = await apiClient.post<BlogPost>("/blog", post);
     return response.data;
   },
 
@@ -394,7 +424,9 @@ export const blog = {
   },
 
   getStats: async (): Promise<{ total_posts: number }> => {
-    const response = await apiClient.get<{ total_posts: number }>('/blog/stats/summary');
+    const response = await apiClient.get<{ total_posts: number }>(
+      "/blog/stats/summary",
+    );
     return response.data;
   },
 };
@@ -403,7 +435,7 @@ export const blog = {
 export const subapps = {
   list: async (menuOnly = true): Promise<SubAppListResponse> => {
     try {
-      const response = await apiClient.get<SubAppListResponse>('/subapps', {
+      const response = await apiClient.get<SubAppListResponse>("/subapps", {
         params: { menu_only: menuOnly },
       });
       return response.data;
@@ -415,9 +447,12 @@ export const subapps = {
 
   listAuthenticated: async (menuOnly = true): Promise<SubAppListResponse> => {
     try {
-      const response = await apiClient.get<SubAppListResponse>('/subapps/authenticated', {
-        params: { menu_only: menuOnly },
-      });
+      const response = await apiClient.get<SubAppListResponse>(
+        "/subapps/authenticated",
+        {
+          params: { menu_only: menuOnly },
+        },
+      );
       return response.data;
     } catch {
       // Return empty response as fallback
@@ -426,7 +461,7 @@ export const subapps = {
   },
 
   listAll: async (): Promise<SubAppListResponse> => {
-    const response = await apiClient.get<SubAppListResponse>('/subapps/admin');
+    const response = await apiClient.get<SubAppListResponse>("/subapps/admin");
     return response.data;
   },
 
@@ -436,9 +471,9 @@ export const subapps = {
   },
 
   create: async (
-    subapp: Omit<SubApp, 'id' | 'slug' | 'created_at' | 'updated_at'>
+    subapp: Omit<SubApp, "id" | "slug" | "created_at" | "updated_at">,
   ): Promise<SubApp> => {
-    const response = await apiClient.post<SubApp>('/subapps', subapp);
+    const response = await apiClient.post<SubApp>("/subapps", subapp);
     return response.data;
   },
 
@@ -452,7 +487,9 @@ export const subapps = {
   },
 
   getStats: async (): Promise<SubAppStatsSummary> => {
-    const response = await apiClient.get<SubAppStatsSummary>('/subapps/stats/summary');
+    const response = await apiClient.get<SubAppStatsSummary>(
+      "/subapps/stats/summary",
+    );
     return response.data;
   },
 };
@@ -461,21 +498,33 @@ export const subapps = {
 export const content = {
   // Public endpoints (no auth required)
   getByKey: async (key: string): Promise<ContentKeyValue> => {
-    const response = await apiClient.get<ContentKeyValue>(`/content/key/${key}`);
+    const response = await apiClient.get<ContentKeyValue>(
+      `/content/key/${key}`,
+    );
     return response.data;
   },
 
-  getByKeys: async (keys: string[]): Promise<Record<string, ContentKeyValue>> => {
-    const response = await apiClient.get<Record<string, ContentKeyValue>>('/content/public', {
-      params: { keys: keys.join(',') },
-    });
+  getByKeys: async (
+    keys: string[],
+  ): Promise<Record<string, ContentKeyValue>> => {
+    const response = await apiClient.get<Record<string, ContentKeyValue>>(
+      "/content/public",
+      {
+        params: { keys: keys.join(",") },
+      },
+    );
     return response.data;
   },
 
-  getByCategory: async (category: string): Promise<Record<string, ContentKeyValue>> => {
-    const response = await apiClient.get<Record<string, ContentKeyValue>>('/content/public', {
-      params: { category },
-    });
+  getByCategory: async (
+    category: string,
+  ): Promise<Record<string, ContentKeyValue>> => {
+    const response = await apiClient.get<Record<string, ContentKeyValue>>(
+      "/content/public",
+      {
+        params: { category },
+      },
+    );
     return response.data;
   },
 
@@ -487,9 +536,9 @@ export const content = {
       search?: string;
       page?: number;
       per_page?: number;
-    } = {}
+    } = {},
   ): Promise<ContentListResponse> => {
-    const response = await apiClient.get<ContentListResponse>('/content', {
+    const response = await apiClient.get<ContentListResponse>("/content", {
       params,
     });
     return response.data;
@@ -501,7 +550,7 @@ export const content = {
   },
 
   create: async (contentData: ContentCreate): Promise<Content> => {
-    const response = await apiClient.post<Content>('/content', contentData);
+    const response = await apiClient.post<Content>("/content", contentData);
     return response.data;
   },
 
@@ -521,50 +570,68 @@ export const profilePictures = {
     params: {
       page?: number;
       per_page?: number;
-    } = {}
+    } = {},
   ): Promise<ProfilePictureListResponse> => {
-    const response = await apiClient.get<ProfilePictureListResponse>('/profile-pictures', {
-      params,
-    });
+    const response = await apiClient.get<ProfilePictureListResponse>(
+      "/profile-pictures",
+      {
+        params,
+      },
+    );
     return response.data;
   },
 
   getActive: async (): Promise<ActiveProfilePictureResponse> => {
-    const response = await apiClient.get<ActiveProfilePictureResponse>('/profile-pictures/active');
+    const response = await apiClient.get<ActiveProfilePictureResponse>(
+      "/profile-pictures/active",
+    );
     return response.data;
   },
 
   getById: async (id: string): Promise<ProfilePicture> => {
-    const response = await apiClient.get<ProfilePicture>(`/profile-pictures/${id}`);
+    const response = await apiClient.get<ProfilePicture>(
+      `/profile-pictures/${id}`,
+    );
     return response.data;
   },
 
-  upload: async (uploadData: ProfilePictureUploadData): Promise<ProfilePicture> => {
+  upload: async (
+    uploadData: ProfilePictureUploadData,
+  ): Promise<ProfilePicture> => {
     const formData = new FormData();
-    formData.append('file', uploadData.file);
+    formData.append("file", uploadData.file);
 
     if (uploadData.title) {
-      formData.append('title', uploadData.title);
+      formData.append("title", uploadData.title);
     }
 
-    const response = await apiClient.post<ProfilePicture>('/profile-pictures', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
+    const response = await apiClient.post<ProfilePicture>(
+      "/profile-pictures",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       },
-    });
+    );
     return response.data;
   },
 
   activate: async (id: string): Promise<ProfilePicture> => {
-    const response = await apiClient.put<ProfilePicture>(`/profile-pictures/${id}/activate`);
+    const response = await apiClient.put<ProfilePicture>(
+      `/profile-pictures/${id}/activate`,
+    );
     return response.data;
   },
 
   update: async (
     id: string,
-    updates: { title?: string; is_active?: boolean }
+    updates: { title?: string; is_active?: boolean },
   ): Promise<ProfilePicture> => {
-    const response = await apiClient.put<ProfilePicture>(`/profile-pictures/${id}`, updates);
+    const response = await apiClient.put<ProfilePicture>(
+      `/profile-pictures/${id}`,
+      updates,
+    );
     return response.data;
   },
 

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import type { SubApp } from '../types';
-import { formatDateSimple } from '../utils/dateFormat';
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import type { SubApp } from "../types";
+import { formatDateSimple } from "../utils/dateFormat";
 
 interface SubAppListProps {
   subapps: SubApp[];
@@ -19,13 +19,13 @@ const SubAppList: React.FC<SubAppListProps> = ({
   isLoading = false,
 }) => {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   const filteredSubapps = subapps.filter(
-    subapp =>
+    (subapp) =>
       subapp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       subapp.url.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      subapp.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      subapp.description?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const handleDeleteClick = (subappId: string) => {
@@ -86,7 +86,11 @@ const SubAppList: React.FC<SubAppListProps> = ({
 
     // Check if icon is an emoji (single character) or URL
     if (subapp.icon.length <= 2) {
-      return <div className="h-8 w-8 flex items-center justify-center text-lg">{subapp.icon}</div>;
+      return (
+        <div className="h-8 w-8 flex items-center justify-center text-lg">
+          {subapp.icon}
+        </div>
+      );
     }
 
     // Assume it's an image URL
@@ -95,13 +99,13 @@ const SubAppList: React.FC<SubAppListProps> = ({
         src={subapp.icon}
         alt={`${subapp.name} icon`}
         className="h-8 w-8 rounded-lg object-cover"
-        onError={e => {
+        onError={(e) => {
           // Fallback to initial letter if image fails to load
           const target = e.target as HTMLImageElement;
-          target.style.display = 'none';
-          const fallback = target.parentElement?.querySelector('.fallback');
+          target.style.display = "none";
+          const fallback = target.parentElement?.querySelector(".fallback");
           if (fallback) {
-            (fallback as HTMLElement).style.display = 'flex';
+            (fallback as HTMLElement).style.display = "flex";
           }
         }}
       />
@@ -112,7 +116,10 @@ const SubAppList: React.FC<SubAppListProps> = ({
     return (
       <div className="space-y-4">
         {Array.from({ length: 3 }).map((_, index) => (
-          <div key={index} className="bg-white rounded-lg border border-gray-200 p-6">
+          <div
+            key={index}
+            className="bg-white rounded-lg border border-gray-200 p-6"
+          >
             <div className="animate-pulse">
               <div className="flex items-center space-x-4">
                 <div className="h-8 w-8 bg-gray-300 rounded-lg" />
@@ -138,7 +145,7 @@ const SubAppList: React.FC<SubAppListProps> = ({
             type="text"
             placeholder="Search sub-apps..."
             value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -170,13 +177,13 @@ const SubAppList: React.FC<SubAppListProps> = ({
           >
             <div className="text-gray-500">
               {searchTerm
-                ? 'No sub-apps match your search.'
-                : 'No sub-apps found. Create your first one!'}
+                ? "No sub-apps match your search."
+                : "No sub-apps found. Create your first one!"}
             </div>
           </motion.div>
         ) : (
           <div className="space-y-4">
-            {filteredSubapps.map(subapp => (
+            {filteredSubapps.map((subapp) => (
               <motion.div
                 key={subapp.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -234,7 +241,9 @@ const SubAppList: React.FC<SubAppListProps> = ({
 
                       <div className="mt-2 flex items-center text-xs text-gray-500 space-x-4">
                         <span>Order: {subapp.order}</span>
-                        <span>Created: {formatDateSimple(subapp.created_at)}</span>
+                        <span>
+                          Created: {formatDateSimple(subapp.created_at)}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -243,15 +252,17 @@ const SubAppList: React.FC<SubAppListProps> = ({
                   <div className="flex items-center space-x-2 ml-4">
                     {/* Toggle Enable/Disable */}
                     <button
-                      onClick={() => onToggleEnabled(subapp.id, !subapp.enabled)}
+                      onClick={() =>
+                        onToggleEnabled(subapp.id, !subapp.enabled)
+                      }
                       className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
                         subapp.enabled
-                          ? 'text-orange-700 bg-orange-100 hover:bg-orange-200'
-                          : 'text-green-700 bg-green-100 hover:bg-green-200'
+                          ? "text-orange-700 bg-orange-100 hover:bg-orange-200"
+                          : "text-green-700 bg-green-100 hover:bg-green-200"
                       }`}
-                      title={subapp.enabled ? 'Disable' : 'Enable'}
+                      title={subapp.enabled ? "Disable" : "Enable"}
                     >
-                      {subapp.enabled ? 'Disable' : 'Enable'}
+                      {subapp.enabled ? "Disable" : "Enable"}
                     </button>
 
                     {/* Edit Button */}

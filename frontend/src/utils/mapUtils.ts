@@ -36,7 +36,7 @@ export const getTileConfig = (): TileConfig => {
     // For retina displays, use 512x512 tiles with zoom offset
     // This makes standard 256x256 tiles render crisp at 512x512
     return {
-      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
       tileSize: 512,
       zoomOffset: -1,
       attribution:
@@ -45,7 +45,7 @@ export const getTileConfig = (): TileConfig => {
   } else {
     // For standard displays, use normal 256x256 tiles
     return {
-      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
       tileSize: 256,
       zoomOffset: 0,
       attribution:
@@ -62,7 +62,7 @@ export const getHighQualityTileConfig = (): TileConfig => {
 
   // Use Mapbox-style URL pattern that supports retina detection
   // Note: This would require a Mapbox API key in production
-  const baseUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}';
+  const baseUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}";
   const retinaUrl = isRetina ? `${baseUrl}@2x.png` : `${baseUrl}.png`;
 
   return {
@@ -77,7 +77,9 @@ export const getHighQualityTileConfig = (): TileConfig => {
 /**
  * Gets optimized marker icon configuration for high-DPI displays
  */
-export const getOptimizedMarkerIcon = (size: 'small' | 'medium' | 'large' = 'medium') => {
+export const getOptimizedMarkerIcon = (
+  size: "small" | "medium" | "large" = "medium",
+) => {
   const sizeConfig = {
     small: {
       iconSize: [16, 25] as [number, number],
@@ -96,14 +98,23 @@ export const getOptimizedMarkerIcon = (size: 'small' | 'medium' | 'large' = 'med
   const config = sizeConfig[size];
 
   return {
-    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+    iconUrl:
+      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+    iconRetinaUrl:
+      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+    shadowUrl:
+      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
     iconSize: config.iconSize,
-    iconAnchor: [config.iconSize[0] / 2, config.iconSize[1]] as [number, number],
+    iconAnchor: [config.iconSize[0] / 2, config.iconSize[1]] as [
+      number,
+      number,
+    ],
     popupAnchor: [0, -config.iconSize[1]] as [number, number],
     shadowSize: config.shadowSize,
-    shadowAnchor: [config.shadowSize[0] / 2, config.shadowSize[1]] as [number, number],
+    shadowAnchor: [config.shadowSize[0] / 2, config.shadowSize[1]] as [
+      number,
+      number,
+    ],
   };
 };
 
@@ -119,12 +130,12 @@ export const getOptimalZoom = (baseZoom: number): number => {
 /**
  * Preloads retina detection on module load for better performance
  */
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   // Trigger initial detection
   getCachedRetinaDetection();
 
   // Update detection if display configuration changes
-  window.addEventListener('resize', () => {
+  window.addEventListener("resize", () => {
     cachedRetinaResult = null;
     getCachedRetinaDetection();
   });

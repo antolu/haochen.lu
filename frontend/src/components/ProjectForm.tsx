@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import MDEditor from '@uiw/react-md-editor';
-import { motion } from 'framer-motion';
-import RepositoryConnector from './RepositoryConnector';
-import TagMultiSelect from './admin/TagMultiSelect';
+import React, { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import MDEditor from "@uiw/react-md-editor";
+import { motion } from "framer-motion";
+import RepositoryConnector from "./RepositoryConnector";
+import TagMultiSelect from "./admin/TagMultiSelect";
 import {
   useCreateProject,
   useUpdateProject,
@@ -15,7 +15,7 @@ import {
   type Project,
   type ProjectCreate,
   type ProjectUpdate,
-} from '../hooks/useProjects';
+} from "../hooks/useProjects";
 
 interface ProjectFormProps {
   project?: Project;
@@ -33,21 +33,25 @@ interface FormData {
   image_url: string;
   technologies: string;
   featured: boolean;
-  status: 'active' | 'archived' | 'in_progress';
+  status: "active" | "archived" | "in_progress";
   use_readme: boolean;
   repository_type?: string;
   repository_owner?: string;
   repository_name?: string;
 }
 
-const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel }) => {
+const ProjectForm: React.FC<ProjectFormProps> = ({
+  project,
+  onSuccess,
+  onCancel,
+}) => {
   const isEditing = !!project;
   const createMutation = useCreateProject();
   const updateMutation = useUpdateProject();
   const previewReadmeMutation = usePreviewReadme();
 
-  const [technologiesInput, setTechnologiesInput] = useState('');
-  const [markdownContent, setMarkdownContent] = useState('');
+  const [technologiesInput, setTechnologiesInput] = useState("");
+  const [markdownContent, setMarkdownContent] = useState("");
   const [useReadme, setUseReadme] = useState(false);
   const [readmePreview, setReadmePreview] = useState<string | null>(null);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
@@ -63,16 +67,16 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
     reset,
   } = useForm<FormData>({
     defaultValues: {
-      title: '',
-      slug: '',
-      description: '',
-      short_description: '',
-      github_url: '',
-      demo_url: '',
-      image_url: '',
-      technologies: '',
+      title: "",
+      slug: "",
+      description: "",
+      short_description: "",
+      github_url: "",
+      demo_url: "",
+      image_url: "",
+      technologies: "",
       featured: false,
-      status: 'active',
+      status: "active",
       use_readme: false,
       repository_type: undefined,
       repository_owner: undefined,
@@ -84,7 +88,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
   useEffect(() => {
     if (project) {
       const technologies = parseTechnologies(project.technologies);
-      setTechnologiesInput(technologies.join(', '));
+      setTechnologiesInput(technologies.join(", "));
       setMarkdownContent(project.description);
       setUseReadme(project.use_readme ?? false);
 
@@ -92,11 +96,11 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
         title: project.title,
         slug: project.slug,
         description: project.description,
-        short_description: project.short_description ?? '',
-        github_url: project.github_url ?? '',
-        demo_url: project.demo_url ?? '',
-        image_url: project.image_url ?? '',
-        technologies: technologies.join(', '),
+        short_description: project.short_description ?? "",
+        github_url: project.github_url ?? "",
+        demo_url: project.demo_url ?? "",
+        image_url: project.image_url ?? "",
+        technologies: technologies.join(", "),
         featured: project.featured,
         status: project.status,
         use_readme: project.use_readme ?? false,
@@ -108,13 +112,13 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
   }, [project, reset]);
 
   // Watch fields for dynamic updates
-  const watchedTitle = watch('title');
-  const watchedGithubUrl = watch('github_url');
+  const watchedTitle = watch("title");
+  const watchedGithubUrl = watch("github_url");
 
   // Auto-generate slug from title
   useEffect(() => {
     if (watchedTitle && !isEditing) {
-      setValue('slug', generateSlug(watchedTitle));
+      setValue("slug", generateSlug(watchedTitle));
     }
   }, [watchedTitle, setValue, isEditing]);
 
@@ -125,16 +129,16 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
     owner?: string;
     name?: string;
   }) => {
-    setValue('github_url', repoData.url);
-    setValue('repository_type', repoData.type);
-    setValue('repository_owner', repoData.owner);
-    setValue('repository_name', repoData.name);
+    setValue("github_url", repoData.url);
+    setValue("repository_type", repoData.type);
+    setValue("repository_owner", repoData.owner);
+    setValue("repository_name", repoData.name);
 
     // Auto-enable use_readme when repository is connected (for new projects only)
     if (repoData.url && !isEditing) {
       // Use setTimeout to ensure this happens after any potential form resets
       setTimeout(() => {
-        setValue('use_readme', true);
+        setValue("use_readme", true);
         setUseReadme(true);
       }, 0);
     }
@@ -143,7 +147,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
   // Handle technologies input
   const handleTechnologiesChange = (value: string) => {
     setTechnologiesInput(value);
-    setValue('technologies', value);
+    setValue("technologies", value);
   };
 
   // Preview README
@@ -152,13 +156,15 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
 
     setIsLoadingPreview(true);
     try {
-      const result = (await previewReadmeMutation.mutateAsync(watchedGithubUrl)) as {
+      const result = (await previewReadmeMutation.mutateAsync(
+        watchedGithubUrl,
+      )) as {
         content: string;
       };
       setReadmePreview(result.content);
       setMarkdownContent(result.content);
     } catch (error) {
-      console.error('Failed to preview README:', error);
+      console.error("Failed to preview README:", error);
       setReadmePreview(null);
     } finally {
       setIsLoadingPreview(false);
@@ -169,14 +175,15 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
   const onSubmit = async (data: FormData) => {
     try {
       const technologies = data.technologies
-        .split(',')
-        .map(tech => tech.trim())
+        .split(",")
+        .map((tech) => tech.trim())
         .filter(Boolean);
 
       const projectData = {
         title: data.title,
         slug: isEditing ? undefined : data.slug,
-        description: useReadme && readmePreview ? readmePreview : markdownContent,
+        description:
+          useReadme && readmePreview ? readmePreview : markdownContent,
         short_description: data.short_description || undefined,
         github_url: data.github_url || undefined,
         demo_url: data.demo_url || undefined,
@@ -202,11 +209,12 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
 
       onSuccess?.(result);
     } catch (error) {
-      console.error('Failed to save project:', error);
+      console.error("Failed to save project:", error);
     }
   };
 
-  const isLoading = isSubmitting || createMutation.isPending || updateMutation.isPending;
+  const isLoading =
+    isSubmitting || createMutation.isPending || updateMutation.isPending;
 
   return (
     <motion.div
@@ -216,7 +224,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
       transition={{ duration: 0.3 }}
     >
       <form
-        onSubmit={e => {
+        onSubmit={(e) => {
           void handleSubmit(onSubmit)(e);
         }}
         className="space-y-8"
@@ -225,12 +233,12 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">
-              {isEditing ? 'Edit Project' : 'Create New Project'}
+              {isEditing ? "Edit Project" : "Create New Project"}
             </h2>
             <p className="text-sm text-gray-600 mt-1">
               {isEditing
-                ? 'Update project information and content'
-                : 'Add a new project to your portfolio'}
+                ? "Update project information and content"
+                : "Add a new project to your portfolio"}
             </p>
           </div>
           <div className="flex gap-3">
@@ -248,14 +256,20 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
               disabled={isLoading}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {isLoading ? 'Saving...' : isEditing ? 'Update Project' : 'Create Project'}
+              {isLoading
+                ? "Saving..."
+                : isEditing
+                  ? "Update Project"
+                  : "Create Project"}
             </button>
           </div>
         </div>
 
         {/* Basic Information */}
         <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Basic Information</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">
+            Basic Information
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Title */}
             <div className="md:col-span-2">
@@ -263,39 +277,51 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
                 Project Title *
               </label>
               <input
-                {...register('title', { required: 'Title is required' })}
+                {...register("title", { required: "Title is required" })}
                 type="text"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter project title"
               />
-              {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>}
+              {errors.title && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.title.message}
+                </p>
+              )}
             </div>
 
             {/* Slug */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                URL Slug {!isEditing && '*'}
+                URL Slug {!isEditing && "*"}
               </label>
               <input
-                {...register('slug', {
-                  required: !isEditing ? 'Slug is required' : false,
+                {...register("slug", {
+                  required: !isEditing ? "Slug is required" : false,
                 })}
                 type="text"
                 disabled={isEditing}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
                 placeholder="project-url-slug"
               />
-              {errors.slug && <p className="mt-1 text-sm text-red-600">{errors.slug.message}</p>}
+              {errors.slug && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.slug.message}
+                </p>
+              )}
               <p className="mt-1 text-xs text-gray-500">
-                {isEditing ? 'Slug cannot be changed after creation' : 'Auto-generated from title'}
+                {isEditing
+                  ? "Slug cannot be changed after creation"
+                  : "Auto-generated from title"}
               </p>
             </div>
 
             {/* Status */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Status
+              </label>
               <select
-                {...register('status')}
+                {...register("status")}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="active">Active</option>
@@ -310,7 +336,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
                 Short Description
               </label>
               <input
-                {...register('short_description')}
+                {...register("short_description")}
                 type="text"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Brief description for project cards"
@@ -322,14 +348,16 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
 
             {/* Technologies */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Technologies</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Technologies
+              </label>
               <TagMultiSelect
                 value={technologiesInput
-                  .split(',')
-                  .map(t => t.trim())
+                  .split(",")
+                  .map((t) => t.trim())
                   .filter(Boolean)}
                 options={distinctTechnologies}
-                onChange={vals => handleTechnologiesChange(vals.join(', '))}
+                onChange={(vals) => handleTechnologiesChange(vals.join(", "))}
                 placeholder="Search or create technologies..."
               />
               <p className="mt-1 text-xs text-gray-500">
@@ -341,11 +369,13 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
             <div className="md:col-span-2">
               <label className="flex items-center">
                 <input
-                  {...register('featured')}
+                  {...register("featured")}
                   type="checkbox"
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
-                <span className="ml-2 text-sm text-gray-700">Mark as featured project</span>
+                <span className="ml-2 text-sm text-gray-700">
+                  Mark as featured project
+                </span>
               </label>
               <p className="mt-1 text-xs text-gray-500">
                 Featured projects appear on the homepage and in special sections
@@ -356,12 +386,14 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
 
         {/* Links */}
         <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Links & Resources</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">
+            Links & Resources
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* GitHub URL */}
             <div className="md:col-span-2">
               <RepositoryConnector
-                value={watch('github_url')}
+                value={watch("github_url")}
                 onChange={handleRepositoryChange}
                 disabled={isSubmitting}
               />
@@ -369,9 +401,11 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
 
             {/* Demo URL */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Demo URL</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Demo URL
+              </label>
               <input
-                {...register('demo_url')}
+                {...register("demo_url")}
                 type="url"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="https://project-demo.com"
@@ -384,7 +418,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
                 Project Image URL
               </label>
               <input
-                {...register('image_url')}
+                {...register("image_url")}
                 type="url"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="https://example.com/image.jpg"
@@ -395,19 +429,21 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
 
         {/* Content Source */}
         <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Project Description</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">
+            Project Description
+          </h3>
 
           {/* README Integration */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
               <label className="flex items-center">
                 <input
-                  {...register('use_readme')}
+                  {...register("use_readme")}
                   type="checkbox"
                   checked={useReadme}
-                  onChange={e => {
+                  onChange={(e) => {
                     setUseReadme(e.target.checked);
-                    setValue('use_readme', e.target.checked);
+                    setValue("use_readme", e.target.checked);
                   }}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
@@ -425,7 +461,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
                   disabled={isLoadingPreview || !watchedGithubUrl}
                   className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 disabled:opacity-50"
                 >
-                  {isLoadingPreview ? 'Loading...' : 'Preview README'}
+                  {isLoadingPreview ? "Loading..." : "Preview README"}
                 </button>
               )}
             </div>
@@ -433,13 +469,20 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
             {readmePreview && (
               <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-blue-800">README Preview</span>
+                  <span className="text-sm font-medium text-blue-800">
+                    README Preview
+                  </span>
                   <button
                     type="button"
                     onClick={() => setReadmePreview(null)}
                     className="text-blue-600 hover:text-blue-800"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -459,12 +502,14 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
           {/* Markdown Editor */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              {useReadme ? 'Custom Description (overrides README)' : 'Project Description *'}
+              {useReadme
+                ? "Custom Description (overrides README)"
+                : "Project Description *"}
             </label>
             <div data-color-mode="light">
               <MDEditor
                 value={markdownContent}
-                onChange={val => setMarkdownContent(val ?? '')}
+                onChange={(val) => setMarkdownContent(val ?? "")}
                 preview="edit"
                 height={400}
                 visibleDragbar={false}
@@ -472,8 +517,8 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
             </div>
             <p className="mt-1 text-xs text-gray-500">
               {useReadme
-                ? 'Leave empty to use README content, or add custom description to override'
-                : 'Supports Markdown formatting including code blocks, links, and images'}
+                ? "Leave empty to use README content, or add custom description to override"
+                : "Supports Markdown formatting including code blocks, links, and images"}
             </p>
           </div>
         </div>
@@ -515,7 +560,11 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, onSuccess, onCancel 
                 />
               </svg>
             )}
-            {isLoading ? 'Saving...' : isEditing ? 'Update Project' : 'Create Project'}
+            {isLoading
+              ? "Saving..."
+              : isEditing
+                ? "Update Project"
+                : "Create Project"}
           </button>
         </div>
       </form>

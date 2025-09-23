@@ -1,8 +1,8 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { auth } from '../api/client';
-import type { AxiosError } from 'axios';
-import type { User, LoginRequest } from '../types';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { auth } from "../api/client";
+import type { AxiosError } from "axios";
+import type { User, LoginRequest } from "../types";
 
 interface AuthState {
   user: User | null;
@@ -60,7 +60,7 @@ export const useAuthStore = create<AuthState>()(
             error: null,
           });
         } catch (error: unknown) {
-          let errorMessage = 'Login failed';
+          let errorMessage = "Login failed";
 
           const axiosErr = error as Partial<AxiosError<{ detail?: string }>>;
           const status = axiosErr.response?.status;
@@ -68,13 +68,13 @@ export const useAuthStore = create<AuthState>()(
           if (detail) {
             errorMessage = detail;
           } else if (status === 401) {
-            errorMessage = 'Invalid username or password';
+            errorMessage = "Invalid username or password";
           } else if (status === 403) {
-            errorMessage = 'Access denied';
+            errorMessage = "Access denied";
           } else if ((status ?? 0) >= 500) {
-            errorMessage = 'Server error. Please try again later.';
+            errorMessage = "Server error. Please try again later.";
           } else if (!axiosErr.response) {
-            errorMessage = 'Network error. Please check your connection.';
+            errorMessage = "Network error. Please check your connection.";
           }
 
           set({
@@ -93,7 +93,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           await auth.logout();
         } catch (_error) {
-          console.warn('Logout request failed:', _error);
+          console.warn("Logout request failed:", _error);
         } finally {
           get().clearAuth();
         }
@@ -103,7 +103,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           await auth.revokeAllSessions();
         } catch (_error) {
-          console.warn('Logout everywhere request failed:', _error);
+          console.warn("Logout everywhere request failed:", _error);
         } finally {
           get().clearAuth();
         }
@@ -134,7 +134,7 @@ export const useAuthStore = create<AuthState>()(
 
           return true;
         } catch (_error) {
-          console.warn('Token refresh failed:', _error);
+          console.warn("Token refresh failed:", _error);
           get().clearAuth();
           return false;
         } finally {
@@ -208,7 +208,7 @@ export const useAuthStore = create<AuthState>()(
               });
               return;
             } catch (retryError) {
-              console.warn('Retry after refresh also failed:', retryError);
+              console.warn("Retry after refresh also failed:", retryError);
             }
           }
 
@@ -222,14 +222,14 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: 'auth-store',
+      name: "auth-store",
       // Only persist user and authentication state, not tokens (they come from cookies)
-      partialize: state => ({
+      partialize: (state) => ({
         user: state.user,
         isAuthenticated: state.isAuthenticated,
       }),
-    }
-  )
+    },
+  ),
 );
 
 // Make auth store available globally for API client

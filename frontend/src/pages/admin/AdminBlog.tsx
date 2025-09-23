@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 const AdminBlog: React.FC = () => {
   return (
@@ -9,7 +9,9 @@ const AdminBlog: React.FC = () => {
       </div>
 
       <div className="bg-gray-100 rounded-lg p-12 text-center">
-        <p className="text-gray-500">Blog management interface coming soon...</p>
+        <p className="text-gray-500">
+          Blog management interface coming soon...
+        </p>
       </div>
     </div>
   );

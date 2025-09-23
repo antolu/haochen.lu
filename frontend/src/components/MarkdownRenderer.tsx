@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import rehypeHighlight from 'rehype-highlight';
-import 'highlight.js/styles/github.css';
+import React, { useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeHighlight from "rehype-highlight";
+import "highlight.js/styles/github.css";
 
 interface MarkdownRendererProps {
   content: string;
@@ -12,7 +12,7 @@ interface MarkdownRendererProps {
 
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   content,
-  className = '',
+  className = "",
   compact = false,
 }) => {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
@@ -23,22 +23,26 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
       setCopiedCode(text);
       setTimeout(() => setCopiedCode(null), 2000);
     } catch (err) {
-      console.error('Failed to copy text: ', err);
+      console.error("Failed to copy text: ", err);
     }
   };
 
   const extractTextFromChildren = (children: unknown): string => {
-    if (typeof children === 'string') return children;
+    if (typeof children === "string") return children;
     if (Array.isArray(children)) {
-      return children.map(extractTextFromChildren).join('');
+      return children.map(extractTextFromChildren).join("");
     }
-    if (typeof children === 'object' && children !== null && 'props' in children) {
+    if (
+      typeof children === "object" &&
+      children !== null &&
+      "props" in children
+    ) {
       const childElement = children as { props?: { children?: unknown } };
       if (childElement.props?.children) {
         return extractTextFromChildren(childElement.props.children);
       }
     }
-    return '';
+    return "";
   };
 
   const CopyButton: React.FC<{ text: string }> = ({ text }) => {
@@ -50,11 +54,16 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           void copyToClipboard(text);
         }}
         className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-gray-800 hover:bg-gray-700 text-white p-1.5 rounded text-xs flex items-center gap-1"
-        title={isCopied ? 'Copied!' : 'Copy code'}
+        title={isCopied ? "Copied!" : "Copy code"}
       >
         {isCopied ? (
           <>
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-3 h-3"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -66,7 +75,12 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           </>
         ) : (
           <>
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-3 h-3"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -82,8 +96,8 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   };
 
   const proseClass = compact
-    ? 'prose prose-sm max-w-none prose-gray'
-    : 'prose prose-lg max-w-none prose-gray';
+    ? "prose prose-sm max-w-none prose-gray"
+    : "prose prose-lg max-w-none prose-gray";
 
   return (
     <div className={`${proseClass} ${className}`}>
@@ -95,8 +109,8 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           a: ({ href, children, ...props }) => (
             <a
               href={href}
-              target={href?.startsWith('http') ? '_blank' : undefined}
-              rel={href?.startsWith('http') ? 'noopener noreferrer' : undefined}
+              target={href?.startsWith("http") ? "_blank" : undefined}
+              rel={href?.startsWith("http") ? "noopener noreferrer" : undefined}
               className="text-blue-600 hover:text-blue-800 transition-colors"
               {...props}
             >
@@ -134,7 +148,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 
           // Inline code styling
           code: ({ children, className, ...props }) => {
-            const isInline = !className?.includes('language-');
+            const isInline = !className?.includes("language-");
 
             if (isInline) {
               return (
@@ -179,7 +193,10 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           ),
 
           td: ({ children, ...props }) => (
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900" {...props}>
+            <td
+              className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+              {...props}
+            >
               {children}
             </td>
           ),
@@ -202,19 +219,28 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           ),
 
           h2: ({ children, ...props }) => (
-            <h2 className="text-2xl font-semibold text-gray-900 mb-3 mt-8" {...props}>
+            <h2
+              className="text-2xl font-semibold text-gray-900 mb-3 mt-8"
+              {...props}
+            >
               {children}
             </h2>
           ),
 
           h3: ({ children, ...props }) => (
-            <h3 className="text-xl font-semibold text-gray-900 mb-2 mt-6" {...props}>
+            <h3
+              className="text-xl font-semibold text-gray-900 mb-2 mt-6"
+              {...props}
+            >
               {children}
             </h3>
           ),
 
           h4: ({ children, ...props }) => (
-            <h4 className="text-lg font-medium text-gray-900 mb-2 mt-4" {...props}>
+            <h4
+              className="text-lg font-medium text-gray-900 mb-2 mt-4"
+              {...props}
+            >
               {children}
             </h4>
           ),

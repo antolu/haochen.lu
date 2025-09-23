@@ -1,10 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@300;400;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@300;400;700&display=swap");
 
 /* Tailwind CSS v4 import */
-@import 'tailwindcss';
+@import "tailwindcss";
 
 /* Import safelist file to ensure all required classes are generated */
-@import './tailwind-safelist.css';
+@import "./tailwind-safelist.css";
 
 @layer base {
   :root {
@@ -32,7 +32,7 @@
   }
 
   body {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: "Inter", system-ui, sans-serif;
     line-height: 1.6;
     color: #1f2937;
     background-color: #ffffff;
@@ -55,7 +55,7 @@
 }
 
 .font-serif {
-  font-family: 'Merriweather', Georgia, serif;
+  font-family: "Merriweather", Georgia, serif;
 }
 
 /* Custom scrollbar */

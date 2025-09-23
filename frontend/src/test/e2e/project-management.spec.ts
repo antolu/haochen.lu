@@ -10,30 +10,33 @@
  * - Form validation and error handling
  * - Responsive behavior across devices
  */
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page } from "@playwright/test";
 
 // Test configuration
-const BASE_URL = process.env.PLAYWRIGHT_TEST_BASE_URL ?? 'http://localhost:3000';
+const BASE_URL =
+  process.env.PLAYWRIGHT_TEST_BASE_URL ?? "http://localhost:3000";
 
 // Mock data for testing
 const testProject = {
-  title: 'E2E Test Project',
-  slug: 'e2e-test-project',
-  description: '# E2E Test Project\n\nThis is a test project created during end-to-end testing.',
-  short_description: 'A project created by automated E2E tests',
-  technologies: 'React, TypeScript, Playwright',
-  status: 'active' as const,
+  title: "E2E Test Project",
+  slug: "e2e-test-project",
+  description:
+    "# E2E Test Project\n\nThis is a test project created during end-to-end testing.",
+  short_description: "A project created by automated E2E tests",
+  technologies: "React, TypeScript, Playwright",
+  status: "active" as const,
   featured: true,
-  github_url: 'https://github.com/test/e2e-project',
-  demo_url: 'https://demo.e2e-project.com',
+  github_url: "https://github.com/test/e2e-project",
+  demo_url: "https://demo.e2e-project.com",
 };
 
 const updatedProject = {
-  title: 'Updated E2E Test Project',
-  description: '# Updated E2E Test Project\n\nThis project has been updated during testing.',
-  short_description: 'An updated test project',
-  technologies: 'React, TypeScript, Playwright, Vitest',
-  status: 'in_progress' as const,
+  title: "Updated E2E Test Project",
+  description:
+    "# Updated E2E Test Project\n\nThis project has been updated during testing.",
+  short_description: "An updated test project",
+  technologies: "React, TypeScript, Playwright, Vitest",
+  status: "in_progress" as const,
   featured: false,
 };
 
@@ -45,8 +48,8 @@ async function loginAsAdmin(page: Page) {
   await page.waitForSelector('input[name="username"]');
 
   // Fill login form
-  await page.fill('input[name="username"]', 'admin');
-  await page.fill('input[name="password"]', 'admin');
+  await page.fill('input[name="username"]', "admin");
+  await page.fill('input[name="password"]', "admin");
 
   // Submit form
   await page.click('button[type="submit"]');
@@ -67,21 +70,26 @@ async function fillProjectForm(page: Page, project: typeof testProject) {
   if (project.short_description) {
     await page.fill(
       'input[placeholder="Brief description for project cards"]',
-      project.short_description
+      project.short_description,
     );
   }
 
   // Select status
-  await page.selectOption('select', project.status);
+  await page.selectOption("select", project.status);
 
   // Fill technologies
-  await page.fill('input[placeholder*="React, TypeScript"]', project.technologies);
+  await page.fill(
+    'input[placeholder*="React, TypeScript"]',
+    project.technologies,
+  );
 
   // Set featured status
   if (project.featured) {
     await page.check('input[type="checkbox"]:near(:text("Mark as featured"))');
   } else {
-    await page.uncheck('input[type="checkbox"]:near(:text("Mark as featured"))');
+    await page.uncheck(
+      'input[type="checkbox"]:near(:text("Mark as featured"))',
+    );
   }
 
   // Fill URLs
@@ -90,12 +98,17 @@ async function fillProjectForm(page: Page, project: typeof testProject) {
   }
 
   if (project.demo_url) {
-    await page.fill('input[placeholder="https://project-demo.com"]', project.demo_url);
+    await page.fill(
+      'input[placeholder="https://project-demo.com"]',
+      project.demo_url,
+    );
   }
 
   // Fill description in markdown editor
   const markdownEditor = page
-    .locator('[data-testid="markdown-textarea"], .w-md-editor-text-textarea, textarea')
+    .locator(
+      '[data-testid="markdown-textarea"], .w-md-editor-text-textarea, textarea',
+    )
     .first();
   await markdownEditor.fill(project.description);
 }
@@ -116,18 +129,21 @@ async function cleanupTestProjects(page: Page) {
         await deleteButton.click();
 
         // Handle confirmation dialog
-        page.on('dialog', dialog => dialog.accept());
+        page.on("dialog", (dialog) => dialog.accept());
 
         // Wait for deletion to complete
         await page.waitForTimeout(1000);
       }
     }
   } catch (error) {
-    console.log('Cleanup failed (this is expected if no test projects exist):', error);
+    console.log(
+      "Cleanup failed (this is expected if no test projects exist):",
+      error,
+    );
   }
 }
 
-test.describe('Project Management E2E Tests', () => {
+test.describe("Project Management E2E Tests", () => {
   test.beforeEach(async ({ page }) => {
     // Login before each test
     await loginAsAdmin(page);
@@ -138,8 +154,8 @@ test.describe('Project Management E2E Tests', () => {
     await cleanupTestProjects(page);
   });
 
-  test.describe('Project Creation Workflow', () => {
-    test('should create a new project successfully', async ({ page }) => {
+  test.describe("Project Creation Workflow", () => {
+    test("should create a new project successfully", async ({ page }) => {
       await navigateToProjectsAdmin(page);
 
       // Click create new project button
@@ -162,12 +178,12 @@ test.describe('Project Management E2E Tests', () => {
 
       // Verify project details
       const projectRow = page.locator(`tr:has-text("${testProject.title}")`);
-      await expect(projectRow.locator('text=Active')).toBeVisible();
-      await expect(projectRow.locator('text=Featured')).toBeVisible();
-      await expect(projectRow.locator('text=React')).toBeVisible();
+      await expect(projectRow.locator("text=Active")).toBeVisible();
+      await expect(projectRow.locator("text=Featured")).toBeVisible();
+      await expect(projectRow.locator("text=React")).toBeVisible();
     });
 
-    test('should validate required fields', async ({ page }) => {
+    test("should validate required fields", async ({ page }) => {
       await navigateToProjectsAdmin(page);
 
       // Click create new project button
@@ -177,44 +193,52 @@ test.describe('Project Management E2E Tests', () => {
       await page.click('button:text("Create Project")');
 
       // Should show validation errors
-      await expect(page.locator('text=Title is required')).toBeVisible();
+      await expect(page.locator("text=Title is required")).toBeVisible();
     });
 
-    test('should auto-generate slug from title', async ({ page }) => {
+    test("should auto-generate slug from title", async ({ page }) => {
       await navigateToProjectsAdmin(page);
 
       // Click create new project button
       await page.click('button:text("Create New Project")');
 
       // Fill title
-      await page.fill('input[placeholder="Enter project title"]', 'My Amazing Project!');
+      await page.fill(
+        'input[placeholder="Enter project title"]',
+        "My Amazing Project!",
+      );
 
       // Check that slug is auto-generated
       const slugInput = page.locator('input[placeholder="project-url-slug"]');
-      await expect(slugInput).toHaveValue('my-amazing-project');
+      await expect(slugInput).toHaveValue("my-amazing-project");
     });
 
-    test('should handle repository validation', async ({ page }) => {
+    test("should handle repository validation", async ({ page }) => {
       await navigateToProjectsAdmin(page);
 
       // Click create new project button
       await page.click('button:text("Create New Project")');
 
       // Fill repository URL
-      await page.fill('input[placeholder*="github.com"]', 'https://github.com/facebook/react');
+      await page.fill(
+        'input[placeholder*="github.com"]',
+        "https://github.com/facebook/react",
+      );
 
       // Click validate button
       await page.click('button:text("Validate")');
 
       // Should show validation result (success or error)
       await expect(
-        page.locator('text=Repository Validated, text=Validation Error').first()
+        page
+          .locator("text=Repository Validated, text=Validation Error")
+          .first(),
       ).toBeVisible({ timeout: 10000 });
     });
   });
 
-  test.describe('Project Editing Workflow', () => {
-    test('should edit an existing project', async ({ page }) => {
+  test.describe("Project Editing Workflow", () => {
+    test("should edit an existing project", async ({ page }) => {
       // First create a project
       await navigateToProjectsAdmin(page);
       await page.click('button:text("Create New Project")');
@@ -230,17 +254,25 @@ test.describe('Project Management E2E Tests', () => {
       await page.waitForSelector('h2:text("Edit Project")');
 
       // Verify form is populated with existing data
-      await expect(page.locator('input[placeholder="Enter project title"]')).toHaveValue(
-        testProject.title
-      );
+      await expect(
+        page.locator('input[placeholder="Enter project title"]'),
+      ).toHaveValue(testProject.title);
 
       // Update project details
-      await page.fill('input[placeholder="Enter project title"]', updatedProject.title);
-      await page.selectOption('select', updatedProject.status);
-      await page.uncheck('input[type="checkbox"]:near(:text("Mark as featured"))');
+      await page.fill(
+        'input[placeholder="Enter project title"]',
+        updatedProject.title,
+      );
+      await page.selectOption("select", updatedProject.status);
+      await page.uncheck(
+        'input[type="checkbox"]:near(:text("Mark as featured"))',
+      );
 
       // Update technologies
-      await page.fill('input[placeholder*="React, TypeScript"]', updatedProject.technologies);
+      await page.fill(
+        'input[placeholder*="React, TypeScript"]',
+        updatedProject.technologies,
+      );
 
       // Submit changes
       await page.click('button:text("Update Project")');
@@ -251,11 +283,11 @@ test.describe('Project Management E2E Tests', () => {
       // Verify changes
       await expect(page.locator(`text=${updatedProject.title}`)).toBeVisible();
       const updatedRow = page.locator(`tr:has-text("${updatedProject.title}")`);
-      await expect(updatedRow.locator('text=In Progress')).toBeVisible();
-      await expect(updatedRow.locator('text=Featured')).not.toBeVisible();
+      await expect(updatedRow.locator("text=In Progress")).toBeVisible();
+      await expect(updatedRow.locator("text=Featured")).not.toBeVisible();
     });
 
-    test('should cancel editing without saving changes', async ({ page }) => {
+    test("should cancel editing without saving changes", async ({ page }) => {
       // Create a project first
       await navigateToProjectsAdmin(page);
       await page.click('button:text("Create New Project")');
@@ -268,7 +300,10 @@ test.describe('Project Management E2E Tests', () => {
       await projectRow.locator('button:text("Edit")').click();
 
       // Make some changes
-      await page.fill('input[placeholder="Enter project title"]', 'Should Not Be Saved');
+      await page.fill(
+        'input[placeholder="Enter project title"]',
+        "Should Not Be Saved",
+      );
 
       // Cancel editing
       await page.click('button:text("Cancel")');
@@ -276,12 +311,12 @@ test.describe('Project Management E2E Tests', () => {
       // Verify we're back to list and changes weren't saved
       await page.waitForSelector('h1:text("Project Management")');
       await expect(page.locator(`text=${testProject.title}`)).toBeVisible();
-      await expect(page.locator('text=Should Not Be Saved')).not.toBeVisible();
+      await expect(page.locator("text=Should Not Be Saved")).not.toBeVisible();
     });
   });
 
-  test.describe('Project Deletion Workflow', () => {
-    test('should delete a project with confirmation', async ({ page }) => {
+  test.describe("Project Deletion Workflow", () => {
+    test("should delete a project with confirmation", async ({ page }) => {
       // Create a project first
       await navigateToProjectsAdmin(page);
       await page.click('button:text("Create New Project")');
@@ -293,7 +328,7 @@ test.describe('Project Management E2E Tests', () => {
       const projectRow = page.locator(`tr:has-text("${testProject.title}")`);
 
       // Setup dialog handler before clicking delete
-      page.on('dialog', dialog => {
+      page.on("dialog", (dialog) => {
         expect(dialog.message()).toContain(testProject.title);
         void dialog.accept();
       });
@@ -307,7 +342,9 @@ test.describe('Project Management E2E Tests', () => {
       await expect(page.locator(`text=${testProject.title}`)).not.toBeVisible();
     });
 
-    test('should cancel deletion when user rejects confirmation', async ({ page }) => {
+    test("should cancel deletion when user rejects confirmation", async ({
+      page,
+    }) => {
       // Create a project first
       await navigateToProjectsAdmin(page);
       await page.click('button:text("Create New Project")');
@@ -319,7 +356,7 @@ test.describe('Project Management E2E Tests', () => {
       const projectRow = page.locator(`tr:has-text("${testProject.title}")`);
 
       // Setup dialog handler to cancel
-      page.on('dialog', dialog => {
+      page.on("dialog", (dialog) => {
         void dialog.dismiss();
       });
 
@@ -330,8 +367,8 @@ test.describe('Project Management E2E Tests', () => {
     });
   });
 
-  test.describe('Project List and Search', () => {
-    test('should search projects by title', async ({ page }) => {
+  test.describe("Project List and Search", () => {
+    test("should search projects by title", async ({ page }) => {
       // Create multiple projects for testing
       await navigateToProjectsAdmin(page);
 
@@ -345,59 +382,61 @@ test.describe('Project Management E2E Tests', () => {
       await page.click('button:text("Create New Project")');
       await fillProjectForm(page, {
         ...testProject,
-        title: 'Another Test Project',
+        title: "Another Test Project",
       });
       await page.click('button:text("Create Project")');
       await page.waitForSelector('h1:text("Project Management")');
 
       // Test search functionality
-      await page.fill('input[placeholder="Search projects..."]', 'E2E Test');
+      await page.fill('input[placeholder="Search projects..."]', "E2E Test");
 
       // Wait for search results
       await page.waitForTimeout(1000);
 
       // Should show only the matching project
       await expect(page.locator(`text=${testProject.title}`)).toBeVisible();
-      await expect(page.locator('text=Another Test Project')).not.toBeVisible();
+      await expect(page.locator("text=Another Test Project")).not.toBeVisible();
 
       // Clear search
-      await page.fill('input[placeholder="Search projects..."]', '');
+      await page.fill('input[placeholder="Search projects..."]', "");
       await page.waitForTimeout(1000);
 
       // Should show all projects again
       await expect(page.locator(`text=${testProject.title}`)).toBeVisible();
-      await expect(page.locator('text=Another Test Project')).toBeVisible();
+      await expect(page.locator("text=Another Test Project")).toBeVisible();
     });
 
-    test('should display project statistics', async ({ page }) => {
+    test("should display project statistics", async ({ page }) => {
       await navigateToProjectsAdmin(page);
 
       // Should show statistics cards
-      await expect(page.locator('text=Total Projects')).toBeVisible();
-      await expect(page.locator('text=Featured')).toBeVisible();
-      await expect(page.locator('text=Active')).toBeVisible();
+      await expect(page.locator("text=Total Projects")).toBeVisible();
+      await expect(page.locator("text=Featured")).toBeVisible();
+      await expect(page.locator("text=Active")).toBeVisible();
 
       // Numbers should be present
-      await expect(page.locator('.text-3xl').first()).toBeVisible();
+      await expect(page.locator(".text-3xl").first()).toBeVisible();
     });
 
-    test('should handle empty state', async ({ page }) => {
+    test("should handle empty state", async ({ page }) => {
       await navigateToProjectsAdmin(page);
 
       // If no projects exist, should show empty state
-      const noProjectsText = page.locator('text=No projects found');
-      page.locator('text=Create your first project');
+      const noProjectsText = page.locator("text=No projects found");
+      page.locator("text=Create your first project");
 
       // Check if either projects exist or empty state is shown
-      const hasProjects = (await page.locator('tbody tr').count()) > 0;
+      const hasProjects = (await page.locator("tbody tr").count()) > 0;
       const hasEmptyState = await noProjectsText.isVisible();
 
       expect(hasProjects || hasEmptyState).toBeTruthy();
     });
   });
 
-  test.describe('Public Project Views', () => {
-    test('should display projects on public projects page', async ({ page }) => {
+  test.describe("Public Project Views", () => {
+    test("should display projects on public projects page", async ({
+      page,
+    }) => {
       // Create a public project first (as admin)
       await navigateToProjectsAdmin(page);
       await page.click('button:text("Create New Project")');
@@ -413,10 +452,12 @@ test.describe('Project Management E2E Tests', () => {
 
       // Should show the project in the grid
       await expect(page.locator(`text=${testProject.title}`)).toBeVisible();
-      await expect(page.locator(`text=${testProject.short_description}`)).toBeVisible();
+      await expect(
+        page.locator(`text=${testProject.short_description}`),
+      ).toBeVisible();
     });
 
-    test('should navigate to project detail page', async ({ page }) => {
+    test("should navigate to project detail page", async ({ page }) => {
       // Create a project first
       await navigateToProjectsAdmin(page);
       await page.click('button:text("Create New Project")');
@@ -435,21 +476,25 @@ test.describe('Project Management E2E Tests', () => {
       await page.waitForURL(`${BASE_URL}/projects/${testProject.slug}`);
 
       // Should show project details
-      await expect(page.locator(`h1:text("${testProject.title}")`)).toBeVisible();
-      await expect(page.locator(`text=${testProject.short_description}`)).toBeVisible();
-      await expect(page.locator('text=Active')).toBeVisible();
-      await expect(page.locator('text=⭐ Featured')).toBeVisible();
+      await expect(
+        page.locator(`h1:text("${testProject.title}")`),
+      ).toBeVisible();
+      await expect(
+        page.locator(`text=${testProject.short_description}`),
+      ).toBeVisible();
+      await expect(page.locator("text=Active")).toBeVisible();
+      await expect(page.locator("text=⭐ Featured")).toBeVisible();
 
       // Should show action buttons
       if (testProject.demo_url) {
-        await expect(page.locator('text=View Live Demo')).toBeVisible();
+        await expect(page.locator("text=View Live Demo")).toBeVisible();
       }
       if (testProject.github_url) {
-        await expect(page.locator('text=View Source Code')).toBeVisible();
+        await expect(page.locator("text=View Source Code")).toBeVisible();
       }
     });
 
-    test('should filter projects by status', async ({ page }) => {
+    test("should filter projects by status", async ({ page }) => {
       // Visit public projects page
       await page.goto(`${BASE_URL}/projects`);
       await page.waitForSelector('h1:text("Projects & Work")');
@@ -470,23 +515,25 @@ test.describe('Project Management E2E Tests', () => {
       await expect(featuredButton).toHaveClass(/bg-blue-600/);
     });
 
-    test('should search projects on public page', async ({ page }) => {
+    test("should search projects on public page", async ({ page }) => {
       await page.goto(`${BASE_URL}/projects`);
       await page.waitForSelector('h1:text("Projects & Work")');
 
       // Use search functionality
-      await page.fill('input[placeholder="Search projects..."]', 'react');
+      await page.fill('input[placeholder="Search projects..."]', "react");
 
       // Should update results (even if no matches)
       await page.waitForTimeout(1000);
 
       // Search input should retain value
-      await expect(page.locator('input[placeholder="Search projects..."]')).toHaveValue('react');
+      await expect(
+        page.locator('input[placeholder="Search projects..."]'),
+      ).toHaveValue("react");
     });
   });
 
-  test.describe('Responsive Behavior', () => {
-    test('should work on mobile devices', async ({ page }) => {
+  test.describe("Responsive Behavior", () => {
+    test("should work on mobile devices", async ({ page }) => {
       // Set mobile viewport
       await page.setViewportSize({ width: 375, height: 667 });
 
@@ -494,17 +541,19 @@ test.describe('Project Management E2E Tests', () => {
 
       // Should still show main elements on mobile
       await expect(page.locator('h1:text("Project Management")')).toBeVisible();
-      await expect(page.locator('button:text("Create New Project")')).toBeVisible();
+      await expect(
+        page.locator('button:text("Create New Project")'),
+      ).toBeVisible();
 
       // Table should be responsive or scrollable
-      const table = page.locator('table');
+      const table = page.locator("table");
       if (await table.isVisible()) {
         // Table should be present and scrollable
         await expect(table).toBeVisible();
       }
     });
 
-    test('should work on tablet devices', async ({ page }) => {
+    test("should work on tablet devices", async ({ page }) => {
       // Set tablet viewport
       await page.setViewportSize({ width: 768, height: 1024 });
 
@@ -522,28 +571,28 @@ test.describe('Project Management E2E Tests', () => {
     });
   });
 
-  test.describe('Error Handling', () => {
-    test('should handle network errors gracefully', async ({ page }) => {
+  test.describe("Error Handling", () => {
+    test("should handle network errors gracefully", async ({ page }) => {
       // Block network requests to simulate offline
-      await page.route('**/api/**', route => route.abort());
+      await page.route("**/api/**", (route) => route.abort());
 
       await page.goto(`${BASE_URL}/projects`);
 
       // Should show error state or retry option
       await expect(
-        page.locator('text=Failed to load, text=Try again, text=Error').first()
+        page.locator("text=Failed to load, text=Try again, text=Error").first(),
       ).toBeVisible({ timeout: 10000 });
     });
 
-    test('should handle form submission errors', async ({ page }) => {
+    test("should handle form submission errors", async ({ page }) => {
       await navigateToProjectsAdmin(page);
 
       // Intercept API calls to return errors
-      await page.route('**/api/projects', route => {
+      await page.route("**/api/projects", (route) => {
         void route.fulfill({
           status: 422,
-          contentType: 'application/json',
-          body: JSON.stringify({ detail: 'Validation error' }),
+          contentType: "application/json",
+          body: JSON.stringify({ detail: "Validation error" }),
         });
       });
 
@@ -561,31 +610,33 @@ test.describe('Project Management E2E Tests', () => {
     });
   });
 
-  test.describe('Accessibility', () => {
-    test('should be keyboard navigable', async ({ page }) => {
+  test.describe("Accessibility", () => {
+    test("should be keyboard navigable", async ({ page }) => {
       await navigateToProjectsAdmin(page);
 
       // Should be able to navigate with keyboard
-      await page.keyboard.press('Tab');
-      await page.keyboard.press('Tab');
+      await page.keyboard.press("Tab");
+      await page.keyboard.press("Tab");
 
       // Focus should be visible
-      const focusedElement = page.locator(':focus');
+      const focusedElement = page.locator(":focus");
       await expect(focusedElement).toBeVisible();
     });
 
-    test('should have proper ARIA labels', async ({ page }) => {
+    test("should have proper ARIA labels", async ({ page }) => {
       await page.goto(`${BASE_URL}/projects`);
       await page.waitForSelector('h1:text("Projects & Work")');
 
       // Check for ARIA labels on interactive elements
-      const searchInput = page.locator('input[placeholder="Search projects..."]');
+      const searchInput = page.locator(
+        'input[placeholder="Search projects..."]',
+      );
       if ((await searchInput.count()) > 0) {
         await expect(searchInput).toBeVisible();
       }
 
       // Check for proper heading hierarchy
-      const mainHeading = page.locator('h1').first();
+      const mainHeading = page.locator("h1").first();
       await expect(mainHeading).toBeVisible();
     });
   });

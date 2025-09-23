@@ -1,35 +1,35 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
 import {
   useProjects,
   useDeleteProject,
   useProjectStats,
   parseTechnologies,
   type Project,
-} from '../../hooks/useProjects';
-import ProjectForm from '../../components/ProjectForm';
+} from "../../hooks/useProjects";
+import ProjectForm from "../../components/ProjectForm";
 
-type ViewMode = 'list' | 'create' | 'edit';
+type ViewMode = "list" | "create" | "edit";
 
 const AdminProjects: React.FC = () => {
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [editingProject, setEditingProject] = useState<Project | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
 
   const {
     data: projectsData,
     isLoading,
     error,
   } = useProjects({
-    search: searchQuery.trim() === '' ? undefined : searchQuery,
-    status: ((): 'active' | 'archived' | 'in_progress' | undefined => {
-      if (statusFilter === '' || statusFilter === undefined) return undefined;
+    search: searchQuery.trim() === "" ? undefined : searchQuery,
+    status: ((): "active" | "archived" | "in_progress" | undefined => {
+      if (statusFilter === "" || statusFilter === undefined) return undefined;
       if (
-        statusFilter === 'active' ||
-        statusFilter === 'archived' ||
-        statusFilter === 'in_progress'
+        statusFilter === "active" ||
+        statusFilter === "archived" ||
+        statusFilter === "in_progress"
       ) {
         return statusFilter;
       }
@@ -43,39 +43,39 @@ const AdminProjects: React.FC = () => {
 
   const handleCreateProject = () => {
     setEditingProject(null);
-    setViewMode('create');
+    setViewMode("create");
   };
 
   const handleEditProject = (project: Project) => {
     setEditingProject(project);
-    setViewMode('edit');
+    setViewMode("edit");
   };
 
   const handleDeleteProject = async (project: Project) => {
     if (
       window.confirm(
-        `Are you sure you want to delete "${project.title}"? This action cannot be undone.`
+        `Are you sure you want to delete "${project.title}"? This action cannot be undone.`,
       )
     ) {
       try {
         await deleteMutation.mutateAsync(project.id);
       } catch (error) {
-        console.error('Failed to delete project:', error);
+        console.error("Failed to delete project:", error);
       }
     }
   };
 
   const handleFormSuccess = () => {
-    setViewMode('list');
+    setViewMode("list");
     setEditingProject(null);
   };
 
   const handleFormCancel = () => {
-    setViewMode('list');
+    setViewMode("list");
     setEditingProject(null);
   };
 
-  if (viewMode === 'create' || viewMode === 'edit') {
+  if (viewMode === "create" || viewMode === "edit") {
     return (
       <div className="max-w-7xl mx-auto">
         <ProjectForm
@@ -93,14 +93,23 @@ const AdminProjects: React.FC = () => {
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Project Management</h1>
-            <p className="mt-2 text-gray-600">Create and manage your project portfolio</p>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Project Management
+            </h1>
+            <p className="mt-2 text-gray-600">
+              Create and manage your project portfolio
+            </p>
           </div>
           <button
             onClick={handleCreateProject}
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors"
           >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -135,8 +144,12 @@ const AdminProjects: React.FC = () => {
                   </div>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-500">Total Projects</p>
-                  <p className="text-2xl font-semibold text-gray-900">{stats.total_projects}</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Total Projects
+                  </p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {stats.total_projects}
+                  </p>
                 </div>
               </div>
             </div>
@@ -162,7 +175,9 @@ const AdminProjects: React.FC = () => {
                 </div>
                 <div className="ml-3">
                   <p className="text-sm font-medium text-gray-500">Featured</p>
-                  <p className="text-2xl font-semibold text-gray-900">{stats.featured_projects}</p>
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {stats.featured_projects}
+                  </p>
                 </div>
               </div>
             </div>
@@ -189,7 +204,7 @@ const AdminProjects: React.FC = () => {
                 <div className="ml-3">
                   <p className="text-sm font-medium text-gray-500">Active</p>
                   <p className="text-2xl font-semibold text-gray-900">
-                    {projects.filter(p => p.status === 'active').length}
+                    {projects.filter((p) => p.status === "active").length}
                   </p>
                 </div>
               </div>
@@ -207,7 +222,7 @@ const AdminProjects: React.FC = () => {
               type="text"
               placeholder="Search projects..."
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -216,7 +231,7 @@ const AdminProjects: React.FC = () => {
           <div>
             <select
               value={statusFilter}
-              onChange={e => setStatusFilter(e.target.value)}
+              onChange={(e) => setStatusFilter(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">All Statuses</option>
@@ -249,7 +264,9 @@ const AdminProjects: React.FC = () => {
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Failed to load projects</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Failed to load projects
+            </h3>
             <p className="text-gray-500">
               There was an error loading your projects. Please try again.
             </p>
@@ -271,11 +288,13 @@ const AdminProjects: React.FC = () => {
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No projects found</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No projects found
+            </h3>
             <p className="text-gray-500 mb-4">
               {searchQuery || statusFilter
-                ? 'Try adjusting your search or filters.'
-                : 'Get started by creating your first project.'}
+                ? "Try adjusting your search or filters."
+                : "Get started by creating your first project."}
             </p>
             {!searchQuery && !statusFilter && (
               <button
@@ -289,7 +308,7 @@ const AdminProjects: React.FC = () => {
         ) : (
           <div className="divide-y divide-gray-200">
             <AnimatePresence>
-              {projects.map(project => (
+              {projects.map((project) => (
                 <ProjectListItem
                   key={project.id}
                   project={project}
@@ -326,27 +345,27 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800';
-      case 'in_progress':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'archived':
-        return 'bg-gray-100 text-gray-800';
+      case "active":
+        return "bg-green-100 text-green-800";
+      case "in_progress":
+        return "bg-yellow-100 text-yellow-800";
+      case "archived":
+        return "bg-gray-100 text-gray-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'active':
-        return 'Active';
-      case 'in_progress':
-        return 'In Progress';
-      case 'archived':
-        return 'Archived';
+      case "active":
+        return "Active";
+      case "in_progress":
+        return "In Progress";
+      case "archived":
+        return "Archived";
       default:
-        return 'Unknown';
+        return "Unknown";
     }
   };
 
@@ -390,7 +409,9 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({
           {/* Project Info */}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-lg font-medium text-gray-900 truncate">{project.title}</h3>
+              <h3 className="text-lg font-medium text-gray-900 truncate">
+                {project.title}
+              </h3>
               <span
                 className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}
               >
@@ -404,7 +425,9 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({
             </div>
 
             {project.short_description && (
-              <p className="text-sm text-gray-600 mb-2 line-clamp-2">{project.short_description}</p>
+              <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                {project.short_description}
+              </p>
             )}
 
             {technologies.length > 0 && (
@@ -434,7 +457,12 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({
             target="_blank"
             className="inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
           >
-            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-4 h-4 mr-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -449,7 +477,12 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({
             onClick={onEdit}
             className="inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
           >
-            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-4 h-4 mr-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -465,7 +498,12 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({
             disabled={isDeleting}
             className="inline-flex items-center px-3 py-1 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-4 h-4 mr-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"

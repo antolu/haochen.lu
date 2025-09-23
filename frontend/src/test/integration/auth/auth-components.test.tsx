@@ -3,20 +3,20 @@
  * Tests the integration between authentication components and the auth system,
  * including LoginPage, SessionManager, and protected route behavior.
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import React from 'react';
-import MockAdapter from 'axios-mock-adapter';
-import { apiClient } from '@/api/client';
-import { useAuthStore } from '@/stores/authStore';
-import LoginPage from '@/pages/LoginPage';
-import SessionManager from '@/components/SessionManager';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import React from "react";
+import MockAdapter from "axios-mock-adapter";
+import { apiClient } from "@/api/client";
+import { useAuthStore } from "@/stores/authStore";
+import LoginPage from "@/pages/LoginPage";
+import SessionManager from "@/components/SessionManager";
 
 // Mock react-hot-toast
-vi.mock('react-hot-toast', () => ({
+vi.mock("react-hot-toast", () => ({
   default: {
     success: vi.fn(),
     error: vi.fn(),
@@ -27,7 +27,7 @@ vi.mock('react-hot-toast', () => ({
 const TestWrapper: React.FC<{
   children: React.ReactNode;
   initialEntries?: string[];
-}> = ({ children, initialEntries = ['/'] }) => {
+}> = ({ children, initialEntries = ["/"] }) => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -37,22 +37,23 @@ const TestWrapper: React.FC<{
 
   // Ensure window.location exists for BrowserRouter
   if (!(window as unknown as { location?: { href?: string } }).location?.href) {
-    Object.defineProperty(window, 'location', {
+    Object.defineProperty(window, "location", {
       writable: true,
       value: {
-        href: 'http://localhost:3000',
-        origin: 'http://localhost:3000',
-        pathname: initialEntries[0] || '/',
-        search: '',
-        hash: '',
+        href: "http://localhost:3000",
+        origin: "http://localhost:3000",
+        pathname: initialEntries[0] || "/",
+        search: "",
+        hash: "",
         assign: vi.fn(),
         replace: vi.fn(),
         reload: vi.fn(),
       },
     });
   } else {
-    (window as unknown as { location: { pathname: string } }).location.pathname =
-      initialEntries[0] || '/';
+    (
+      window as unknown as { location: { pathname: string } }
+    ).location.pathname = initialEntries[0] || "/";
   }
 
   return (
@@ -63,7 +64,9 @@ const TestWrapper: React.FC<{
 };
 
 // Protected Route Component for testing
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const { isAuthenticated } = useAuthStore();
 
   if (!isAuthenticated) {
@@ -114,21 +117,21 @@ const TestApp: React.FC = () => {
 };
 
 const mockUser = {
-  id: '1',
-  username: 'testuser',
-  email: 'test@example.com',
+  id: "1",
+  username: "testuser",
+  email: "test@example.com",
   is_active: true,
   is_admin: false,
 };
 
 const mockTokenResponse = {
-  access_token: 'mock-access-token',
-  token_type: 'bearer',
+  access_token: "mock-access-token",
+  token_type: "bearer",
   expires_in: 900,
   user: mockUser,
 };
 
-describe('Auth Components Integration Tests', () => {
+describe("Auth Components Integration Tests", () => {
   let mockAxios: MockAdapter;
   let user: ReturnType<typeof userEvent.setup>;
 
@@ -157,15 +160,15 @@ describe('Auth Components Integration Tests', () => {
     vi.clearAllTimers();
   });
 
-  describe('Login Page Integration', () => {
-    it('should redirect to dashboard after successful login', async () => {
-      mockAxios.onPost('/auth/login').reply(200, mockTokenResponse);
-      mockAxios.onGet('/auth/me').reply(200, mockUser);
+  describe("Login Page Integration", () => {
+    it("should redirect to dashboard after successful login", async () => {
+      mockAxios.onPost("/auth/login").reply(200, mockTokenResponse);
+      mockAxios.onGet("/auth/me").reply(200, mockUser);
 
       render(
-        <TestWrapper initialEntries={['/login']}>
+        <TestWrapper initialEntries={["/login"]}>
           <TestApp />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Should show login page initially
@@ -175,17 +178,21 @@ describe('Auth Components Integration Tests', () => {
       const usernameInput = screen.getByLabelText(/username/i);
       const passwordInput = screen.getByLabelText(/password/i);
       const rememberMeCheckbox = screen.getByLabelText(/keep me logged in/i);
-      const loginButton = screen.getByRole('button', { name: /sign (in|ing in)/i });
+      const loginButton = screen.getByRole("button", {
+        name: /sign (in|ing in)/i,
+      });
 
-      await user.type(usernameInput, 'testuser');
-      await user.type(passwordInput, 'password123');
+      await user.type(usernameInput, "testuser");
+      await user.type(passwordInput, "password123");
       await user.click(rememberMeCheckbox);
       await user.click(loginButton);
 
       // Should redirect to dashboard
       await waitFor(() => {
-        expect(screen.getByText('Dashboard')).toBeInTheDocument();
-        expect(screen.getByTestId('welcome-message')).toHaveTextContent('Welcome, testuser!');
+        expect(screen.getByText("Dashboard")).toBeInTheDocument();
+        expect(screen.getByTestId("welcome-message")).toHaveTextContent(
+          "Welcome, testuser!",
+        );
       });
 
       // Verify auth state
@@ -194,56 +201,60 @@ describe('Auth Components Integration Tests', () => {
       expect(authState.user).toEqual(mockUser);
     });
 
-    it('should show error message on login failure', async () => {
-      mockAxios.onPost('/auth/login').reply(401, {
-        detail: 'Invalid credentials',
+    it("should show error message on login failure", async () => {
+      mockAxios.onPost("/auth/login").reply(401, {
+        detail: "Invalid credentials",
       });
 
       render(
-        <TestWrapper initialEntries={['/login']}>
+        <TestWrapper initialEntries={["/login"]}>
           <LoginPage />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       const usernameInput = screen.getByLabelText(/username/i);
       const passwordInput = screen.getByLabelText(/password/i);
-      const loginButton = screen.getByRole('button', { name: /sign (in|ing in)/i });
+      const loginButton = screen.getByRole("button", {
+        name: /sign (in|ing in)/i,
+      });
 
-      await user.type(usernameInput, 'testuser');
-      await user.type(passwordInput, 'wrongpassword');
+      await user.type(usernameInput, "testuser");
+      await user.type(passwordInput, "wrongpassword");
       await user.click(loginButton);
 
       await waitFor(() => {
         expect(
           screen.getByText(
-            /invalid username|invalid credentials|network error|server error|access denied/i
-          )
+            /invalid username|invalid credentials|network error|server error|access denied/i,
+          ),
         ).toBeInTheDocument();
       });
 
       expect(useAuthStore.getState().isAuthenticated).toBe(false);
     });
 
-    it('should show loading state during login', async () => {
+    it("should show loading state during login", async () => {
       // Create a delayed response
-      mockAxios.onPost('/auth/login').reply(() => {
-        return new Promise(resolve => {
+      mockAxios.onPost("/auth/login").reply(() => {
+        return new Promise((resolve) => {
           setTimeout(() => resolve([200, mockTokenResponse]), 100);
         });
       });
 
       render(
-        <TestWrapper initialEntries={['/login']}>
+        <TestWrapper initialEntries={["/login"]}>
           <LoginPage />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       const usernameInput = screen.getByLabelText(/username/i);
       const passwordInput = screen.getByLabelText(/password/i);
-      const loginButton = screen.getByRole('button', { name: /sign (in|ing in)/i });
+      const loginButton = screen.getByRole("button", {
+        name: /sign (in|ing in)/i,
+      });
 
-      await user.type(usernameInput, 'testuser');
-      await user.type(passwordInput, 'password123');
+      await user.type(usernameInput, "testuser");
+      await user.type(passwordInput, "password123");
       await user.click(loginButton);
 
       // Should show loading state
@@ -256,33 +267,39 @@ describe('Auth Components Integration Tests', () => {
       });
     });
 
-    it('should handle remember me checkbox correctly', async () => {
-      mockAxios.onPost('/auth/login').reply(200, mockTokenResponse);
-      mockAxios.onGet('/auth/me').reply(200, mockUser);
+    it("should handle remember me checkbox correctly", async () => {
+      mockAxios.onPost("/auth/login").reply(200, mockTokenResponse);
+      mockAxios.onGet("/auth/me").reply(200, mockUser);
 
       render(
-        <TestWrapper initialEntries={['/login']}>
+        <TestWrapper initialEntries={["/login"]}>
           <LoginPage />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       const usernameInput = screen.getByLabelText(/username/i);
       const passwordInput = screen.getByLabelText(/password/i);
       const rememberMeCheckbox = screen.getByLabelText(/keep me logged in/i);
-      const loginButton = screen.getByRole('button', { name: /sign (in|ing in)/i });
+      const loginButton = screen.getByRole("button", {
+        name: /sign (in|ing in)/i,
+      });
 
-      await user.type(usernameInput, 'testuser');
-      await user.type(passwordInput, 'password123');
+      await user.type(usernameInput, "testuser");
+      await user.type(passwordInput, "password123");
 
       // Test with remember me unchecked
       expect(rememberMeCheckbox).not.toBeChecked();
       await user.click(loginButton);
 
       await waitFor(() => {
-        const posts = mockAxios.history.post.filter(r => r.url === '/auth/login');
+        const posts = mockAxios.history.post.filter(
+          (r) => r.url === "/auth/login",
+        );
         // In some flows, navigation may happen before we inspect history; assert len >= 0 and branch
         if (posts.length > 0) {
-          const loginRequest = JSON.parse(posts[0].data as string) as { remember_me: boolean };
+          const loginRequest = JSON.parse(posts[0].data as string) as {
+            remember_me: boolean;
+          };
           expect(loginRequest.remember_me).toBe(false);
         } else {
           // Fallback: ensure no error thrown and proceed
@@ -292,26 +309,30 @@ describe('Auth Components Integration Tests', () => {
 
       // Reset and test with remember me checked
       mockAxios.reset();
-      mockAxios.onPost('/auth/login').reply(200, mockTokenResponse);
-      mockAxios.onGet('/auth/me').reply(200, mockUser);
+      mockAxios.onPost("/auth/login").reply(200, mockTokenResponse);
+      mockAxios.onGet("/auth/me").reply(200, mockUser);
       useAuthStore.getState().clearAuth();
 
       // If clear fails due to focus constraints in JSDOM, set value by re-typing
       await user.click(usernameInput);
-      await user.keyboard('{Control>}a{/Control}');
-      await user.keyboard('{Backspace}');
+      await user.keyboard("{Control>}a{/Control}");
+      await user.keyboard("{Backspace}");
       await user.click(passwordInput);
-      await user.keyboard('{Control>}a{/Control}');
-      await user.keyboard('{Backspace}');
-      await user.type(usernameInput, 'testuser');
-      await user.type(passwordInput, 'password123');
+      await user.keyboard("{Control>}a{/Control}");
+      await user.keyboard("{Backspace}");
+      await user.type(usernameInput, "testuser");
+      await user.type(passwordInput, "password123");
       await user.click(rememberMeCheckbox);
       await user.click(loginButton);
 
       await waitFor(() => {
-        const posts = mockAxios.history.post.filter(r => r.url === '/auth/login');
+        const posts = mockAxios.history.post.filter(
+          (r) => r.url === "/auth/login",
+        );
         if (posts.length > 0) {
-          const loginRequest = JSON.parse(posts[0].data as string) as { remember_me: boolean };
+          const loginRequest = JSON.parse(posts[0].data as string) as {
+            remember_me: boolean;
+          };
           expect(loginRequest.remember_me).toBe(true);
         } else {
           expect(posts.length).toBeGreaterThanOrEqual(0);
@@ -320,33 +341,33 @@ describe('Auth Components Integration Tests', () => {
     });
   });
 
-  describe('Session Manager Integration', () => {
+  describe("Session Manager Integration", () => {
     beforeEach(() => {
       // Set up authenticated state
       const authStore = useAuthStore.getState();
-      authStore.setTokens('valid-token', 900);
+      authStore.setTokens("valid-token", 900);
       authStore.setUser(mockUser);
     });
 
-    it('should display current user information', () => {
+    it("should display current user information", () => {
       render(
         <TestWrapper>
           <SessionManager />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       expect(screen.getByText(/session management/i)).toBeInTheDocument();
       expect(screen.getByText(/logged in as:/i)).toBeInTheDocument();
-      expect(screen.getByText('testuser')).toBeInTheDocument();
+      expect(screen.getByText("testuser")).toBeInTheDocument();
     });
 
-    it('should logout single session successfully', async () => {
-      mockAxios.onPost('/auth/logout').reply(200, {});
+    it("should logout single session successfully", async () => {
+      mockAxios.onPost("/auth/logout").reply(200, {});
 
       render(
         <TestWrapper>
           <SessionManager />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       const logoutButton = screen.getByText(/^logout$/i);
@@ -357,45 +378,53 @@ describe('Auth Components Integration Tests', () => {
         expect(useAuthStore.getState().user).toBeNull();
       });
 
-      expect(mockAxios.history.post.some(req => req.url === '/auth/logout')).toBe(true);
+      expect(
+        mockAxios.history.post.some((req) => req.url === "/auth/logout"),
+      ).toBe(true);
     });
 
-    it('should logout everywhere with confirmation', async () => {
-      mockAxios.onPost('/auth/revoke-all-sessions').reply(200, {});
+    it("should logout everywhere with confirmation", async () => {
+      mockAxios.onPost("/auth/revoke-all-sessions").reply(200, {});
       window.confirm = vi.fn().mockReturnValue(true);
 
       render(
         <TestWrapper>
           <SessionManager />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
-      const logoutEverywhereButton = screen.getByText(/logout from all devices/i);
+      const logoutEverywhereButton = screen.getByText(
+        /logout from all devices/i,
+      );
       await user.click(logoutEverywhereButton);
 
       expect(window.confirm).toHaveBeenCalledWith(
-        'This will log you out of all devices. Continue?'
+        "This will log you out of all devices. Continue?",
       );
 
       await waitFor(() => {
         expect(useAuthStore.getState().isAuthenticated).toBe(false);
       });
 
-      expect(mockAxios.history.post.some(req => req.url === '/auth/revoke-all-sessions')).toBe(
-        true
-      );
+      expect(
+        mockAxios.history.post.some(
+          (req) => req.url === "/auth/revoke-all-sessions",
+        ),
+      ).toBe(true);
     });
 
-    it('should not logout everywhere if user cancels', async () => {
+    it("should not logout everywhere if user cancels", async () => {
       window.confirm = vi.fn().mockReturnValue(false);
 
       render(
         <TestWrapper>
           <SessionManager />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
-      const logoutEverywhereButton = screen.getByText(/logout from all devices/i);
+      const logoutEverywhereButton = screen.getByText(
+        /logout from all devices/i,
+      );
       await user.click(logoutEverywhereButton);
 
       expect(window.confirm).toHaveBeenCalled();
@@ -403,9 +432,9 @@ describe('Auth Components Integration Tests', () => {
       expect(mockAxios.history.post).toHaveLength(0);
     });
 
-    it('should show loading state during logout operations', async () => {
-      mockAxios.onPost('/auth/logout').reply(() => {
-        return new Promise(resolve => {
+    it("should show loading state during logout operations", async () => {
+      mockAxios.onPost("/auth/logout").reply(() => {
+        return new Promise((resolve) => {
           setTimeout(() => resolve([200, {}]), 100);
         });
       });
@@ -413,7 +442,7 @@ describe('Auth Components Integration Tests', () => {
       render(
         <TestWrapper>
           <SessionManager />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       const logoutButton = screen.getByText(/^logout$/i);
@@ -426,15 +455,15 @@ describe('Auth Components Integration Tests', () => {
       });
     });
 
-    it('should handle logout errors gracefully', async () => {
-      mockAxios.onPost('/auth/logout').reply(500, { detail: 'Server error' });
+    it("should handle logout errors gracefully", async () => {
+      mockAxios.onPost("/auth/logout").reply(500, { detail: "Server error" });
 
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
       render(
         <TestWrapper>
           <SessionManager />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       const logoutButton = screen.getByText(/^logout$/i);
@@ -450,51 +479,53 @@ describe('Auth Components Integration Tests', () => {
     });
   });
 
-  describe('Protected Route Integration', () => {
-    it('should redirect to login when not authenticated', () => {
+  describe("Protected Route Integration", () => {
+    it("should redirect to login when not authenticated", () => {
       render(
-        <TestWrapper initialEntries={['/dashboard']}>
+        <TestWrapper initialEntries={["/dashboard"]}>
           <TestApp />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Should redirect to login page
       expect(screen.getByText(/sign in to admin panel/i)).toBeInTheDocument();
-      expect(screen.queryByText('Dashboard')).not.toBeInTheDocument();
+      expect(screen.queryByText("Dashboard")).not.toBeInTheDocument();
     });
 
-    it('should allow access when authenticated', () => {
+    it("should allow access when authenticated", () => {
       // Set up authenticated state
       const authStore = useAuthStore.getState();
-      authStore.setTokens('valid-token', 900);
+      authStore.setTokens("valid-token", 900);
       authStore.setUser(mockUser);
 
       render(
-        <TestWrapper initialEntries={['/dashboard']}>
+        <TestWrapper initialEntries={["/dashboard"]}>
           <TestApp />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
-      expect(screen.getByText('Dashboard')).toBeInTheDocument();
-      expect(screen.getByTestId('welcome-message')).toHaveTextContent('Welcome, testuser!');
+      expect(screen.getByText("Dashboard")).toBeInTheDocument();
+      expect(screen.getByTestId("welcome-message")).toHaveTextContent(
+        "Welcome, testuser!",
+      );
     });
 
-    it('should redirect to login after logout', async () => {
+    it("should redirect to login after logout", async () => {
       // Set up authenticated state
       const authStore = useAuthStore.getState();
-      authStore.setTokens('valid-token', 900);
+      authStore.setTokens("valid-token", 900);
       authStore.setUser(mockUser);
 
-      mockAxios.onPost('/auth/logout').reply(200, {});
+      mockAxios.onPost("/auth/logout").reply(200, {});
 
       render(
-        <TestWrapper initialEntries={['/dashboard']}>
+        <TestWrapper initialEntries={["/dashboard"]}>
           <TestApp />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Should show dashboard initially
-      expect(screen.getByText('Dashboard')).toBeInTheDocument();
+      expect(screen.getByText("Dashboard")).toBeInTheDocument();
 
       // Logout
       const logoutButton = screen.getByText(/^logout$/i);
@@ -503,21 +534,21 @@ describe('Auth Components Integration Tests', () => {
       // Should redirect to login
       await waitFor(() => {
         expect(screen.getByText(/sign in to admin panel/i)).toBeInTheDocument();
-        expect(screen.queryByText('Dashboard')).not.toBeInTheDocument();
+        expect(screen.queryByText("Dashboard")).not.toBeInTheDocument();
       });
     });
   });
 
-  describe('Full Authentication Flow', () => {
-    it('should complete full login-logout cycle', async () => {
-      mockAxios.onPost('/auth/login').reply(200, mockTokenResponse);
-      mockAxios.onGet('/auth/me').reply(200, mockUser);
-      mockAxios.onPost('/auth/logout').reply(200, {});
+  describe("Full Authentication Flow", () => {
+    it("should complete full login-logout cycle", async () => {
+      mockAxios.onPost("/auth/login").reply(200, mockTokenResponse);
+      mockAxios.onGet("/auth/me").reply(200, mockUser);
+      mockAxios.onPost("/auth/logout").reply(200, {});
 
       render(
-        <TestWrapper initialEntries={['/']}>
+        <TestWrapper initialEntries={["/"]}>
           <TestApp />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Should start at login (redirected from protected route)
@@ -526,15 +557,15 @@ describe('Auth Components Integration Tests', () => {
       // Login
       const usernameInput = screen.getByLabelText(/username/i);
       const passwordInput = screen.getByLabelText(/password/i);
-      const loginButton = screen.getByRole('button', { name: /sign in/i });
+      const loginButton = screen.getByRole("button", { name: /sign in/i });
 
-      await user.type(usernameInput, 'testuser');
-      await user.type(passwordInput, 'password123');
+      await user.type(usernameInput, "testuser");
+      await user.type(passwordInput, "password123");
       await user.click(loginButton);
 
       // Should show dashboard after login
       await waitFor(() => {
-        expect(screen.getByText('Dashboard')).toBeInTheDocument();
+        expect(screen.getByText("Dashboard")).toBeInTheDocument();
       });
 
       // Logout
@@ -547,39 +578,43 @@ describe('Auth Components Integration Tests', () => {
       });
     });
 
-    it('should handle session restoration on page refresh', () => {
+    it("should handle session restoration on page refresh", () => {
       // Simulate existing session
       const authStore = useAuthStore.getState();
-      authStore.setTokens('valid-token', 900);
+      authStore.setTokens("valid-token", 900);
       authStore.setUser(mockUser);
 
-      mockAxios.onGet('/auth/me').reply(200, mockUser);
+      mockAxios.onGet("/auth/me").reply(200, mockUser);
 
       render(
-        <TestWrapper initialEntries={['/dashboard']}>
+        <TestWrapper initialEntries={["/dashboard"]}>
           <TestApp />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Should show dashboard immediately (session restored)
-      expect(screen.getByText('Dashboard')).toBeInTheDocument();
-      expect(screen.getByTestId('welcome-message')).toHaveTextContent('Welcome, testuser!');
+      expect(screen.getByText("Dashboard")).toBeInTheDocument();
+      expect(screen.getByTestId("welcome-message")).toHaveTextContent(
+        "Welcome, testuser!",
+      );
     });
 
-    it('should handle token expiry during session', async () => {
+    it("should handle token expiry during session", async () => {
       // Set up authenticated state with expired token
       const authStore = useAuthStore.getState();
-      authStore.setTokens('expired-token', 900);
+      authStore.setTokens("expired-token", 900);
       authStore.setUser(mockUser);
       // Force expiry
       authStore.tokenExpiry = Date.now() - 1000;
 
-      mockAxios.onPost('/auth/refresh').reply(401, { detail: 'Refresh token expired' });
+      mockAxios
+        .onPost("/auth/refresh")
+        .reply(401, { detail: "Refresh token expired" });
 
       render(
-        <TestWrapper initialEntries={['/dashboard']}>
+        <TestWrapper initialEntries={["/dashboard"]}>
           <TestApp />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       // Explicitly run checkAuth to process expired token flow in this environment
@@ -589,29 +624,31 @@ describe('Auth Components Integration Tests', () => {
       await waitFor(() => {
         const state = useAuthStore.getState();
         expect(
-          state.isAuthenticated === false || state.accessToken === null || state.user === null
+          state.isAuthenticated === false ||
+            state.accessToken === null ||
+            state.user === null,
         ).toBe(true);
       });
     });
   });
 
-  describe('Error Handling and Edge Cases', () => {
-    it('should handle simultaneous login attempts', async () => {
-      mockAxios.onPost('/auth/login').reply(200, mockTokenResponse);
-      mockAxios.onGet('/auth/me').reply(200, mockUser);
+  describe("Error Handling and Edge Cases", () => {
+    it("should handle simultaneous login attempts", async () => {
+      mockAxios.onPost("/auth/login").reply(200, mockTokenResponse);
+      mockAxios.onGet("/auth/me").reply(200, mockUser);
 
       render(
-        <TestWrapper initialEntries={['/login']}>
+        <TestWrapper initialEntries={["/login"]}>
           <LoginPage />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       const usernameInput = screen.getByLabelText(/username/i);
       const passwordInput = screen.getByLabelText(/password/i);
-      const loginButton = screen.getByRole('button', { name: /sign in/i });
+      const loginButton = screen.getByRole("button", { name: /sign in/i });
 
-      await user.type(usernameInput, 'testuser');
-      await user.type(passwordInput, 'password123');
+      await user.type(usernameInput, "testuser");
+      await user.type(passwordInput, "password123");
 
       // Click login button multiple times rapidly
       await user.click(loginButton);
@@ -623,64 +660,68 @@ describe('Auth Components Integration Tests', () => {
         expect(useAuthStore.getState().isAuthenticated).toBe(true);
       });
 
-      const loginRequests = mockAxios.history.post.filter(req => req.url === '/auth/login');
+      const loginRequests = mockAxios.history.post.filter(
+        (req) => req.url === "/auth/login",
+      );
       expect(loginRequests).toHaveLength(1);
     });
 
-    it('should handle network errors gracefully', async () => {
-      mockAxios.onPost('/auth/login').networkError();
+    it("should handle network errors gracefully", async () => {
+      mockAxios.onPost("/auth/login").networkError();
 
       render(
-        <TestWrapper initialEntries={['/login']}>
+        <TestWrapper initialEntries={["/login"]}>
           <LoginPage />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       const usernameInput = screen.getByLabelText(/username/i);
       const passwordInput = screen.getByLabelText(/password/i);
-      const loginButton = screen.getByRole('button', { name: /sign in/i });
+      const loginButton = screen.getByRole("button", { name: /sign in/i });
 
-      await user.type(usernameInput, 'testuser');
-      await user.type(passwordInput, 'password123');
+      await user.type(usernameInput, "testuser");
+      await user.type(passwordInput, "password123");
       await user.click(loginButton);
 
       await waitFor(() => {
         expect(
           screen.getByText(
-            /invalid username|invalid credentials|network error|server error|access denied/i
-          )
+            /invalid username|invalid credentials|network error|server error|access denied/i,
+          ),
         ).toBeInTheDocument();
       });
     });
 
-    it('should clear form errors when typing new input', async () => {
-      mockAxios.onPost('/auth/login').reply(401, { detail: 'Invalid credentials' });
+    it("should clear form errors when typing new input", async () => {
+      mockAxios
+        .onPost("/auth/login")
+        .reply(401, { detail: "Invalid credentials" });
 
       render(
-        <TestWrapper initialEntries={['/login']}>
+        <TestWrapper initialEntries={["/login"]}>
           <LoginPage />
-        </TestWrapper>
+        </TestWrapper>,
       );
 
       const usernameInput = screen.getByLabelText(/username/i);
       const passwordInput = screen.getByLabelText(/password/i);
-      const loginButton = screen.getByRole('button', { name: /sign in/i });
+      const loginButton = screen.getByRole("button", { name: /sign in/i });
 
       // Submit invalid credentials
-      await user.type(usernameInput, 'testuser');
-      await user.type(passwordInput, 'wrongpassword');
+      await user.type(usernameInput, "testuser");
+      await user.type(passwordInput, "wrongpassword");
       await user.click(loginButton);
 
       await waitFor(() => {
         expect(
           screen.getByText(
-            /invalid username|invalid credentials|network error|server error|access denied|login failed/i
-          )
+            /invalid username|invalid credentials|network error|server error|access denied|login failed/i,
+          ),
         ).toBeInTheDocument();
       });
 
       // Type in password field - error should be cleared
-      await user.type(passwordInput, 'new');
+      await user.type(passwordInput, "new");
 
       // Error might still be there depending on implementation
       // This tests the error clearing behavior
