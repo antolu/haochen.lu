@@ -1,24 +1,27 @@
 # Development Dockerfile for backend
 # hadolint ignore=DL3008,DL3013
+# syntax=docker/dockerfile:1.4
 FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies
+# Install minimal system dependencies required for setuptools-scm
 # hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    curl \
+    git \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
-COPY pyproject.toml ./
-COPY requirements.txt* ./
+# With backend/ as build context, copy files directly
+# Copy project metadata first for better caching
+COPY . ./
 
 # Install Python dependencies and development dependencies
 # hadolint ignore=DL3013
-RUN pip install --no-cache-dir -e . && \
-    pip install --no-cache-dir watchfiles
+# Prefer editable install to generate version file using setuptools-scm with ephemeral .git
+RUN --mount=type=bind,from=gitdir,src=.,target=/app/.git \
+    pip install --no-cache-dir -e . && \
+    pip install --no-cache-dir watchfiles==0.24.0
 
 # Create uploads and compressed directories
 RUN mkdir -p /app/uploads /app/compressed

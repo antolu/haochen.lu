@@ -25,6 +25,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
+      additional_contexts:
+        gitdir: ./.git
     volumes:
       # Mount source code for live reload
       - ./backend:/app
