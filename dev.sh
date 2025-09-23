@@ -48,9 +48,9 @@ start_dev() {
     # Stop any existing containers
     docker compose -f docker-compose.dev.yml down
 
-    # Build development images
+    # Build development images (BuildKit on, provenance off for speed)
     print_status "Building development images..."
-    docker compose -f docker-compose.dev.yml build
+    DOCKER_BUILDKIT=1 BUILDKIT_PROVENANCE=0 docker compose -f docker-compose.dev.yml build
 
     # Start development environment
     print_status "Starting containers..."
