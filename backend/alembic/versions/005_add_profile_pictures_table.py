@@ -1,6 +1,6 @@
 """Add profile pictures table
 
-Revision ID: 6d97478363ce
+Revision ID: 005_add_profile_pictures_table
 Revises: 004_add_alias_tables
 Create Date: 2025-09-22 21:38:20.120181
 
