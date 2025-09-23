@@ -8,6 +8,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile.nginx.dev
+    image: antonlu/arcadia-nginx:dev
     ports:
       - "80:80"
       - "443:443"
@@ -27,6 +28,7 @@ services:
       dockerfile: Dockerfile.dev
       additional_contexts:
         gitdir: ./.git
+    image: antonlu/arcadia-backend:dev
     volumes:
       # Mount source code for live reload
       - ./backend:/app
@@ -71,6 +73,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
+    image: antonlu/arcadia-frontend:dev
     volumes:
       # Mount source code for live reload
       - ./frontend:/app

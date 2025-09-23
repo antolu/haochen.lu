@@ -6,9 +6,10 @@ import {
   PencilSquareIcon,
   DocumentTextIcon,
   EyeIcon,
+  SparklesIcon,
 } from "@heroicons/react/24/outline";
 
-import { photos, projects, blog } from "../../api/client";
+import { photos, projects, blog, heroImages } from "../../api/client";
 import type { PhotoStatsSummary, ProjectStatsSummary } from "../../types";
 
 const AdminDashboard: React.FC = () => {
@@ -27,6 +28,11 @@ const AdminDashboard: React.FC = () => {
     queryFn: blog.getStats,
   });
 
+  const { data: heroImagesList } = useQuery({
+    queryKey: ["admin", "hero-images"],
+    queryFn: heroImages.list,
+  });
+
   const stats = [
     {
       name: "Total Photos",
@@ -39,6 +45,12 @@ const AdminDashboard: React.FC = () => {
       stat: photoStats?.featured_photos ?? 0,
       icon: EyeIcon,
       color: "bg-green-500",
+    },
+    {
+      name: "Hero Images",
+      stat: heroImagesList?.length ?? 0,
+      icon: SparklesIcon,
+      color: "bg-pink-500",
     },
     {
       name: "Projects",
@@ -105,6 +117,21 @@ const AdminDashboard: React.FC = () => {
                 </h3>
                 <p className="text-sm text-gray-500">
                   Add new photos to gallery
+                </p>
+              </div>
+            </a>
+
+            <a
+              href="/admin/hero-images"
+              className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-primary-300 hover:shadow-md transition-all duration-200"
+            >
+              <SparklesIcon className="h-8 w-8 text-primary-600 mr-3" />
+              <div>
+                <h3 className="text-sm font-medium text-gray-900">
+                  Hero Images
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Manage homepage hero images
                 </p>
               </div>
             </a>
