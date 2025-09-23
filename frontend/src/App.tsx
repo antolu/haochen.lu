@@ -19,6 +19,7 @@ import LoginPage from './pages/LoginPage';
 // Admin pages
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminPhotos from './pages/admin/AdminPhotos';
+import AdminProfilePictures from './pages/admin/AdminProfilePictures';
 import AdminProjects from './pages/admin/AdminProjects';
 import AdminBlog from './pages/admin/AdminBlog';
 import AdminCameraAliases from './pages/admin/AdminCameraAliases';
@@ -67,6 +68,7 @@ function App() {
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} />
               <Route path="photos" element={<AdminPhotos />} />
+              <Route path="profile-pictures" element={<AdminProfilePictures />} />
               <Route path="projects" element={<AdminProjects />} />
               <Route path="blog" element={<AdminBlog />} />
               <Route path="camera-aliases" element={<AdminCameraAliases />} />

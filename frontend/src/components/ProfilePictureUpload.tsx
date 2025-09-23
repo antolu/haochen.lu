@@ -1,0 +1,375 @@
+import React, { useState, useRef, useCallback } from 'react';
+import ReactCrop, { type Crop, type PixelCrop, centerCrop, makeAspectCrop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
+
+export interface ProfilePictureUploadProps {
+  onUpload: (file: File, title?: string) => Promise<void>;
+  onCancel: () => void;
+  isUploading?: boolean;
+}
+
+// Helper function to get square crop
+function getCenterSquareCrop(mediaWidth: number, mediaHeight: number): Crop {
+  const size = Math.min(mediaWidth, mediaHeight);
+  return centerCrop(
+    makeAspectCrop(
+      {
+        unit: 'px',
+        width: size,
+      },
+      1, // 1:1 aspect ratio (square)
+      mediaWidth,
+      mediaHeight
+    ),
+    mediaWidth,
+    mediaHeight
+  );
+}
+
+// Convert canvas to File
+function canvasToFile(canvas: HTMLCanvasElement, fileName: string): Promise<File> {
+  return new Promise(resolve => {
+    canvas.toBlob(
+      blob => {
+        if (blob) {
+          const file = new File([blob], fileName, { type: 'image/jpeg' });
+          resolve(file);
+        }
+      },
+      'image/jpeg',
+      0.9
+    );
+  });
+}
+
+const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
+  onUpload,
+  onCancel,
+  isUploading = false,
+}) => {
+  const [imgSrc, setImgSrc] = useState<string>('');
+  const [crop, setCrop] = useState<Crop>();
+  const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
+  const [title, setTitle] = useState<string>('');
+  const [originalFile, setOriginalFile] = useState<File | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const imgRef = useRef<HTMLImageElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const selectFile = useCallback((file: File) => {
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file.');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      // 10MB limit
+      alert('File size must be less than 10MB.');
+      return;
+    }
+
+    setOriginalFile(file);
+
+    const reader = new FileReader();
+    const onLoadHandler = () => {
+      const result = reader.result;
+      setImgSrc(typeof result === 'string' ? result : '');
+    };
+    // Support both addEventListener and onload assignment for test environments
+    if (
+      typeof (reader as unknown as { addEventListener?: unknown }).addEventListener === 'function'
+    ) {
+      (
+        reader as unknown as { addEventListener: (type: string, cb: () => void) => void }
+      ).addEventListener('load', onLoadHandler);
+    } else {
+      // Fallback used by jsdom/vitest FileReader mocks
+      (reader as unknown as { onload: (() => void) | null }).onload = onLoadHandler;
+    }
+    reader.readAsDataURL(file);
+  }, []);
+
+  const onFileSelect = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        selectFile(file);
+      }
+    },
+    [selectFile]
+  );
+
+  const onImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
+    const { width, height } = e.currentTarget;
+    const newCrop = getCenterSquareCrop(width, height);
+    setCrop(newCrop);
+    setCompletedCrop(newCrop as PixelCrop);
+  }, []);
+
+  const onDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  }, []);
+
+  const onDragLeave = useCallback(() => {
+    setIsDragOver(false);
+  }, []);
+
+  const onDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragOver(false);
+
+      const files = Array.from(e.dataTransfer.files);
+      const imageFile = files.find(file => file.type.startsWith('image/'));
+
+      if (imageFile) {
+        selectFile(imageFile);
+      }
+    },
+    [selectFile]
+  );
+
+  const getCroppedImg = useCallback(async (): Promise<File | null> => {
+    const image = imgRef.current;
+    const pixelCrop = completedCrop;
+
+    if (!image || !pixelCrop || !originalFile) {
+      return null;
+    }
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) {
+      return null;
+    }
+
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
+
+    // Set canvas size to the crop size
+    canvas.width = pixelCrop.width;
+    canvas.height = pixelCrop.height;
+
+    // Draw the cropped image
+    ctx.drawImage(
+      image,
+      pixelCrop.x * scaleX,
+      pixelCrop.y * scaleY,
+      pixelCrop.width * scaleX,
+      pixelCrop.height * scaleY,
+      0,
+      0,
+      pixelCrop.width,
+      pixelCrop.height
+    );
+
+    // Convert canvas to file
+    const fileName = `profile-${Date.now()}.jpg`;
+    return canvasToFile(canvas, fileName);
+  }, [completedCrop, originalFile]);
+
+  const handleUpload = useCallback(async () => {
+    const croppedFile = await getCroppedImg();
+    if (croppedFile) {
+      await onUpload(croppedFile, title || 'Profile Picture');
+    }
+  }, [getCroppedImg, onUpload, title]);
+
+  const reset = useCallback(() => {
+    setImgSrc('');
+    setCrop(undefined);
+    setCompletedCrop(undefined);
+    setTitle('');
+    setOriginalFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }, []);
+
+  const handleCancel = useCallback(() => {
+    reset();
+    onCancel();
+  }, [reset, onCancel]);
+
+  return (
+    <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl mx-auto">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Upload Profile Picture</h2>
+        <p className="text-gray-600">
+          Select an image and crop it to a square. The cropped image will be used as your profile
+          picture.
+        </p>
+      </div>
+
+      {!imgSrc ? (
+        <div className="space-y-4">
+          {/* File Input */}
+          <div
+            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+              isDragOver ? 'border-blue-400 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
+            }`}
+            onDragOver={onDragOver}
+            onDragLeave={onDragLeave}
+            onDrop={onDrop}
+          >
+            <div className="space-y-4">
+              <div className="mx-auto w-12 h-12 text-gray-400">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <p className="text-gray-600">
+                  Drag and drop an image here, or{' '}
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="text-blue-600 hover:text-blue-700 underline"
+                  >
+                    click to select
+                  </button>
+                </p>
+                <p className="text-sm text-gray-500 mt-1">PNG, JPG, JPEG up to 10MB</p>
+              </div>
+            </div>
+          </div>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={onFileSelect}
+            className="hidden"
+          />
+
+          <div className="flex justify-end space-x-3">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {/* Title Input */}
+          <div>
+            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+              Title (optional)
+            </label>
+            <input
+              type="text"
+              id="title"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              placeholder="Profile Picture"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          {/* Crop Area */}
+          <div className="border border-gray-300 rounded-lg overflow-hidden">
+            <ReactCrop
+              crop={crop}
+              onChange={(_, percentCrop) => setCrop(percentCrop)}
+              onComplete={c => setCompletedCrop(c)}
+              aspect={1} // Square aspect ratio
+              minWidth={100}
+              minHeight={100}
+            >
+              <img
+                ref={imgRef}
+                alt="Crop preview"
+                src={imgSrc}
+                onLoad={onImageLoad}
+                className="max-h-96 w-auto"
+              />
+            </ReactCrop>
+          </div>
+
+          {/* Preview */}
+          {completedCrop && (
+            <div className="text-center">
+              <p className="text-sm text-gray-600 mb-2">Preview (cropped area):</p>
+              <div className="inline-block border-2 border-gray-300 rounded-full overflow-hidden">
+                <canvas
+                  ref={canvas => {
+                    if (canvas && imgRef.current && completedCrop) {
+                      const ctx = canvas.getContext('2d');
+                      if (ctx) {
+                        const image = imgRef.current;
+                        const scaleX = image.naturalWidth / image.width;
+                        const scaleY = image.naturalHeight / image.height;
+
+                        canvas.width = 120;
+                        canvas.height = 120;
+
+                        ctx.drawImage(
+                          image,
+                          completedCrop.x * scaleX,
+                          completedCrop.y * scaleY,
+                          completedCrop.width * scaleX,
+                          completedCrop.height * scaleY,
+                          0,
+                          0,
+                          120,
+                          120
+                        );
+                      }
+                    }
+                  }}
+                  className="block"
+                  width={120}
+                  height={120}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex justify-end space-x-3">
+            <button
+              type="button"
+              onClick={handleCancel}
+              disabled={isUploading}
+              className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                reset();
+                fileInputRef.current?.click();
+              }}
+              disabled={isUploading}
+              className="px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors disabled:opacity-50"
+            >
+              Choose Different Image
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleUpload()}
+              disabled={isUploading || !completedCrop}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isUploading ? 'Uploading...' : 'Upload Profile Picture'}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ProfilePictureUpload;

@@ -222,3 +222,6 @@ export interface ApiError {
   detail: string;
   status?: number;
 }
+
+// Re-export profile picture types
+export * from './profilePicture';

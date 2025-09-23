@@ -19,6 +19,10 @@ import type {
   ContentUpdate,
   ContentListResponse,
   ContentKeyValue,
+  ProfilePicture,
+  ProfilePictureListResponse,
+  ActiveProfilePictureResponse,
+  ProfilePictureUploadData,
 } from '../types';
 
 const API_BASE_URL: string = (import.meta.env.VITE_API_URL as string | undefined) ?? '/api';
@@ -78,7 +82,9 @@ apiClient.interceptors.request.use(config => {
 apiClient.interceptors.response.use(
   response => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config as AxiosRequestConfig & {
+      _retry?: boolean;
+    };
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
@@ -506,6 +512,64 @@ export const content = {
 
   delete: async (id: string): Promise<void> => {
     await apiClient.delete(`/content/${id}`);
+  },
+};
+
+// Profile Pictures API
+export const profilePictures = {
+  list: async (
+    params: {
+      page?: number;
+      per_page?: number;
+    } = {}
+  ): Promise<ProfilePictureListResponse> => {
+    const response = await apiClient.get<ProfilePictureListResponse>('/profile-pictures', {
+      params,
+    });
+    return response.data;
+  },
+
+  getActive: async (): Promise<ActiveProfilePictureResponse> => {
+    const response = await apiClient.get<ActiveProfilePictureResponse>('/profile-pictures/active');
+    return response.data;
+  },
+
+  getById: async (id: string): Promise<ProfilePicture> => {
+    const response = await apiClient.get<ProfilePicture>(`/profile-pictures/${id}`);
+    return response.data;
+  },
+
+  upload: async (uploadData: ProfilePictureUploadData): Promise<ProfilePicture> => {
+    const formData = new FormData();
+    formData.append('file', uploadData.file);
+
+    if (uploadData.title) {
+      formData.append('title', uploadData.title);
+    }
+
+    const response = await apiClient.post<ProfilePicture>('/profile-pictures', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  activate: async (id: string): Promise<ProfilePicture> => {
+    const response = await apiClient.put<ProfilePicture>(`/profile-pictures/${id}/activate`);
+    return response.data;
+  },
+
+  update: async (
+    id: string,
+    updates: { title?: string; is_active?: boolean }
+  ): Promise<ProfilePicture> => {
+    const response = await apiClient.put<ProfilePicture>(`/profile-pictures/${id}`, updates);
+    return response.data;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete(`/profile-pictures/${id}`);
   },
 };
 

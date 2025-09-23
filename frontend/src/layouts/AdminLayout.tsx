@@ -9,6 +9,7 @@ import {
   DocumentTextIcon,
   ArrowRightOnRectangleIcon,
   CameraIcon,
+  UserCircleIcon,
 } from '@heroicons/react/24/outline';
 
 import { useAuthStore } from '../stores/authStore';
@@ -30,6 +31,11 @@ const AdminLayout: React.FC = () => {
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: HomeIcon },
     { name: 'Photos', href: '/admin/photos', icon: PhotoIcon },
+    {
+      name: 'Profile Pictures',
+      href: '/admin/profile-pictures',
+      icon: UserCircleIcon,
+    },
     { name: 'Projects', href: '/admin/projects', icon: FolderIcon },
     { name: 'Blog', href: '/admin/blog', icon: PencilSquareIcon },
     { name: 'Camera Aliases', href: '/admin/camera-aliases', icon: CameraIcon },

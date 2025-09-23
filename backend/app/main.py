@@ -14,6 +14,7 @@ from app.api import (
     lens_aliases,
     locations,
     photos,
+    profile_pictures,
     projects,
     subapp_integration,
     subapps,
@@ -67,6 +68,9 @@ app.add_middleware(
 # Routes
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(photos.router, prefix="/photos", tags=["photos"])
+app.include_router(
+    profile_pictures.router, prefix="/profile-pictures", tags=["profile-pictures"]
+)
 app.include_router(projects.router, prefix="/projects", tags=["projects"])
 app.include_router(blog.router, prefix="/blog", tags=["blog"])
 app.include_router(subapps.router, prefix="/subapps", tags=["subapps"])

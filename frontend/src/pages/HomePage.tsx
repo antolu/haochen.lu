@@ -7,6 +7,7 @@ import { photos, projects, content } from '../api/client';
 import type { Photo } from '../types';
 import { formatDate } from '../utils/dateFormat';
 import { selectOptimalImage, ImageUseCase } from '../utils/imageUtils';
+import ProfilePictureDisplay from '../components/ProfilePictureDisplay';
 
 const HomePage: React.FC = () => {
   const { data: latestPhotos } = useQuery({
@@ -218,10 +219,12 @@ const HomePage: React.FC = () => {
               viewport={{ once: true }}
               className="relative"
             >
-              <div className="aspect-square bg-gradient-to-br from-primary-600 to-primary-800 rounded-2xl shadow-xl">
-                <div className="flex items-center justify-center h-full text-white text-6xl font-light">
-                  AL
-                </div>
+              <div className="aspect-square rounded-2xl shadow-xl overflow-hidden">
+                <ProfilePictureDisplay
+                  className="w-full h-full rounded-2xl"
+                  fallback="AL"
+                  size="large"
+                />
               </div>
             </motion.div>
           </div>
