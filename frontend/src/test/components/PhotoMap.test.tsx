@@ -4,6 +4,9 @@ import { userEvent } from "@testing-library/user-event";
 import PhotoMap from "../../components/PhotoMap";
 import type { Photo } from "../../types";
 
+// Mock leaflet.markercluster
+vi.mock("leaflet.markercluster", () => ({}));
+
 // Mock Leaflet and react-leaflet
 vi.mock("leaflet", () => {
   const mockLatLngBounds = vi.fn(() => ({
@@ -29,16 +32,31 @@ vi.mock("leaflet", () => {
 
   const mockPoint = vi.fn((x: number, y: number) => ({ x, y }));
 
+  const mockMarker = vi.fn((latlng: [number, number], options?: any) => ({
+    on: vi.fn(),
+    bindPopup: vi.fn(),
+    options: options || {},
+  }));
+
+  const mockMarkerClusterGroup = vi.fn(() => ({
+    addLayer: vi.fn(),
+    on: vi.fn(),
+  }));
+
   return {
     divIcon: mockDivIcon,
     latLngBounds: mockLatLngBounds,
     popup: mockPopup,
     point: mockPoint,
+    marker: mockMarker,
+    markerClusterGroup: mockMarkerClusterGroup,
     default: {
       divIcon: mockDivIcon,
       latLngBounds: mockLatLngBounds,
       popup: mockPopup,
       point: mockPoint,
+      marker: mockMarker,
+      markerClusterGroup: mockMarkerClusterGroup,
     },
   };
 });
@@ -85,7 +103,13 @@ vi.mock("react-leaflet", () => {
     Popup: ({ children }: { children?: React.ReactNode }) => (
       <div data-testid="photo-popup">{children}</div>
     ),
-    useMap: () => ({ fitBounds: vi.fn(), on: vi.fn(), off: vi.fn() }),
+    useMap: () => ({
+      fitBounds: vi.fn(),
+      on: vi.fn(),
+      off: vi.fn(),
+      addLayer: vi.fn(),
+      removeLayer: vi.fn(),
+    }),
     // Provide a minimal context-like object for components that call useLeafletContext internally
     useLeafletContext: () => ({
       map: {},
