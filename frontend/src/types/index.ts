@@ -223,5 +223,56 @@ export interface ApiError {
   status?: number;
 }
 
+// Hero Image types
+export interface FocalPoint {
+  x: number;
+  y: number;
+}
+
+export interface ResponsiveFocalPoints {
+  mobile?: FocalPoint;
+  tablet?: FocalPoint;
+  desktop?: FocalPoint;
+}
+
+export interface HeroImage {
+  id: string;
+  title: string;
+  photo_id: string;
+  focal_point_x: number;
+  focal_point_y: number;
+  focal_points_responsive?: ResponsiveFocalPoints;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  photo: Photo;
+}
+
+export interface HeroImageCreate {
+  title: string;
+  photo_id: string;
+  focal_point_x?: number;
+  focal_point_y?: number;
+  focal_points_responsive?: ResponsiveFocalPoints;
+}
+
+export interface HeroImageUpdate {
+  title?: string;
+  focal_point_x?: number;
+  focal_point_y?: number;
+  focal_points_responsive?: ResponsiveFocalPoints;
+}
+
+export interface HeroImageFocalPointUpdate {
+  focal_point_x: number;
+  focal_point_y: number;
+  focal_points_responsive?: ResponsiveFocalPoints;
+}
+
+export interface HeroImageListResponse {
+  hero_images: HeroImage[];
+  total: number;
+}
+
 // Re-export profile picture types
 export * from "./profilePicture";

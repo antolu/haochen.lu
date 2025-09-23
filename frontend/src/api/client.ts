@@ -23,6 +23,10 @@ import type {
   ProfilePictureListResponse,
   ActiveProfilePictureResponse,
   ProfilePictureUploadData,
+  HeroImage,
+  HeroImageCreate,
+  HeroImageUpdate,
+  HeroImageFocalPointUpdate,
 } from "../types";
 
 const API_BASE_URL: string =
@@ -637,6 +641,68 @@ export const profilePictures = {
 
   delete: async (id: string): Promise<void> => {
     await apiClient.delete(`/profile-pictures/${id}`);
+  },
+};
+
+// Hero Images API
+export const heroImages = {
+  list: async (): Promise<HeroImage[]> => {
+    const response = await apiClient.get<HeroImage[]>("/hero-images");
+    return response.data;
+  },
+
+  getActive: async (): Promise<HeroImage | null> => {
+    try {
+      const response = await apiClient.get<HeroImage>("/hero-images/active");
+      return response.data;
+    } catch {
+      // Return null if no active hero image
+      return null;
+    }
+  },
+
+  getById: async (id: string): Promise<HeroImage> => {
+    const response = await apiClient.get<HeroImage>(`/hero-images/${id}`);
+    return response.data;
+  },
+
+  create: async (heroImageData: HeroImageCreate): Promise<HeroImage> => {
+    const response = await apiClient.post<HeroImage>(
+      "/hero-images",
+      heroImageData,
+    );
+    return response.data;
+  },
+
+  update: async (id: string, updates: HeroImageUpdate): Promise<HeroImage> => {
+    const response = await apiClient.put<HeroImage>(
+      `/hero-images/${id}`,
+      updates,
+    );
+    return response.data;
+  },
+
+  updateFocalPoints: async (
+    id: string,
+    focalPointUpdate: HeroImageFocalPointUpdate,
+  ): Promise<HeroImage> => {
+    const response = await apiClient.put<HeroImage>(
+      `/hero-images/${id}/focal-points`,
+      focalPointUpdate,
+    );
+    return response.data;
+  },
+
+  activate: async (id: string): Promise<HeroImage> => {
+    const response = await apiClient.post<HeroImage>(
+      `/hero-images/${id}/activate`,
+      {},
+    );
+    return response.data;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete(`/hero-images/${id}`);
   },
 };
 
