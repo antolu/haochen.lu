@@ -16,9 +16,9 @@ export const createAuthQueryClient = () => {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        retry: (failureCount, error: AxiosError) => {
+        retry: (failureCount, error) => {
           // Don't retry on authentication errors
-          if (error?.response?.status === 401) {
+          if ((error as AxiosError)?.response?.status === 401) {
             return false;
           }
           // Retry up to 3 times for other errors
@@ -28,9 +28,9 @@ export const createAuthQueryClient = () => {
         gcTime: 10 * 60 * 1000, // 10 minutes (renamed from cacheTime in v5)
       },
       mutations: {
-        retry: (failureCount, error: AxiosError) => {
+        retry: (failureCount, error) => {
           // Don't retry authentication errors
-          if (error?.response?.status === 401) {
+          if ((error as AxiosError)?.response?.status === 401) {
             return false;
           }
           // Retry once for other errors

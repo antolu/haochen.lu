@@ -60,6 +60,20 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
   onCancel,
   isLoading = false,
 }) => {
+  const toSafeString = (value: unknown): string => {
+    if (value === null || value === undefined) return "";
+    if (typeof value === "string" || typeof value === "number") {
+      return String(value);
+    }
+    if (typeof value === "boolean") {
+      return value ? "true" : "false";
+    }
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return "";
+    }
+  };
   const [activeTab, setActiveTab] = useState<
     "basic" | "location" | "technical" | "custom"
   >("basic");
@@ -220,7 +234,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
           <label className="flex items-center">
             <input
               type="checkbox"
-              checked={field.value}
+              checked={Boolean(field.value)}
               onChange={(e) => updateCustomField(index, e.target.checked)}
               className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
             />
@@ -236,7 +250,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
             </label>
             <input
               type="number"
-              value={field.value}
+              value={toSafeString(field.value)}
               onChange={(e) =>
                 updateCustomField(index, parseFloat(e.target.value) || 0)
               }
@@ -252,7 +266,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
               {field.label}
             </label>
             <textarea
-              value={field.value}
+              value={toSafeString(field.value)}
               onChange={(e) => updateCustomField(index, e.target.value)}
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -268,7 +282,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
             </label>
             <input
               type="date"
-              value={field.value}
+              value={toSafeString(field.value)}
               onChange={(e) => updateCustomField(index, e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
@@ -283,7 +297,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
             </label>
             <input
               type="text"
-              value={field.value}
+              value={toSafeString(field.value)}
               onChange={(e) => updateCustomField(index, e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />

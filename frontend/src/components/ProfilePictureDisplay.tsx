@@ -2,6 +2,7 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { profilePictures } from "../api/client";
 import { selectOptimalImage, ImageUseCase } from "../utils/imageUtils";
+// Note: type-only import removed to avoid unused warnings
 
 export interface ProfilePictureDisplayProps {
   className?: string;
@@ -45,7 +46,18 @@ const ProfilePictureDisplay: React.FC<ProfilePictureDisplayProps> = ({
         ? ImageUseCase.GALLERY
         : ImageUseCase.HERO;
 
-  const optimalImage = selectOptimalImage(profilePicture, useCase);
+  const optimalImage = selectOptimalImage(
+    {
+      // Provide minimal PhotoLike shape
+      filename: profilePicture.filename,
+      original_url: profilePicture.original_url,
+      variants: profilePicture.variants as Record<
+        string,
+        { url?: string; width: number }
+      >,
+    },
+    useCase,
+  );
 
   return (
     <div className={`overflow-hidden ${className}`}>

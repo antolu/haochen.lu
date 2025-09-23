@@ -1,5 +1,9 @@
 import React from "react";
-import { render, RenderOptions, RenderResult } from "@testing-library/react";
+import {
+  render,
+  type RenderOptions,
+  type RenderResult,
+} from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import { vi } from "vitest";
@@ -266,10 +270,7 @@ export const fillForm = async (
 
 // Network request mocking
 export const mockFetch = <T,>(response: T, ok = true, status = 200) => {
-  return vi.fn<
-    [input: RequestInfo | URL, init?: RequestInit],
-    Promise<Response>
-  >(() =>
+  return vi.fn(() =>
     Promise.resolve(
       new Response(JSON.stringify(response), {
         status,
@@ -293,10 +294,40 @@ export const mockIntersectionObserver = (isIntersecting = true) => {
         {
           isIntersecting,
           target: document.createElement("div"),
-          boundingClientRect: {},
+          boundingClientRect: {
+            bottom: 0,
+            height: 0,
+            left: 0,
+            right: 0,
+            top: 0,
+            width: 0,
+            x: 0,
+            y: 0,
+            toJSON: () => ({}),
+          } as DOMRectReadOnly,
           intersectionRatio: isIntersecting ? 1 : 0,
-          intersectionRect: {},
-          rootBounds: {},
+          intersectionRect: {
+            bottom: 0,
+            height: 0,
+            left: 0,
+            right: 0,
+            top: 0,
+            width: 0,
+            x: 0,
+            y: 0,
+            toJSON: () => ({}),
+          } as DOMRectReadOnly,
+          rootBounds: {
+            bottom: 0,
+            height: 0,
+            left: 0,
+            right: 0,
+            top: 0,
+            width: 0,
+            x: 0,
+            y: 0,
+            toJSON: () => ({}),
+          } as DOMRectReadOnly,
           time: Date.now(),
         },
       ]);

@@ -2,25 +2,12 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import YamlEditor from "../../components/YamlEditor";
 
-interface IntegrationMeta {
-  name: string;
-  slug: string;
-  version: string;
-}
-interface IntegrationSection {
-  frontend_path: string;
-  api_path: string;
-  admin_path?: string;
-  has_admin?: boolean;
-}
+// Types retained in comments for reference; inferred at usage sites
 interface ValidationResult {
   valid: boolean;
   errors: string[];
   warnings: string[];
-  config?: {
-    meta: IntegrationMeta;
-    integration: IntegrationSection;
-  };
+  config?: Record<string, unknown>;
 }
 
 const EXAMPLE_CONFIG = `# Example Cookbook Subapp Configuration
@@ -235,19 +222,25 @@ const AdminSubAppIntegration: React.FC = () => {
                   <div className="flex">
                     <dt className="w-20 text-gray-500">Name:</dt>
                     <dd className="text-gray-900">
-                      {validationResult.config.meta.name}
+                      {(validationResult.config as { meta?: { name?: string } })
+                        ?.meta?.name ?? ""}
                     </dd>
                   </div>
                   <div className="flex">
                     <dt className="w-20 text-gray-500">Slug:</dt>
                     <dd className="font-mono text-gray-900">
-                      {validationResult.config.meta.slug}
+                      {(validationResult.config as { meta?: { slug?: string } })
+                        ?.meta?.slug ?? ""}
                     </dd>
                   </div>
                   <div className="flex">
                     <dt className="w-20 text-gray-500">Version:</dt>
                     <dd className="text-gray-900">
-                      {validationResult.config.meta.version}
+                      {(
+                        validationResult.config as {
+                          meta?: { version?: string };
+                        }
+                      )?.meta?.version ?? ""}
                     </dd>
                   </div>
                 </dl>
@@ -261,20 +254,39 @@ const AdminSubAppIntegration: React.FC = () => {
                   <div className="flex">
                     <dt className="w-20 text-gray-500">Frontend:</dt>
                     <dd className="font-mono text-blue-600">
-                      {validationResult.config.integration.frontend_path}
+                      {(
+                        validationResult.config as {
+                          integration?: { frontend_path?: string };
+                        }
+                      )?.integration?.frontend_path ?? ""}
                     </dd>
                   </div>
                   <div className="flex">
                     <dt className="w-20 text-gray-500">API:</dt>
                     <dd className="font-mono text-blue-600">
-                      {validationResult.config.integration.api_path}
+                      {(
+                        validationResult.config as {
+                          integration?: { api_path?: string };
+                        }
+                      )?.integration?.api_path ?? ""}
                     </dd>
                   </div>
-                  {validationResult.config.integration.has_admin && (
+                  {(
+                    validationResult.config as {
+                      integration?: { has_admin?: boolean };
+                    }
+                  )?.integration?.has_admin && (
                     <div className="flex">
                       <dt className="w-20 text-gray-500">Admin:</dt>
                       <dd className="font-mono text-blue-600">
-                        /admin/subapps/{validationResult.config.meta.slug}
+                        /admin/subapps/
+                        {
+                          (
+                            validationResult.config as {
+                              meta?: { slug?: string };
+                            }
+                          )?.meta?.slug
+                        }
                       </dd>
                     </div>
                   )}

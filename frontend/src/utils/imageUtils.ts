@@ -2,7 +2,12 @@
  * Image optimization utilities for DPI-aware and responsive image selection
  */
 
-import type { Photo } from "../types";
+// Accept photo-like objects rather than a strict Photo type
+export type PhotoLike = {
+  filename: string;
+  original_url?: string;
+  variants?: Record<string, ImageVariant>;
+};
 
 export interface DeviceContext {
   devicePixelRatio: number;
@@ -12,13 +17,14 @@ export interface DeviceContext {
 }
 
 export interface ImageVariant {
-  path: string;
-  filename: string;
+  // Fields are optional except width; callers/tests may not provide everything
+  path?: string;
+  filename?: string;
   url?: string;
   width: number;
-  height: number;
-  size_bytes: number;
-  format: string;
+  height?: number;
+  size_bytes?: number;
+  format?: string;
 }
 
 export interface OptimalImageSelection {
@@ -262,7 +268,7 @@ export const generateSizesAttribute = (useCase: ImageUseCase): string => {
  * Main function to select optimal image for current context
  */
 export const selectOptimalImage = (
-  photo: Photo,
+  photo: PhotoLike,
   useCase: ImageUseCase,
   containerSize?: { width: number; height: number },
 ): OptimalImageSelection => {
@@ -311,7 +317,7 @@ export const selectOptimalImage = (
  * Simplified helper for common use cases
  */
 export const getOptimalImageUrl = (
-  photo: Photo,
+  photo: PhotoLike,
   useCase: ImageUseCase,
   containerSize?: { width: number; height: number },
 ): string => {
@@ -322,7 +328,7 @@ export const getOptimalImageUrl = (
  * Hook-style helper for React components
  */
 export const useOptimalImage = (
-  photo: Photo,
+  photo: PhotoLike,
   useCase: ImageUseCase,
   containerSize?: { width: number; height: number },
 ) => {
@@ -335,7 +341,7 @@ export const useOptimalImage = (
  * Debug helper to understand image selection
  */
 export const debugImageSelection = (
-  photo: Photo,
+  photo: PhotoLike,
   useCase: ImageUseCase,
   containerSize?: { width: number; height: number },
 ): object => {

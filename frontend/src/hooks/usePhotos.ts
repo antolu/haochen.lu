@@ -134,7 +134,14 @@ export const useUploadPhoto = () => {
       queryClient.setQueryData<PhotoListResponse>(
         photoKeys.list("admin"),
         (old) => {
-          if (!old) return { photos: [], total: 0 } as PhotoListResponse;
+          if (!old)
+            return {
+              photos: [],
+              total: 0,
+              page: 1,
+              per_page: 0,
+              pages: 1,
+            } as PhotoListResponse;
 
           const optimisticPhoto: Partial<Photo> = {
             id: `temp-${Date.now()}`,

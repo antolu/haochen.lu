@@ -256,16 +256,26 @@ const YamlEditor: React.FC<YamlEditorProps> = ({
               </div>
               {validationResult.config && (
                 <div className="mt-2 text-sm text-green-700">
-                  <p>
-                    <strong>Name:</strong> {validationResult.config.meta.name}
-                  </p>
-                  <p>
-                    <strong>Slug:</strong> {validationResult.config.meta.slug}
-                  </p>
-                  <p>
-                    <strong>Frontend Path:</strong>{" "}
-                    {validationResult.config.integration.frontend_path}
-                  </p>
+                  {(() => {
+                    const meta = (validationResult.config as unknown as {
+                      meta?: { name?: string; slug?: string };
+                      integration?: { frontend_path?: string };
+                    }) ?? { meta: {}, integration: {} };
+                    return (
+                      <>
+                        <p>
+                          <strong>Name:</strong> {meta.meta?.name ?? ""}
+                        </p>
+                        <p>
+                          <strong>Slug:</strong> {meta.meta?.slug ?? ""}
+                        </p>
+                        <p>
+                          <strong>Frontend Path:</strong>{" "}
+                          {meta.integration?.frontend_path ?? ""}
+                        </p>
+                      </>
+                    );
+                  })()}
                 </div>
               )}
             </div>

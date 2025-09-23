@@ -29,42 +29,28 @@ vi.mock("react-hot-toast", () => ({
 
 // Mock react-dropzone to make testing easier
 vi.mock("react-dropzone", () => ({
-  useDropzone: vi.fn(
-    ({
-      onDrop,
-      accept: _accept,
-      maxSize: _maxSize,
-      multiple: _multiple,
-      disabled: _disabled,
-    }: {
-      onDrop?: (files: File[]) => void;
-      accept?: string;
-      maxSize?: number;
-      multiple?: boolean;
-      disabled?: boolean;
-    }) => ({
-      getRootProps: () => ({
-        "data-testid": "drop-zone",
-        onClick: () => {
-          // Simulate file selection
-          const mockFile = new File(["test content"], "test.jpg", {
-            type: "image/jpeg",
-          });
-          onDrop?.([mockFile]);
-        },
-      }),
-      getInputProps: () => ({
-        "data-testid": "file-input",
-        type: "file",
-        onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
-          if (e.target.files) {
-            onDrop?.(Array.from(e.target.files));
-          }
-        },
-      }),
-      isDragActive: false,
+  useDropzone: vi.fn(({ onDrop }: { onDrop?: (files: File[]) => void }) => ({
+    getRootProps: () => ({
+      "data-testid": "drop-zone",
+      onClick: () => {
+        // Simulate file selection
+        const mockFile = new File(["test content"], "test.jpg", {
+          type: "image/jpeg",
+        });
+        onDrop?.([mockFile]);
+      },
     }),
-  ),
+    getInputProps: () => ({
+      "data-testid": "file-input",
+      type: "file",
+      onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+          onDrop?.(Array.from(e.target.files));
+        }
+      },
+    }),
+    isDragActive: false,
+  })),
 }));
 
 const createTestFile = (
@@ -201,7 +187,7 @@ describe("PhotoUpload Component Tests", () => {
 
       // Override the mock to simulate file rejection by react-dropzone
       const { useDropzone } = await import("react-dropzone");
-      vi.mocked(useDropzone).mockImplementation((_options: any) => ({
+      vi.mocked(useDropzone).mockImplementation(() => ({
         getRootProps: () => ({
           "data-testid": "drop-zone",
           onClick: () => {

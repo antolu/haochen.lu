@@ -25,7 +25,7 @@ vi.mock("react-leaflet", () => ({
   ),
   TileLayer: (props: any) => <div data-testid="tile-layer" {...props} />,
   Marker: (props: any) => <div data-testid="marker" {...props} />,
-  useMapEvents: ({ click: _click }: { click?: (event: unknown) => void }) => {
+  useMapEvents: () => {
     // Simulate click event handling - currently unused but could be used for integration tests
     return null;
   },

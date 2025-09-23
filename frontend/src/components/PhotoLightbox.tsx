@@ -18,10 +18,6 @@ interface LightGalleryInstance {
   ): void;
 }
 
-interface LightGalleryEvent {
-  detail: { index: number };
-}
-
 import "lightgallery/css/lightgallery.css";
 import "lightgallery/css/lg-zoom.css";
 import "lightgallery/css/lg-thumbnail.css";
@@ -169,7 +165,28 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
       };
     });
 
-    const lgOptions = {
+    const lgOptions: Partial<{
+      plugins: unknown[];
+      licenseKey: string;
+      dynamic: boolean;
+      dynamicEl: Array<{ src: string; thumb: string; subHtml: string }>;
+      mode: string;
+      speed: number;
+      thumbnail: boolean;
+      showThumbByDefault: boolean;
+      thumbWidth: number;
+      thumbHeight: string;
+      thumbMargin: number;
+      zoom: boolean;
+      scale: number;
+      controls: boolean;
+      download: boolean;
+      closable: boolean;
+      closeOnTap: boolean;
+      escKey: boolean;
+      allowMediaOverlap: boolean;
+      slideDelay: number;
+    }> = {
       plugins: [lgThumbnail, lgZoom, lgFullscreen],
       licenseKey: "0000-0000-000-0000",
       dynamic: true,
@@ -179,7 +196,7 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
       thumbnail: true,
       showThumbByDefault: false,
       thumbWidth: 100,
-      thumbHeight: 80,
+      thumbHeight: "80px",
       thumbMargin: 5,
       zoom: true,
       scale: 1,
@@ -194,20 +211,30 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
     };
     galleryRef.current = lightGallery(
       container as HTMLElement,
-      lgOptions as Parameters<typeof lightGallery>[1],
-    ) as LightGalleryInstance;
+      lgOptions as unknown as Record<string, unknown>,
+    ) as unknown as LightGalleryInstance;
 
     const onInit = (e: Event) => {
-      const lgInstance = (
-        e as LightGalleryEvent & { detail: { instance: LightGalleryInstance } }
-      ).detail.instance;
-      injectToolbarButtons(lgInstance);
+      const detail = (e as unknown as { detail?: { instance?: unknown } })
+        .detail;
+      const instance = detail?.instance as LightGalleryInstance | undefined;
+      if (instance) {
+        injectToolbarButtons(instance);
+      }
     };
 
-    const onBeforeSlide = (e: Event) =>
-      setCurrentIndex((e as LightGalleryEvent).detail.index);
-    const onAfterSlide = (e: Event) =>
-      setCurrentIndex((e as LightGalleryEvent).detail.index);
+    const onBeforeSlide = (e: Event) => {
+      const detail = (e as unknown as { detail?: { index?: number } }).detail;
+      if (typeof detail?.index === "number") {
+        setCurrentIndex(detail.index);
+      }
+    };
+    const onAfterSlide = (e: Event) => {
+      const detail = (e as unknown as { detail?: { index?: number } }).detail;
+      if (typeof detail?.index === "number") {
+        setCurrentIndex(detail.index);
+      }
+    };
     const onAfterClose = () => {
       setSidebarOpen(false);
       onClose();
@@ -260,8 +287,13 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
           Math.min(initialIndex, dynamicElements.length - 1),
         );
         const gallery = galleryRef.current as unknown as {
-          refresh?: (elements: unknown[]) => void;
-          updateSlides?: (elements: unknown[], index: number) => void;
+          refresh?: (
+            elements: Array<{ src: string; thumb: string; subHtml: string }>,
+          ) => void;
+          updateSlides?: (
+            elements: Array<{ src: string; thumb: string; subHtml: string }>,
+            index: number,
+          ) => void;
           galleryItems?: unknown[];
           openGallery?: (index: number) => void;
         };

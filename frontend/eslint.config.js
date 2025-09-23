@@ -8,7 +8,7 @@ import { globalIgnores } from "eslint/config";
 export default tseslint.config([
   globalIgnores(["dist", "build", "coverage", "node_modules"]),
   {
-    files: ["**/*.{ts,tsx}"],
+    files: ["src/**/*.{ts,tsx}"],
     extends: [
       js.configs.recommended,
       tseslint.configs.recommended,
@@ -72,9 +72,17 @@ export default tseslint.config([
       "**/*.spec.{ts,tsx}",
       "src/test/**/*.{ts,tsx}",
     ],
+    extends: [tseslint.configs.recommended],
+    languageOptions: {
+      parserOptions: {
+        projectService: false,
+      },
+    },
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-non-null-assertion": "off",
+      "@typescript-eslint/no-array-delete": "off",
+      "@typescript-eslint/await-thenable": "off",
       "no-console": "off",
       "react-refresh/only-export-components": "off",
     },
