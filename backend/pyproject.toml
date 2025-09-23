@@ -1,20 +1,18 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools >= 61", "setuptools-scm[toml] ~= 6.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "photography-portfolio"
-version = "1.0.0"
+dynamic = ["version", "readme"]
 description = "Modern photography portfolio with FastAPI backend"
-authors = [{ name = "Anton Lu", email = "hello@antonlu.com" }]
-license = { text = "MIT" }
-readme = "README.md"
 requires-python = ">=3.11"
 classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
-  "License :: OSI Approved :: MIT License",
-  "Programming Language :: Python :: 3",
+  "Natural Language :: English",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
 ]
@@ -38,6 +36,10 @@ dependencies = [
   "pydantic-settings~=2.1.0",
   "httpx~=0.25.2",
 ]
+
+[[project.authors]]
+name = "Anton Lu"
+email = "anton@haochen.lu"
 
 [project.optional-dependencies]
 test = [
@@ -203,29 +205,12 @@ ignore = [
   "N806",
   "G004",
   "RUF002",
-  "FBT001",  # Boolean-typed positional argument
-  "FBT002",  # Boolean default positional argument
-  "FBT003",  # Boolean positional value in function call
-  "NPY002",  # Replace legacy numpy random calls
-  "E721",    # Type comparison with ==
-  "RUF043",  # Raw string for regex patterns
-  "B008",    # Do not perform function calls in argument defaults (FastAPI Depends pattern)
-  "TRY300",  # Consider moving statement to else block (stylistic)
-  "TRY401",  # Redundant exception object in logging.exception
-  "RUF029",  # Function is declared async but doesn't await (acceptable for FastAPI)
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = [
   "SLF001",  # Private member accessed (common in tests)
   "PLC2701", # Private name import (common in tests)
-  "PLC0415", # Import should be at top-level (common in test functions)
-  "PT011",   # pytest.raises() too broad (acceptable in tests)
-  "PT017",   # assertion on exception in except block (acceptable in tests)
-  "PT012",   # pytest.raises() multi-statement (acceptable in tests)
-  "SIM115",  # Use context manager for opening files (acceptable in tests)
-  "TRY300",  # Move statement to else block (acceptable in tests)
-  "PLC1901", # Empty string comparison (acceptable in tests)
 ]
 "docs/**" = [
   "SLF001", # Private member accessed (needed for docs)
@@ -275,3 +260,16 @@ skips = [
   "B601",
   "B105",
 ] # B105: hardcoded password string (common in tests)
+
+# keep this for dynamic versioning
+[tool.setuptools_scm]
+write_to = "app/_version.py"
+local_scheme = "no-local-version"
+
+[tool.setuptools.dynamic]
+readme = { file = ["README.md"], content-type = "text/markdown" }
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+namespaces = false
+exclude = ["tests", "tests.*", "build"]
