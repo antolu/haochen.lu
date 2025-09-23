@@ -5,19 +5,28 @@ Test configuration and fixtures for the portfolio backend.
 from __future__ import annotations
 
 import asyncio
+import os
 import tempfile
 from collections.abc import AsyncGenerator, Generator
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 
+# Set required environment variables for testing before importing app modules
+os.environ.setdefault("SECRET_KEY", "test_secret_key_for_testing_minimum_32_chars")
+os.environ.setdefault(
+    "SESSION_SECRET_KEY", "test_session_secret_key_for_testing_minimum_32_chars"
+)
+os.environ.setdefault("ADMIN_PASSWORD", "test_password")
+
 import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
 from app.config import Settings
+from app.core.redis import redis_client
 from app.database import Base, get_session
 from app.main import app
 from app.models import BlogPost, Photo, Project, User
@@ -30,7 +39,8 @@ def test_settings() -> Settings:
     """Override settings for testing."""
     return Settings(
         database_url="sqlite+aiosqlite:///:memory:",
-        redis_url="redis://localhost:6379/1",  # Use test database
+        # Prefer docker redis service if available; override with REDIS_URL env
+        redis_url=os.getenv("REDIS_URL", "redis://redis:6379/1"),
         secret_key="test-secret-key-for-testing-only",
         admin_password="test-admin-password",
         upload_dir="test_uploads",
@@ -87,17 +97,58 @@ def test_client(test_settings, override_get_session) -> TestClient:
     with TestClient(app) as client:
         yield client
     app.dependency_overrides.clear()
+    # Ensure Redis connection is closed between tests
+    try:
+        import anyio
+
+        anyio.run(redis_client.disconnect)
+    except Exception:
+        pass
 
 
 @pytest_asyncio.fixture
 async def async_client(
     test_settings, override_get_session
 ) -> AsyncGenerator[AsyncClient, None]:
-    """Create an async test client."""
+    """Create an async test client compatible with httpx>=0.28."""
     app.dependency_overrides[get_session] = override_get_session
-    async with AsyncClient(app=app, base_url="http://testserver") as client:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
         yield client
     app.dependency_overrides.clear()
+    await redis_client.disconnect()
+
+
+# Service availability gates
+def _is_service_available(url: str, timeout: float = 0.2) -> bool:
+    import socket
+    from urllib.parse import urlparse
+
+    try:
+        parsed = urlparse(url)
+        host = parsed.hostname or "localhost"
+        port = int(parsed.port or 0)
+        if not port:
+            return False
+        with socket.create_connection((host, port), timeout=timeout):
+            return True
+    except Exception:
+        return False
+
+
+def pytest_collection_modifyitems(config, items):
+    """Skip integration tests that depend on external services if unavailable."""
+    redis_url = os.getenv("REDIS_URL", "redis://redis:6379/1")
+    redis_up = _is_service_available(redis_url)
+
+    for item in items:
+        # Markers in our suite that depend on Redis/services
+        if (
+            item.get_closest_marker("redis")
+            or "auth" in item.nodeid
+            or "session" in item.nodeid
+        ) and not redis_up:
+            item.add_marker(pytest.mark.skip(reason="Redis service unavailable"))
 
 
 # Authentication fixtures
@@ -144,6 +195,38 @@ def temp_compressed_dir() -> Generator[Path, None, None]:
     """Create a temporary directory for compressed images."""
     with tempfile.TemporaryDirectory() as tmpdir:
         yield Path(tmpdir)
+
+
+@pytest.fixture(autouse=True)
+def use_temp_storage_dirs(
+    temp_upload_dir: Path, temp_compressed_dir: Path, monkeypatch
+):
+    """Route storage to temp dirs during tests for isolation.
+
+    Ensures that any file writes go to per-test temporary directories
+    instead of the development/production folders.
+    """
+    # Override settings
+    from app import config as app_config  # local import to avoid early import timing
+
+    monkeypatch.setattr(
+        app_config.settings, "upload_dir", str(temp_upload_dir), raising=False
+    )
+    monkeypatch.setattr(
+        app_config.settings, "compressed_dir", str(temp_compressed_dir), raising=False
+    )
+
+    # Reinitialize global image processor with temp dirs
+    import app.core.image_processor as ip_mod
+
+    ip_mod.image_processor = ip_mod.ImageProcessor(
+        str(temp_upload_dir), str(temp_compressed_dir)
+    )
+
+    # Reinitialize file access controller to pick up new settings
+    import app.core.file_access as fa_mod
+
+    fa_mod.file_access_controller = fa_mod.FileAccessController()
 
 
 # Mock fixtures

@@ -4,11 +4,12 @@ Factory classes for creating test data.
 
 from __future__ import annotations
 
+import random
 import uuid
 from typing import Any
 
 import factory
-from factory import Faker, LazyAttribute
+from factory import Faker, LazyAttribute, LazyFunction
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import get_password_hash
@@ -70,14 +71,54 @@ class PhotoFactory(AsyncSQLAlchemyModelFactory):
     category = Faker(
         "random_element", elements=("landscape", "portrait", "street", "wildlife")
     )
-    tags = Faker("words", nb=3)
+
+    # Store as comma-separated string to match DB String column and API expectations
+    tags = LazyFunction(
+        lambda: ", ".join(
+            random.sample(
+                [
+                    "nature",
+                    "city",
+                    "portrait",
+                    "travel",
+                    "night",
+                    "sunset",
+                    "street",
+                    "wildlife",
+                    "macro",
+                    "mountain",
+                    "ocean",
+                ],
+                3,
+            )
+        )
+    )
     comments = Faker("paragraph", nb_sentences=1)
 
     # File paths
     filename = LazyAttribute(lambda obj: f"{obj.id}.jpg")
     original_path = LazyAttribute(lambda obj: f"uploads/{obj.filename}")
-    webp_path = LazyAttribute(lambda obj: f"compressed/{obj.id}.webp")
-    thumbnail_path = LazyAttribute(lambda obj: f"compressed/{obj.id}_thumb.webp")
+    # Variants stored as JSON dict in model
+    variants = LazyAttribute(
+        lambda obj: {
+            "thumbnail": {
+                "path": f"compressed/{obj.id}_thumb.webp",
+                "filename": f"{obj.id}_thumb.webp",
+                "width": 400,
+                "height": 400,
+                "size_bytes": 12345,
+                "format": "webp",
+            },
+            "small": {
+                "path": f"compressed/{obj.id}_small.webp",
+                "filename": f"{obj.id}_small.webp",
+                "width": 800,
+                "height": 600,
+                "size_bytes": 45678,
+                "format": "webp",
+            },
+        }
+    )
 
     # EXIF data
     location_lat = Faker("latitude")
