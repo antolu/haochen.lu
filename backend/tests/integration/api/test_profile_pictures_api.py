@@ -7,14 +7,11 @@ activation flow, and detail retrieval including URL fields.
 
 from __future__ import annotations
 
-import io
 import tempfile
-import uuid
 
 import pytest
 from httpx import AsyncClient
 from PIL import Image
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @pytest.mark.integration
@@ -47,12 +44,13 @@ class TestProfilePicturesAPI:
             assert "id" in data
             assert data["title"] == "Square Avatar"
             # width/height should be present (comes from EXIF extraction)
-            assert "width" in data and "height" in data
+            assert "width" in data
+            assert "height" in data
             # URLs should be populated
             assert data.get("original_url")
             assert data.get("download_url")
         finally:
-            import os
+            import os  # noqa: PLC0415
 
             if os.path.exists(temp_file_path):
                 os.unlink(temp_file_path)
@@ -76,7 +74,7 @@ class TestProfilePicturesAPI:
             detail = response.json().get("detail", "")
             assert "square" in detail.lower()
         finally:
-            import os
+            import os  # noqa: PLC0415
 
             if os.path.exists(temp_file_path):
                 os.unlink(temp_file_path)
@@ -107,7 +105,7 @@ class TestProfilePicturesAPI:
                     data={"title": "P1"},
                 )
             assert r1.status_code == 200
-            id1 = r1.json()["id"]
+            r1.json()["id"]
 
             # Second
             with open(path2, "rb") as f2:
@@ -135,7 +133,7 @@ class TestProfilePicturesAPI:
             assert active["id"] == id2
             assert active.get("original_url")
         finally:
-            import os
+            import os  # noqa: PLC0415
 
             for p in (path1, path2):
                 if os.path.exists(p):

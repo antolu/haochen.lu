@@ -76,7 +76,7 @@ class TokenManager:
         return jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
 
     @staticmethod
-    def create_refresh_token(data: dict[str, Any], remember_me: bool = False) -> str:
+    def create_refresh_token(data: dict[str, Any], *, remember_me: bool = False) -> str:
         """Create refresh token with remember me support"""
         to_encode = data.copy()
 
@@ -114,13 +114,14 @@ class TokenManager:
             )
             if payload.get("type") != "refresh":
                 return None
-            return payload
         except JWTError:
             return None
+        else:
+            return payload
 
     @staticmethod
     def set_refresh_cookie(
-        response: Response, token: str, remember_me: bool = False
+        response: Response, token: str, *, remember_me: bool = False
     ) -> None:
         """Set HttpOnly refresh token cookie"""
         if remember_me:

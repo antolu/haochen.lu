@@ -32,7 +32,7 @@ class MockRedis:
             value = value.decode()
         self.data[key] = value
         if ex:
-            import time
+            import time  # noqa: PLC0415
 
             self.expires[key] = time.time() + ex
         return True
@@ -55,7 +55,7 @@ class MockRedis:
     async def expire(self, key: str, seconds: int) -> bool:
         """Set expiration for a key."""
         if key in self.data:
-            import time
+            import time  # noqa: PLC0415
 
             self.expires[key] = time.time() + seconds
             return True
@@ -64,7 +64,7 @@ class MockRedis:
     async def ttl(self, key: str) -> int:
         """Get time to live for a key."""
         if key in self.expires:
-            import time
+            import time  # noqa: PLC0415
 
             remaining = self.expires[key] - time.time()
             return max(0, int(remaining))
@@ -170,7 +170,7 @@ def create_redis_mock() -> MockRedis:
 def create_fakeredis():
     """Create a FakeRedis instance (requires fakeredis package)."""
     try:
-        import fakeredis.aioredis
+        import fakeredis.aioredis  # noqa: PLC0415
 
         return fakeredis.aioredis.FakeRedis()
     except ImportError:

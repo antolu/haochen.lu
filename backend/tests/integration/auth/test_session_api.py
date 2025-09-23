@@ -349,7 +349,7 @@ class TestLogoutEndpoint:
         for cookie in logout_response.cookies.values():
             if cookie.name == getattr(settings, "REFRESH_COOKIE_NAME", "refresh_token"):
                 # Cookie should be cleared (empty value or expired)
-                if not cookie.value or cookie.value == "":
+                if not cookie.value:
                     pass
                 break
 
@@ -457,7 +457,7 @@ class TestRevokeAllSessionsEndpoint:
         # Check if refresh token cookie is cleared
         for cookie in response.cookies.values():
             if cookie.name == getattr(settings, "REFRESH_COOKIE_NAME", "refresh_token"):
-                if not cookie.value or cookie.value == "":
+                if not cookie.value:
                     pass
                 break
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.subapp import (
@@ -14,8 +14,11 @@ from app.crud.subapp import (
     get_subapps,
     update_subapp,
 )
-from app.database import get_session
-from app.dependencies import get_current_admin_user, get_current_user
+from app.dependencies import (
+    _current_admin_user_dependency,
+    _current_user_dependency,
+    _session_dependency,
+)
 from app.schemas.subapp import (
     SubAppCreate,
     SubAppUpdate,
@@ -52,7 +55,9 @@ def convert_to_response(db_subapp) -> dict:
 @router.get(
     "/",
 )
-async def list_subapps(menu_only: bool = True, db: AsyncSession = Depends(get_session)):
+async def list_subapps(
+    *, menu_only: bool = True, db: AsyncSession = _session_dependency
+):
     """List available sub-applications for public access."""
     # Show only public subapps (those that don't require auth)
     subapps = await get_subapps(
@@ -74,9 +79,10 @@ async def list_subapps(menu_only: bool = True, db: AsyncSession = Depends(get_se
     "/authenticated",
 )
 async def list_authenticated_subapps(
+    *,
     menu_only: bool = True,
-    db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_user),
+    db: AsyncSession = _session_dependency,
+    current_user=_current_user_dependency,
 ):
     """List sub-applications available to authenticated users."""
     admin_only = None if current_user.is_admin else False
@@ -94,8 +100,8 @@ async def list_authenticated_subapps(
     "/admin",
 )
 async def list_all_subapps(
-    db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_admin_user),
+    db: AsyncSession = _session_dependency,
+    current_user=_current_admin_user_dependency,
 ):
     """List all sub-applications (admin only)."""
     subapps = await get_subapps(db, enabled_only=False, menu_only=False)
@@ -109,7 +115,7 @@ async def list_all_subapps(
     "/{subapp_identifier}",
 )
 async def get_subapp_detail(
-    subapp_identifier: str, db: AsyncSession = Depends(get_session)
+    subapp_identifier: str, db: AsyncSession = _session_dependency
 ):
     """Get sub-application by ID or slug."""
     subapp = None
@@ -131,8 +137,8 @@ async def get_subapp_detail(
 @router.post("")
 async def create_subapp_endpoint(
     subapp: SubAppCreate,
-    db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_admin_user),
+    db: AsyncSession = _session_dependency,
+    current_user=_current_admin_user_dependency,
 ):
     """Create a new sub-application (admin only)."""
     try:
@@ -150,8 +156,8 @@ async def create_subapp_endpoint(
 async def update_subapp_endpoint(
     subapp_id: UUID,
     subapp_update: SubAppUpdate,
-    db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_admin_user),
+    db: AsyncSession = _session_dependency,
+    current_user=_current_admin_user_dependency,
 ):
     """Update sub-application (admin only)."""
     subapp = await update_subapp(db, subapp_id, subapp_update)
@@ -164,8 +170,8 @@ async def update_subapp_endpoint(
 @router.delete("/{subapp_id}")
 async def delete_subapp_endpoint(
     subapp_id: UUID,
-    db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_admin_user),
+    db: AsyncSession = _session_dependency,
+    current_user=_current_admin_user_dependency,
 ):
     """Delete sub-application (admin only)."""
     success = await delete_subapp(db, subapp_id)
@@ -177,8 +183,8 @@ async def delete_subapp_endpoint(
 
 @router.get("/stats/summary")
 async def get_subapp_stats(
-    db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_admin_user),
+    db: AsyncSession = _session_dependency,
+    current_user=_current_admin_user_dependency,
 ):
     """Get sub-application statistics (admin only)."""
     total_subapps = await get_subapp_count(db)

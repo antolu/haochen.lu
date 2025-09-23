@@ -74,9 +74,10 @@ class RepositoryService:
                 return await self._fetch_github_readme(repo_info)
             if repo_info.type == "gitlab":
                 return await self._fetch_gitlab_readme(repo_info)
-            return None, None
         except Exception as e:
             print(f"Error fetching README from {repo_info.url}: {e}")
+            return None, None
+        else:
             return None, None
 
     async def _fetch_github_readme(
@@ -220,8 +221,9 @@ class RepositoryService:
                 return await self._validate_github_repo(repo_info)
             if repo_info.type == "gitlab":
                 return await self._validate_gitlab_repo(repo_info)
-            return False
         except Exception:
+            return False
+        else:
             return False
 
     async def _validate_github_repo(self, repo_info: RepositoryInfo) -> bool:
@@ -235,9 +237,10 @@ class RepositoryService:
         async with httpx.AsyncClient(timeout=30.0) as client:
             try:
                 response = await client.get(url, headers=headers)
-                return response.status_code == 200
             except httpx.HTTPStatusError:
                 return False
+            else:
+                return response.status_code == 200
 
     async def _validate_gitlab_repo(self, repo_info: RepositoryInfo) -> bool:
         """Validate GitLab repository exists"""
@@ -263,9 +266,10 @@ class RepositoryService:
         async with httpx.AsyncClient(timeout=30.0) as client:
             try:
                 response = await client.get(url, headers=headers)
-                return response.status_code == 200
             except httpx.HTTPStatusError:
                 return False
+            else:
+                return response.status_code == 200
 
 
 # Global instance

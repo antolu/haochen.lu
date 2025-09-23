@@ -1,5 +1,5 @@
 import React from "react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, vi } from "vitest";
 import {
   renderWithProviders,
   userEvent,
@@ -12,7 +12,7 @@ describe("ProfilePictureUpload", () => {
     const onUpload = vi.fn().mockResolvedValue(undefined);
     const onCancel = vi.fn();
 
-    const { getByText, getByRole, findByText } = renderWithProviders(
+    const { getByText, findByText } = renderWithProviders(
       <ProfilePictureUpload
         onUpload={onUpload}
         onCancel={onCancel}

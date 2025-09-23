@@ -5,11 +5,17 @@ Test configuration and fixtures for the portfolio backend.
 from __future__ import annotations
 
 import asyncio
+import io
 import os
+import socket
 import tempfile
 from collections.abc import AsyncGenerator, Generator
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
+from urllib.parse import urlparse
+
+import anyio
+from PIL import Image
 
 # Set required environment variables for testing before importing app modules
 os.environ.setdefault("SECRET_KEY", "test_secret_key_for_testing_minimum_32_chars")
@@ -18,6 +24,8 @@ os.environ.setdefault(
 )
 os.environ.setdefault("ADMIN_PASSWORD", "test_password")
 
+import contextlib
+
 import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
@@ -25,8 +33,12 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
+import app.core.file_access as fa_mod
+import app.core.image_processor as ip_mod
+from app import config as app_config
 from app.config import Settings
 from app.core.redis import redis_client
+from app.core.security import create_access_token, decode_token
 from app.database import Base, get_session
 from app.main import app
 from app.models import BlogPost, Photo, Project, User
@@ -98,12 +110,8 @@ def test_client(test_settings, override_get_session) -> TestClient:
         yield client
     app.dependency_overrides.clear()
     # Ensure Redis connection is closed between tests
-    try:
-        import anyio
-
+    with contextlib.suppress(Exception):
         anyio.run(redis_client.disconnect)
-    except Exception:
-        pass
 
 
 @pytest_asyncio.fixture
@@ -121,9 +129,6 @@ async def async_client(
 
 # Service availability gates
 def _is_service_available(url: str, timeout: float = 0.2) -> bool:
-    import socket
-    from urllib.parse import urlparse
-
     try:
         parsed = urlparse(url)
         host = parsed.hostname or "localhost"
@@ -168,16 +173,14 @@ async def regular_user(test_session: AsyncSession) -> User:
     )
 
 
-@pytest_asyncio.fixture
-async def admin_token(admin_user: User) -> str:
+@pytest.fixture
+def admin_token(admin_user: User) -> str:
     """Generate a JWT token for admin user."""
-    from app.core.security import create_access_token
-
     return create_access_token({"sub": admin_user.username})
 
 
-@pytest_asyncio.fixture
-async def admin_headers(admin_token: str) -> dict[str, str]:
+@pytest.fixture
+def admin_headers(admin_token: str) -> dict[str, str]:
     """Create headers with admin authorization."""
     return {"Authorization": f"Bearer {admin_token}"}
 
@@ -207,8 +210,6 @@ def use_temp_storage_dirs(
     instead of the development/production folders.
     """
     # Override settings
-    from app import config as app_config  # local import to avoid early import timing
-
     monkeypatch.setattr(
         app_config.settings, "upload_dir", str(temp_upload_dir), raising=False
     )
@@ -217,15 +218,11 @@ def use_temp_storage_dirs(
     )
 
     # Reinitialize global image processor with temp dirs
-    import app.core.image_processor as ip_mod
-
     ip_mod.image_processor = ip_mod.ImageProcessor(
         str(temp_upload_dir), str(temp_compressed_dir)
     )
 
     # Reinitialize file access controller to pick up new settings
-    import app.core.file_access as fa_mod
-
     fa_mod.file_access_controller = fa_mod.FileAccessController()
 
 
@@ -233,7 +230,7 @@ def use_temp_storage_dirs(
 @pytest.fixture
 def mock_redis():
     """Mock Redis client."""
-    import fakeredis
+    import fakeredis  # noqa: PLC0415
 
     return fakeredis.FakeRedis()
 
@@ -308,9 +305,6 @@ async def sample_blog_post(test_session: AsyncSession) -> BlogPost:
 @pytest.fixture
 def sample_image_data() -> bytes:
     """Generate sample image data for testing."""
-    import io
-
-    from PIL import Image
 
     # Create a small test image
     img = Image.new("RGB", (100, 100), color="red")
@@ -323,9 +317,6 @@ def sample_image_data() -> bytes:
 @pytest.fixture
 def sample_image_with_exif() -> bytes:
     """Generate sample image with EXIF data."""
-    import io
-
-    from PIL import Image
 
     # Create image with basic EXIF
     img = Image.new("RGB", (200, 200), color="blue")
@@ -413,8 +404,6 @@ class CustomAssertions:
     @staticmethod
     def assert_valid_jwt_token(token: str) -> None:
         """Assert that a JWT token is valid."""
-        from app.core.security import decode_token
-
         payload = decode_token(token)
         assert payload is not None
         assert "sub" in payload

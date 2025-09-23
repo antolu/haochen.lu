@@ -16,6 +16,7 @@ def generate_slug(name: str) -> str:
 
 async def get_subapps(
     db: AsyncSession,
+    *,
     enabled_only: bool = True,
     menu_only: bool = True,
     admin_only: bool | None = None,

@@ -27,15 +27,15 @@ class TestImageProcessingIntegration:
     def sample_image_file(self):
         """Create a sample image file for testing."""
         img = Image.new("RGB", (800, 600), color="red")
-        temp_file = tempfile.NamedTemporaryFile(suffix=".jpg", delete=False)
-        img.save(temp_file, format="JPEG", quality=90)
-        temp_file.close()
+        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
+            img.save(temp_file, format="JPEG", quality=90)
+            path = temp_file.name
 
-        yield temp_file.name
+        yield path
 
         # Cleanup
-        if os.path.exists(temp_file.name):
-            os.unlink(temp_file.name)
+        if os.path.exists(path):
+            os.unlink(path)
 
     async def test_upload_image_creates_photo_record(
         self,
@@ -113,7 +113,7 @@ class TestImageProcessingIntegration:
 
         with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
             try:
-                import piexif
+                import piexif  # noqa: PLC0415
 
                 exif_dict = {
                     "0th": {
@@ -231,12 +231,11 @@ class TestImageProcessingIntegration:
         temp_files = []
         for i in range(3):
             img = Image.new("RGB", (400, 300), color=(i * 80, i * 80, i * 80))
-            temp_file = tempfile.NamedTemporaryFile(
+            with tempfile.NamedTemporaryFile(
                 suffix=f"_concurrent_{i}.jpg", delete=False
-            )
-            img.save(temp_file, format="JPEG")
-            temp_file.close()
-            temp_files.append(temp_file.name)
+            ) as temp_file:
+                img.save(temp_file, format="JPEG")
+                temp_files.append(temp_file.name)
 
         try:
             # Upload all images concurrently
@@ -429,7 +428,7 @@ class TestImageProcessingPerformance:
         self, admin_token: str, async_client: AsyncClient
     ):
         """Test processing of large images completes within reasonable time."""
-        import time
+        import time  # noqa: PLC0415
 
         # Create a large image (simulating high-resolution camera output)
         large_img = Image.new("RGB", (6000, 4000), color="red")
@@ -469,9 +468,9 @@ class TestImageProcessingPerformance:
         self, admin_token: str, async_client: AsyncClient
     ):
         """Test memory usage remains reasonable during batch processing."""
-        import os
+        import os  # noqa: PLC0415
 
-        import psutil
+        import psutil  # noqa: PLC0415
 
         # Get initial memory usage
         process = psutil.Process(os.getpid())
@@ -484,12 +483,11 @@ class TestImageProcessingPerformance:
             # Create multiple medium-sized images
             for i in range(5):
                 img = Image.new("RGB", (2000, 1500), color=(i * 50, i * 50, i * 50))
-                temp_file = tempfile.NamedTemporaryFile(
+                with tempfile.NamedTemporaryFile(
                     suffix=f"_batch_{i}.jpg", delete=False
-                )
-                img.save(temp_file, format="JPEG", quality=80)
-                temp_file.close()
-                temp_files.append(temp_file.name)
+                ) as temp_file:
+                    img.save(temp_file, format="JPEG", quality=80)
+                    temp_files.append(temp_file.name)
 
             # Process all images
             for i, temp_file_path in enumerate(temp_files):

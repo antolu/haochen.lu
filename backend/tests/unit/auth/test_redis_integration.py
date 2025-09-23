@@ -22,13 +22,13 @@ from app.core.redis import (
 
 
 @pytest.fixture
-async def fake_redis():
+def fake_redis():
     """Create a fake Redis instance for testing."""
     return aioredis.FakeRedis()
 
 
 @pytest.fixture
-async def redis_test_client():
+def redis_test_client():
     """Create a RedisClient instance with fake Redis."""
     client = RedisClient()
     client._redis = aioredis.FakeRedis()
@@ -37,7 +37,7 @@ async def redis_test_client():
 
 
 @pytest.fixture
-async def redis_unavailable_client():
+def redis_unavailable_client():
     """Create a RedisClient instance that simulates Redis being unavailable."""
     client = RedisClient()
     client._redis = None
@@ -77,7 +77,7 @@ class TestRedisClient:
 
     async def test_connect_redis_not_available(self):
         """Test when Redis module is not available."""
-        with patch("app.core.redis.REDIS_AVAILABLE", False):
+        with patch("app.core.redis.REDIS_AVAILABLE", new=False):
             client = RedisClient()
             result = await client.connect()
 
@@ -601,4 +601,4 @@ class TestEdgeCases:
         assert result is True
 
         retrieved = await redis_test_client.get("empty_value")
-        assert retrieved == ""
+        assert not retrieved

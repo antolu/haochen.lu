@@ -162,14 +162,15 @@ class LocationService:
 
             # Cache the result
             await self._cache_result(cache_key, result, self.geocoding_cache_ttl)
-            return result
 
         except ValueError:
             # Re-raise validation errors
             raise
-        except Exception as e:
-            logger.exception(f"Error reverse geocoding {latitude}, {longitude}: {e}")
+        except Exception:
+            logger.exception(f"Error reverse geocoding {latitude}, {longitude}")
             return None
+        else:
+            return result
 
     async def forward_geocode(
         self, address: str, language: str = "en"
@@ -216,14 +217,15 @@ class LocationService:
 
             # Cache the result
             await self._cache_result(cache_key, result, self.geocoding_cache_ttl)
-            return result
 
         except ValueError:
             # Re-raise validation errors
             raise
-        except Exception as e:
-            logger.exception(f"Error forward geocoding '{address}': {e}")
+        except Exception:
+            logger.exception(f"Error forward geocoding '{address}'")
             return None
+        else:
+            return result
 
     async def search_locations(
         self, query: str, limit: int = 10, language: str = "en"
@@ -312,13 +314,14 @@ class LocationService:
                     await self._cache_result(
                         cache_key, locations, self.search_cache_ttl
                     )
-                    return locations
 
         except ValueError:
             # Re-raise validation errors
             raise
-        except Exception as e:
-            logger.exception(f"Error searching locations for '{query}': {e}")
+        except Exception:
+            logger.exception(f"Error searching locations for '{query}'")
+        else:
+            return locations
 
         return []
 
@@ -386,15 +389,16 @@ class LocationService:
 
                     # Sort by distance
                     locations.sort(key=lambda x: x["distance_km"])
-                    return locations
 
         except ValueError:
             # Re-raise validation errors
             raise
-        except Exception as e:
+        except Exception:
             logger.exception(
-                f"Error getting nearby locations for {latitude}, {longitude}: {e}"
+                f"Error getting nearby locations for {latitude}, {longitude}"
             )
+        else:
+            return locations
 
         return []
 
@@ -434,12 +438,13 @@ class LocationService:
                 logger.info(
                     f"Cleared {deleted} location cache entries for pattern '{pattern}'"
                 )
-                return deleted
+            else:
+                deleted = 0
+        except Exception:
+            logger.exception("Error clearing location cache")
             return 0
-
-        except Exception as e:
-            logger.exception(f"Error clearing location cache: {e}")
-            return 0
+        else:
+            return deleted
 
     async def get_cache_stats(self) -> dict[str, int]:
         """Get location cache statistics."""
@@ -456,17 +461,16 @@ class LocationService:
 
             # Count different operation types (approximation based on hash)
             total = len(all_keys)
-
+        except Exception:
+            logger.exception("Error getting cache stats")
+            return {"total_keys": 0, "cache_enabled": False}
+        else:
             return {
                 "total_keys": total,
                 "cache_enabled": True,
                 "geocoding_ttl": self.geocoding_cache_ttl,
                 "search_ttl": self.search_cache_ttl,
             }
-
-        except Exception as e:
-            logger.exception(f"Error getting cache stats: {e}")
-            return {"total_keys": 0, "cache_enabled": False}
 
 
 # Global instance

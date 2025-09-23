@@ -653,7 +653,7 @@ class TestSessionExpirationAndCleanup:
                     max_age = getattr(cookie, "max_age", None)
                     value = getattr(cookie, "value", "")
 
-                    cleared = max_age == 0 or value == "" or value == "deleted"
+                    cleared = max_age == 0 or not value or value == "deleted"
                     assert cleared, f"Refresh cookie not properly cleared: {cookie}"
 
     async def test_concurrent_session_limits(

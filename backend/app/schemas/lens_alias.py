@@ -18,7 +18,7 @@ class LensAliasBase(BaseModel):
         None, description="Lens type (Prime, Zoom, Macro, etc.)"
     )
     notes: str | None = Field(None, description="Optional notes about the lens")
-    is_active: bool = Field(True, description="Whether the alias is active")
+    is_active: bool = Field(default=True, description="Whether the alias is active")
 
 
 class LensAliasCreate(LensAliasBase):

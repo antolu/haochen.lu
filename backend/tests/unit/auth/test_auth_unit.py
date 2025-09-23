@@ -99,10 +99,10 @@ class TestPasswordHashing:
 
     def test_empty_password_handling(self):
         """Test handling of empty passwords."""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"password"):
             get_password_hash("")
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"password"):
             get_password_hash(None)
 
     def test_very_long_password_handling(self):

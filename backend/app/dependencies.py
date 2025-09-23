@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, File, Form, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,10 +11,14 @@ from app.models.user import User
 
 security = HTTPBearer()
 
+# Module-level singletons for dependency injection
+_security_dependency = Depends(security)
+_session_dependency = Depends(get_session)
+
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: AsyncSession = Depends(get_session),
+    credentials: HTTPAuthorizationCredentials = _security_dependency,
+    db: AsyncSession = _session_dependency,
 ) -> User:
     invalid_token_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -47,7 +51,7 @@ async def get_current_user(
 
 async def get_current_user_optional(
     request: Request,
-    db: AsyncSession = Depends(get_session),
+    db: AsyncSession = _session_dependency,
 ) -> User | None:
     """Get current user if authenticated, otherwise return None."""
     # Try to get authorization header
@@ -70,8 +74,13 @@ async def get_current_user_optional(
         return None
 
 
+# Additional module-level singletons for common dependencies
+_current_user_dependency = Depends(get_current_user)
+_current_user_optional_dependency = Depends(get_current_user_optional)
+
+
 def get_current_admin_user(
-    current_user: User = Depends(get_current_user),
+    current_user: User = _current_user_dependency,
 ) -> User:
     if not current_user.is_admin:
         raise HTTPException(
@@ -79,3 +88,12 @@ def get_current_admin_user(
             detail="Administrator privileges required",
         )
     return current_user
+
+
+_current_admin_user_dependency = Depends(get_current_admin_user)
+
+
+# Common File and Form dependencies
+_image_file_dependency = File(..., description="Image file to upload")
+_profile_image_file_dependency = File(..., description="Square image file to upload")
+_form_dependency = Form()

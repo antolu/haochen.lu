@@ -7,8 +7,12 @@ filtering, pagination, and image upload handling.
 
 from __future__ import annotations
 
+import asyncio
+import os
 import tempfile
+import time
 import uuid
+from datetime import datetime, timedelta
 
 import pytest
 from httpx import AsyncClient
@@ -89,8 +93,6 @@ class TestPhotosAPI:
         self, async_client: AsyncClient, test_session: AsyncSession
     ):
         """Test GET /api/photos with date range filtering."""
-        from datetime import datetime, timedelta
-
         # Create photos with different dates
         await PhotoFactory.create_batch_async(
             test_session, 3, created_at=datetime.utcnow() - timedelta(days=30)
@@ -113,9 +115,8 @@ class TestPhotosAPI:
         self, async_client: AsyncClient, test_session: AsyncSession
     ):
         """Test GET /api/photos with different sorting options."""
-        from datetime import datetime, timedelta
-
         # Create photos with different creation dates and titles
+
         photos_data = [
             ("Photo A", datetime.utcnow() - timedelta(days=3)),
             ("Photo C", datetime.utcnow() - timedelta(days=1)),
@@ -215,8 +216,6 @@ class TestPhotosAPI:
             assert db_photo.title == "API Upload Test"
 
         finally:
-            import os
-
             if os.path.exists(temp_file_path):
                 os.unlink(temp_file_path)
 
@@ -241,8 +240,6 @@ class TestPhotosAPI:
             assert response.status_code == 401
 
         finally:
-            import os
-
             if os.path.exists(temp_file_path):
                 os.unlink(temp_file_path)
 
@@ -273,8 +270,6 @@ class TestPhotosAPI:
             assert "detail" in data
 
         finally:
-            import os
-
             if os.path.exists(temp_file_path):
                 os.unlink(temp_file_path)
 
@@ -316,8 +311,6 @@ class TestPhotosAPI:
             assert "empty" in photo_data["tags"]
 
         finally:
-            import os
-
             if os.path.exists(temp_file_path):
                 os.unlink(temp_file_path)
 
@@ -351,12 +344,10 @@ class TestPhotosAPI:
             photo_data = response.json()
 
             assert photo_data["title"] == "Empty Description Test"
-            assert photo_data["description"] == ""  # Should remain empty
+            assert not photo_data["description"]  # Should remain empty
             assert photo_data["category"] == "test"
 
         finally:
-            import os
-
             if os.path.exists(temp_file_path):
                 os.unlink(temp_file_path)
 
@@ -394,8 +385,6 @@ class TestPhotosAPI:
             assert photo_data["category"] in ["uncategorized", "general", "default", ""]
 
         finally:
-            import os
-
             if os.path.exists(temp_file_path):
                 os.unlink(temp_file_path)
 
@@ -432,8 +421,6 @@ class TestPhotosAPI:
             assert photo_data["tags"] == []  # Should be empty list
 
         finally:
-            import os
-
             if os.path.exists(temp_file_path):
                 os.unlink(temp_file_path)
 
@@ -470,15 +457,13 @@ class TestPhotosAPI:
             # Title should fallback to filename when whitespace-only
             assert photo_data["title"] == "whitespace_test.jpg"
             # Description should be empty after trimming
-            assert photo_data["description"] == ""
+            assert not photo_data["description"]
             # Category should be trimmed
             assert photo_data["category"] == "test"
             # Tags should be trimmed and filtered
             assert set(photo_data["tags"]) == {"tag1", "tag2"}
 
         finally:
-            import os
-
             if os.path.exists(temp_file_path):
                 os.unlink(temp_file_path)
 
@@ -515,15 +500,13 @@ class TestPhotosAPI:
             # Should use filename as title
             assert photo_data["title"] == "all_empty_test.jpg"
             # Other fields should handle empty values gracefully
-            assert photo_data["description"] == ""
+            assert not photo_data["description"]
             assert photo_data["tags"] == []
             assert photo_data["featured"] is False
             # Category should get default value or remain empty
             assert "category" in photo_data
 
         finally:
-            import os
-
             if os.path.exists(temp_file_path):
                 os.unlink(temp_file_path)
 
@@ -561,8 +544,6 @@ class TestPhotosAPI:
             assert isinstance(photo_data["featured"], bool)
 
         finally:
-            import os
-
             if os.path.exists(temp_file_path):
                 os.unlink(temp_file_path)
 
@@ -599,8 +580,6 @@ class TestPhotosAPI:
             assert set(photo_data["tags"]) == {"tag1", "tag2", "tag3"}
 
         finally:
-            import os
-
             if os.path.exists(temp_file_path):
                 os.unlink(temp_file_path)
 
@@ -642,8 +621,6 @@ class TestPhotosAPI:
             # Other fields should be cleaned or remain as-is based on backend logic
 
         finally:
-            import os
-
             if os.path.exists(temp_file_path):
                 os.unlink(temp_file_path)
 
@@ -793,8 +770,6 @@ class TestPhotosAPIValidation:
                 assert "detail" in data
 
         finally:
-            import os
-
             if os.path.exists(temp_file_path):
                 os.unlink(temp_file_path)
 
@@ -848,7 +823,6 @@ class TestPhotosAPIPerformance:
         self, async_client: AsyncClient, test_session: AsyncSession
     ):
         """Test performance with large number of photos."""
-        import time
 
         # Create many photos
         await PhotoFactory.create_batch_async(test_session, 100)
@@ -872,7 +846,6 @@ class TestPhotosAPIPerformance:
         self, async_client: AsyncClient, test_session: AsyncSession
     ):
         """Test search performance with filters."""
-        import time
 
         # Create photos with various attributes for search
         for i in range(50):
@@ -903,7 +876,6 @@ class TestPhotosAPIPerformance:
         self, async_client: AsyncClient, test_session: AsyncSession
     ):
         """Test handling of concurrent API requests."""
-        import asyncio
 
         # Create some test photos
         await PhotoFactory.create_batch_async(test_session, 10)

@@ -38,7 +38,7 @@ class SecurityTestUtils:
 
     @staticmethod
     def extract_jwt_payload(
-        token: str, secret: str, verify: bool = True
+        token: str, secret: str, *, verify: bool = True
     ) -> dict[str, Any]:
         """Extract JWT payload with optional verification."""
         try:

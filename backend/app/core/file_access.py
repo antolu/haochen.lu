@@ -25,6 +25,7 @@ class FileAccessController:
         db: AsyncSession,
         photo_id: UUID,
         file_type: FileType,
+        *,
         user_id: str | None = None,
         is_admin: bool = False,
     ):

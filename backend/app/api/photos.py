@@ -7,8 +7,6 @@ from uuid import UUID
 
 from fastapi import (
     APIRouter,
-    Depends,
-    File,
     Form,
     HTTPException,
     Query,
@@ -33,8 +31,12 @@ from app.crud.photo import (
     increment_view_count,
     update_photo,
 )
-from app.database import get_session
-from app.dependencies import get_current_admin_user, get_current_user_optional
+from app.dependencies import (
+    _current_admin_user_dependency,
+    _current_user_optional_dependency,
+    _image_file_dependency,
+    _session_dependency,
+)
 from app.models.photo import Photo as PhotoModel
 from app.schemas.photo import (
     PhotoCreate,
@@ -70,6 +72,7 @@ async def list_photos(
     page: int = Query(1, ge=1, description="Page number"),
     per_page: int = Query(20, ge=1, le=100, description="Items per page"),
     category: str | None = Query(None, max_length=100),
+    *,
     featured: bool | None = None,
     has_location: bool | None = None,
     near_lat: float | None = Query(
@@ -84,7 +87,7 @@ async def list_photos(
     order_by: str = Query(
         "created_at", regex="^(created_at|date_taken|views|title|order)$"
     ),
-    db: AsyncSession = Depends(get_session),
+    db: AsyncSession = _session_dependency,
 ):
     """List photos with pagination and filtering."""
     # Validate proximity search parameters
@@ -151,9 +154,7 @@ async def list_photos(
 
 
 @router.get("/featured", response_model=list[PhotoResponse])
-async def list_featured_photos(
-    limit: int = 10, db: AsyncSession = Depends(get_session)
-):
+async def list_featured_photos(limit: int = 10, db: AsyncSession = _session_dependency):
     """Get featured photos."""
     photos = await get_photos(db, limit=limit, featured=True)
 
@@ -182,7 +183,7 @@ async def list_featured_photos(
 
 
 @router.get("/tags", response_model=list[str])
-async def list_distinct_tags(db: AsyncSession = Depends(get_session)):
+async def list_distinct_tags(db: AsyncSession = _session_dependency):
     """Return a distinct, sorted list of tags across all photos."""
     # Fetch tags column for all photos (could paginate in large datasets)
     result = await db.execute(select(PhotoModel.tags))
@@ -198,7 +199,7 @@ async def list_distinct_tags(db: AsyncSession = Depends(get_session)):
 
 @router.get("/locations", response_model=PhotoLocationsResponse)
 async def get_photo_locations(
-    db: AsyncSession = Depends(get_session),
+    db: AsyncSession = _session_dependency,
 ):
     """Get all photos with valid location data for map display."""
     # Query photos with valid coordinates
@@ -243,8 +244,9 @@ async def get_photo_locations(
 @router.get("/{photo_id}", response_model=PhotoResponse)
 async def get_photo_detail(
     photo_id: UUID,
+    *,
     increment_views: bool = True,
-    db: AsyncSession = Depends(get_session),
+    db: AsyncSession = _session_dependency,
 ):
     """Get photo details and optionally increment view count."""
     photo = await get_photo(db, photo_id)
@@ -275,15 +277,16 @@ async def get_photo_detail(
 
 @router.post("", response_model=PhotoResponse)
 async def upload_photo(
-    file: UploadFile = File(..., description="Image file to upload"),
+    file: UploadFile = _image_file_dependency,
     title: Annotated[str, Form()] = "",
     description: Annotated[str, Form()] = "",
     category: Annotated[str, Form()] = "",
     tags: Annotated[str, Form()] = "",
     comments: Annotated[str, Form()] = "",
+    *,
     featured: Annotated[bool, Form()] = False,
-    db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_admin_user),
+    db: AsyncSession = _session_dependency,
+    current_user=_current_admin_user_dependency,
 ):
     """Upload a new photo (admin only)."""
 
@@ -331,8 +334,8 @@ async def upload_photo(
 async def update_photo_endpoint(
     photo_id: UUID,
     photo_update: PhotoUpdate,
-    db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_admin_user),
+    db: AsyncSession = _session_dependency,
+    current_user=_current_admin_user_dependency,
 ):
     """Update photo metadata (admin only)."""
     photo = await update_photo(db, photo_id, photo_update)
@@ -349,8 +352,8 @@ async def update_photo_endpoint(
 @router.delete("/{photo_id}")
 async def delete_photo_endpoint(
     photo_id: UUID,
-    db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_admin_user),
+    db: AsyncSession = _session_dependency,
+    current_user=_current_admin_user_dependency,
 ):
     """Delete photo (admin only)."""
     photo = await get_photo(db, photo_id)
@@ -375,8 +378,8 @@ async def delete_photo_endpoint(
 @router.post("/reorder")
 async def reorder_photos(
     payload: PhotoReorderRequest,
-    db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_admin_user),
+    db: AsyncSession = _session_dependency,
+    current_user=_current_admin_user_dependency,
 ):
     """Bulk reorder photos (admin only)."""
     # Convert to simple dicts for the crud layer
@@ -387,8 +390,8 @@ async def reorder_photos(
 
 @router.get("/stats/summary")
 async def get_photo_stats(
-    db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_admin_user),
+    db: AsyncSession = _session_dependency,
+    current_user=_current_admin_user_dependency,
 ):
     """Get photo statistics (admin only)."""
     total_photos = await get_photo_count(db)
@@ -405,8 +408,8 @@ async def get_photo_stats(
 async def serve_photo_original(
     photo_id: UUID,
     request: Request,
-    db: AsyncSession = Depends(get_session),
-    current_user: Any | None = Depends(get_current_user_optional),
+    db: AsyncSession = _session_dependency,
+    current_user: Any | None = _current_user_optional_dependency,
     expires: int | None = Query(None, description="Temporary URL expiration timestamp"),
     signature: str | None = Query(None, description="Temporary URL signature"),
 ):
@@ -462,8 +465,8 @@ async def serve_photo_variant(
     photo_id: UUID,
     variant: str,
     request: Request,
-    db: AsyncSession = Depends(get_session),
-    current_user: Any | None = Depends(get_current_user_optional),
+    db: AsyncSession = _session_dependency,
+    current_user: Any | None = _current_user_optional_dependency,
     expires: int | None = Query(None, description="Temporary URL expiration timestamp"),
     signature: str | None = Query(None, description="Temporary URL signature"),
 ):
@@ -523,8 +526,8 @@ async def serve_photo_variant(
 async def download_photo_original(
     photo_id: UUID,
     request: Request,
-    db: AsyncSession = Depends(get_session),
-    current_user: Any | None = Depends(get_current_user_optional),
+    db: AsyncSession = _session_dependency,
+    current_user: Any | None = _current_user_optional_dependency,
 ):
     """Download original photo file (forces download with proper filename)."""
     # Validate access
@@ -577,8 +580,8 @@ async def download_photo_variant(
     photo_id: UUID,
     variant: str,
     request: Request,
-    db: AsyncSession = Depends(get_session),
-    current_user: Any | None = Depends(get_current_user_optional),
+    db: AsyncSession = _session_dependency,
+    current_user: Any | None = _current_user_optional_dependency,
 ):
     """Download photo variant (forces download with proper filename)."""
     # Validate variant
@@ -640,8 +643,8 @@ async def generate_temporary_url(
     expires_in: int = Query(
         3600, ge=60, le=86400, description="URL expires in seconds"
     ),
-    db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_admin_user),  # Only admins can generate temp URLs
+    db: AsyncSession = _session_dependency,
+    current_user=_current_admin_user_dependency,  # Only admins can generate temp URLs
 ):
     """Generate temporary signed URL for photo access."""
     # Validate variant

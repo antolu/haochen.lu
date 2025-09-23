@@ -101,12 +101,16 @@ class TestLocationValidation:
     @pytest.mark.asyncio
     async def test_nearby_locations_invalid_radius(self):
         """Test nearby locations with invalid radius."""
-        with pytest.raises(ValueError, match="Radius must be between 0.1 and 50.0 km"):
+        with pytest.raises(
+            ValueError, match=r"Radius must be between 0\.1 and 50\.0 km"
+        ):
             await self.location_service.get_nearby_locations(
                 37.7749, -122.4194, radius_km=0.05
             )
 
-        with pytest.raises(ValueError, match="Radius must be between 0.1 and 50.0 km"):
+        with pytest.raises(
+            ValueError, match=r"Radius must be between 0\.1 and 50\.0 km"
+        ):
             await self.location_service.get_nearby_locations(
                 37.7749, -122.4194, radius_km=51
             )

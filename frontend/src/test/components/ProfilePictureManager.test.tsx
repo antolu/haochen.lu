@@ -3,6 +3,7 @@ import { describe, it, expect, vi } from "vitest";
 import { renderWithProviders, userEvent } from "../../test/utils";
 import ProfilePictureManager from "../../components/admin/ProfilePictureManager";
 import * as api from "../../api/client";
+import type { ProfilePicture } from "../../types/profilePicture";
 
 describe("ProfilePictureManager", () => {
   it("shows upload modal and calls upload API", async () => {
@@ -31,7 +32,7 @@ describe("ProfilePictureManager", () => {
         updated_at: new Date().toISOString(),
         original_url: "/api/profile-pictures/pp-1/file",
         download_url: "/api/profile-pictures/pp-1/download",
-      } as any);
+      } satisfies ProfilePicture);
 
     const { getByText, findByText } = renderWithProviders(
       <ProfilePictureManager />,

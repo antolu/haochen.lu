@@ -5,6 +5,7 @@ Revises: 004_add_alias_tables
 Create Date: 2025-09-22 21:38:20.120181
 
 """
+
 from __future__ import annotations
 
 import sqlalchemy as sa

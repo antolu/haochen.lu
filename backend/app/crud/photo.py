@@ -15,6 +15,7 @@ async def get_photos(
     skip: int = 0,
     limit: int = 20,
     category: str | None = None,
+    *,
     featured: bool | None = None,
     has_location: bool | None = None,
     near_lat: float | None = None,
@@ -74,6 +75,7 @@ async def get_photos(
 async def get_photo_count(
     db: AsyncSession,
     category: str | None = None,
+    *,
     featured: bool | None = None,
     has_location: bool | None = None,
     near_lat: float | None = None,
@@ -167,6 +169,7 @@ async def increment_view_count(db: AsyncSession, photo_id: UUID) -> None:
 async def bulk_reorder_photos(
     db: AsyncSession,
     items: list[tuple[UUID, int]] | list[dict],
+    *,
     normalize: bool = False,
 ) -> None:
     """Bulk update the order of multiple photos in a single transaction.

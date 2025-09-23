@@ -17,7 +17,10 @@ def generate_slug(title: str) -> str:
 
 
 async def get_projects(
-    db: AsyncSession, featured_only: bool = False, status: str | None = None
+    db: AsyncSession,
+    *,
+    featured_only: bool = False,
+    status: str | None = None,
 ) -> list[Project]:
     query = select(Project)
 

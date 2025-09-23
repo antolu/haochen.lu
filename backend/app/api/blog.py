@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.blog import (
@@ -27,13 +27,20 @@ from app.schemas.blog import (
 
 router = APIRouter()
 
+# Module-level dependency variables to avoid B008
+db_dependency = Depends(get_session)
+admin_dependency = Depends(get_current_admin_user)
+
 
 @router.get("", response_model=BlogPostListResponse)
 async def list_blog_posts(
     page: int = 1,
     per_page: int = 10,
-    published_only: bool = True,
-    db: AsyncSession = Depends(get_session),
+    *,
+    published_only: bool = Query(
+        default=True, description="Filter to only published posts"
+    ),
+    db: AsyncSession = db_dependency,
 ):
     """List blog posts with pagination."""
     skip = (page - 1) * per_page
@@ -58,8 +65,8 @@ async def list_blog_posts(
 async def list_all_blog_posts(
     page: int = 1,
     per_page: int = 20,
-    db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_admin_user),
+    db: AsyncSession = db_dependency,
+    current_user=admin_dependency,
 ):
     """List all blog posts including drafts (admin only)."""
     skip = (page - 1) * per_page
@@ -81,8 +88,11 @@ async def list_all_blog_posts(
 @router.get("/{post_identifier}", response_model=BlogPostResponse)
 async def get_blog_post_detail(
     post_identifier: str,
-    increment_views: bool = True,
-    db: AsyncSession = Depends(get_session),
+    *,
+    increment_views: bool = Query(
+        default=True, description="Whether to increment view count"
+    ),
+    db: AsyncSession = db_dependency,
 ):
     """Get blog post by ID or slug."""
     post = None
@@ -114,8 +124,8 @@ async def get_blog_post_detail(
 @router.post("", response_model=BlogPostResponse)
 async def create_blog_post_endpoint(
     post: BlogPostCreate,
-    db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_admin_user),
+    db: AsyncSession = db_dependency,
+    current_user=admin_dependency,
 ):
     """Create a new blog post (admin only)."""
     try:
@@ -131,8 +141,8 @@ async def create_blog_post_endpoint(
 async def update_blog_post_endpoint(
     post_id: UUID,
     post_update: BlogPostUpdate,
-    db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_admin_user),
+    db: AsyncSession = db_dependency,
+    current_user=admin_dependency,
 ):
     """Update blog post (admin only)."""
     post = await update_blog_post(db, post_id, post_update)
@@ -145,8 +155,8 @@ async def update_blog_post_endpoint(
 @router.delete("/{post_id}")
 async def delete_blog_post_endpoint(
     post_id: UUID,
-    db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_admin_user),
+    db: AsyncSession = db_dependency,
+    current_user=admin_dependency,
 ):
     """Delete blog post (admin only)."""
     success = await delete_blog_post(db, post_id)
@@ -158,8 +168,8 @@ async def delete_blog_post_endpoint(
 
 @router.get("/stats/summary")
 async def get_blog_stats(
-    db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_admin_user),
+    db: AsyncSession = db_dependency,
+    current_user=admin_dependency,
 ):
     """Get blog statistics (admin only)."""
     total_posts = await get_blog_post_count(db, published_only=False)

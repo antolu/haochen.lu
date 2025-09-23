@@ -248,7 +248,11 @@ class ImageProcessor:
         return True
 
     async def sanitize_metadata(
-        self, image_path: str, remove_gps: bool = True, remove_personal: bool = True
+        self,
+        image_path: str,
+        *,
+        remove_gps: bool = True,
+        remove_personal: bool = True,
     ) -> bytes:
         # Simple sanitization: re-save without EXIF
         return await asyncio.to_thread(self._sanitize_sync, image_path)
@@ -283,6 +287,7 @@ class ImageProcessor:
             decimal = deg + (minutes / 60.0) + (seconds / 3600.0)
             if ref in ["S", "W"]:
                 decimal = -decimal
-            return decimal
         except Exception:
             return None
+        else:
+            return decimal

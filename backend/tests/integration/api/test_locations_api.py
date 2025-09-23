@@ -425,7 +425,7 @@ class TestLocationAPIPerformance:
 
     def test_concurrent_requests_handling(self, client, mock_location_service):
         """Test that API can handle multiple concurrent requests."""
-        import threading
+        import threading  # noqa: PLC0415
 
         mock_location_service.reverse_geocode.return_value = {
             "location_name": "Test",
@@ -459,7 +459,7 @@ class TestLocationAPIPerformance:
 
     def test_response_time_reasonable(self, client, mock_location_service):
         """Test that API response times are reasonable."""
-        import time
+        import time  # noqa: PLC0415
 
         mock_location_service.reverse_geocode.return_value = {
             "location_name": "Test",

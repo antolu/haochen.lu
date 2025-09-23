@@ -135,13 +135,12 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
             results = await pipe.execute()
             current_calls = results[1]  # Result from zcard
-
-            return current_calls >= calls_allowed
-
         except Exception as e:
             # If Redis fails, allow the request
             print(f"Rate limiting error: {e}")
             return False
+        else:
+            return current_calls >= calls_allowed
 
     async def _get_remaining_calls(
         self, client_id: str, calls_allowed: int, period: int, key_suffix: str
@@ -192,8 +191,7 @@ class FileAccessRateLimiter:
 
             results = await pipe.execute()
             current_downloads = results[1]
-
-            return current_downloads < limit
-
         except Exception:
             return True
+        else:
+            return current_downloads < limit

@@ -663,7 +663,7 @@ class TestCookieSecurityValidation:
         }
 
         # Mock production environment
-        with patch.object(settings, "COOKIE_SECURE", True):
+        with patch.object(settings, "COOKIE_SECURE", new=True):
             response = await async_client.post("/api/auth/login", json=login_data)
 
             refresh_cookie = None

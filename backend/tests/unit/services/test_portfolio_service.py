@@ -10,10 +10,10 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 
 import pytest
-from app.core.exceptions import BusinessLogicError, ValidationError
 from app.services.portfolio_service import PortfolioService
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.exceptions import BusinessLogicError, ValidationError
 from tests.factories import PhotoFactory, ProjectFactory, UserFactory
 
 

@@ -12,7 +12,7 @@ class CameraAliasBase(BaseModel):
     brand: str | None = Field(None, description="Normalized brand name")
     model: str | None = Field(None, description="Normalized model name")
     notes: str | None = Field(None, description="Optional notes about the alias")
-    is_active: bool = Field(True, description="Whether the alias is active")
+    is_active: bool = Field(default=True, description="Whether the alias is active")
 
 
 class CameraAliasCreate(CameraAliasBase):

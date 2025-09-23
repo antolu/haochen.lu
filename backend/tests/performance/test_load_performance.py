@@ -191,12 +191,11 @@ class TestMemoryPerformance:
         try:
             for i in range(10):
                 img = Image.new("RGB", (1000, 800), color=(i * 25, i * 25, i * 25))
-                temp_file = tempfile.NamedTemporaryFile(
+                with tempfile.NamedTemporaryFile(
                     suffix=f"_mem_test_{i}.jpg", delete=False
-                )
-                img.save(temp_file, format="JPEG", quality=80)
-                temp_file.close()
-                temp_files.append(temp_file.name)
+                ) as temp_file:
+                    img.save(temp_file, format="JPEG", quality=80)
+                    temp_files.append(temp_file.name)
 
             # Upload images sequentially and monitor memory
             memory_readings = [initial_memory]
@@ -366,12 +365,11 @@ class TestImageProcessingPerformance:
         try:
             for i in range(5):
                 img = Image.new("RGB", (1200, 800), color=(i * 50, i * 50, i * 50))
-                temp_file = tempfile.NamedTemporaryFile(
+                with tempfile.NamedTemporaryFile(
                     suffix=f"_concurrent_{i}.jpg", delete=False
-                )
-                img.save(temp_file, format="JPEG", quality=85)
-                temp_file.close()
-                temp_files.append(temp_file.name)
+                ) as temp_file:
+                    img.save(temp_file, format="JPEG", quality=85)
+                    temp_files.append(temp_file.name)
 
             async def upload_image(file_path: str, index: int):
                 start_time = time.time()

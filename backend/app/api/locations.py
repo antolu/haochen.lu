@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
 from app.core.location_service import location_service
-from app.dependencies import get_current_admin_user
+from app.dependencies import _current_admin_user_dependency
 
 router = APIRouter(prefix="/locations", tags=["locations"])
 
@@ -180,7 +180,7 @@ async def get_nearby_locations(
 
 @router.get("/cache/stats")
 async def get_cache_stats(
-    current_user=Depends(get_current_admin_user),
+    current_user=_current_admin_user_dependency,
 ) -> dict[str, int]:
     """Get location cache statistics (admin only)."""
     return await location_service.get_cache_stats()
@@ -191,7 +191,7 @@ async def clear_cache(
     operation: str | None = Query(
         None, description="Operation type to clear (reverse, forward, search)"
     ),
-    current_user=Depends(get_current_admin_user),
+    current_user=_current_admin_user_dependency,
 ) -> dict[str, int | str]:
     """Clear location cache (admin only)."""
     deleted_count = await location_service.clear_cache(operation)

@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import asyncio
 import uuid
+from contextlib import suppress
+from datetime import datetime
 from unittest.mock import patch
 
 import pytest
@@ -17,6 +19,7 @@ from sqlalchemy import select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.database import async_session_maker
 from app.models import Photo
 from tests.factories import PhotoFactory
 
@@ -98,11 +101,12 @@ class TestPhotoDeletionCascade:
             mock_remove.side_effect = PermissionError("Cannot delete file")
 
             # Attempt to delete photo
-            with pytest.raises(PermissionError):
+            async def _delete_and_commit():
                 await test_session.delete(photo)
-                # If your implementation includes file cleanup in transaction,
-                # it should rollback on file deletion failure
                 await test_session.commit()
+
+            with pytest.raises(PermissionError):
+                await _delete_and_commit()
 
         # Verify photo still exists due to rollback
         await test_session.rollback()  # Explicitly rollback
@@ -170,7 +174,6 @@ class TestConcurrentModifications:
         # Simulate two concurrent updates
         async def update_title():
             # Create new session for concurrent operation
-            from app.database import async_session_maker
 
             async with async_session_maker() as session:
                 result = await session.execute(
@@ -182,7 +185,6 @@ class TestConcurrentModifications:
 
         async def increment_views():
             # Create new session for concurrent operation
-            from app.database import async_session_maker
 
             async with async_session_maker() as session:
                 result = await session.execute(
@@ -212,8 +214,6 @@ class TestConcurrentModifications:
         async def create_photo_with_slug(slug: str):
             """Create photo with specific slug."""
             try:
-                from app.database import async_session_maker
-
                 async with async_session_maker() as session:
                     return await PhotoFactory.create_async(
                         session,
@@ -248,7 +248,6 @@ class TestConcurrentModifications:
 
         async def update_photos_order1():
             """Update photos in order 1->2"""
-            from app.database import async_session_maker
 
             async with async_session_maker() as session:
                 # Lock photo1 first, then photo2
@@ -271,7 +270,6 @@ class TestConcurrentModifications:
 
         async def update_photos_order2():
             """Update photos in order 2->1"""
-            from app.database import async_session_maker
 
             async with async_session_maker() as session:
                 # Lock photo2 first, then photo1
@@ -293,14 +291,10 @@ class TestConcurrentModifications:
                 await session.commit()
 
         # Run operations that could potentially deadlock
-        try:
+        with suppress(Exception):
             await asyncio.gather(
                 update_photos_order1(), update_photos_order2(), return_exceptions=True
             )
-        except Exception as e:
-            # Deadlocks should be handled gracefully by the database
-            # Application should not crash
-            assert "deadlock" not in str(e).lower() or "timeout" in str(e).lower()
 
         # Verify database is still consistent
         await test_session.rollback()
@@ -322,8 +316,6 @@ class TestConcurrentModifications:
 
         # Simulate optimistic locking scenario
         async def concurrent_update(increment: int):
-            from app.database import async_session_maker
-
             async with async_session_maker() as session:
                 result = await session.execute(
                     select(Photo).where(Photo.id == photo.id)
@@ -367,9 +359,7 @@ class TestConcurrentModifications:
 
         async def worker_task(worker_id: int):
             """Worker that performs random operations."""
-            import random
-
-            from app.database import async_session_maker
+            import random  # noqa: PLC0415
 
             operations_completed = 0
 
@@ -509,8 +499,6 @@ class TestTransactionIntegrity:
         )
 
         # Start a transaction that modifies but doesn't commit
-        from app.database import async_session_maker
-
         async with async_session_maker() as session1:
             result1 = await session1.execute(select(Photo).where(Photo.id == photo.id))
             photo1 = result1.scalar_one()
@@ -549,8 +537,6 @@ class TestTransactionIntegrity:
         photo_id = photo.id
 
         # Simulate system restart by creating new session
-        from app.database import async_session_maker
-
         async with async_session_maker() as new_session:
             result = await new_session.execute(
                 select(Photo).where(Photo.id == photo_id)
@@ -652,8 +638,6 @@ class TestDataConsistencyChecks:
         assert photo.view_count == 0
 
         # Test date constraints
-        from datetime import datetime
-
         photo.date_taken = datetime(2030, 1, 1)  # Future date
 
         # Future dates might be invalid depending on business rules

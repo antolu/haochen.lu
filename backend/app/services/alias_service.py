@@ -87,6 +87,6 @@ class AliasService:
         return photos
 
 
-async def create_alias_service(db: AsyncSession) -> AliasService:
+def create_alias_service(db: AsyncSession) -> AliasService:
     """Factory function to create an AliasService instance."""
     return AliasService(db)

@@ -16,7 +16,7 @@ def generate_slug(title: str) -> str:
 
 
 async def get_blog_posts(
-    db: AsyncSession, skip: int = 0, limit: int = 20, published_only: bool = True
+    db: AsyncSession, skip: int = 0, limit: int = 20, *, published_only: bool = True
 ) -> list[BlogPost]:
     query = select(BlogPost)
 
@@ -30,7 +30,7 @@ async def get_blog_posts(
     return list(result.scalars().all())
 
 
-async def get_blog_post_count(db: AsyncSession, published_only: bool = True) -> int:
+async def get_blog_post_count(db: AsyncSession, *, published_only: bool = True) -> int:
     query = select(func.count(BlogPost.id))
 
     if published_only:

@@ -45,7 +45,7 @@ class TestLoginFlow:
         assert data["token_type"] == "bearer"
 
         # Verify token is valid
-        from app.core.security import decode_token
+        from app.core.security import decode_token  # noqa: PLC0415
 
         payload = decode_token(data["access_token"])
         assert payload is not None

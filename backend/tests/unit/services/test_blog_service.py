@@ -10,10 +10,10 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 
 import pytest
-from app.core.exceptions import ValidationError
 from app.services.blog_service import BlogService
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.exceptions import ValidationError
 from tests.factories import BlogPostFactory, UserFactory
 
 

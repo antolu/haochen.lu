@@ -23,10 +23,14 @@ from app.schemas.content import (
 
 router = APIRouter(prefix="/content", tags=["content"])
 
+# Module-level dependency variables to avoid B008
+db_dependency = Depends(get_session)
+admin_dependency = Depends(get_current_admin_user)
+
 
 @router.get("/public", response_model=dict[str, ContentKeyValueResponse])
 async def get_public_content(
-    db: AsyncSession = Depends(get_session),
+    db: AsyncSession = db_dependency,
     keys: str | None = Query(None, description="Comma-separated list of content keys"),
     category: str | None = Query(None, description="Filter by content category"),
 ):
@@ -55,7 +59,7 @@ async def get_public_content(
 @router.get("/key/{key}", response_model=ContentKeyValueResponse)
 async def get_public_content_by_key_endpoint(
     key: str,
-    db: AsyncSession = Depends(get_session),
+    db: AsyncSession = db_dependency,
 ):
     """
     Retrieve a single public (active) content item by its unique key.
@@ -71,12 +75,13 @@ async def get_public_content_by_key_endpoint(
 
 @router.get("", response_model=ContentListResponse)
 async def list_content(
-    db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_admin_user),
+    db: AsyncSession = db_dependency,
+    current_user=admin_dependency,
     page: int = Query(1, ge=1),
     per_page: int = Query(10, ge=1, le=100),
     category: str | None = Query(None),
-    is_active: bool | None = Query(None),
+    *,
+    is_active: bool | None = Query(default=None),
     search: str | None = Query(None),
     order_by: str = Query("created_at"),
     order_direction: str = Query("desc"),
@@ -99,8 +104,8 @@ async def list_content(
 @router.get("/{content_id}", response_model=ContentResponse)
 async def get_content_by_id_endpoint(
     content_id: str,
-    db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_admin_user),
+    db: AsyncSession = db_dependency,
+    current_user=admin_dependency,
 ):
     """
     Retrieve a single content item by ID (admin only).
@@ -116,8 +121,8 @@ async def get_content_by_id_endpoint(
 @router.post("", response_model=ContentResponse, status_code=status.HTTP_201_CREATED)
 async def create_content_endpoint(
     content_in: ContentCreate,
-    db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_admin_user),
+    db: AsyncSession = db_dependency,
+    current_user=admin_dependency,
 ):
     """
     Create a new content item (admin only).
@@ -135,8 +140,8 @@ async def create_content_endpoint(
 async def update_content_endpoint(
     content_id: str,
     content_in: ContentUpdate,
-    db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_admin_user),
+    db: AsyncSession = db_dependency,
+    current_user=admin_dependency,
 ):
     """
     Update an existing content item (admin only).
@@ -152,8 +157,8 @@ async def update_content_endpoint(
 @router.delete("/{content_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_content_endpoint(
     content_id: str,
-    db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_admin_user),
+    db: AsyncSession = db_dependency,
+    current_user=admin_dependency,
 ):
     """
     Delete a content item (admin only).

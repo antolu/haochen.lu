@@ -88,7 +88,7 @@ def malicious_headers():
 
 
 @pytest.fixture
-async def expired_tokens(security_settings):
+def expired_tokens(security_settings):
     """Generate expired tokens for testing."""
     # Create tokens that are already expired
     past_time = datetime.utcnow() - timedelta(hours=1)
@@ -245,7 +245,7 @@ def timing_attack_data():
 
 
 @pytest.fixture
-async def concurrent_login_clients():
+def concurrent_login_clients():
     """Multiple concurrent clients for load testing."""
     # In a real test, you'd create actual AsyncClient instances
     # This is a placeholder for the concept
@@ -389,7 +389,7 @@ class SecurityTestContext:
 
 
 @pytest.fixture
-async def security_context(mock_redis_for_security):
+def security_context(mock_redis_for_security):
     """Security test context fixture."""
     return SecurityTestContext(mock_redis_for_security)
 
@@ -405,7 +405,7 @@ class NetworkConditionMock:
     async def apply_conditions(self, func):
         """Apply network conditions to a function call."""
         if self.packet_loss > 0:
-            import random
+            import random  # noqa: PLC0415
 
             if random.random() < self.packet_loss:
                 msg = "Simulated packet loss"

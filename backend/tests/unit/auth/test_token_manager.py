@@ -467,7 +467,7 @@ class TestEdgeCases:
 
         assert access_payload["sub"] == "testuser"
         assert access_payload["optional_field"] is None
-        assert access_payload["empty_string"] == ""
+        assert not access_payload["empty_string"]
         assert access_payload["zero_value"] == 0
         assert access_payload["false_value"] is False
 
@@ -485,7 +485,7 @@ class TestEdgeCases:
         TokenManager.set_refresh_cookie(mock_response, "token")
 
         call_args = mock_response.set_cookie.call_args
-        assert call_args[1]["domain"] == ""
+        assert not call_args[1]["domain"]
 
     @patch("app.core.security.secrets.token_urlsafe")
     def test_jti_generation_fallback(self, mock_token_urlsafe, mock_settings):

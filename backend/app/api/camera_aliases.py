@@ -22,6 +22,9 @@ from app.schemas.camera_alias import (
 
 router = APIRouter()
 
+# Module-level dependency variables to avoid B008
+db_dependency = Depends(get_session)
+
 
 @router.get("", response_model=CameraAliasListResponse)
 async def list_camera_aliases(
@@ -29,8 +32,9 @@ async def list_camera_aliases(
     per_page: int = Query(50, ge=1, le=100, description="Items per page"),
     search: str | None = Query(None, description="Search in original or display name"),
     brand: str | None = Query(None, description="Filter by brand"),
-    is_active: bool | None = Query(None, description="Filter by active status"),
-    db: AsyncSession = Depends(get_session),
+    *,
+    is_active: bool | None = Query(default=None, description="Filter by active status"),
+    db: AsyncSession = db_dependency,
 ) -> CameraAliasListResponse:
     """List camera aliases with pagination and filtering."""
 
@@ -79,7 +83,7 @@ async def list_camera_aliases(
 @router.post("", response_model=CameraAliasResponse)
 async def create_camera_alias(
     alias_data: CameraAliasCreate,
-    db: AsyncSession = Depends(get_session),
+    db: AsyncSession = db_dependency,
 ) -> CameraAliasResponse:
     """Create a new camera alias."""
 
@@ -105,7 +109,7 @@ async def create_camera_alias(
 @router.get("/{alias_id}", response_model=CameraAliasResponse)
 async def get_camera_alias(
     alias_id: uuid.UUID,
-    db: AsyncSession = Depends(get_session),
+    db: AsyncSession = db_dependency,
 ) -> CameraAliasResponse:
     """Get a specific camera alias by ID."""
 
@@ -122,7 +126,7 @@ async def get_camera_alias(
 async def update_camera_alias(
     alias_id: uuid.UUID,
     alias_data: CameraAliasUpdate,
-    db: AsyncSession = Depends(get_session),
+    db: AsyncSession = db_dependency,
 ) -> CameraAliasResponse:
     """Update a camera alias."""
 
@@ -146,7 +150,7 @@ async def update_camera_alias(
 @router.delete("/{alias_id}")
 async def delete_camera_alias(
     alias_id: uuid.UUID,
-    db: AsyncSession = Depends(get_session),
+    db: AsyncSession = db_dependency,
 ) -> dict[str, str]:
     """Delete a camera alias."""
 
@@ -164,7 +168,7 @@ async def delete_camera_alias(
 
 @router.get("/discover/cameras", response_model=CameraDiscoveryResponse)
 async def discover_cameras(
-    db: AsyncSession = Depends(get_session),
+    db: AsyncSession = db_dependency,
 ) -> CameraDiscoveryResponse:
     """Discover unique cameras from photos that don't have aliases yet."""
 

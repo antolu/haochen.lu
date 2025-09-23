@@ -13,9 +13,10 @@ import os
 import tempfile
 
 import pytest
+from PIL import Image
+
 from app.core.exceptions import ImageProcessingError, UnsupportedFileTypeError
 from app.services.image_processor import ImageProcessor
-from PIL import Image
 
 
 class TestImageProcessing:
@@ -56,7 +57,7 @@ class TestImageProcessing:
         # Convert to bytes
         buffer = io.BytesIO()
         try:
-            import piexif
+            import piexif  # noqa: PLC0415
 
             exif_bytes = piexif.dump(exif_dict)
             img.save(buffer, format="JPEG", exif=exif_bytes)
@@ -309,12 +310,11 @@ class TestImageProcessing:
         # Create multiple temporary files
         temp_files = []
         for i in range(5):
-            temp_file = tempfile.NamedTemporaryFile(
+            with tempfile.NamedTemporaryFile(
                 suffix=f"_test_{i}.jpg", delete=False
-            )
-            temp_file.write(sample_jpeg_bytes)
-            temp_file.close()
-            temp_files.append(temp_file.name)
+            ) as temp_file:
+                temp_file.write(sample_jpeg_bytes)
+                temp_files.append(temp_file.name)
 
         try:
             # Process all images concurrently

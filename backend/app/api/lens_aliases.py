@@ -4,11 +4,11 @@ import uuid
 from math import ceil
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database import get_session
+from app.dependencies import _session_dependency
 from app.models.lens_alias import LensAlias
 from app.models.photo import Photo
 from app.schemas.lens_alias import (
@@ -30,8 +30,9 @@ async def list_lens_aliases(
     search: str | None = Query(None, description="Search in original or display name"),
     brand: str | None = Query(None, description="Filter by brand"),
     mount_type: str | None = Query(None, description="Filter by mount type"),
-    is_active: bool | None = Query(None, description="Filter by active status"),
-    db: AsyncSession = Depends(get_session),
+    *,
+    is_active: bool | None = Query(default=None, description="Filter by active status"),
+    db: AsyncSession = _session_dependency,
 ) -> LensAliasListResponse:
     """List lens aliases with pagination and filtering."""
 
@@ -83,7 +84,7 @@ async def list_lens_aliases(
 @router.post("", response_model=LensAliasResponse)
 async def create_lens_alias(
     alias_data: LensAliasCreate,
-    db: AsyncSession = Depends(get_session),
+    db: AsyncSession = _session_dependency,
 ) -> LensAliasResponse:
     """Create a new lens alias."""
 
@@ -109,7 +110,7 @@ async def create_lens_alias(
 @router.get("/{alias_id}", response_model=LensAliasResponse)
 async def get_lens_alias(
     alias_id: uuid.UUID,
-    db: AsyncSession = Depends(get_session),
+    db: AsyncSession = _session_dependency,
 ) -> LensAliasResponse:
     """Get a specific lens alias by ID."""
 
@@ -126,7 +127,7 @@ async def get_lens_alias(
 async def update_lens_alias(
     alias_id: uuid.UUID,
     alias_data: LensAliasUpdate,
-    db: AsyncSession = Depends(get_session),
+    db: AsyncSession = _session_dependency,
 ) -> LensAliasResponse:
     """Update a lens alias."""
 
@@ -150,7 +151,7 @@ async def update_lens_alias(
 @router.delete("/{alias_id}")
 async def delete_lens_alias(
     alias_id: uuid.UUID,
-    db: AsyncSession = Depends(get_session),
+    db: AsyncSession = _session_dependency,
 ) -> dict[str, str]:
     """Delete a lens alias."""
 
@@ -168,7 +169,7 @@ async def delete_lens_alias(
 
 @router.get("/discover/lenses", response_model=LensDiscoveryResponse)
 async def discover_lenses(
-    db: AsyncSession = Depends(get_session),
+    db: AsyncSession = _session_dependency,
 ) -> LensDiscoveryResponse:
     """Discover unique lenses from photos that don't have aliases yet."""
 

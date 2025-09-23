@@ -64,12 +64,12 @@ class RedisClient:
             # Test connection
             await self._redis.ping()
             logger.info("Connected to Redis successfully")
-            return True
-
         except Exception as e:
             logger.warning(f"Failed to connect to Redis: {e}")
             self._redis = None
             return False
+        else:
+            return True
 
     async def disconnect(self):
         """Close Redis connection"""
@@ -84,9 +84,10 @@ class RedisClient:
 
         try:
             await self._redis.ping()
-            return True
         except Exception:
             return False
+        else:
+            return True
 
     async def set(self, key: str, value: str, ex: int | None = None) -> bool:
         """Set a key-value pair with optional expiration"""
@@ -95,10 +96,11 @@ class RedisClient:
 
         try:
             await self._redis.set(key, value, ex=ex)
-            return True
-        except Exception as e:
-            logger.exception(f"Redis SET failed: {e}")
+        except Exception:
+            logger.exception("Redis SET failed")
             return False
+        else:
+            return True
 
     async def setex(self, key: str, time: int, value: str) -> bool:
         """Set key with expiration time"""
@@ -117,10 +119,11 @@ class RedisClient:
                     return value.decode()
                 except Exception:
                     return None
-            return value
-        except Exception as e:
-            logger.exception(f"Redis GET failed: {e}")
+        except Exception:
+            logger.exception("Redis GET failed")
             return None
+        else:
+            return value
 
     async def delete(self, *keys: str) -> int:
         """Delete one or more keys"""
@@ -129,8 +132,8 @@ class RedisClient:
 
         try:
             return await self._redis.delete(*keys)
-        except Exception as e:
-            logger.exception(f"Redis DELETE failed: {e}")
+        except Exception:
+            logger.exception("Redis DELETE failed")
             return 0
 
     async def keys(self, pattern: str) -> list[str]:
@@ -140,8 +143,8 @@ class RedisClient:
 
         try:
             return await self._redis.keys(pattern)
-        except Exception as e:
-            logger.exception(f"Redis KEYS failed: {e}")
+        except Exception:
+            logger.exception("Redis KEYS failed")
             return []
 
     async def exists(self, key: str) -> bool:
@@ -151,8 +154,8 @@ class RedisClient:
 
         try:
             return bool(await self._redis.exists(key))
-        except Exception as e:
-            logger.exception(f"Redis EXISTS failed: {e}")
+        except Exception:
+            logger.exception("Redis EXISTS failed")
             return False
 
     async def ttl(self, key: str) -> int:
@@ -162,8 +165,8 @@ class RedisClient:
 
         try:
             return await self._redis.ttl(key)
-        except Exception as e:
-            logger.exception(f"Redis TTL failed: {e}")
+        except Exception:
+            logger.exception("Redis TTL failed")
             return -1
 
 

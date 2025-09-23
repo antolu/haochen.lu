@@ -170,7 +170,7 @@ class TestPhotoUploadGPSWorkflow:
                 "date_taken": result.get("date_taken"),
             }
 
-            from app.schemas.photo import PhotoCreate
+            from app.schemas.photo import PhotoCreate  # noqa: PLC0415
 
             photo_create = PhotoCreate(
                 title=photo_data["title"],
@@ -604,7 +604,7 @@ async def test_end_to_end_workflow_with_database(
         assert photo_id in photo_ids
 
         # 5. Verify database record directly
-        from uuid import UUID
+        from uuid import UUID  # noqa: PLC0415
 
         db_photo = await get_photo(db_session, UUID(photo_id))
         assert db_photo is not None

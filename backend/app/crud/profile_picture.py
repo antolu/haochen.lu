@@ -31,7 +31,9 @@ async def get_profile_picture_count(db: AsyncSession) -> int:
     return len(list(result.scalars().all()))
 
 
-async def get_profile_picture(db: AsyncSession, profile_picture_id: UUID) -> ProfilePicture | None:
+async def get_profile_picture(
+    db: AsyncSession, profile_picture_id: UUID
+) -> ProfilePicture | None:
     """Get profile picture by ID."""
     result = await db.execute(
         select(ProfilePicture).where(ProfilePicture.id == profile_picture_id)
@@ -41,9 +43,7 @@ async def get_profile_picture(db: AsyncSession, profile_picture_id: UUID) -> Pro
 
 async def get_active_profile_picture(db: AsyncSession) -> ProfilePicture | None:
     """Get the currently active profile picture."""
-    result = await db.execute(
-        select(ProfilePicture).where(ProfilePicture.is_active)
-    )
+    result = await db.execute(select(ProfilePicture).where(ProfilePicture.is_active))
     return result.scalar_one_or_none()
 
 
@@ -130,9 +130,7 @@ async def activate_profile_picture(
 
 async def deactivate_all_profile_pictures(db: AsyncSession) -> None:
     """Deactivate all profile pictures."""
-    await db.execute(
-        update(ProfilePicture).values(is_active=False)
-    )
+    await db.execute(update(ProfilePicture).values(is_active=False))
 
 
 async def delete_profile_picture(db: AsyncSession, profile_picture_id: UUID) -> bool:

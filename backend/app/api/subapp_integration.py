@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 import yaml
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.subapp import get_subapp_by_slug
-from app.database import get_session
-from app.dependencies import get_current_admin_user
+from app.dependencies import (
+    _current_admin_user_dependency,
+    _session_dependency,
+)
 from app.schemas.subapp_config import (
     SubAppConfig,
     SubAppConfigValidationResponse,
@@ -33,14 +35,14 @@ def parse_yaml_safely(yaml_content: str) -> tuple[dict | None, list[str]]:
             errors.append("YAML must contain a dictionary/object at root level")
             return None, errors
 
-        return data, errors
-
     except yaml.YAMLError as e:
         errors.append(f"Invalid YAML syntax: {e!s}")
         return None, errors
     except Exception as e:
         errors.append(f"Failed to parse YAML: {e!s}")
         return None, errors
+    else:
+        return data, errors
 
 
 def validate_subapp_config(
@@ -76,8 +78,6 @@ def validate_subapp_config(
             if "=" not in env_var and not env_var.startswith("${")
         )
 
-        return config, errors, warnings
-
     except ValidationError as e:
         for error in e.errors():
             field_path = " -> ".join(str(x) for x in error["loc"])
@@ -86,13 +86,15 @@ def validate_subapp_config(
     except Exception as e:
         errors.append(f"Validation error: {e!s}")
         return None, errors, warnings
+    else:
+        return config, errors, warnings
 
 
 @router.post("/validate", response_model=SubAppConfigValidationResponse)
 async def validate_subapp_config_endpoint(
     request: SubAppIntegrationRequest,
-    db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_admin_user),
+    db: AsyncSession = _session_dependency,
+    current_user=_current_admin_user_dependency,
 ):
     """Validate subapp YAML configuration."""
 
@@ -128,8 +130,8 @@ async def validate_subapp_config_endpoint(
 @router.post("/integrate")
 async def integrate_subapp(
     request: SubAppIntegrationRequest,
-    db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_admin_user),
+    db: AsyncSession = _session_dependency,
+    current_user=_current_admin_user_dependency,
 ):
     """Integrate a new subapp from YAML configuration."""
 

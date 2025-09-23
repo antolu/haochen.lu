@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,8 +18,10 @@ from app.crud.project import (
     update_project,
     update_project_readme,
 )
-from app.database import get_session
-from app.dependencies import get_current_admin_user
+from app.dependencies import (
+    _current_admin_user_dependency,
+    _session_dependency,
+)
 from app.models.project import Project as ProjectModel
 from app.schemas.project import (
     ProjectCreate,
@@ -34,9 +36,10 @@ router = APIRouter()
 
 @router.get("", response_model=ProjectListResponse)
 async def list_projects(
+    *,
     featured_only: bool = False,
     status: str | None = None,
-    db: AsyncSession = Depends(get_session),
+    db: AsyncSession = _session_dependency,
 ):
     """List all projects."""
     projects = await get_projects(db, featured_only=featured_only, status=status)
@@ -50,14 +53,14 @@ async def list_projects(
 
 
 @router.get("/featured", response_model=list[ProjectResponse])
-async def list_featured_projects(db: AsyncSession = Depends(get_session)):
+async def list_featured_projects(db: AsyncSession = _session_dependency):
     """Get featured projects."""
     projects = await get_projects(db, featured_only=True)
     return [ProjectResponse.model_validate(project) for project in projects]
 
 
 @router.get("/technologies", response_model=list[str])
-async def list_distinct_technologies(db: AsyncSession = Depends(get_session)):
+async def list_distinct_technologies(db: AsyncSession = _session_dependency):
     """Return a distinct, sorted list of technologies across all projects."""
 
     result = await db.execute(select(ProjectModel.technologies))
@@ -89,8 +92,8 @@ async def list_distinct_technologies(db: AsyncSession = Depends(get_session)):
 
 @router.get("/stats/summary")
 async def get_project_stats(
-    db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_admin_user),
+    db: AsyncSession = _session_dependency,
+    current_user=_current_admin_user_dependency,
 ):
     """Get project statistics (admin only)."""
     total_projects = await get_project_count(db)
@@ -102,7 +105,7 @@ async def get_project_stats(
 @router.post("/repository/validate")
 async def validate_repository_url(
     request: dict,
-    current_user=Depends(get_current_admin_user),
+    current_user=_current_admin_user_dependency,
 ):
     """Validate a repository URL and return repository info (admin only)."""
     repository_url = request.get("repository_url")
@@ -130,7 +133,7 @@ async def validate_repository_url(
 
 @router.get("/{project_identifier}", response_model=ProjectResponse)
 async def get_project_detail(
-    project_identifier: str, db: AsyncSession = Depends(get_session)
+    project_identifier: str, db: AsyncSession = _session_dependency
 ):
     """Get project by ID or slug."""
     project = None
@@ -152,8 +155,8 @@ async def get_project_detail(
 @router.post("", response_model=ProjectResponse)
 async def create_project_endpoint(
     project: ProjectCreate,
-    db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_admin_user),
+    db: AsyncSession = _session_dependency,
+    current_user=_current_admin_user_dependency,
 ):
     """Create a new project (admin only)."""
     try:
@@ -169,8 +172,8 @@ async def create_project_endpoint(
 async def update_project_endpoint(
     project_id: UUID,
     project_update: ProjectUpdate,
-    db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_admin_user),
+    db: AsyncSession = _session_dependency,
+    current_user=_current_admin_user_dependency,
 ):
     """Update project (admin only)."""
     project = await update_project(db, project_id, project_update)
@@ -183,8 +186,8 @@ async def update_project_endpoint(
 @router.delete("/{project_id}")
 async def delete_project_endpoint(
     project_id: UUID,
-    db: AsyncSession = Depends(get_session),
-    current_user=Depends(get_current_admin_user),
+    db: AsyncSession = _session_dependency,
+    current_user=_current_admin_user_dependency,
 ):
     """Delete project (admin only)."""
     success = await delete_project(db, project_id)
@@ -197,8 +200,9 @@ async def delete_project_endpoint(
 @router.get("/{project_identifier}/readme", response_model=ReadmeResponse)
 async def get_project_readme(
     project_identifier: str,
+    *,
     refresh: bool = False,
-    db: AsyncSession = Depends(get_session),
+    db: AsyncSession = _session_dependency,
 ):
     """Get project README content."""
     project = None

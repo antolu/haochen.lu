@@ -81,7 +81,7 @@ class TestProjectsAPI:
         self, async_client: AsyncClient, test_session: AsyncSession
     ):
         """Test GET /api/projects with sorting."""
-        from datetime import datetime, timedelta
+        from datetime import datetime, timedelta  # noqa: PLC0415
 
         # Create projects with different dates and titles
         projects_data = [
@@ -123,7 +123,7 @@ class TestProjectsAPI:
         assert data["id"] == str(project.id)
         assert data["title"] == "Test Project"
         assert data["description"] == "A test project for API testing"
-        import json as _json
+        import json as _json  # noqa: PLC0415
 
         techs_val = data.get("technologies")
         parsed = _json.loads(techs_val) if isinstance(techs_val, str) else techs_val
@@ -166,7 +166,7 @@ class TestProjectsAPI:
         assert "id" in created_project
         assert created_project["title"] == "New API Project"
         assert created_project["description"] == "A project created via API testing"
-        import json as _json2
+        import json as _json2  # noqa: PLC0415
 
         created_val = created_project.get("technologies")
         parsed_created = (
@@ -251,7 +251,7 @@ class TestProjectsAPI:
 
         assert updated_project["title"] == "Updated Project Title"
         assert updated_project["description"] == "Updated description with more details"
-        import json as _json3
+        import json as _json3  # noqa: PLC0415
 
         upd_val = updated_project.get("technologies")
         parsed_upd = _json3.loads(upd_val) if isinstance(upd_val, str) else upd_val
@@ -538,7 +538,7 @@ class TestProjectsAPIPerformance:
         self, async_client: AsyncClient, test_session: AsyncSession
     ):
         """Test performance with large number of projects."""
-        import time
+        import time  # noqa: PLC0415
 
         # Create many projects
         await ProjectFactory.create_batch_async(test_session, 50)
@@ -561,7 +561,7 @@ class TestProjectsAPIPerformance:
         self, async_client: AsyncClient, test_session: AsyncSession
     ):
         """Test search performance."""
-        import time
+        import time  # noqa: PLC0415
 
         # Create projects with various search terms
         for i in range(30):
