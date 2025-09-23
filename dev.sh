@@ -82,10 +82,19 @@ restart_dev() {
 # Function to show logs
 show_logs() {
     service=${2:-""}
+    follow_flag=""
+
+    # Check if -f flag is provided
+    if [[ "$*" == *"-f"* ]]; then
+        follow_flag="-f"
+        # Remove -f from service name if it was passed as service
+        service=${service//-f/}
+    fi
+
     if [ -n "$service" ]; then
-        docker compose -f docker-compose.dev.yml logs -f "$service"
+        docker compose -f docker-compose.dev.yml logs $follow_flag "$service"
     else
-        docker compose -f docker-compose.dev.yml logs -f
+        docker compose -f docker-compose.dev.yml logs $follow_flag
     fi
 }
 
@@ -137,7 +146,7 @@ show_help() {
     echo "  start, dev          Start development environment with live reload"
     echo "  stop               Stop development environment"
     echo "  restart            Restart development environment"
-    echo "  logs [service]     Show logs (optionally for specific service)"
+    echo "  logs [service] [-f] Show logs (optionally for specific service, -f to follow)"
     echo "  prod               Start production environment"
     echo "  prod-stop          Stop production environment"
     echo "  build              Build frontend"
