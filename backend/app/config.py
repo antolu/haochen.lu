@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -31,14 +32,23 @@ class Settings(BaseSettings):
     cookie_samesite: str = "lax"
     cookie_domain: str | None = os.getenv("COOKIE_DOMAIN")
 
-    # CORS
-    cors_origins: str = os.getenv(
+    # CORS (accept str or list[str] for tests)
+    cors_origins: str | list[str] = os.getenv(
         "CORS_ORIGINS", "http://localhost:3000,http://localhost:5173"
     )
 
+    @field_validator("cors_origins")
+    @classmethod
+    def _normalize_cors(cls, v: str | list[str]):
+        if isinstance(v, list):
+            return v
+        if isinstance(v, str):
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return []
+
     @property
     def cors_origins_list(self) -> list[str]:
-        return [origin.strip() for origin in self.cors_origins.split(",")]
+        return list(self.cors_origins) if isinstance(self.cors_origins, list) else []
 
     # File uploads
     upload_dir: str = os.getenv("UPLOAD_DIR", "uploads")
