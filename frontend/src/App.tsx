@@ -27,6 +27,7 @@ import AdminEquipmentAliases from "./pages/admin/AdminEquipmentAliases";
 import AdminSubApps from "./pages/admin/AdminSubApps";
 import AdminSubAppIntegration from "./pages/admin/AdminSubAppIntegration";
 import AdminContent from "./pages/admin/AdminContent";
+import AdminSettings from "./pages/admin/AdminSettings";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -79,6 +80,7 @@ function App() {
                 path="equipment-aliases"
                 element={<AdminEquipmentAliases />}
               />
+              <Route path="settings" element={<AdminSettings />} />
               {/* Backward compatibility redirects */}
               <Route
                 path="camera-aliases"
