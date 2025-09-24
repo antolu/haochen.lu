@@ -434,13 +434,17 @@ async def upload_photo(
             file.file, file.filename or "image.jpg", title or file.filename
         )
 
+        # Compute default title from filename stem if empty
+        default_title = (file.filename or "image").rsplit(".", 1)[0]
+        normalized_title = title.strip() if title and title.strip() else None
+
         # Create photo record
         photo_data = PhotoCreate(
-            title=title or file.filename or "Untitled",
-            description=description,
-            category=category,
-            tags=tags,
-            comments=comments,
+            title=normalized_title or default_title,
+            description=description or None,
+            category=category or None,
+            tags=tags or None,
+            comments=comments or None,
             featured=featured,
         )
 
@@ -637,7 +641,15 @@ async def serve_photo_variant(
     # Get photo and file path
     if not (expires and signature):
         photo = await get_photo(db, photo_id)
-    file_path = file_access_controller.get_file_path(photo, file_type)
+    try:
+        file_path = file_access_controller.get_file_path(photo, file_type)
+    except HTTPException as e:
+        # Fallback: if specific variant not found, serve original instead
+        if e.status_code == status.HTTP_404_NOT_FOUND:
+            file_path = file_access_controller.get_file_path(photo, FileType.ORIGINAL)
+            file_type = FileType.ORIGINAL
+        else:
+            raise
 
     # Record access
     # Return file
