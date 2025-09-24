@@ -217,7 +217,7 @@ const ProfilePictureManager: React.FC = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-2xl max-h-[85vh] overflow-y-auto"
+              className="w-full max-w-lg max-h-[85vh] overflow-y-auto"
             >
               <ProfilePictureUpload
                 onUpload={handleUpload}

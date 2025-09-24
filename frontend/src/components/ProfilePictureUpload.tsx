@@ -221,14 +221,10 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
   }, [reset, onCancel]);
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl mx-auto">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Upload Profile Picture
-        </h2>
-        <p className="text-gray-600">
-          Select an image and crop it to a square. The cropped image will be
-          used as your profile picture.
+    <div className="bg-white rounded-lg shadow-lg p-4 max-w-lg mx-auto">
+      <div className="mb-4">
+        <p className="text-gray-700 text-sm">
+          Select an image and crop it to a square.
         </p>
       </div>
 
@@ -261,30 +257,14 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
         </div>
       ) : (
         <div className="space-y-4">
-          {/* Title Input */}
-          <div>
-            <label
-              htmlFor="title"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Title (optional)
-            </label>
-            <input
-              type="text"
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Profile Picture"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
+          {/* Title removed per request */}
 
           {/* Crop Area */}
-          <div className="border border-gray-300 rounded-lg overflow-hidden max-h-[60vh]">
+          <div className="border border-gray-300 rounded-lg overflow-hidden max-h-[55vh]">
             <ReactCrop
               crop={crop}
-              onChange={(_, percentCrop) => setCrop(percentCrop)}
-              onComplete={(c) => setCompletedCrop(c)}
+              onChange={(newCrop) => setCrop(newCrop)}
+              onComplete={(c) => setCompletedCrop(c as PixelCrop)}
               aspect={1} // Square aspect ratio
               minWidth={100}
               minHeight={100}
@@ -294,7 +274,7 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
                 alt="Crop preview"
                 src={imgSrc}
                 onLoad={onImageLoad}
-                className="max-h-[55vh] w-auto"
+                className="max-h-[50vh] w-auto"
               />
             </ReactCrop>
           </div>
