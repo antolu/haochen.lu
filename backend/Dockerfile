@@ -17,6 +17,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libx265-dev \
     libaom-dev \
     libdav1d-dev \
+    libwebp-dev \
+    libjpeg62-turbo-dev \
     pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
