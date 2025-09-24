@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from "react";
 import L from "leaflet";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import "leaflet.markercluster";
 import type { Photo } from "../types";
 import { formatDateSimple } from "../utils/dateFormat";
@@ -331,54 +331,6 @@ const PhotoMap: React.FC<PhotoMapProps> = ({
 
         <MapBounds photos={photosWithLocation} />
         <ClusterLayer photos={photosWithLocation} onPhotoClick={onPhotoClick} />
-        {photosWithLocation.map((photo) => {
-          // Get thumbnail URL - using variants system or fallback
-          const thumbnailUrl =
-            photo.variants?.thumbnail?.url ??
-            photo.original_url ??
-            `/uploads/${photo.filename}`;
-
-          return (
-            <Marker
-              key={photo.id}
-              position={[photo.location_lat ?? 0, photo.location_lon ?? 0]}
-              icon={createPhotoMarker(thumbnailUrl)}
-              eventHandlers={{
-                click: () => onPhotoClick?.(photo),
-              }}
-            >
-              <Popup>
-                <div className="min-w-0 max-w-xs">
-                  <div className="aspect-video mb-2 rounded overflow-hidden">
-                    <img
-                      src={thumbnailUrl}
-                      alt={photo.title || "Photo"}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <h3 className="font-semibold text-sm mb-1 truncate">
-                    {photo.title || "Untitled"}
-                  </h3>
-                  {photo.location_name && (
-                    <p className="text-xs text-gray-600 mb-1">
-                      📍 {photo.location_name}
-                    </p>
-                  )}
-                  {photo.date_taken && (
-                    <p className="text-xs text-gray-500">
-                      📅 {formatDateSimple(photo.date_taken)}
-                    </p>
-                  )}
-                  {(photo.camera_make ?? photo.camera_model) && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      📷 {photo.camera_make} {photo.camera_model}
-                    </p>
-                  )}
-                </div>
-              </Popup>
-            </Marker>
-          );
-        })}
       </MapContainer>
 
       <div className="mt-2 text-sm text-gray-500">

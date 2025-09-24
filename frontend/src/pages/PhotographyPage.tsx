@@ -101,11 +101,6 @@ const PhotographyPage: React.FC = () => {
       setTimeout(() => {
         setHighlightedPhotoId(null);
       }, 3000);
-
-      // Also open lightbox
-      setPhotoSwipeIndex(index);
-      setIsLGOpening(true);
-      setIsPhotoSwipeOpen(true);
     }
   };
 
