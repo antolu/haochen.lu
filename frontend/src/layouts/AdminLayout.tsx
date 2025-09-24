@@ -17,6 +17,7 @@ import {
   Sun,
   Laptop,
   Settings,
+  Sparkles,
 } from "lucide-react";
 
 import { useAuthStore } from "../stores/authStore";
