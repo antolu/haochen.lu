@@ -1,11 +1,15 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Edit3, Trash2, Star, Calendar, Camera, MapPin } from "lucide-react";
 import type { Photo } from "../../types";
-import {
-  useReorderPhotos,
-  useDeletePhoto,
-  useTogglePhotoFeatured,
-} from "../../hooks/usePhotos";
+import { useDeletePhoto, useTogglePhotoFeatured } from "../../hooks/usePhotos";
 import { selectOptimalImage, ImageUseCase } from "../../utils/imageUtils";
+import { DataTable } from "../ui/data-table";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
+import { Card } from "../ui/card";
+import { formatDateSimple } from "../../utils/dateFormat";
+import { cn } from "../../lib/utils";
 
 interface PhotoListTableProps {
   photos: Photo[];
@@ -18,18 +22,17 @@ const PhotoListTable: React.FC<PhotoListTableProps> = ({
   isLoading = false,
   onEdit,
 }) => {
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
-  const [localOrder, setLocalOrder] = useState<Record<string, number>>({});
+  // Drag and drop state removed for now
+  // const [dragIndex, setDragIndex] = useState<number | null>(null);
+  // const [localOrder, setLocalOrder] = useState<Record<string, number>>({});
+  const [viewMode, setViewMode] = useState<"table" | "grid">("grid");
 
   const deleteMutation = useDeletePhoto();
   const toggleFeaturedMutation = useTogglePhotoFeatured();
-  const reorderMutation = useReorderPhotos();
+  // const reorderMutation = useReorderPhotos(); // Removed for now
 
   const sorted = useMemo(() => {
-    const arr = [...photos].map((p) => ({
-      ...p,
-      order: localOrder[p.id] ?? p.order,
-    }));
+    const arr = [...photos];
     arr.sort((a, b) =>
       a.order !== b.order
         ? a.order - b.order
@@ -37,151 +40,353 @@ const PhotoListTable: React.FC<PhotoListTableProps> = ({
           new Date(a.date_taken ?? a.created_at).getTime(),
     );
     return arr;
-  }, [photos, localOrder]);
+  }, [photos]);
 
-  const handleDragStart = (index: number) => setDragIndex(index);
-  const handleDragOver = (e: React.DragEvent<HTMLTableRowElement>) =>
-    e.preventDefault();
-  const handleDrop = (dropIndex: number) => {
-    if (dragIndex === null || dragIndex === dropIndex) return;
-    const reordered = [...sorted];
-    const [moved] = reordered.splice(dragIndex, 1);
-    reordered.splice(dropIndex, 0, moved);
-    const newOrders: Record<string, number> = {};
-    reordered.forEach((p, i) => {
-      newOrders[p.id] = i;
-    });
-    setLocalOrder(newOrders);
-    setDragIndex(null);
-    // Persist
-    reorderMutation.mutate({
-      items: reordered.map((p, i) => ({ id: p.id, order: i })),
-      normalize: false,
-    });
-  };
+  const handleToggleFeatured = useCallback(
+    async (photo: Photo) => {
+      await toggleFeaturedMutation.mutateAsync({
+        id: photo.id,
+        featured: !photo.featured,
+      });
+    },
+    [toggleFeaturedMutation],
+  );
+
+  const handleDelete = useCallback(
+    async (photoId: string) => {
+      if (window.confirm("Are you sure you want to delete this photo?")) {
+        await deleteMutation.mutateAsync(photoId);
+      }
+    },
+    [deleteMutation],
+  );
+
+  const columns: Array<{
+    key: string;
+    title: string;
+    width?: string;
+    searchable?: boolean;
+    sortable?: boolean;
+    render: (value: unknown, photo: Photo) => React.ReactNode;
+  }> = [
+    {
+      key: "thumbnail",
+      title: "Photo",
+      width: "20",
+      render: (_: unknown, photo: Photo) => {
+        const imageUrl = selectOptimalImage(photo, ImageUseCase.THUMBNAIL).url;
+        return (
+          <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-muted">
+            <img
+              src={imageUrl}
+              alt={photo.title || "Photo"}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+            {photo.featured && (
+              <div className="absolute top-0 right-0 w-3 h-3 bg-yellow-400 rounded-bl-lg">
+                <Star className="w-2 h-2 text-yellow-900 absolute top-0.5 right-0.5" />
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      key: "title",
+      title: "Title",
+      searchable: true,
+      sortable: true,
+      render: (_: unknown, photo: Photo) => (
+        <div>
+          <div className="font-medium">{photo.title || "Untitled"}</div>
+          {photo.description && (
+            <div className="text-sm text-muted-foreground truncate max-w-xs">
+              {photo.description}
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "metadata",
+      title: "Details",
+      render: (_: unknown, photo: Photo) => (
+        <div className="space-y-1">
+          {photo.date_taken && (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Calendar className="w-3 h-3" />
+              {formatDateSimple(photo.date_taken)}
+            </div>
+          )}
+          {photo.camera_make && (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Camera className="w-3 h-3" />
+              {photo.camera_make} {photo.camera_model}
+            </div>
+          )}
+          {photo.location_name && (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <MapPin className="w-3 h-3" />
+              {photo.location_name}
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "tags",
+      title: "Tags",
+      render: (_: unknown, photo: Photo) => (
+        <div className="flex flex-wrap gap-1">
+          {photo.tags
+            ?.split(",")
+            .slice(0, 3)
+            .map((tag: string) => (
+              <Badge key={tag.trim()} variant="secondary" className="text-xs">
+                {tag.trim()}
+              </Badge>
+            ))}
+          {(photo.tags?.split(",").length ?? 0) > 3 && (
+            <Badge variant="outline" className="text-xs">
+              +{(photo.tags?.split(",").length ?? 0) - 3}
+            </Badge>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "status",
+      title: "Status",
+      render: (_: unknown, photo: Photo) => (
+        <div className="space-y-1">
+          {photo.featured && (
+            <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">
+              Featured
+            </Badge>
+          )}
+          {photo.category && (
+            <Badge variant="outline" className="text-xs">
+              {photo.category}
+            </Badge>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "actions",
+      title: "Actions",
+      render: (_: unknown, photo: Photo) => (
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              void handleToggleFeatured(photo);
+            }}
+            className="h-8 w-8 p-0"
+          >
+            {photo.featured ? (
+              <Star className="h-4 w-4 fill-current text-yellow-500" />
+            ) : (
+              <Star className="h-4 w-4" />
+            )}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onEdit(photo)}
+            className="h-8 w-8 p-0"
+          >
+            <Edit3 className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              void handleDelete(photo.id);
+            }}
+            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
+  const GridView = () => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <AnimatePresence>
+        {sorted.map((photo, index) => {
+          const imageUrl = selectOptimalImage(
+            photo,
+            ImageUseCase.THUMBNAIL,
+          ).url;
+          return (
+            <motion.div
+              key={photo.id}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ delay: index * 0.05 }}
+            >
+              <Card className="group overflow-hidden hover:shadow-md transition-all duration-200">
+                <div className="aspect-square relative overflow-hidden bg-muted">
+                  <img
+                    src={imageUrl}
+                    alt={photo.title || "Photo"}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                    loading="lazy"
+                  />
+                  {photo.featured && (
+                    <div className="absolute top-2 right-2">
+                      <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">
+                        <Star className="w-3 h-3 mr-1" />
+                        Featured
+                      </Badge>
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200" />
+                  <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <div className="flex gap-1">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => {
+                          void handleToggleFeatured(photo);
+                        }}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Star
+                          className={cn(
+                            "h-4 w-4",
+                            photo.featured && "fill-current text-yellow-500",
+                          )}
+                        />
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => onEdit(photo)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Edit3 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                          void handleDelete(photo.id);
+                        }}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-3">
+                  <h3 className="font-medium truncate">
+                    {photo.title || "Untitled"}
+                  </h3>
+                  {photo.description && (
+                    <p className="text-sm text-muted-foreground truncate mt-1">
+                      {photo.description}
+                    </p>
+                  )}
+                  <div className="flex items-center justify-between mt-2">
+                    <div className="flex flex-wrap gap-1">
+                      {photo.tags
+                        ?.split(",")
+                        .slice(0, 2)
+                        .map((tag) => (
+                          <Badge
+                            key={tag.trim()}
+                            variant="secondary"
+                            className="text-xs"
+                          >
+                            {tag.trim()}
+                          </Badge>
+                        ))}
+                    </div>
+                    {photo.date_taken && (
+                      <span className="text-xs text-muted-foreground">
+                        {formatDateSimple(photo.date_taken)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+          );
+        })}
+      </AnimatePresence>
+    </div>
+  );
+
+  // Drag and drop functionality removed for now - can be re-added later
+  // const handleDrop = (dropIndex: number) => { ... }
 
   if (isLoading) {
-    return <div className="p-6 text-gray-500">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-pulse text-muted-foreground">
+          Loading photos...
+        </div>
+      </div>
+    );
+  }
+
+  if (sorted.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <Camera className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+        <h3 className="font-medium mb-2">No photos found</h3>
+        <p className="text-muted-foreground">
+          Start by uploading some photos to your gallery.
+        </p>
+      </div>
+    );
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-              #
-            </th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-              Preview
-            </th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-              Title
-            </th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-              Category
-            </th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-              Tags
-            </th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-              Featured
-            </th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-              Order
-            </th>
-            <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
-              Actions
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-200 bg-white">
-          {sorted.map((p, index) => (
-            <tr
-              key={p.id}
-              draggable
-              onDragStart={() => handleDragStart(index)}
-              onDragOver={handleDragOver}
-              onDrop={() => handleDrop(index)}
-              className="hover:bg-gray-50"
-            >
-              <td className="px-4 py-2 text-sm text-gray-500 cursor-move">
-                ☰
-              </td>
-              <td className="px-4 py-2">
-                {(() => {
-                  const optimalImage = selectOptimalImage(
-                    p,
-                    ImageUseCase.ADMIN,
-                  );
-                  return (
-                    <img
-                      src={optimalImage.url}
-                      alt={p.title}
-                      className="h-12 w-12 object-cover rounded"
-                    />
-                  );
-                })()}
-              </td>
-              <td className="px-4 py-2">
-                <div
-                  className="text-sm text-gray-900 truncate max-w-xs"
-                  title={p.title}
-                >
-                  {p.title ?? "Untitled"}
-                </div>
-                {p.description && (
-                  <div
-                    className="text-xs text-gray-500 truncate max-w-sm"
-                    title={p.description}
-                  >
-                    {p.description}
-                  </div>
-                )}
-              </td>
-              <td className="px-4 py-2 text-sm text-gray-700">
-                {p.category ?? "-"}
-              </td>
-              <td
-                className="px-4 py-2 text-sm text-gray-700 truncate max-w-xs"
-                title={p.tags ?? ""}
-              >
-                {p.tags ?? "-"}
-              </td>
-              <td className="px-4 py-2">
-                <button
-                  onClick={() =>
-                    toggleFeaturedMutation.mutate({
-                      id: p.id,
-                      featured: !p.featured,
-                    })
-                  }
-                  className={`px-2 py-1 text-xs rounded border ${p.featured ? "bg-yellow-100 border-yellow-300 text-yellow-700" : "bg-gray-100 border-gray-300 text-gray-700"}`}
-                >
-                  {p.featured ? "Featured" : "Normal"}
-                </button>
-              </td>
-              <td className="px-4 py-2 text-sm text-gray-500">{p.order}</td>
-              <td className="px-4 py-2 text-right">
-                <div className="flex justify-end gap-2">
-                  <button
-                    onClick={() => onEdit(p)}
-                    className="px-2 py-1 text-xs bg-blue-600 text-white rounded"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => deleteMutation.mutate(p.id)}
-                    className="px-2 py-1 text-xs bg-red-600 text-white rounded"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="space-y-4">
+      {/* View Toggle */}
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-muted-foreground">
+          {sorted.length} photo{sorted.length !== 1 ? "s" : ""} total
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant={viewMode === "grid" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("grid")}
+          >
+            Grid
+          </Button>
+          <Button
+            variant={viewMode === "table" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("table")}
+          >
+            Table
+          </Button>
+        </div>
+      </div>
+
+      {/* Content */}
+      {viewMode === "grid" ? (
+        <GridView />
+      ) : (
+        <DataTable
+          data={sorted}
+          columns={columns}
+          searchPlaceholder="Search photos by title or description..."
+          onRowClick={onEdit}
+          emptyMessage="No photos match your search."
+        />
+      )}
     </div>
   );
 };

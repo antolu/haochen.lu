@@ -75,17 +75,17 @@ const HomePage: React.FC = () => {
 
             // Generate responsive focal points with fallbacks
             const mobileFocalPoint = activeHeroImage.focal_points_responsive
-              ?.mobile || {
+              ?.mobile ?? {
               x: activeHeroImage.focal_point_x,
               y: activeHeroImage.focal_point_y,
             };
             const tabletFocalPoint = activeHeroImage.focal_points_responsive
-              ?.tablet || {
+              ?.tablet ?? {
               x: activeHeroImage.focal_point_x,
               y: activeHeroImage.focal_point_y,
             };
             const desktopFocalPoint = activeHeroImage.focal_points_responsive
-              ?.desktop || {
+              ?.desktop ?? {
               x: activeHeroImage.focal_point_x,
               y: activeHeroImage.focal_point_y,
             };

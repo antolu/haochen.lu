@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { useDropzone } from "react-dropzone";
+import { useDropzone, type FileRejection } from "react-dropzone";
 
 export interface UploadFile {
   id: string;
@@ -42,83 +42,116 @@ const PhotoDropzone: React.FC<PhotoDropzoneProps> = ({
 
   // Handle file drops
   const onDrop = useCallback(
-    (acceptedFiles: File[]) => {
-      try {
-        if (!acceptedFiles || acceptedFiles.length === 0) {
+    (acceptedFiles: File[], fileRejections: FileRejection[] = []) => {
+      if (!acceptedFiles?.length && !fileRejections.length) {
+        return;
+      }
+
+      const validFiles: File[] = [];
+      const errorUploads: UploadFile[] = [];
+
+      acceptedFiles.forEach((file) => {
+        if (!(file instanceof File)) {
+          console.warn("Invalid file object received:", file);
           return;
         }
 
-        // Validate each file before processing
-        const validFiles = acceptedFiles.filter((file) => {
-          if (!(file instanceof File)) {
-            console.warn("Invalid file object received:", file);
-            return false;
-          }
-
-          if (!file.name) {
-            console.warn("File missing name property:", file);
-            return false;
-          }
-
-          if (file.size === 0) {
-            console.warn("Empty file received:", file.name);
-            return false;
-          }
-
-          if (file.size > maxFileSize) {
-            console.warn(
-              `File too large: ${file.name} (${formatFileSize(file.size)} > ${formatFileSize(maxFileSize)})`,
-            );
-            return false;
-          }
-
-          return true;
-        });
-
-        if (validFiles.length === 0) {
-          console.warn("No valid files to process");
+        if (!file.name) {
+          console.warn("File missing name property:", file);
           return;
         }
 
-        // Take only up to maxFiles
-        const filesToProcess = validFiles.slice(0, maxFiles);
+        if (file.size === 0) {
+          console.warn("Empty file received:", file.name);
+          return;
+        }
 
-        if (filesToProcess.length < validFiles.length) {
+        if (file.size > maxFileSize) {
           console.warn(
-            `Only processing ${filesToProcess.length} of ${validFiles.length} files due to upload limit`,
+            `File too large: ${file.name} (${formatFileSize(file.size)} > ${formatFileSize(maxFileSize)})`,
           );
+          errorUploads.push({
+            id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
+            file,
+            preview: "",
+            progress: 0,
+            status: "error",
+            error: `File is too large (max ${formatFileSize(maxFileSize)})`,
+          });
+          return;
         }
 
-        const newFiles: UploadFile[] = filesToProcess.map((file) => {
-          const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-          let preview = "";
+        validFiles.push(file);
+      });
 
-          try {
-            preview = URL.createObjectURL(file);
-          } catch (error) {
-            console.warn(
-              "Failed to create preview URL for file:",
-              file.name,
-              error,
-            );
-            preview = "";
-          }
+      if (
+        validFiles.length === 0 &&
+        errorUploads.length === 0 &&
+        fileRejections.length === 0
+      ) {
+        console.warn("No valid files to process");
+        return;
+      }
+
+      const availableSlots = Math.max(maxFiles, 0);
+      const filesToProcess = validFiles.slice(0, availableSlots);
+
+      if (filesToProcess.length < validFiles.length) {
+        console.warn(
+          `Only processing ${filesToProcess.length} of ${validFiles.length} files due to upload limit`,
+        );
+      }
+
+      const acceptedUploads: UploadFile[] = filesToProcess.map((file) => ({
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
+        file,
+        preview: URL.createObjectURL(file),
+        progress: 0,
+        status: "pending",
+      }));
+
+      const dropzoneRejections: UploadFile[] = fileRejections.map(
+        (rejection) => {
+          const message = rejection.errors
+            .map((error) => {
+              if (error.code === "file-too-large") {
+                return `File is too large (max ${formatFileSize(maxFileSize)})`;
+              }
+              if (error.code === "file-invalid-type") {
+                return "Unsupported file type";
+              }
+              if (error.code === "too-many-files") {
+                return "Too many files selected";
+              }
+              return error.message;
+            })
+            .filter(Boolean)
+            .join(", ");
 
           return {
-            id,
-            file,
-            preview,
+            id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
+            file: rejection.file,
+            preview: "",
             progress: 0,
-            status: "pending" as const,
-          };
-        });
+            status: "error",
+            error: message || "Upload failed",
+          } satisfies UploadFile;
+        },
+      );
 
-        onFilesAdded(newFiles);
-      } catch (error) {
-        console.error("Error processing dropped files:", error);
+      const uploads = [
+        ...acceptedUploads,
+        ...errorUploads,
+        ...dropzoneRejections,
+      ];
+
+      if (uploads.length === 0) {
+        return;
       }
+
+      onFilesAdded(uploads);
     },
-    [onFilesAdded, maxFiles, maxFileSize, formatFileSize],
+    [formatFileSize, maxFileSize, maxFiles, onFilesAdded],
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -126,6 +159,7 @@ const PhotoDropzone: React.FC<PhotoDropzoneProps> = ({
     accept,
     maxFiles,
     disabled,
+    maxSize: maxFileSize,
   });
 
   // If children are provided, render them instead of default drop zone

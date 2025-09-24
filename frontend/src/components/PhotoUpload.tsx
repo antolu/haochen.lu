@@ -46,8 +46,20 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
   }, [uploadFiles, onComplete]);
 
   const handleFilesAdded = (newFiles: UploadFile[]) => {
-    const availableSlots = maxFiles - uploadFiles.length;
+    if (!newFiles || newFiles.length === 0) {
+      return;
+    }
+
+    const availableSlots = Math.max(maxFiles - uploadFiles.length, 0);
+    if (availableSlots === 0) {
+      return;
+    }
+
     const filesToAdd = newFiles.slice(0, availableSlots);
+    if (filesToAdd.length === 0) {
+      return;
+    }
+
     setUploadFiles((prev) => [...prev, ...filesToAdd]);
   };
 
@@ -125,7 +137,9 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
 
     // Upload all pending files
     const pendingFiles = uploadFiles.filter((f) => f.status === "pending");
-    pendingFiles.forEach(handleUpload);
+    pendingFiles.forEach((file) => {
+      handleUpload(file);
+    });
   };
 
   const handleCancel = () => {

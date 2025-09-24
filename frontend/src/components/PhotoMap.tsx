@@ -21,15 +21,44 @@ const createPhotoMarker = (photoUrl: string) => {
   });
 };
 
+type MarkerWithPhotoOptions = L.MarkerOptions & { photo?: Photo };
+
+type MarkerWithPhoto = L.Marker & { options: MarkerWithPhotoOptions };
+
+type MarkerClusterWithPhotos = L.MarkerCluster & {
+  getAllChildMarkers(): MarkerWithPhoto[];
+  getLatLng(): L.LatLng;
+};
+
+const hasLocation = (
+  photo: Photo,
+): photo is Photo & {
+  location_lat: number;
+  location_lon: number;
+} =>
+  photo.location_lat !== null &&
+  photo.location_lat !== undefined &&
+  photo.location_lon !== null &&
+  photo.location_lon !== undefined;
+
+const getClusterMarkers = (cluster: L.MarkerCluster): MarkerWithPhoto[] => {
+  const markers = cluster.getAllChildMarkers();
+  if (!Array.isArray(markers)) {
+    return [];
+  }
+
+  return markers
+    .filter((marker): marker is MarkerWithPhoto => marker instanceof L.Marker)
+    .map((marker) => marker);
+};
+
 // Custom cluster icon for grouped photos with thumbnail preview
-const createClusterIcon = (cluster: L.MarkerCluster) => {
+const createClusterIcon = (cluster: MarkerClusterWithPhotos) => {
   const count = cluster.getChildCount();
   const size = count < 10 ? "small" : count < 100 ? "medium" : "large";
 
   // Get first few photos for preview
-  const childMarkers = cluster.getAllChildMarkers() as Array<
-    L.Marker & { options: { photo?: Photo } }
-  >;
+  const childMarkers = getClusterMarkers(cluster);
   const previewPhotos = childMarkers.slice(0, 4).map((marker) => {
     const p = marker.options.photo;
     const url = p?.variants?.thumbnail?.url ?? p?.original_url;
@@ -94,7 +123,7 @@ const ClusterLayer: React.FC<{
 
     // Add markers
     photos.forEach((photo) => {
-      if (photo.location_lat != null && photo.location_lon != null) {
+      if (hasLocation(photo)) {
         const thumbnailUrl =
           photo.variants?.thumbnail?.url ??
           photo.original_url ??
@@ -102,7 +131,7 @@ const ClusterLayer: React.FC<{
 
         const marker = L.marker([photo.location_lat, photo.location_lon], {
           icon: createPhotoMarker(thumbnailUrl),
-        }) as L.Marker & { options: { photo?: Photo } };
+        }) as MarkerWithPhoto;
         marker.options.photo = photo;
 
         marker.on("click", () => {
@@ -129,10 +158,8 @@ const ClusterLayer: React.FC<{
     clusterGroup.on(
       "clusterclick",
       (e: L.LeafletEvent & { layer: L.MarkerCluster }) => {
-        const cluster = e.layer;
-        const childMarkers = cluster.getAllChildMarkers() as Array<
-          L.Marker & { options: { photo?: Photo } }
-        >;
+        const cluster = e.layer as MarkerClusterWithPhotos;
+        const childMarkers = getClusterMarkers(cluster);
         const photosInCluster = childMarkers
           .map((m) => m.options.photo)
           .filter((p): p is Photo => Boolean(p));
@@ -221,9 +248,10 @@ const PhotoMap: React.FC<PhotoMapProps> = ({
   const tileConfig = useMemo(() => getTileConfig(), []);
 
   // Filter photos that have location data
-  const photosWithLocation = useMemo(() => {
-    return photos.filter((photo) => photo.location_lat && photo.location_lon);
-  }, [photos]);
+  const photosWithLocation = useMemo(
+    () => photos.filter((photo) => hasLocation(photo)),
+    [photos],
+  );
 
   // Calculate center from photos or use default
   const mapCenter = useMemo((): [number, number] => {

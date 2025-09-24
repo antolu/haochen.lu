@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { heroImages, photos } from "../../api/client";
@@ -21,6 +21,7 @@ const HeroImageManager: React.FC = () => {
     data: heroImagesList,
     isLoading: isLoadingHeros,
     error: heroError,
+    refetch: fetchHeroImages,
   } = useQuery({
     queryKey: ["hero-images"],
     queryFn: () => heroImages.list(),
@@ -59,10 +60,30 @@ const HeroImageManager: React.FC = () => {
     },
   });
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadHeroImages = async () => {
+      try {
+        await fetchHeroImages();
+      } catch (error) {
+        console.error("Failed to load hero images", error);
+      }
+    };
+
+    if (isMounted) {
+      void loadHeroImages();
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [fetchHeroImages]);
+
   const handleCreateHeroImage = () => {
     if (!selectedPhoto) return;
 
-    createMutation.mutate({
+    void createMutation.mutate({
       title: `Hero: ${selectedPhoto.title}`,
       photo_id: selectedPhoto.id,
       focal_point_x: 50,
@@ -73,17 +94,17 @@ const HeroImageManager: React.FC = () => {
   const handlePhotoUploadComplete = (photo: Photo) => {
     // When photo upload is complete, automatically select it and switch to select tab
     setSelectedPhoto(photo);
-    queryClient.invalidateQueries({ queryKey: ["photos", "for-hero"] });
+    void queryClient.invalidateQueries({ queryKey: ["photos", "for-hero"] });
     setActiveTab("select");
   };
 
   const handleActivate = (heroImage: HeroImage) => {
-    activateMutation.mutate(heroImage.id);
+    void activateMutation.mutate(heroImage.id);
   };
 
   const handleDelete = (heroImage: HeroImage) => {
     if (confirm(`Delete hero image "${heroImage.title}"?`)) {
-      deleteMutation.mutate(heroImage.id);
+      void deleteMutation.mutate(heroImage.id);
     }
   };
 
@@ -103,7 +124,7 @@ const HeroImageManager: React.FC = () => {
   if (heroError) {
     return (
       <div className="text-red-600 p-4">
-        Error loading hero images: {(heroError as Error).message}
+        Error loading hero images: {heroError.message}
       </div>
     );
   }
@@ -489,7 +510,7 @@ const HeroImageManager: React.FC = () => {
                                 );
                                 if (activeHero) {
                                   // Deactivate current hero to use default
-                                  deleteMutation.mutate(activeHero.id);
+                                  void deleteMutation.mutate(activeHero.id);
                                 }
                                 setShowCreateForm(false);
                                 setActiveTab("upload");

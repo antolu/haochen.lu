@@ -49,10 +49,12 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({
         {/* File Info */}
         <div className="flex-1 min-w-0">
           <div className="font-medium text-gray-900 truncate">
-            {uploadFile.file.name}
+            {uploadFile.file?.name ?? "Unknown file"}
           </div>
           <div className="text-sm text-gray-500">
-            {formatFileSize(uploadFile.file.size)}
+            {uploadFile.file?.size
+              ? formatFileSize(uploadFile.file.size)
+              : "Unknown size"}
           </div>
 
           {/* Progress Bar - Only show when uploading */}
@@ -102,6 +104,7 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({
             {uploadFile.status === "error" && onRetry && (
               <button
                 onClick={onRetry}
+                aria-label="Retry upload"
                 className="text-blue-600 hover:text-blue-800 text-sm font-medium"
               >
                 Retry
@@ -113,15 +116,17 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({
               onRemove && (
                 <button
                   onClick={onRemove}
+                  aria-label="Remove photo"
                   className="text-red-600 hover:text-red-800 text-sm font-medium"
                 >
-                  Remove
+                  ×
                 </button>
               )}
 
             {uploadFile.status === "uploading" && onRemove && (
               <button
                 onClick={onRemove}
+                aria-label="Cancel upload"
                 className="text-gray-600 hover:text-gray-800 text-sm font-medium"
               >
                 Cancel

@@ -1,16 +1,30 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
 import {
-  PhotoIcon,
-  FolderIcon,
-  PencilSquareIcon,
-  DocumentTextIcon,
-  EyeIcon,
-  SparklesIcon,
-} from "@heroicons/react/24/outline";
+  Camera,
+  FolderOpen,
+  PenTool,
+  FileText,
+  Eye,
+  Sparkles,
+  Upload,
+  Settings,
+  Users,
+  BarChart3,
+} from "lucide-react";
 
 import { photos, projects, blog, heroImages } from "../../api/client";
 import type { PhotoStatsSummary, ProjectStatsSummary } from "../../types";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
+import { Badge } from "../../components/ui/badge";
+import { Button } from "../../components/ui/button";
+import { formatNumber } from "../../lib/utils";
 
 const AdminDashboard: React.FC = () => {
   const { data: photoStats } = useQuery<PhotoStatsSummary>({
@@ -37,148 +51,215 @@ const AdminDashboard: React.FC = () => {
     {
       name: "Total Photos",
       stat: photoStats?.total_photos ?? 0,
-      icon: PhotoIcon,
-      color: "bg-blue-500",
+      icon: Camera,
+      gradient: "from-blue-500 to-cyan-500",
+      change: "+12%",
     },
     {
       name: "Featured Photos",
       stat: photoStats?.featured_photos ?? 0,
-      icon: EyeIcon,
-      color: "bg-green-500",
+      icon: Eye,
+      gradient: "from-emerald-500 to-teal-500",
+      change: "+8%",
     },
     {
       name: "Hero Images",
       stat: heroImagesList?.length ?? 0,
-      icon: SparklesIcon,
-      color: "bg-pink-500",
+      icon: Sparkles,
+      gradient: "from-purple-500 to-pink-500",
+      change: "+5%",
     },
     {
       name: "Projects",
       stat: projectStats?.total_projects ?? 0,
-      icon: FolderIcon,
-      color: "bg-purple-500",
+      icon: FolderOpen,
+      gradient: "from-orange-500 to-red-500",
+      change: "+3%",
     },
     {
       name: "Blog Posts",
       stat: blogStats?.total_posts ?? 0,
-      icon: PencilSquareIcon,
-      color: "bg-orange-500",
+      icon: PenTool,
+      gradient: "from-violet-500 to-purple-500",
+      change: "+15%",
+    },
+  ];
+
+  const quickActions = [
+    {
+      title: "Upload Photos",
+      description: "Add new photos to gallery",
+      icon: Upload,
+      href: "/admin/photos",
+      color: "bg-blue-50 text-blue-600 border-blue-200",
+    },
+    {
+      title: "Hero Images",
+      description: "Manage homepage hero images",
+      icon: Sparkles,
+      href: "/admin/hero-images",
+      color: "bg-purple-50 text-purple-600 border-purple-200",
+    },
+    {
+      title: "Manage Projects",
+      description: "Add or edit projects",
+      icon: FolderOpen,
+      href: "/admin/projects",
+      color: "bg-orange-50 text-orange-600 border-orange-200",
+    },
+    {
+      title: "Write Blog Post",
+      description: "Create new blog content",
+      icon: PenTool,
+      href: "/admin/blog",
+      color: "bg-green-50 text-green-600 border-green-200",
+    },
+    {
+      title: "Edit Content",
+      description: "Update website text content",
+      icon: FileText,
+      href: "/admin/content",
+      color: "bg-cyan-50 text-cyan-600 border-cyan-200",
+    },
+    {
+      title: "Settings",
+      description: "Manage system settings",
+      icon: Settings,
+      href: "/admin/subapps",
+      color: "bg-gray-50 text-gray-600 border-gray-200",
     },
   ];
 
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="mt-2 text-gray-600">Welcome to your admin panel</p>
-      </div>
+    <div className="space-y-8">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+      >
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground mt-2">
+            Welcome back! Here's what's happening.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="px-3 py-1">
+            <BarChart3 className="h-3 w-3 mr-1" />
+            Analytics
+          </Badge>
+        </div>
+      </motion.div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((item) => {
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        {stats.map((item, index) => {
           const Icon = item.icon;
           return (
-            <div key={item.name} className="bg-white rounded-lg shadow p-6">
-              <div className="flex items-center">
-                <div className={`flex-shrink-0 p-3 rounded-md ${item.color}`}>
-                  <Icon className="h-6 w-6 text-white" />
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">
-                      {item.name}
-                    </dt>
-                    <dd className="text-lg font-medium text-gray-900">
-                      {item.stat}
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
+            <motion.div
+              key={item.name}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <Card className="relative overflow-hidden border-0 shadow-sm hover:shadow-md transition-all duration-200">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-muted-foreground">
+                        {item.name}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl font-bold">
+                          {formatNumber(item.stat)}
+                        </span>
+                        <Badge
+                          variant="secondary"
+                          className="text-xs px-1.5 py-0.5"
+                        >
+                          {item.change}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div
+                      className={`w-12 h-12 rounded-lg bg-gradient-to-r ${item.gradient} p-2.5 shadow-sm`}
+                    >
+                      <Icon className="h-full w-full text-white" />
+                    </div>
+                  </div>
+                  <div
+                    className={`absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r ${item.gradient}`}
+                  />
+                </CardContent>
+              </Card>
+            </motion.div>
           );
         })}
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">Quick Actions</h2>
-        </div>
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <a
-              href="/admin/photos"
-              className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-primary-300 hover:shadow-md transition-all duration-200"
-            >
-              <PhotoIcon className="h-8 w-8 text-primary-600 mr-3" />
-              <div>
-                <h3 className="text-sm font-medium text-gray-900">
-                  Upload Photos
-                </h3>
-                <p className="text-sm text-gray-500">
-                  Add new photos to gallery
-                </p>
-              </div>
-            </a>
-
-            <a
-              href="/admin/hero-images"
-              className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-primary-300 hover:shadow-md transition-all duration-200"
-            >
-              <SparklesIcon className="h-8 w-8 text-primary-600 mr-3" />
-              <div>
-                <h3 className="text-sm font-medium text-gray-900">
-                  Hero Images
-                </h3>
-                <p className="text-sm text-gray-500">
-                  Manage homepage hero images
-                </p>
-              </div>
-            </a>
-
-            <a
-              href="/admin/projects"
-              className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-primary-300 hover:shadow-md transition-all duration-200"
-            >
-              <FolderIcon className="h-8 w-8 text-primary-600 mr-3" />
-              <div>
-                <h3 className="text-sm font-medium text-gray-900">
-                  Manage Projects
-                </h3>
-                <p className="text-sm text-gray-500">Add or edit projects</p>
-              </div>
-            </a>
-
-            <a
-              href="/admin/blog"
-              className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-primary-300 hover:shadow-md transition-all duration-200"
-            >
-              <PencilSquareIcon className="h-8 w-8 text-primary-600 mr-3" />
-              <div>
-                <h3 className="text-sm font-medium text-gray-900">
-                  Write Blog Post
-                </h3>
-                <p className="text-sm text-gray-500">Create new blog content</p>
-              </div>
-            </a>
-
-            <a
-              href="/admin/content"
-              className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-primary-300 hover:shadow-md transition-all duration-200"
-            >
-              <DocumentTextIcon className="h-8 w-8 text-primary-600 mr-3" />
-              <div>
-                <h3 className="text-sm font-medium text-gray-900">
-                  Edit Content
-                </h3>
-                <p className="text-sm text-gray-500">
-                  Update website text content
-                </p>
-              </div>
-            </a>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Quick Actions
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {quickActions.map((action, index) => {
+              const Icon = action.icon;
+              return (
+                <motion.div
+                  key={action.title}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5 + index * 0.1 }}
+                >
+                  <Button
+                    variant="outline"
+                    asChild
+                    className={`w-full h-auto p-4 justify-start hover:scale-105 transition-all duration-200 ${action.color}`}
+                  >
+                    <a href={action.href}>
+                      <div className="flex items-center gap-3 w-full">
+                        <Icon className="h-6 w-6 flex-shrink-0" />
+                        <div className="text-left min-w-0 flex-1">
+                          <div className="font-medium truncate">
+                            {action.title}
+                          </div>
+                          <div className="text-xs opacity-75 truncate">
+                            {action.description}
+                          </div>
+                        </div>
+                      </div>
+                    </a>
+                  </Button>
+                </motion.div>
+              );
+            })}
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
+
+      {/* Recent Activity Placeholder */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Recent Activity
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-8 text-muted-foreground">
+            <div className="text-center">
+              <BarChart3 className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">Activity feed coming soon</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
