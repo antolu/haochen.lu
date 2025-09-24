@@ -1,7 +1,5 @@
-import * as React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import { Command, CommandList, CommandGroup, CommandItem } from "./ui/command";
 import { Dialog, DialogContent } from "./ui/dialog";
 import {
@@ -36,14 +34,14 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
 
-  const goTo = React.useCallback(
+  const goTo = useCallback(
     (path: string) => {
       void navigate(path);
     },
     [navigate],
   );
 
-  const commands = React.useMemo<PaletteCommand[]>(
+  const commands = useMemo<PaletteCommand[]>(
     () => [
       {
         id: "nav-dashboard",
@@ -152,7 +150,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     [goTo],
   );
 
-  const filteredCommands = React.useMemo(() => {
+  const filteredCommands = useMemo(() => {
     if (!search) return commands;
 
     const searchLower = search.toLowerCase();
