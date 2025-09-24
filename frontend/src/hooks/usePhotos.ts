@@ -126,10 +126,7 @@ export const useUploadPhoto = () => {
       try {
         const wsBase =
           (import.meta.env.VITE_WS_URL as string | undefined) ??
-          (window.location.protocol === "https:" ? "wss" : "ws") +
-            "://" +
-            window.location.host +
-            "/ws";
+          `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/ws`;
         const ws = new WebSocket(`${wsBase}/uploads/${uploadId}`);
         ws.onmessage = (ev) => {
           try {
@@ -160,7 +157,9 @@ export const useUploadPhoto = () => {
         ws.onerror = () => {
           try {
             ws.close();
-          } catch {}
+          } catch {
+            // Ignore close errors
+          }
         };
       } catch {
         // Ignore WS errors; upload continues

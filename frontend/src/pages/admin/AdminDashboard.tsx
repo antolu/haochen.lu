@@ -10,7 +10,6 @@ import {
   Sparkles,
   Upload,
   Settings,
-  Users,
   BarChart3,
 } from "lucide-react";
 
@@ -91,42 +90,47 @@ const AdminDashboard: React.FC = () => {
       description: "Add new photos to gallery",
       icon: Upload,
       href: "/admin/photos",
-      color: "bg-blue-50 text-blue-600 border-blue-200",
+      color:
+        "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-950 dark:text-blue-400 dark:border-blue-800",
     },
     {
       title: "Hero Images",
       description: "Manage homepage hero images",
       icon: Sparkles,
       href: "/admin/hero-images",
-      color: "bg-purple-50 text-purple-600 border-purple-200",
+      color:
+        "bg-purple-50 text-purple-600 border-purple-200 dark:bg-purple-950 dark:text-purple-400 dark:border-purple-800",
     },
     {
       title: "Manage Projects",
       description: "Add or edit projects",
       icon: FolderOpen,
       href: "/admin/projects",
-      color: "bg-orange-50 text-orange-600 border-orange-200",
+      color:
+        "bg-orange-50 text-orange-600 border-orange-200 dark:bg-orange-950 dark:text-orange-400 dark:border-orange-800",
     },
     {
       title: "Write Blog Post",
       description: "Create new blog content",
       icon: PenTool,
       href: "/admin/blog",
-      color: "bg-green-50 text-green-600 border-green-200",
+      color:
+        "bg-green-50 text-green-600 border-green-200 dark:bg-green-950 dark:text-green-400 dark:border-green-800",
     },
     {
       title: "Edit Content",
       description: "Update website text content",
       icon: FileText,
       href: "/admin/content",
-      color: "bg-cyan-50 text-cyan-600 border-cyan-200",
+      color:
+        "bg-cyan-50 text-cyan-600 border-cyan-200 dark:bg-cyan-950 dark:text-cyan-400 dark:border-cyan-800",
     },
     {
       title: "Settings",
       description: "Manage system settings",
       icon: Settings,
       href: "/admin/settings",
-      color: "bg-gray-50 text-gray-600 border-gray-200",
+      color: "bg-muted text-muted-foreground border-border",
     },
   ];
 
