@@ -14,6 +14,7 @@ import pyvips  # type: ignore[import-not-found]
 from app.config import settings
 from app.core.location_service import location_service
 from app.core.progress import progress_manager
+from app.core.runtime_settings import get_image_settings
 
 
 class VipsImageProcessor:
@@ -313,14 +314,15 @@ class VipsImageProcessor:
             original_width, original_height = vips_image.width, vips_image.height
 
             current_progress: float = 60.0
-            total_variants = len(settings.responsive_sizes)
+            runtime = get_image_settings()
+            total_variants = len(runtime.responsive_sizes)
             progress_per_variant: float = (
                 30.0 / total_variants if total_variants else 30.0
             )
 
             # Generate each responsive size
             for _i, (size_name, target_size) in enumerate(
-                settings.responsive_sizes.items()
+                runtime.responsive_sizes.items()
             ):
                 # Skip if target size is larger than original
                 if target_size > max(original_width, original_height):
@@ -359,7 +361,9 @@ class VipsImageProcessor:
                 # 2. WebP (good balance)
                 webp_filename = f"{file_id}_{size_name}.webp"
                 webp_path = self.compressed_dir / webp_filename
-                webp_quality = settings.quality_settings.get(size_name, 85)
+                webp_quality = runtime.quality_settings.get(
+                    size_name, settings.webp_quality
+                )
 
                 try:
                     resized_img.webpsave(
@@ -428,12 +432,17 @@ class VipsImageProcessor:
 
     def _get_avif_quality(self, size_name: str) -> dict[str, int]:
         """Get AVIF-specific quality settings for different sizes."""
-        base_quality = settings.quality_settings.get(size_name, 85)
+        runtime = get_image_settings()
+        base_quality = runtime.quality_settings.get(size_name, settings.webp_quality)
 
         # AVIF can achieve better compression, so we can use slightly lower quality,
         # allow overrides via settings
-        avif_quality_offset = getattr(settings, "avif_quality_base_offset", -10)
-        avif_quality_floor = getattr(settings, "avif_quality_floor", 50)
+        avif_quality_offset = getattr(
+            runtime, "avif_quality_base_offset", settings.avif_quality_base_offset
+        )
+        avif_quality_floor = getattr(
+            runtime, "avif_quality_floor", settings.avif_quality_floor
+        )
         try:
             offset = int(avif_quality_offset)
         except Exception:
@@ -453,7 +462,9 @@ class VipsImageProcessor:
             "xlarge": 4,  # Lower effort for large files (speed vs quality)
         }
 
-        avif_effort_default = getattr(settings, "avif_effort_default", 6)
+        avif_effort_default = getattr(
+            runtime, "avif_effort_default", settings.avif_effort_default
+        )
         return {
             "quality": int(avif_quality),
             "effort": int(effort_map.get(size_name, avif_effort_default)),

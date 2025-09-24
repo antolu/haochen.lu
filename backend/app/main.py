@@ -20,6 +20,9 @@ from app.api import (
     subapp_integration,
     subapps,
 )
+from app.api import (
+    settings as settings_api,
+)
 from app.config import settings
 from app.core.progress import progress_manager
 from app.core.rate_limiter import RateLimitMiddleware
@@ -71,6 +74,7 @@ app.add_middleware(
 api_router = APIRouter()
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(photos.router, prefix="/photos", tags=["photos"])
+api_router.include_router(settings_api.router, prefix="/settings", tags=["settings"])
 api_router.include_router(
     profile_pictures.router, prefix="/profile-pictures", tags=["profile-pictures"]
 )
