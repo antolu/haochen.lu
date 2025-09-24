@@ -280,7 +280,7 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
           </div>
 
           {/* Crop Area */}
-          <div className="border border-gray-300 rounded-lg overflow-hidden">
+          <div className="border border-gray-300 rounded-lg overflow-hidden max-h-[60vh]">
             <ReactCrop
               crop={crop}
               onChange={(_, percentCrop) => setCrop(percentCrop)}
@@ -294,7 +294,7 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
                 alt="Crop preview"
                 src={imgSrc}
                 onLoad={onImageLoad}
-                className="max-h-96 w-auto"
+                className="max-h-[55vh] w-auto"
               />
             </ReactCrop>
           </div>
