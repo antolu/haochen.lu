@@ -58,7 +58,10 @@ const PhotoMetadataForm: React.FC<PhotoMetadataFormProps> = ({
   });
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form
+      onSubmit={(e) => void handleSubmit(onSubmit)(e)}
+      className="space-y-4"
+    >
       {/* Title Field */}
       {fields.showTitle && (
         <div>

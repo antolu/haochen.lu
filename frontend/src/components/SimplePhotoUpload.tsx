@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { AnimatePresence } from "framer-motion";
 import PhotoDropzone, { type UploadFile } from "./PhotoDropzone";
 import PhotoPreview from "./PhotoPreview";
@@ -29,6 +29,62 @@ const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
   );
   const uploadMutation = useUploadPhoto();
 
+  const handleUpload = useCallback(
+    (file: UploadFile) => {
+      // Update status to uploading
+      setUploadFiles((prev) =>
+        prev.map((f) => (f.id === file.id ? { ...f, status: "uploading" } : f)),
+      );
+
+      uploadMutation.mutate(
+        {
+          file: file.file,
+          metadata: {
+            title: file.file.name.replace(/\.[^/.]+$/, ""), // Remove file extension
+            description: "",
+            category,
+            tags: "",
+            featured: false,
+          },
+        },
+        {
+          onSuccess: (uploadedPhoto) => {
+            setUploadFiles((prev) =>
+              prev.map((f) =>
+                f.id === file.id
+                  ? { ...f, status: "completed", progress: 100 }
+                  : f,
+              ),
+            );
+            setUploadedPhotos(
+              (prev) => new Map(prev.set(file.id, uploadedPhoto)),
+            );
+          },
+          onError: (error) => {
+            console.error("Upload failed:", error);
+            const axiosError = error as AxiosError;
+            const errorMessage =
+              (axiosError.response?.data as { detail?: string })?.detail ??
+              error.message ??
+              "Upload failed";
+            setUploadFiles((prev) =>
+              prev.map((f) =>
+                f.id === file.id
+                  ? {
+                      ...f,
+                      status: "error",
+                      error: errorMessage,
+                    }
+                  : f,
+              ),
+            );
+          },
+        },
+      );
+    },
+    [uploadMutation, category, setUploadFiles, setUploadedPhotos],
+  );
+
   // Auto-upload files when they're added (if enabled)
   useEffect(() => {
     if (!autoUpload) return;
@@ -41,7 +97,7 @@ const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
     // Upload the first pending file
     const file = pendingFiles[0];
     handleUpload(file);
-  }, [uploadFiles, autoUpload]);
+  }, [uploadFiles, autoUpload, handleUpload]);
 
   // Call onComplete when upload is finished
   useEffect(() => {
@@ -58,57 +114,6 @@ const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
 
   const handleFilesAdded = (newFiles: UploadFile[]) => {
     setUploadFiles(newFiles);
-  };
-
-  const handleUpload = (file: UploadFile) => {
-    // Update status to uploading
-    setUploadFiles((prev) =>
-      prev.map((f) => (f.id === file.id ? { ...f, status: "uploading" } : f)),
-    );
-
-    uploadMutation.mutate(
-      {
-        file: file.file,
-        metadata: {
-          title: file.file.name.replace(/\.[^/.]+$/, ""), // Remove file extension
-          description: "",
-          category,
-          tags: "",
-          featured: false,
-        },
-      },
-      {
-        onSuccess: (uploadedPhoto) => {
-          setUploadFiles((prev) =>
-            prev.map((f) =>
-              f.id === file.id
-                ? { ...f, status: "completed", progress: 100 }
-                : f,
-            ),
-          );
-          setUploadedPhotos(
-            (prev) => new Map(prev.set(file.id, uploadedPhoto)),
-          );
-        },
-        onError: (error: AxiosError) => {
-          console.error("Upload failed:", error);
-          setUploadFiles((prev) =>
-            prev.map((f) =>
-              f.id === file.id
-                ? {
-                    ...f,
-                    status: "error",
-                    error:
-                      error.response?.data?.detail ||
-                      error.message ||
-                      "Upload failed",
-                  }
-                : f,
-            ),
-          );
-        },
-      },
-    );
   };
 
   const handleRemove = (fileId: string) => {

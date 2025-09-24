@@ -32,13 +32,13 @@ const PhotoDropzone: React.FC<PhotoDropzoneProps> = ({
   className,
 }) => {
   // Helper function to format file size
-  const formatFileSize = (bytes: number): string => {
+  const formatFileSize = useCallback((bytes: number): string => {
     if (bytes === 0) return "0 Bytes";
     const k = 1024;
     const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
-  };
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+  }, []);
 
   // Handle file drops
   const onDrop = useCallback(
@@ -141,7 +141,7 @@ const PhotoDropzone: React.FC<PhotoDropzoneProps> = ({
         isDragActive
           ? "border-blue-500 bg-blue-50"
           : "border-gray-300 hover:border-gray-400 hover:bg-gray-50"
-      } ${disabled ? "opacity-50 cursor-not-allowed" : ""} ${className || ""}`}
+      } ${disabled ? "opacity-50 cursor-not-allowed" : ""} ${className ?? ""}`}
     >
       <input {...getInputProps()} />
       <div className="space-y-3">

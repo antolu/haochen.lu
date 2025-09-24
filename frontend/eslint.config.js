@@ -8,7 +8,13 @@ import { globalIgnores } from "eslint/config";
 export default tseslint.config([
   globalIgnores(["dist", "build", "coverage", "node_modules"]),
   {
+    // Non-test source files - with type checking
     files: ["src/**/*.{ts,tsx}"],
+    ignores: [
+      "**/*.test.{ts,tsx}",
+      "**/*.spec.{ts,tsx}",
+      "src/test/**/*.{ts,tsx}",
+    ],
     extends: [
       js.configs.recommended,
       tseslint.configs.recommended,
@@ -66,14 +72,16 @@ export default tseslint.config([
     },
   },
   {
-    // Test files
+    // Test files - without type checking
     files: [
       "**/*.test.{ts,tsx}",
       "**/*.spec.{ts,tsx}",
       "src/test/**/*.{ts,tsx}",
     ],
-    extends: [tseslint.configs.recommended],
+    extends: [js.configs.recommended, tseslint.configs.recommended],
     languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
       parserOptions: {
         projectService: false,
       },
@@ -81,8 +89,10 @@ export default tseslint.config([
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-non-null-assertion": "off",
-      "@typescript-eslint/no-array-delete": "off",
-      "@typescript-eslint/await-thenable": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_" },
+      ],
       "no-console": "off",
       "react-refresh/only-export-components": "off",
     },

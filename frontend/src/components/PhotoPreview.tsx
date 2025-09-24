@@ -24,7 +24,7 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({
     const k = 1024;
     const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
   };
 
   return (
@@ -87,7 +87,7 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({
 
           {uploadFile.status === "error" && (
             <div className="mt-2 text-sm text-red-600">
-              ✗ {uploadFile.error || "Upload failed"}
+              ✗ {uploadFile.error ?? "Upload failed"}
             </div>
           )}
 

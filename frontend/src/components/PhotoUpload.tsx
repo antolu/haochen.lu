@@ -78,17 +78,19 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
             ),
           );
         },
-        onError: (error: AxiosError) => {
+        onError: (error) => {
+          const axiosError = error as AxiosError;
+          const errorMessage =
+            (axiosError.response?.data as { detail?: string })?.detail ??
+            error.message ??
+            "Upload failed";
           setUploadFiles((prev) =>
             prev.map((f) =>
               f.id === file.id
                 ? {
                     ...f,
                     status: "error",
-                    error:
-                      error.response?.data?.detail ||
-                      error.message ||
-                      "Upload failed",
+                    error: errorMessage,
                   }
                 : f,
             ),
