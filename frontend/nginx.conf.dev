@@ -99,6 +99,16 @@ http {
             proxy_set_header Access-Control-Allow-Headers "Origin, X-Requested-With, Content-Type, Accept, Authorization";
         }
 
+        # Proxy WebSocket connections for upload progress to backend
+        location /ws/ {
+            proxy_pass http://backend_api;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host $host;
+            proxy_read_timeout 600s;
+        }
+
         # File access now controlled through API endpoints
         # Direct file access removed for security - use /api/photos/{photo_id}/file/{variant}
 
