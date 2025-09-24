@@ -6,6 +6,7 @@ import ReactCrop, {
   makeAspectCrop,
 } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
+import PhotoDropzone, { type UploadFile } from "./PhotoDropzone";
 
 export interface ProfilePictureUploadProps {
   onUpload: (file: File, title?: string) => Promise<void>;
@@ -107,6 +108,16 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
       const file = e.target.files?.[0];
       if (file) {
         selectFile(file);
+      }
+    },
+    [selectFile],
+  );
+
+  const onDropzoneFiles = useCallback(
+    (files: UploadFile[]) => {
+      const first = files.find((f) => f.status !== "error");
+      if (first?.file) {
+        selectFile(first.file);
       }
     },
     [selectFile],
@@ -223,45 +234,12 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
 
       {!imgSrc ? (
         <div className="space-y-4">
-          {/* File Input */}
-          <div
-            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-              isDragOver
-                ? "border-blue-400 bg-blue-50"
-                : "border-gray-300 hover:border-gray-400"
-            }`}
-            onDragOver={onDragOver}
-            onDragLeave={onDragLeave}
-            onDrop={onDrop}
-          >
-            <div className="space-y-4">
-              <div className="mx-auto w-12 h-12 text-gray-400">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <p className="text-gray-600">
-                  Drag and drop an image here, or{" "}
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="text-blue-600 hover:text-blue-700 underline"
-                  >
-                    click to select
-                  </button>
-                </p>
-                <p className="text-sm text-gray-500 mt-1">
-                  PNG, JPG, JPEG up to 10MB
-                </p>
-              </div>
-            </div>
-          </div>
+          <PhotoDropzone
+            onFilesAdded={onDropzoneFiles}
+            maxFiles={1}
+            maxFileSize={10 * 1024 * 1024}
+            accept={{ "image/*": [".jpeg", ".jpg", ".png", ".webp"] }}
+          />
 
           <input
             ref={fileInputRef}
