@@ -4,13 +4,20 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies including libvips and AVIF support
 # hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     g++ \
     libpq-dev \
     curl \
+    libvips-dev \
+    libheif-dev \
+    libde265-dev \
+    libx265-dev \
+    libaom-dev \
+    libdav1d-dev \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy pyproject.toml first for better caching

@@ -25,6 +25,7 @@ dependencies = [
   "redis~=6.4",
   "celery~=5.5",
   "pillow~=11.3",
+  "pyvips~=2.2.3",
   "python-multipart~=0.0.20",
   "passlib[bcrypt]~=1.7.4",
   "python-jose[cryptography]~=3.3.0",
@@ -35,6 +36,7 @@ dependencies = [
   "pydantic~=2.11",
   "pydantic-settings~=2.10",
   "httpx~=0.28.1",
+  "python-socketio~=5.11.0",
 ]
 
 [[project.authors]]
@@ -251,6 +253,13 @@ ignore_errors = true
 [[tool.mypy.overrides]]
 module = "app.crud.*"
 warn_return_any = false
+
+[[tool.mypy.overrides]]
+module = [
+  "pyvips",
+  "piexif",
+]
+ignore_missing_imports = true
 
 [tool.bandit]
 exclude_dirs = ["tests", "migrations", "test_simple.py"]

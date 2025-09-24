@@ -20,8 +20,8 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.file_access import file_access_controller
-from app.core.image_processor import image_processor
 from app.core.rate_limiter import FileAccessRateLimiter
+from app.core.vips_processor import vips_image_processor as image_processor
 from app.crud.photo import (
     bulk_reorder_photos,
     create_photo,
@@ -55,6 +55,41 @@ from app.services.alias_service import AliasService
 from app.types.access_control import FileType
 
 router = APIRouter()
+
+
+def _negotiate_variant_file_type(
+    raw_variant: str, accept_header: str | None
+) -> FileType:
+    """Map a requested variant (size or size-format) and Accept header to a FileType.
+
+    - If raw_variant already includes a format suffix (e.g., "medium-avif"), use it directly.
+    - Otherwise, choose best format based on Accept header: avif -> webp -> jpeg.
+    """
+    try:
+        # If this is already a valid FileType, return it as-is
+        return FileType(raw_variant)
+    except ValueError:
+        pass
+
+    size = raw_variant
+    accept = (accept_header or "").lower()
+
+    def supports(mime: str) -> bool:
+        return mime in accept or "*/*" in accept or "image/*" in accept
+
+    # Prefer AVIF if supported; then WebP; then JPEG
+    if supports("image/avif"):
+        candidate = f"{size}-avif"
+    elif supports("image/webp"):
+        candidate = f"{size}-webp"
+    else:
+        candidate = f"{size}-jpeg"
+
+    try:
+        return FileType(candidate)
+    except ValueError:
+        # Fallback to size without format; backend will auto-pick best available
+        return FileType(size)
 
 
 async def _create_aliases_for_photo(
@@ -496,7 +531,9 @@ async def serve_photo_original(
 
     # Get client ID for rate limiting
     client_id = (
-        f"user:{current_user.id}" if current_user else f"ip:{request.client.host}"
+        f"user:{current_user.id}"
+        if current_user
+        else f"ip:{(request.client.host if request.client else 'unknown')}"
     )
 
     # Check rate limits
@@ -532,10 +569,10 @@ async def serve_photo_variant(
     signature: str | None = Query(None, description="Temporary URL signature"),
 ):
     """Serve photo variant with access control."""
-    # Validate variant
+    # Validate and negotiate variant based on Accept header
     try:
-        file_type = FileType(variant)
-    except ValueError as e:
+        file_type = _negotiate_variant_file_type(variant, request.headers.get("accept"))
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid variant '{variant}'",
@@ -602,7 +639,9 @@ async def download_photo_original(
 
     # Get client ID for rate limiting
     client_id = (
-        f"user:{current_user.id}" if current_user else f"ip:{request.client.host}"
+        f"user:{current_user.id}"
+        if current_user
+        else f"ip:{(request.client.host if request.client else 'unknown')}"
     )
 
     # Check download rate limits (stricter for downloads)
@@ -645,10 +684,10 @@ async def download_photo_variant(
     current_user: Any | None = _current_user_optional_dependency,
 ):
     """Download photo variant (forces download with proper filename)."""
-    # Validate variant
+    # Validate and negotiate variant based on Accept header
     try:
-        file_type = FileType(variant)
-    except ValueError as e:
+        file_type = _negotiate_variant_file_type(variant, request.headers.get("accept"))
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid variant '{variant}'",
@@ -665,7 +704,9 @@ async def download_photo_variant(
 
     # Get client ID for rate limiting
     client_id = (
-        f"user:{current_user.id}" if current_user else f"ip:{request.client.host}"
+        f"user:{current_user.id}"
+        if current_user
+        else f"ip:{(request.client.host if request.client else 'unknown')}"
     )
 
     # Check download rate limits

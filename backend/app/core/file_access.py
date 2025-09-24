@@ -84,14 +84,83 @@ class FileAccessController:
                     detail=f"Variant '{file_type}' not available",
                 )
 
-            variant_info = photo.variants.get(file_type.value)
-            if not variant_info:
+            # 1) Direct lookup (legacy flat mapping or precomputed key)
+            direct = photo.variants.get(file_type.value)
+
+            def _path_from_variant_info(info: dict) -> Path | None:
+                # Legacy shape: { path: "...", ... }
+                if (
+                    isinstance(info, dict)
+                    and "path" in info
+                    and isinstance(info["path"], str)
+                ):
+                    return self.compressed_dir / Path(info["path"]).name
+                return None
+
+            resolved_path: Path | None = (
+                _path_from_variant_info(direct) if isinstance(direct, dict) else None
+            )
+
+            if resolved_path is None:
+                # 2) Multi-format nested mapping introduced with libvips:
+                # variants[size] -> { "avif": {...}, "webp": {...}, "jpeg": {...} }
+                size_part: str
+                format_part: str | None
+                if "-" in file_type.value:
+                    # Explicit format requested, e.g. "medium-avif"
+                    size_part, format_part = file_type.value.split("-", 1)
+                else:
+                    size_part, format_part = file_type.value, None
+
+                size_entry = photo.variants.get(size_part)
+                if isinstance(size_entry, dict):
+                    if format_part:
+                        # Specific format requested
+                        fmt_info = size_entry.get(format_part)
+                        resolved_path = (
+                            _path_from_variant_info(fmt_info)
+                            if isinstance(fmt_info, dict)
+                            else None
+                        )
+                    else:
+                        # No specific format -> follow priority: avif -> webp -> jpeg
+                        for fmt in ("avif", "webp", "jpeg"):
+                            fmt_info = size_entry.get(fmt)
+                            resolved_path = (
+                                _path_from_variant_info(fmt_info)
+                                if isinstance(fmt_info, dict)
+                                else None
+                            )
+                            if resolved_path is not None:
+                                break
+
+            if resolved_path is None:
+                # 3) As a last resort, try to find any entry whose key starts with the size
+                # This helps if keys were persisted like "medium-webp"
+                size_key = file_type.value.split("-", 1)[0]
+                candidate = next(
+                    (
+                        v
+                        for k, v in photo.variants.items()
+                        if isinstance(k, str)
+                        and k.startswith(size_key)
+                        and isinstance(v, dict)
+                    ),
+                    None,
+                )
+                resolved_path = (
+                    _path_from_variant_info(candidate)
+                    if isinstance(candidate, dict)
+                    else None
+                )
+
+            if resolved_path is None:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail=f"Variant '{file_type}' not found",
                 )
 
-            file_path = self.compressed_dir / Path(variant_info["path"]).name
+            file_path = resolved_path
 
         # Verify file exists
         if not file_path.exists():
@@ -121,6 +190,7 @@ class FileAccessController:
             ".png": "image/png",
             ".gif": "image/gif",
             ".webp": "image/webp",
+            ".avif": "image/avif",
             ".bmp": "image/bmp",
             ".tiff": "image/tiff",
             ".svg": "image/svg+xml",
@@ -140,18 +210,13 @@ class FileAccessController:
         if file_type == FileType.ORIGINAL:
             extension = Path(photo.filename).suffix
         else:
-            # Most variants are WebP
-            extension = ".webp"
-            if photo.variants and isinstance(photo.variants, dict):
-                variant_info = photo.variants.get(file_type.value, {})
-                if "format" in variant_info:
-                    format_ext = {
-                        "JPEG": ".jpg",
-                        "PNG": ".png",
-                        "WEBP": ".webp",
-                        "GIF": ".gif",
-                    }
-                    extension = format_ext.get(variant_info["format"].upper(), ".webp")
+            # Determine extension based on the resolved file path to be accurate across formats
+            try:
+                resolved_path = self.get_file_path(photo, file_type)
+                extension = resolved_path.suffix
+            except Exception:
+                # Fallback to webp if we cannot resolve
+                extension = ".webp"
 
         # Add variant suffix for non-original files
         if file_type != FileType.ORIGINAL:
