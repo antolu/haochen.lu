@@ -53,35 +53,35 @@ const AdminDashboard: React.FC = () => {
       stat: photoStats?.total_photos ?? 0,
       icon: Camera,
       gradient: "from-blue-500 to-cyan-500",
-      change: "+12%",
+      change: null,
     },
     {
       name: "Featured Photos",
       stat: photoStats?.featured_photos ?? 0,
       icon: Eye,
       gradient: "from-emerald-500 to-teal-500",
-      change: "+8%",
+      change: null,
     },
     {
       name: "Hero Images",
       stat: heroImagesList?.length ?? 0,
       icon: Sparkles,
       gradient: "from-purple-500 to-pink-500",
-      change: "+5%",
+      change: null,
     },
     {
       name: "Projects",
       stat: projectStats?.total_projects ?? 0,
       icon: FolderOpen,
       gradient: "from-orange-500 to-red-500",
-      change: "+3%",
+      change: null,
     },
     {
       name: "Blog Posts",
       stat: blogStats?.total_posts ?? 0,
       icon: PenTool,
       gradient: "from-violet-500 to-purple-500",
-      change: "+15%",
+      change: null,
     },
   ];
 
@@ -174,12 +174,14 @@ const AdminDashboard: React.FC = () => {
                         <span className="text-2xl font-bold">
                           {formatNumber(item.stat)}
                         </span>
-                        <Badge
-                          variant="secondary"
-                          className="text-xs px-1.5 py-0.5"
-                        >
-                          {item.change}
-                        </Badge>
+                        {item.change ? (
+                          <Badge
+                            variant="secondary"
+                            className="text-xs px-1.5 py-0.5"
+                          >
+                            {item.change}
+                          </Badge>
+                        ) : null}
                       </div>
                     </div>
                     <div
