@@ -156,7 +156,28 @@ def populate_photo_urls(photo_dict: dict, photo_id: str) -> dict:
     # Add variant URLs
     if photo_dict.get("variants"):
         for variant_name, variant_data in photo_dict["variants"].items():
-            variant_data["url"] = f"/api/photos/{photo_id}/file/{variant_name}"
+            # Always provide a size-level URL that negotiates best format
+            if isinstance(variant_data, dict):
+                variant_data["url"] = f"/api/photos/{photo_id}/file/{variant_name}"
+
+                # If nested multi-format object, surface width/height at size level
+                if "width" not in variant_data:
+                    preferred = None
+                    for fmt in ("avif", "webp", "jpeg"):
+                        fmt_info = variant_data.get(fmt)
+                        if isinstance(fmt_info, dict):
+                            preferred = fmt_info
+                            break
+                    if not preferred:
+                        # Fall back to any mapping value
+                        for v in variant_data.values():
+                            if isinstance(v, dict):
+                                preferred = v
+                                break
+                    if preferred:
+                        for key in ("width", "height"):
+                            if key in preferred and key not in variant_data:
+                                variant_data[key] = preferred[key]
 
     return photo_dict
 

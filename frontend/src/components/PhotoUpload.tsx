@@ -68,6 +68,24 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
       prev.map((f) => (f.id === file.id ? { ...f, status: "uploading" } : f)),
     );
 
+    // Listen for global progress events for this upload (best-effort)
+    const onProgress = (e: Event) => {
+      const detail = (e as CustomEvent).detail as {
+        uploadId?: string;
+        stage?: string;
+        progress?: number;
+      };
+      if (!detail || !detail.progress) return;
+      setUploadFiles((prev) =>
+        prev.map((f) =>
+          f.id === file.id
+            ? { ...f, progress: Math.max(0, Math.min(100, detail.progress)) }
+            : f,
+        ),
+      );
+    };
+    window.addEventListener("upload:progress", onProgress as EventListener);
+
     uploadMutation.mutate(
       {
         file: file.file,
@@ -89,6 +107,10 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
                 : f,
             ),
           );
+          window.removeEventListener(
+            "upload:progress",
+            onProgress as EventListener,
+          );
         },
         onError: (error) => {
           const axiosError = error as AxiosError;
@@ -106,6 +128,10 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
                   }
                 : f,
             ),
+          );
+          window.removeEventListener(
+            "upload:progress",
+            onProgress as EventListener,
           );
         },
       },

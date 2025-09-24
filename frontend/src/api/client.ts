@@ -253,6 +253,7 @@ export const photos = {
       comments?: string;
       featured?: boolean;
     },
+    options?: { uploadId?: string },
   ): Promise<Photo> => {
     const formData = new FormData();
     formData.append("file", file);
@@ -277,6 +278,9 @@ export const photos = {
     const response = await apiClient.post<Photo>("/photos", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
+        ...(options?.uploadId ? { "X-Upload-Id": options.uploadId } : {}),
+        // Encourage AVIF/WebP preference where applicable
+        Accept: "image/avif,image/webp,image/jpeg;q=0.9,*/*;q=0.8",
       },
     });
     return response.data;

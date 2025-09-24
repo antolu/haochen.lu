@@ -119,7 +119,55 @@ export const useUploadPhoto = () => {
         comments?: string;
         featured?: boolean;
       };
-    }) => photos.upload(file, metadata),
+    }) => {
+      // Create an upload ID to correlate WS progress
+      const uploadId = `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+      // Attempt to open WS for progress (best-effort)
+      try {
+        const wsBase =
+          (import.meta.env.VITE_WS_URL as string | undefined) ??
+          (window.location.protocol === "https:" ? "wss" : "ws") +
+            "://" +
+            window.location.host +
+            "/ws";
+        const ws = new WebSocket(`${wsBase}/uploads/${uploadId}`);
+        ws.onmessage = (ev) => {
+          try {
+            const data = JSON.parse(ev.data as string) as {
+              type?: string;
+              stage?: string;
+              progress?: number;
+            };
+            if (
+              data?.type === "progress" &&
+              typeof data.progress === "number"
+            ) {
+              // Broadcast via a custom event; PhotoUpload component can listen if desired
+              window.dispatchEvent(
+                new CustomEvent("upload:progress", {
+                  detail: {
+                    uploadId,
+                    stage: data.stage,
+                    progress: data.progress,
+                  },
+                }),
+              );
+            }
+          } catch {
+            // ignore
+          }
+        };
+        ws.onerror = () => {
+          try {
+            ws.close();
+          } catch {}
+        };
+      } catch {
+        // Ignore WS errors; upload continues
+      }
+
+      return photos.upload(file, metadata, { uploadId });
+    },
 
     onMutate: async ({ file, metadata }) => {
       // Cancel any outgoing refetches
