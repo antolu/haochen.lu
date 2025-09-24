@@ -125,7 +125,7 @@ const AdminDashboard: React.FC = () => {
       title: "Settings",
       description: "Manage system settings",
       icon: Settings,
-      href: "/admin/subapps",
+      href: "/admin/settings",
       color: "bg-gray-50 text-gray-600 border-gray-200",
     },
   ];

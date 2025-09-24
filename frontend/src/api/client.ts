@@ -572,6 +572,34 @@ export const content = {
   },
 };
 
+// Settings API (admin)
+export const settings = {
+  getImage: async (): Promise<{
+    responsive_sizes: Record<string, number>;
+    quality_settings: Record<string, number>;
+    avif_quality_base_offset: number;
+    avif_quality_floor: number;
+    avif_effort_default: number;
+    webp_quality: number;
+  }> => {
+    const res = await apiClient.get("/settings/image");
+    return res.data as any;
+  },
+  updateImage: async (
+    payload: Partial<{
+      responsive_sizes: Record<string, number>;
+      quality_settings: Record<string, number>;
+      avif_quality_base_offset: number;
+      avif_quality_floor: number;
+      avif_effort_default: number;
+      webp_quality: number;
+    }>,
+  ) => {
+    const res = await apiClient.put("/settings/image", payload);
+    return res.data as any;
+  },
+};
+
 // Profile Pictures API
 export const profilePictures = {
   list: async (
