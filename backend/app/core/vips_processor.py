@@ -4,6 +4,7 @@ import asyncio
 import os
 import uuid
 from collections.abc import Callable
+from contextlib import suppress
 from datetime import datetime
 from pathlib import Path
 from typing import Any, BinaryIO
@@ -45,9 +46,18 @@ class VipsImageProcessor:
         if self.progress_callback:
             self.progress_callback(stage, progress)
         if self.upload_id:
-            self._progress_task = asyncio.create_task(
-                progress_manager.send_progress(self.upload_id, stage, progress)
-            )
+            try:
+                loop = asyncio.get_running_loop()
+                # We are in an active event loop (main thread). Schedule task.
+                self._progress_task = loop.create_task(
+                    progress_manager.send_progress(self.upload_id, stage, progress)
+                )
+            except RuntimeError:
+                # No running event loop in this thread (likely from to_thread). Run synchronously.
+                with suppress(RuntimeError):
+                    asyncio.run(
+                        progress_manager.send_progress(self.upload_id, stage, progress)
+                    )
 
     async def extract_exif_data(self, image_path: str) -> dict[str, Any]:
         """Extract comprehensive EXIF data from image including timezone and GPS."""
