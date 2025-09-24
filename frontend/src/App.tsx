@@ -23,8 +23,7 @@ import AdminProfilePictures from "./pages/admin/AdminProfilePictures";
 import AdminHeroImages from "./pages/admin/AdminHeroImages";
 import AdminProjects from "./pages/admin/AdminProjects";
 import AdminBlog from "./pages/admin/AdminBlog";
-import AdminCameraAliases from "./pages/admin/AdminCameraAliases";
-import AdminLensAliases from "./pages/admin/AdminLensAliases";
+import AdminEquipmentAliases from "./pages/admin/AdminEquipmentAliases";
 import AdminSubApps from "./pages/admin/AdminSubApps";
 import AdminSubAppIntegration from "./pages/admin/AdminSubAppIntegration";
 import AdminContent from "./pages/admin/AdminContent";
@@ -76,8 +75,16 @@ function App() {
               <Route path="hero-images" element={<AdminHeroImages />} />
               <Route path="projects" element={<AdminProjects />} />
               <Route path="blog" element={<AdminBlog />} />
-              <Route path="camera-aliases" element={<AdminCameraAliases />} />
-              <Route path="lens-aliases" element={<AdminLensAliases />} />
+              <Route
+                path="equipment-aliases"
+                element={<AdminEquipmentAliases />}
+              />
+              {/* Backward compatibility redirects */}
+              <Route
+                path="camera-aliases"
+                element={<AdminEquipmentAliases />}
+              />
+              <Route path="lens-aliases" element={<AdminEquipmentAliases />} />
               <Route path="subapps" element={<AdminSubApps />} />
               <Route
                 path="subapps/integrate"

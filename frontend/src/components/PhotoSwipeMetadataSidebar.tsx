@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import MiniMap from "./MiniMap";
 import MapModal from "./MapModal";
 import type { Photo } from "../types";
@@ -39,9 +39,9 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
           <span className="font-medium text-white">{title}</span>
         </div>
         {isOpen ? (
-          <ChevronUpIcon className="h-4 w-4 text-gray-400" />
+          <ChevronUp className="h-4 w-4 text-gray-400" />
         ) : (
-          <ChevronDownIcon className="h-4 w-4 text-gray-400" />
+          <ChevronDown className="h-4 w-4 text-gray-400" />
         )}
       </button>
       <AnimatePresence>

@@ -16,6 +16,7 @@ import {
   Moon,
   Sun,
   Laptop,
+  Settings,
 } from "lucide-react";
 
 import { useAuthStore } from "../stores/authStore";
@@ -98,15 +99,9 @@ const AdminLayoutContent: React.FC = () => {
       badge: null,
     },
     {
-      name: "Camera Aliases",
-      href: "/admin/camera-aliases",
-      icon: Camera,
-      badge: null,
-    },
-    {
-      name: "Lens Aliases",
-      href: "/admin/lens-aliases",
-      icon: Camera,
+      name: "Equipment Aliases",
+      href: "/admin/equipment-aliases",
+      icon: Settings,
       badge: null,
     },
     {
