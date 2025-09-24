@@ -245,23 +245,7 @@ const AdminDashboard: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Recent Activity Placeholder */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Recent Activity
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center py-8 text-muted-foreground">
-            <div className="text-center">
-              <BarChart3 className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">Activity feed coming soon</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Recent Activity section removed per request */}
     </div>
   );
 };

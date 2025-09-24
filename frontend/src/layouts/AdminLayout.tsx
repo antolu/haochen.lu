@@ -93,6 +93,12 @@ const AdminLayoutContent: React.FC = () => {
       badge: null,
     },
     {
+      name: "Hero Images",
+      href: "/admin/hero-images",
+      icon: Sparkles,
+      badge: null,
+    },
+    {
       name: "Blog",
       href: "/admin/blog",
       icon: PenTool,
@@ -114,6 +120,12 @@ const AdminLayoutContent: React.FC = () => {
       name: "Sub-Apps",
       href: "/admin/subapps",
       icon: Layers,
+      badge: null,
+    },
+    {
+      name: "Settings",
+      href: "/admin/settings",
+      icon: Settings,
       badge: null,
     },
   ];
