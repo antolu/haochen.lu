@@ -42,6 +42,7 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
 
   const imageRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const crosshairRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
   // Update focal points mutation
@@ -57,7 +58,7 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
     },
   });
 
-  const getCurrentFocalPoint = (): FocalPoint => {
+  const getCurrentFocalPoint = useCallback((): FocalPoint => {
     if (activeDevice === "mobile" && focalPoints.responsive.mobile) {
       return focalPoints.responsive.mobile;
     }
@@ -68,33 +69,36 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
       return focalPoints.responsive.desktop;
     }
     return focalPoints.default;
-  };
+  }, [activeDevice, focalPoints]);
 
-  const setCurrentFocalPoint = (point: FocalPoint) => {
-    if (activeDevice === "mobile") {
-      setFocalPoints((prev) => ({
-        ...prev,
-        responsive: { ...prev.responsive, mobile: point },
-      }));
-    } else if (activeDevice === "tablet") {
-      setFocalPoints((prev) => ({
-        ...prev,
-        responsive: { ...prev.responsive, tablet: point },
-      }));
-    } else if (activeDevice === "desktop") {
-      setFocalPoints((prev) => ({
-        ...prev,
-        responsive: { ...prev.responsive, desktop: point },
-      }));
-    }
-    // Also update default to match desktop
-    if (activeDevice === "desktop") {
-      setFocalPoints((prev) => ({
-        ...prev,
-        default: point,
-      }));
-    }
-  };
+  const setCurrentFocalPoint = useCallback(
+    (point: FocalPoint) => {
+      if (activeDevice === "mobile") {
+        setFocalPoints((prev) => ({
+          ...prev,
+          responsive: { ...prev.responsive, mobile: point },
+        }));
+      } else if (activeDevice === "tablet") {
+        setFocalPoints((prev) => ({
+          ...prev,
+          responsive: { ...prev.responsive, tablet: point },
+        }));
+      } else if (activeDevice === "desktop") {
+        setFocalPoints((prev) => ({
+          ...prev,
+          responsive: { ...prev.responsive, desktop: point },
+        }));
+      }
+      // Also update default to match desktop
+      if (activeDevice === "desktop") {
+        setFocalPoints((prev) => ({
+          ...prev,
+          default: point,
+        }));
+      }
+    },
+    [activeDevice],
+  );
 
   // Utility function to calculate focal point from mouse/touch position
   const calculateFocalPoint = useCallback(
@@ -127,10 +131,16 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
 
   const handleImageMouseMove = useCallback(
     (event: React.MouseEvent<HTMLImageElement>) => {
-      if (!isHovering) return;
+      if (!isHovering || !crosshairRef.current) return;
 
       const focalPoint = calculateFocalPoint(event.clientX, event.clientY);
       if (focalPoint) {
+        // Direct DOM manipulation for smooth crosshair tracking
+        crosshairRef.current.style.transform = `translate(-50%, -50%)`;
+        crosshairRef.current.style.left = `${focalPoint.x}%`;
+        crosshairRef.current.style.top = `${focalPoint.y}%`;
+
+        // Update preview state for coordinate display (less frequent updates)
         setPreviewFocalPoint(focalPoint);
       }
     },
@@ -144,7 +154,14 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
   const handleImageMouseLeave = useCallback(() => {
     setIsHovering(false);
     setPreviewFocalPoint(null);
-  }, []);
+
+    // Reset crosshair position to committed focal point
+    if (crosshairRef.current) {
+      const currentFocalPoint = getCurrentFocalPoint();
+      crosshairRef.current.style.left = `${currentFocalPoint.x}%`;
+      crosshairRef.current.style.top = `${currentFocalPoint.y}%`;
+    }
+  }, [getCurrentFocalPoint]);
 
   const handleSave = () => {
     updateMutation.mutate({
@@ -161,9 +178,9 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
         y: heroImage.focal_point_y,
       },
       responsive: {
-        mobile: heroImage.focal_points_responsive?.mobile || { x: 70, y: 50 },
-        tablet: heroImage.focal_points_responsive?.tablet || { x: 60, y: 50 },
-        desktop: heroImage.focal_points_responsive?.desktop || { x: 55, y: 50 },
+        mobile: heroImage.focal_points_responsive?.mobile ?? { x: 70, y: 50 },
+        tablet: heroImage.focal_points_responsive?.tablet ?? { x: 60, y: 50 },
+        desktop: heroImage.focal_points_responsive?.desktop ?? { x: 55, y: 50 },
       },
     });
   };
@@ -230,25 +247,37 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
             ))}
           </div>
 
-          {/* Instructions */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <p className="text-blue-800 text-sm">
-              <strong>Instructions:</strong> Hover over the image to preview
-              where the focal point will be set (blue crosshair), then click to
-              confirm (red crosshair) for <strong>{activeDevice}</strong>{" "}
-              devices. The focal point determines where the image will be
-              centered when cropped for different screen sizes.
-            </p>
-          </div>
-
           {/* Main Editor */}
           <div className="flex flex-col lg:flex-row gap-6">
             {/* Image Preview */}
             <div className="flex-1">
               <div className="mb-4">
-                <h4 className="font-semibold text-gray-900 mb-2">
-                  Preview ({activeDevice})
-                </h4>
+                <div className="flex items-center gap-2 mb-2">
+                  <h4 className="font-semibold text-gray-900">
+                    Preview ({activeDevice})
+                  </h4>
+                  {/* Help Tooltip */}
+                  <div className="relative group">
+                    <button
+                      type="button"
+                      className="w-5 h-5 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors flex items-center justify-center text-xs text-gray-600 font-medium"
+                      aria-label="Help"
+                    >
+                      ?
+                    </button>
+                    <div className="absolute left-0 top-6 z-50 w-80 p-3 bg-gray-900 text-white text-sm rounded-lg shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200">
+                      <div className="absolute -top-1 left-3 w-2 h-2 bg-gray-900 rotate-45"></div>
+                      <p>
+                        <strong>Instructions:</strong> Hover over the image to
+                        preview where the focal point will be set (blue
+                        crosshair), then click to confirm (red crosshair) for{" "}
+                        <strong>{activeDevice}</strong> devices. The focal point
+                        determines where the image will be centered when cropped
+                        for different screen sizes.
+                      </p>
+                    </div>
+                  </div>
+                </div>
                 <div className="text-sm text-gray-600">
                   {previewFocalPoint ? (
                     <>
@@ -291,13 +320,15 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
                   draggable={false}
                 />
 
-                {/* Crosshair Overlay */}
+                {/* Crosshair Overlay - Optimized for GPU acceleration */}
                 <div
-                  className="absolute pointer-events-none transition-all duration-150 ease-out"
+                  ref={crosshairRef}
+                  className="absolute pointer-events-none"
                   style={{
                     left: `${displayedFocalPoint.x}%`,
                     top: `${displayedFocalPoint.y}%`,
                     transform: "translate(-50%, -50%)",
+                    willChange: "transform",
                   }}
                 >
                   <div className="relative">
