@@ -22,6 +22,7 @@ async def get_photos(
     near_lon: float | None = None,
     radius: float = 10.0,
     order_by: str = "created_at",
+    exclude_photo_ids: set[UUID] | None = None,
 ) -> list[Photo]:
     query = select(Photo)
 
@@ -53,6 +54,9 @@ async def get_photos(
             & Photo.location_lon.between(near_lon - lon_range, near_lon + lon_range)
         )
 
+    if exclude_photo_ids:
+        query = query.where(Photo.id.notin_(list(exclude_photo_ids)))
+
     # Order by
     if order_by == "order":
         query = query.order_by(
@@ -81,6 +85,7 @@ async def get_photo_count(
     near_lat: float | None = None,
     near_lon: float | None = None,
     radius: float = 10.0,
+    exclude_photo_ids: set[UUID] | None = None,
 ) -> int:
     query = select(func.count(Photo.id))
 
@@ -109,6 +114,9 @@ async def get_photo_count(
             Photo.location_lat.between(near_lat - lat_range, near_lat + lat_range)
             & Photo.location_lon.between(near_lon - lon_range, near_lon + lon_range)
         )
+
+    if exclude_photo_ids:
+        query = query.where(Photo.id.notin_(list(exclude_photo_ids)))
 
     result = await db.execute(query)
     count = result.scalar()

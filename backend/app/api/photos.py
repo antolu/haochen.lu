@@ -39,6 +39,7 @@ from app.dependencies import (
     _session_dependency,
 )
 from app.models.camera_alias import CameraAlias
+from app.models.hero_image import HeroImage
 from app.models.lens_alias import LensAlias
 from app.models.photo import Photo as PhotoModel
 from app.schemas.photo import (
@@ -56,8 +57,17 @@ from app.types.access_control import FileType
 router = APIRouter()
 
 
-async def _create_aliases_for_photo(db: AsyncSession, photo: PhotoModel) -> None:
+async def _create_aliases_for_photo(
+    db: AsyncSession, photo: PhotoModel, *, skip_hero_check: bool = False
+) -> None:
     """Auto-create camera and lens aliases for a new photo if they don't exist."""
+
+    if not skip_hero_check:
+        hero_reference = await db.execute(
+            select(HeroImage.id).where(HeroImage.photo_id == photo.id)
+        )
+        if hero_reference.scalar_one_or_none():
+            return
 
     # Create camera alias if camera info exists
     if photo.camera_make and photo.camera_model:
@@ -135,18 +145,24 @@ async def list_photos(
         "created_at", regex="^(created_at|date_taken|views|title|order)$"
     ),
     db: AsyncSession = _session_dependency,
-):
+) -> PhotoListResponse:
     """List photos with pagination and filtering."""
-    # Validate proximity search parameters
+
     if (near_lat is None) != (near_lon is None):
         raise HTTPException(
             status_code=422,
             detail="Both near_lat and near_lon must be provided for proximity search",
         )
 
+    hero_photo_ids_result = await db.execute(select(HeroImage.photo_id))
+    hero_photo_ids = {
+        row[0] for row in hero_photo_ids_result.all() if row[0] is not None
+    }
+
+    effective_order = order_by if order_by != "order" else "order"
     skip = (page - 1) * per_page
 
-    photos = await get_photos(
+    photos_query = await get_photos(
         db,
         skip=skip,
         limit=per_page,
@@ -156,7 +172,8 @@ async def list_photos(
         near_lat=near_lat,
         near_lon=near_lon,
         radius=radius,
-        order_by=order_by,
+        order_by=effective_order,
+        exclude_photo_ids=hero_photo_ids,
     )
 
     total = await get_photo_count(
@@ -167,35 +184,29 @@ async def list_photos(
         near_lat=near_lat,
         near_lon=near_lon,
         radius=radius,
+        exclude_photo_ids=hero_photo_ids,
     )
     pages = math.ceil(total / per_page)
 
-    # Resolve display names for camera and lens aliases
     alias_service = AliasService(db)
 
-    # Convert photos to response objects with display names and URLs
     photo_responses = []
-    for photo in photos:
+    for photo in photos_query:
         photo_dict = PhotoResponse.model_validate(photo).model_dump()
-
-        # Add display names
         photo_dict["camera_display_name"] = await alias_service.get_camera_display_name(
             getattr(photo, "camera_make", None), getattr(photo, "camera_model", None)
         )
         photo_dict["lens_display_name"] = await alias_service.get_lens_display_name(
             getattr(photo, "lens", None)
         )
-
-        # Add secure URLs
         photo_dict = populate_photo_urls(photo_dict, str(photo.id))
-
         photo_responses.append(PhotoResponse.model_validate(photo_dict))
 
     return PhotoListResponse(
         photos=photo_responses,
-        total=total,
         page=page,
         per_page=per_page,
+        total=total,
         pages=pages,
     )
 

@@ -697,29 +697,20 @@ const HomePage: React.FC = () => {
                   {/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */}
                   {(selectedPhoto.camera_display_name ||
                     selectedPhoto.camera_make ||
-                    selectedPhoto.camera_model ||
-                    selectedPhoto.lens_display_name ||
-                    selectedPhoto.lens) && (
+                    selectedPhoto.camera_model) && (
                     <div>
-                      <div className="text-gray-500">Equipment</div>
+                      <div className="text-gray-500">Camera</div>
                       <div className="text-gray-800">
-                        {(selectedPhoto.camera_display_name ||
-                          selectedPhoto.camera_make ||
-                          selectedPhoto.camera_model) && (
-                          <div>
-                            Camera:{" "}
-                            {selectedPhoto.camera_display_name ??
-                              `${selectedPhoto.camera_make ?? ""} ${selectedPhoto.camera_model ?? ""}`.trim()}
-                          </div>
-                        )}
-                        {(selectedPhoto.lens_display_name ??
-                          selectedPhoto.lens) && (
-                          <div className="mt-2">
-                            Lens:{" "}
-                            {selectedPhoto.lens_display_name ??
-                              selectedPhoto.lens}
-                          </div>
-                        )}
+                        {selectedPhoto.camera_display_name ??
+                          `${selectedPhoto.camera_make ?? ""} ${selectedPhoto.camera_model ?? ""}`.trim()}
+                      </div>
+                    </div>
+                  )}
+                  {(selectedPhoto.lens_display_name ?? selectedPhoto.lens) && (
+                    <div>
+                      <div className="text-gray-500">Lens</div>
+                      <div className="text-gray-800">
+                        {selectedPhoto.lens_display_name ?? selectedPhoto.lens}
                       </div>
                     </div>
                   )}
