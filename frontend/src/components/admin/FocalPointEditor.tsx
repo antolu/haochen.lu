@@ -28,11 +28,17 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
       y: heroImage.focal_point_y,
     },
     responsive: {
-      mobile: heroImage.focal_points_responsive?.mobile || { x: 70, y: 50 },
-      tablet: heroImage.focal_points_responsive?.tablet || { x: 60, y: 50 },
-      desktop: heroImage.focal_points_responsive?.desktop || { x: 55, y: 50 },
+      mobile: heroImage.focal_points_responsive?.mobile ?? { x: 70, y: 50 },
+      tablet: heroImage.focal_points_responsive?.tablet ?? { x: 60, y: 50 },
+      desktop: heroImage.focal_points_responsive?.desktop ?? { x: 55, y: 50 },
     },
   });
+
+  // Preview focal point (shows during mouse movement, before click)
+  const [previewFocalPoint, setPreviewFocalPoint] = useState<FocalPoint | null>(
+    null,
+  );
+  const [isHovering, setIsHovering] = useState(false);
 
   const imageRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -90,22 +96,55 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
     }
   };
 
-  const handleImageClick = useCallback(
-    (event: React.MouseEvent<HTMLImageElement>) => {
-      if (!imageRef.current || !containerRef.current) return;
+  // Utility function to calculate focal point from mouse/touch position
+  const calculateFocalPoint = useCallback(
+    (clientX: number, clientY: number): FocalPoint | null => {
+      if (!imageRef.current) return null;
 
       const rect = imageRef.current.getBoundingClientRect();
-      const x = ((event.clientX - rect.left) / rect.width) * 100;
-      const y = ((event.clientY - rect.top) / rect.height) * 100;
+      const x = ((clientX - rect.left) / rect.width) * 100;
+      const y = ((clientY - rect.top) / rect.height) * 100;
 
       // Clamp values between 0 and 100
       const clampedX = Math.max(0, Math.min(100, x));
       const clampedY = Math.max(0, Math.min(100, y));
 
-      setCurrentFocalPoint({ x: clampedX, y: clampedY });
+      return { x: clampedX, y: clampedY };
     },
-    [activeDevice],
+    [],
   );
+
+  const handleImageClick = useCallback(
+    (event: React.MouseEvent<HTMLImageElement>) => {
+      const focalPoint = calculateFocalPoint(event.clientX, event.clientY);
+      if (focalPoint) {
+        setCurrentFocalPoint(focalPoint);
+        setPreviewFocalPoint(null); // Clear preview on commit
+      }
+    },
+    [calculateFocalPoint, setCurrentFocalPoint],
+  );
+
+  const handleImageMouseMove = useCallback(
+    (event: React.MouseEvent<HTMLImageElement>) => {
+      if (!isHovering) return;
+
+      const focalPoint = calculateFocalPoint(event.clientX, event.clientY);
+      if (focalPoint) {
+        setPreviewFocalPoint(focalPoint);
+      }
+    },
+    [calculateFocalPoint, isHovering],
+  );
+
+  const handleImageMouseEnter = useCallback(() => {
+    setIsHovering(true);
+  }, []);
+
+  const handleImageMouseLeave = useCallback(() => {
+    setIsHovering(false);
+    setPreviewFocalPoint(null);
+  }, []);
 
   const handleSave = () => {
     updateMutation.mutate({
@@ -130,6 +169,7 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
   };
 
   const currentFocalPoint = getCurrentFocalPoint();
+  const displayedFocalPoint = previewFocalPoint ?? currentFocalPoint; // Show preview if available, otherwise show current
   const optimalImage = selectOptimalImage(
     heroImage.photo,
     ImageUseCase.LIGHTBOX,
@@ -193,10 +233,11 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
           {/* Instructions */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
             <p className="text-blue-800 text-sm">
-              <strong>Instructions:</strong> Click anywhere on the image to set
-              the focal point for <strong>{activeDevice}</strong> devices. The
-              crosshair shows where the image will be centered when cropped for
-              different screen sizes.
+              <strong>Instructions:</strong> Hover over the image to preview
+              where the focal point will be set (blue crosshair), then click to
+              confirm (red crosshair) for <strong>{activeDevice}</strong>{" "}
+              devices. The focal point determines where the image will be
+              centered when cropped for different screen sizes.
             </p>
           </div>
 
@@ -209,8 +250,23 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
                   Preview ({activeDevice})
                 </h4>
                 <div className="text-sm text-gray-600">
-                  Current focal point: {currentFocalPoint.x.toFixed(1)}%,{" "}
-                  {currentFocalPoint.y.toFixed(1)}%
+                  {previewFocalPoint ? (
+                    <>
+                      <span className="text-blue-600 font-medium">
+                        Preview:
+                      </span>{" "}
+                      {previewFocalPoint.x.toFixed(1)}%,{" "}
+                      {previewFocalPoint.y.toFixed(1)}%{" "}
+                      <span className="text-xs text-gray-500">
+                        (click to confirm)
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      Current focal point: {currentFocalPoint.x.toFixed(1)}%,{" "}
+                      {currentFocalPoint.y.toFixed(1)}%
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -226,27 +282,42 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
                   alt={heroImage.photo.title}
                   className="w-full h-full object-cover cursor-crosshair"
                   style={{
-                    objectPosition: `${currentFocalPoint.x}% ${currentFocalPoint.y}%`,
+                    objectPosition: `${displayedFocalPoint.x}% ${displayedFocalPoint.y}%`,
                   }}
                   onClick={handleImageClick}
+                  onMouseMove={handleImageMouseMove}
+                  onMouseEnter={handleImageMouseEnter}
+                  onMouseLeave={handleImageMouseLeave}
                   draggable={false}
                 />
 
                 {/* Crosshair Overlay */}
                 <div
-                  className="absolute pointer-events-none"
+                  className="absolute pointer-events-none transition-all duration-150 ease-out"
                   style={{
-                    left: `${currentFocalPoint.x}%`,
-                    top: `${currentFocalPoint.y}%`,
+                    left: `${displayedFocalPoint.x}%`,
+                    top: `${displayedFocalPoint.y}%`,
                     transform: "translate(-50%, -50%)",
                   }}
                 >
                   <div className="relative">
-                    {/* Crosshair lines */}
-                    <div className="absolute w-8 h-0.5 bg-red-500 shadow-lg -translate-x-1/2 -translate-y-px" />
-                    <div className="absolute h-8 w-0.5 bg-red-500 shadow-lg -translate-y-1/2 -translate-x-px" />
+                    {/* Crosshair lines - different colors for preview vs committed */}
+                    <div
+                      className={`absolute w-8 h-0.5 shadow-lg -translate-x-1/2 -translate-y-px transition-colors duration-150 ${
+                        previewFocalPoint ? "bg-blue-400" : "bg-red-500"
+                      }`}
+                    />
+                    <div
+                      className={`absolute h-8 w-0.5 shadow-lg -translate-y-1/2 -translate-x-px transition-colors duration-150 ${
+                        previewFocalPoint ? "bg-blue-400" : "bg-red-500"
+                      }`}
+                    />
                     {/* Center dot */}
-                    <div className="w-2 h-2 bg-red-500 rounded-full shadow-lg -translate-x-1/2 -translate-y-1/2" />
+                    <div
+                      className={`w-2 h-2 rounded-full shadow-lg -translate-x-1/2 -translate-y-1/2 transition-colors duration-150 ${
+                        previewFocalPoint ? "bg-blue-400" : "bg-red-500"
+                      }`}
+                    />
                   </div>
                 </div>
 
@@ -279,12 +350,13 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
                       max="100"
                       step="0.1"
                       value={currentFocalPoint.x}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         setCurrentFocalPoint({
                           ...currentFocalPoint,
                           x: parseFloat(e.target.value),
-                        })
-                      }
+                        });
+                        setPreviewFocalPoint(null); // Clear preview when manually adjusting
+                      }}
                       className="w-full"
                     />
                   </div>
@@ -298,12 +370,13 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
                       max="100"
                       step="0.1"
                       value={currentFocalPoint.y}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         setCurrentFocalPoint({
                           ...currentFocalPoint,
                           y: parseFloat(e.target.value),
-                        })
-                      }
+                        });
+                        setPreviewFocalPoint(null); // Clear preview when manually adjusting
+                      }}
                       className="w-full"
                     />
                   </div>
@@ -329,9 +402,10 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
                   ].map((preset) => (
                     <button
                       key={preset.label}
-                      onClick={() =>
-                        setCurrentFocalPoint({ x: preset.x, y: preset.y })
-                      }
+                      onClick={() => {
+                        setCurrentFocalPoint({ x: preset.x, y: preset.y });
+                        setPreviewFocalPoint(null); // Clear preview when using preset
+                      }}
                       className="text-xs p-2 bg-white border border-gray-200 rounded hover:bg-gray-50 transition-colors"
                     >
                       {preset.label}
