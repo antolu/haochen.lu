@@ -109,7 +109,7 @@ const AdminSubApps: React.FC = () => {
   if (subappsError) {
     return (
       <div className="text-center py-12">
-        <div className="text-red-600 mb-4">
+        <div className="text-destructive mb-4">
           <svg
             className="h-12 w-12 mx-auto mb-4"
             fill="none"
@@ -125,10 +125,10 @@ const AdminSubApps: React.FC = () => {
           </svg>
           Error loading sub-applications
         </div>
-        <p className="text-gray-600">{subappsError.message}</p>
+        <p className="text-muted-foreground">{subappsError.message}</p>
         <button
           onClick={() => window.location.reload()}
-          className="mt-4 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+          className="mt-4 px-4 py-2 text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 rounded-lg transition-colors"
         >
           Retry
         </button>
@@ -142,17 +142,17 @@ const AdminSubApps: React.FC = () => {
       <div className="mb-8">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-3xl font-bold text-foreground">
               Sub-Applications
             </h1>
-            <p className="mt-2 text-gray-600">
+            <p className="mt-2 text-muted-foreground">
               Manage external and internal sub-applications
             </p>
           </div>
           <div className="flex gap-3">
             <Link
               to="/admin/subapps/integrate"
-              className="px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 rounded-lg transition-colors"
+              className="px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 dark:text-blue-400 dark:bg-blue-950 dark:hover:bg-blue-900 rounded-lg transition-colors"
             >
               <span className="flex items-center">
                 <svg
@@ -174,7 +174,7 @@ const AdminSubApps: React.FC = () => {
             <button
               onClick={() => handleCreateSubApp()}
               disabled={showForm}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
+              className="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
             >
               <span className="flex items-center">
                 <svg
@@ -199,12 +199,12 @@ const AdminSubApps: React.FC = () => {
         {/* Stats Cards */}
         {!isLoadingStats && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="bg-card rounded-lg border border-border p-4">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="h-8 w-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <div className="h-8 w-8 bg-blue-100 dark:bg-blue-950 rounded-lg flex items-center justify-center">
                     <svg
-                      className="h-4 w-4 text-blue-600"
+                      className="h-4 w-4 text-blue-600 dark:text-blue-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -219,22 +219,22 @@ const AdminSubApps: React.FC = () => {
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-medium text-foreground">
                     Total Sub-Apps
                   </p>
-                  <p className="text-2xl font-bold text-blue-600">
+                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                     {stats.total_subapps}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="bg-card rounded-lg border border-border p-4">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="h-8 w-8 bg-green-100 rounded-lg flex items-center justify-center">
+                  <div className="h-8 w-8 bg-green-100 dark:bg-green-950 rounded-lg flex items-center justify-center">
                     <svg
-                      className="h-4 w-4 text-green-600"
+                      className="h-4 w-4 text-green-600 dark:text-green-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -249,20 +249,20 @@ const AdminSubApps: React.FC = () => {
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-900">Enabled</p>
-                  <p className="text-2xl font-bold text-green-600">
+                  <p className="text-sm font-medium text-foreground">Enabled</p>
+                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                     {stats.enabled_subapps}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="bg-card rounded-lg border border-border p-4">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="h-8 w-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                  <div className="h-8 w-8 bg-orange-100 dark:bg-orange-950 rounded-lg flex items-center justify-center">
                     <svg
-                      className="h-4 w-4 text-orange-600"
+                      className="h-4 w-4 text-orange-600 dark:text-orange-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -277,8 +277,10 @@ const AdminSubApps: React.FC = () => {
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-900">Disabled</p>
-                  <p className="text-2xl font-bold text-orange-600">
+                  <p className="text-sm font-medium text-foreground">
+                    Disabled
+                  </p>
+                  <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                     {stats.disabled_subapps}
                   </p>
                 </div>
@@ -306,19 +308,19 @@ const AdminSubApps: React.FC = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+              className="bg-card rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-bold text-gray-900">
+                  <h2 className="text-xl font-bold text-foreground">
                     {editingSubApp
                       ? "Edit Sub-Application"
                       : "Create New Sub-Application"}
                   </h2>
                   <button
                     onClick={handleFormCancel}
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <svg
                       className="h-6 w-6"
@@ -351,8 +353,8 @@ const AdminSubApps: React.FC = () => {
       </AnimatePresence>
 
       {/* Sub-Apps List */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">
+      <div className="bg-card rounded-lg border border-border p-6">
+        <h2 className="text-lg font-medium text-foreground mb-4">
           All Sub-Applications ({subapps.length})
         </h2>
 

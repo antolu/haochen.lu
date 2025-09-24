@@ -83,7 +83,7 @@ const AdminSettings: React.FC = () => {
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto p-6">
-        <div className="text-gray-600">Loading settings...</div>
+        <div className="text-muted-foreground">Loading settings...</div>
       </div>
     );
   }
@@ -91,7 +91,7 @@ const AdminSettings: React.FC = () => {
   if (error) {
     return (
       <div className="max-w-4xl mx-auto p-6">
-        <div className="text-red-600">{error}</div>
+        <div className="text-destructive">{error}</div>
       </div>
     );
   }
@@ -101,7 +101,9 @@ const AdminSettings: React.FC = () => {
       <h1 className="text-2xl font-semibold">Settings</h1>
 
       {ok ? (
-        <div className="p-3 rounded bg-green-50 text-green-700">{ok}</div>
+        <div className="p-3 rounded bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400">
+          {ok}
+        </div>
       ) : null}
 
       {/* Responsive Sizes */}
@@ -110,9 +112,11 @@ const AdminSettings: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {responsiveEntries.map(([k, v]) => (
             <label key={k} className="flex items-center justify-between gap-3">
-              <span className="text-sm text-gray-700 w-32 capitalize">{k}</span>
+              <span className="text-sm text-foreground w-32 capitalize">
+                {k}
+              </span>
               <input
-                className="w-40 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-40 px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-ring bg-background text-foreground"
                 type="number"
                 value={v}
                 onChange={(e) =>
@@ -132,9 +136,11 @@ const AdminSettings: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {qualityEntries.map(([k, v]) => (
             <label key={k} className="flex items-center justify-between gap-3">
-              <span className="text-sm text-gray-700 w-32 capitalize">{k}</span>
+              <span className="text-sm text-foreground w-32 capitalize">
+                {k}
+              </span>
               <input
-                className="w-40 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-40 px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-ring bg-background text-foreground"
                 type="number"
                 value={v}
                 onChange={(e) =>
@@ -153,9 +159,9 @@ const AdminSettings: React.FC = () => {
         <h2 className="text-lg font-medium">Compression Knobs</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <label className="flex items-center justify-between gap-3">
-            <span className="text-sm text-gray-700">AVIF Quality Offset</span>
+            <span className="text-sm text-foreground">AVIF Quality Offset</span>
             <input
-              className="w-40 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-40 px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-ring bg-background text-foreground"
               type="number"
               value={img?.avif_quality_base_offset ?? 0}
               onChange={(e) =>
@@ -170,9 +176,9 @@ const AdminSettings: React.FC = () => {
           </label>
 
           <label className="flex items-center justify-between gap-3">
-            <span className="text-sm text-gray-700">AVIF Quality Floor</span>
+            <span className="text-sm text-foreground">AVIF Quality Floor</span>
             <input
-              className="w-40 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-40 px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-ring bg-background text-foreground"
               type="number"
               value={img?.avif_quality_floor ?? 50}
               onChange={(e) =>
@@ -184,9 +190,9 @@ const AdminSettings: React.FC = () => {
           </label>
 
           <label className="flex items-center justify-between gap-3">
-            <span className="text-sm text-gray-700">AVIF Effort Default</span>
+            <span className="text-sm text-foreground">AVIF Effort Default</span>
             <input
-              className="w-40 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-40 px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-ring bg-background text-foreground"
               type="number"
               value={img?.avif_effort_default ?? 6}
               onChange={(e) =>
@@ -198,11 +204,11 @@ const AdminSettings: React.FC = () => {
           </label>
 
           <label className="flex items-center justify-between gap-3">
-            <span className="text-sm text-gray-700">
+            <span className="text-sm text-foreground">
               WebP Quality (fallback)
             </span>
             <input
-              className="w-40 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-40 px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-ring bg-background text-foreground"
               type="number"
               value={img?.webp_quality ?? 85}
               onChange={(e) =>
@@ -219,7 +225,7 @@ const AdminSettings: React.FC = () => {
         <button
           onClick={save}
           disabled={saving}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
         >
           {saving ? "Saving..." : "Save Settings"}
         </button>

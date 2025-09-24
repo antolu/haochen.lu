@@ -75,7 +75,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
         stage?: string;
         progress?: number;
       };
-      if (!detail || !detail.progress) return;
+      if (!detail?.progress) return;
       setUploadFiles((prev) =>
         prev.map((f) =>
           f.id === file.id

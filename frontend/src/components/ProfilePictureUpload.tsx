@@ -264,7 +264,7 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
             <ReactCrop
               crop={crop}
               onChange={(newCrop) => setCrop(newCrop)}
-              onComplete={(c) => setCompletedCrop(c as PixelCrop)}
+              onComplete={(c) => setCompletedCrop(c)}
               aspect={1} // Square aspect ratio
               minWidth={100}
               minHeight={100}

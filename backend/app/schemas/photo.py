@@ -9,7 +9,7 @@ from app.types.access_control import AccessLevel
 
 
 class PhotoBase(BaseModel):
-    title: str
+    title: str | None = None
     description: str | None = None
     category: str | None = None
     tags: str | None = None
@@ -163,6 +163,9 @@ class PhotoResponse(PhotoBase):
     original_path: str
     original_url: str | None = None  # Secure API URL for original file
     download_url: str | None = None  # Download URL for original file
+    processing_errors: list[str] | None = (
+        None  # Non-persistent warnings about missing/failed variants
+    )
 
     # Responsive image variants
     # Accept both legacy flat variant objects and new multi-format nested variants

@@ -258,6 +258,27 @@ async def list_photos(
             getattr(photo, "lens", None)
         )
         photo_dict = populate_photo_urls(photo_dict, str(photo.id))
+        # Attach warnings if some variants are missing (e.g., due to encoder failure)
+        try:
+            variants = photo_dict.get("variants") or {}
+            missing_sizes = [
+                size
+                for size, data in variants.items()
+                if isinstance(data, dict)
+                and not any(
+                    isinstance(v, dict) and v.get("path") for v in data.values()
+                )
+            ]
+            if missing_sizes:
+                msg = (
+                    "Missing compressed variants for sizes: "
+                    + ", ".join(missing_sizes)
+                    + "; serving original until encoders are available"
+                )
+                photo_dict["processing_errors"] = [msg]
+        except Exception:
+            # Do not break listing on introspection failure
+            pass  # nosec B110
         photo_responses.append(PhotoResponse.model_validate(photo_dict))
 
     return PhotoListResponse(

@@ -583,7 +583,7 @@ export const settings = {
     webp_quality: number;
   }> => {
     const res = await apiClient.get("/settings/image");
-    return res.data as any;
+    return res.data;
   },
   updateImage: async (
     payload: Partial<{
@@ -596,7 +596,7 @@ export const settings = {
     }>,
   ) => {
     const res = await apiClient.put("/settings/image", payload);
-    return res.data as any;
+    return res.data;
   },
 };
 
