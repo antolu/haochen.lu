@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.hero_image import (
@@ -191,10 +191,11 @@ async def delete_hero_image_by_id(
     hero_image_id: UUID,
     db: AsyncSession = _session_dependency,
     _: None = _current_admin_user_dependency,
-) -> None:
+) -> Response:
     """Delete a hero image."""
     success = await delete_hero_image(db, hero_image_id)
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Hero image not found"
         )
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

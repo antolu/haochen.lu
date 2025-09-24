@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import time
+import uuid
 from typing import Annotated, Any
 from uuid import UUID
 
@@ -37,6 +38,8 @@ from app.dependencies import (
     _image_file_dependency,
     _session_dependency,
 )
+from app.models.camera_alias import CameraAlias
+from app.models.lens_alias import LensAlias
 from app.models.photo import Photo as PhotoModel
 from app.schemas.photo import (
     PhotoCreate,
@@ -51,6 +54,50 @@ from app.services.alias_service import AliasService
 from app.types.access_control import FileType
 
 router = APIRouter()
+
+
+async def _create_aliases_for_photo(db: AsyncSession, photo: PhotoModel) -> None:
+    """Auto-create camera and lens aliases for a new photo if they don't exist."""
+
+    # Create camera alias if camera info exists
+    if photo.camera_make and photo.camera_model:
+        original_name = f"{photo.camera_make} {photo.camera_model}".strip()
+        if original_name:
+            # Check if alias already exists
+            existing = await db.execute(
+                select(CameraAlias).where(CameraAlias.original_name == original_name)
+            )
+            if not existing.scalar_one_or_none():
+                # Create new camera alias
+                camera_alias = CameraAlias(
+                    id=uuid.uuid4(),
+                    original_name=original_name,
+                    display_name=original_name,  # Default to same as original
+                    brand=photo.camera_make,
+                    model=photo.camera_model,
+                    is_active=True,
+                )
+                db.add(camera_alias)
+
+    # Create lens alias if lens info exists
+    if photo.lens:
+        original_name = photo.lens.strip()
+        if original_name:
+            # Check if alias already exists
+            existing = await db.execute(
+                select(LensAlias).where(LensAlias.original_name == original_name)
+            )
+            if not existing.scalar_one_or_none():
+                # Create new lens alias
+                lens_alias = LensAlias(
+                    id=uuid.uuid4(),
+                    original_name=original_name,
+                    display_name=original_name,  # Default to same as original
+                    is_active=True,
+                )
+                db.add(lens_alias)
+
+    await db.commit()
 
 
 def populate_photo_urls(photo_dict: dict, photo_id: str) -> dict:
@@ -317,6 +364,9 @@ async def upload_photo(
         )
 
         photo = await create_photo(db, photo_data, **processed_data)
+
+        # Auto-create aliases for camera and lens if they don't exist
+        await _create_aliases_for_photo(db, photo)
 
         # Add secure URLs to response
         photo_dict = PhotoResponse.model_validate(photo).model_dump()

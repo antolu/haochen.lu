@@ -12,12 +12,9 @@ from app.dependencies import _session_dependency
 from app.models.lens_alias import LensAlias
 from app.models.photo import Photo
 from app.schemas.lens_alias import (
-    LensAliasCreate,
     LensAliasListResponse,
     LensAliasResponse,
     LensAliasUpdate,
-    LensDiscoveryItem,
-    LensDiscoveryResponse,
 )
 
 router = APIRouter()
@@ -34,7 +31,10 @@ async def list_lens_aliases(
     is_active: bool | None = Query(default=None, description="Filter by active status"),
     db: AsyncSession = _session_dependency,
 ) -> LensAliasListResponse:
-    """List lens aliases with pagination and filtering."""
+    """List lens aliases auto-populated from uploaded photos."""
+
+    # Auto-create aliases for lenses found in photos that don't have aliases yet
+    await _ensure_lens_aliases_exist(db)
 
     # Build base query
     query = select(LensAlias)
@@ -81,30 +81,41 @@ async def list_lens_aliases(
     )
 
 
-@router.post("", response_model=LensAliasResponse)
-async def create_lens_alias(
-    alias_data: LensAliasCreate,
-    db: AsyncSession = _session_dependency,
-) -> LensAliasResponse:
-    """Create a new lens alias."""
-
-    # Check if alias already exists for this original name
-    existing = await db.execute(
-        select(LensAlias).where(LensAlias.original_name == alias_data.original_name)
-    )
-    if existing.scalar_one_or_none():
-        raise HTTPException(
-            status_code=400,
-            detail=f"Alias already exists for lens '{alias_data.original_name}'",
+async def _ensure_lens_aliases_exist(db: AsyncSession) -> None:
+    """Auto-create lens aliases for lenses found in photos that don't have aliases yet."""
+    # Get unique lenses from photos
+    lens_query = (
+        select(Photo.lens)
+        .where(
+            and_(
+                Photo.lens.is_not(None),
+                func.length(func.trim(Photo.lens)) > 0,
+            )
         )
+        .distinct()
+    )
 
-    alias = LensAlias(id=uuid.uuid4(), **alias_data.model_dump())
+    lens_result = await db.execute(lens_query)
+    lenses_data = lens_result.scalars().all()
 
-    db.add(alias)
+    # Get existing aliases
+    alias_query = select(LensAlias.original_name)
+    alias_result = await db.execute(alias_query)
+    existing_aliases = {alias[0] for alias in alias_result.all()}
+
+    # Create aliases for lenses that don't have them
+    for lens_name in lenses_data:
+        original_name = lens_name.strip()
+        if original_name and original_name not in existing_aliases:
+            alias = LensAlias(
+                id=uuid.uuid4(),
+                original_name=original_name,
+                display_name=original_name,  # Default to same as original
+                is_active=True,
+            )
+            db.add(alias)
+
     await db.commit()
-    await db.refresh(alias)
-
-    return LensAliasResponse.model_validate(alias)
 
 
 @router.get("/{alias_id}", response_model=LensAliasResponse)
@@ -146,67 +157,3 @@ async def update_lens_alias(
     await db.refresh(alias)
 
     return LensAliasResponse.model_validate(alias)
-
-
-@router.delete("/{alias_id}")
-async def delete_lens_alias(
-    alias_id: uuid.UUID,
-    db: AsyncSession = _session_dependency,
-) -> dict[str, str]:
-    """Delete a lens alias."""
-
-    result = await db.execute(select(LensAlias).where(LensAlias.id == alias_id))
-    alias = result.scalar_one_or_none()
-
-    if not alias:
-        raise HTTPException(status_code=404, detail="Lens alias not found")
-
-    await db.delete(alias)
-    await db.commit()
-
-    return {"message": "Lens alias deleted successfully"}
-
-
-@router.get("/discover/lenses", response_model=LensDiscoveryResponse)
-async def discover_lenses(
-    db: AsyncSession = _session_dependency,
-) -> LensDiscoveryResponse:
-    """Discover unique lenses from photos that don't have aliases yet."""
-
-    # Get unique lenses from photos
-    lens_query = (
-        select(Photo.lens.label("original_name"), func.count().label("photo_count"))
-        .where(and_(Photo.lens.is_not(None), Photo.lens))
-        .group_by(Photo.lens)
-    )
-
-    lens_result = await db.execute(lens_query)
-    lenses_data = lens_result.all()
-
-    # Get existing aliases to mark which lenses already have them
-    alias_query = select(LensAlias.original_name)
-    alias_result = await db.execute(alias_query)
-    existing_aliases = {alias[0] for alias in alias_result.all()}
-
-    # Build response
-    lenses = []
-    total_photos = 0
-
-    for lens_data in lenses_data:
-        original_name = lens_data.original_name.strip()
-        if original_name:  # Skip empty names
-            lenses.append(
-                LensDiscoveryItem(
-                    original_name=original_name,
-                    photo_count=lens_data.photo_count,
-                    has_alias=original_name in existing_aliases,
-                )
-            )
-            total_photos += lens_data.photo_count
-
-    # Sort by photo count descending (most used lenses first)
-    lenses.sort(key=lambda x: x.photo_count, reverse=True)
-
-    return LensDiscoveryResponse(
-        lenses=lenses, total_unique_lenses=len(lenses), total_photos=total_photos
-    )

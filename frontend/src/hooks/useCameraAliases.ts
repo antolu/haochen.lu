@@ -121,26 +121,6 @@ export function useCameraDiscovery() {
   });
 }
 
-export function useCreateCameraAlias() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (data: CameraAliasCreate): Promise<CameraAlias> => {
-      const response = await apiClient.post<CameraAlias>(
-        "/camera-aliases",
-        data,
-      );
-      return response.data;
-    },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: cameraAliasKeys.lists() });
-      void queryClient.invalidateQueries({
-        queryKey: cameraAliasKeys.discovery(),
-      });
-    },
-  });
-}
-
 export function useUpdateCameraAlias() {
   const queryClient = useQueryClient();
 
@@ -163,22 +143,6 @@ export function useUpdateCameraAlias() {
       void queryClient.invalidateQueries({
         queryKey: cameraAliasKeys.detail(id),
       });
-      void queryClient.invalidateQueries({
-        queryKey: cameraAliasKeys.discovery(),
-      });
-    },
-  });
-}
-
-export function useDeleteCameraAlias() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (id: string): Promise<void> => {
-      await apiClient.delete(`/camera-aliases/${id}`);
-    },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: cameraAliasKeys.lists() });
       void queryClient.invalidateQueries({
         queryKey: cameraAliasKeys.discovery(),
       });

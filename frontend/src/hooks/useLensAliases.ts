@@ -131,23 +131,6 @@ export function useLensDiscovery() {
   });
 }
 
-export function useCreateLensAlias() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (data: LensAliasCreate): Promise<LensAlias> => {
-      const response = await apiClient.post<LensAlias>("/lens-aliases", data);
-      return response.data;
-    },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: lensAliasKeys.lists() });
-      void queryClient.invalidateQueries({
-        queryKey: lensAliasKeys.discovery(),
-      });
-    },
-  });
-}
-
 export function useUpdateLensAlias() {
   const queryClient = useQueryClient();
 
@@ -170,22 +153,6 @@ export function useUpdateLensAlias() {
       void queryClient.invalidateQueries({
         queryKey: lensAliasKeys.detail(id),
       });
-      void queryClient.invalidateQueries({
-        queryKey: lensAliasKeys.discovery(),
-      });
-    },
-  });
-}
-
-export function useDeleteLensAlias() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (id: string): Promise<void> => {
-      await apiClient.delete(`/lens-aliases/${id}`);
-    },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: lensAliasKeys.lists() });
       void queryClient.invalidateQueries({
         queryKey: lensAliasKeys.discovery(),
       });

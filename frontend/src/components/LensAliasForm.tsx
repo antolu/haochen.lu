@@ -1,13 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import {
-  useCreateLensAlias,
-  useUpdateLensAlias,
-  type LensAlias,
-} from "../hooks/useLensAliases";
+import { useUpdateLensAlias, type LensAlias } from "../hooks/useLensAliases";
 
 interface LensAliasFormProps {
-  alias?: LensAlias | null;
+  alias: LensAlias | null;
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -33,10 +29,7 @@ const LensAliasForm: React.FC<LensAliasFormProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const createMutation = useCreateLensAlias();
   const updateMutation = useUpdateLensAlias();
-
-  const isEditing = !!alias?.id;
 
   useEffect(() => {
     if (alias) {
@@ -73,7 +66,7 @@ const LensAliasForm: React.FC<LensAliasFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) {
+    if (!validateForm() || !alias?.id) {
       return;
     }
 
@@ -93,14 +86,10 @@ const LensAliasForm: React.FC<LensAliasFormProps> = ({
         notes: formData.notes.trim() || undefined,
       };
 
-      if (isEditing && alias?.id) {
-        await updateMutation.mutateAsync({
-          id: alias.id,
-          data: submitData,
-        });
-      } else {
-        await createMutation.mutateAsync(submitData);
-      }
+      await updateMutation.mutateAsync({
+        id: alias.id,
+        data: submitData,
+      });
 
       onSuccess();
     } catch (error: unknown) {
@@ -386,11 +375,7 @@ const LensAliasForm: React.FC<LensAliasFormProps> = ({
             disabled={isSubmitting}
             className="px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-md shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting
-              ? "Saving..."
-              : isEditing
-                ? "Update Alias"
-                : "Create Alias"}
+            {isSubmitting ? "Saving..." : "Save Changes"}
           </button>
         </div>
       </form>
