@@ -54,6 +54,11 @@ const HomePage: React.FC = () => {
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
   const navigate = useNavigate();
 
+  // Fallbacks for social links if content keys are missing
+  const githubUrl =
+    homeContent?.["social.github_url"]?.content ||
+    (import.meta.env.VITE_GITHUB_URL as string | undefined);
+
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") setSelectedPhoto(null);
@@ -570,9 +575,9 @@ const HomePage: React.FC = () => {
                       </svg>
                     </a>
                   )}
-                  {homeContent?.["social.github_url"]?.content && (
+                  {githubUrl && (
                     <a
-                      href={homeContent["social.github_url"].content}
+                      href={githubUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-gray-400 hover:text-primary-600 transition-colors"
