@@ -141,6 +141,22 @@ class ImageVariant(BaseModel):
     url: str | None = None  # Secure API URL for accessing the variant
 
 
+class MultiFormatVariants(BaseModel):
+    """Nested multi-format variants for a single size (e.g., avif/webp/jpeg).
+
+    Also allows size-level width/height and a convenience URL at the size level.
+    """
+
+    avif: ImageVariant | None = None
+    webp: ImageVariant | None = None
+    jpeg: ImageVariant | None = None
+
+    # Convenience fields surfaced by populate_photo_urls
+    width: int | None = None
+    height: int | None = None
+    url: str | None = None
+
+
 class PhotoResponse(PhotoBase):
     id: str | UUID
     filename: str
@@ -149,7 +165,8 @@ class PhotoResponse(PhotoBase):
     download_url: str | None = None  # Download URL for original file
 
     # Responsive image variants
-    variants: dict[str, ImageVariant]
+    # Accept both legacy flat variant objects and new multi-format nested variants
+    variants: dict[str, ImageVariant | MultiFormatVariants]
 
     # EXIF data
     location_lat: float | None
