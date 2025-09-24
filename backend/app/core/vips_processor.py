@@ -8,11 +8,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, BinaryIO
 
-import piexif
-import pyvips
+import piexif  # type: ignore[import-not-found, unused-ignore]
+import pyvips  # type: ignore[import-not-found]
 
 from app.config import settings
 from app.core.location_service import location_service
+from app.core.progress import progress_manager
 
 
 class VipsImageProcessor:
@@ -23,12 +24,16 @@ class VipsImageProcessor:
         upload_dir: str,
         compressed_dir: str,
         progress_callback: Callable[[str, int], None] | None = None,
+        *,
+        upload_id: str | None = None,
     ):
         self.upload_dir = Path(upload_dir).resolve()
         self.compressed_dir = Path(compressed_dir).resolve()
         self.upload_dir.mkdir(exist_ok=True, parents=True)
         self.compressed_dir.mkdir(exist_ok=True, parents=True)
         self.progress_callback = progress_callback
+        self.upload_id = upload_id
+        self._progress_task: asyncio.Task | None = None
 
         # Configure vips for better performance
         pyvips.cache_set_max(100)  # Set cache size
@@ -38,6 +43,10 @@ class VipsImageProcessor:
         """Update progress if callback is available."""
         if self.progress_callback:
             self.progress_callback(stage, progress)
+        if self.upload_id:
+            self._progress_task = asyncio.create_task(
+                progress_manager.send_progress(self.upload_id, stage, progress)
+            )
 
     async def extract_exif_data(self, image_path: str) -> dict[str, Any]:
         """Extract comprehensive EXIF data from image including timezone and GPS."""
@@ -421,8 +430,19 @@ class VipsImageProcessor:
         """Get AVIF-specific quality settings for different sizes."""
         base_quality = settings.quality_settings.get(size_name, 85)
 
-        # AVIF can achieve better compression, so we can use slightly lower quality
-        avif_quality = max(base_quality - 10, 50)
+        # AVIF can achieve better compression, so we can use slightly lower quality,
+        # allow overrides via settings
+        avif_quality_offset = getattr(settings, "avif_quality_base_offset", -10)
+        avif_quality_floor = getattr(settings, "avif_quality_floor", 50)
+        try:
+            offset = int(avif_quality_offset)
+        except Exception:
+            offset = -10
+        try:
+            floor = int(avif_quality_floor)
+        except Exception:
+            floor = 50
+        avif_quality = max(base_quality + offset, floor)
 
         # Adjust effort based on size (higher effort for smaller sizes)
         effort_map = {
@@ -433,9 +453,10 @@ class VipsImageProcessor:
             "xlarge": 4,  # Lower effort for large files (speed vs quality)
         }
 
+        avif_effort_default = getattr(settings, "avif_effort_default", 6)
         return {
-            "quality": avif_quality,
-            "effort": effort_map.get(size_name, 6),
+            "quality": int(avif_quality),
+            "effort": int(effort_map.get(size_name, avif_effort_default)),
         }
 
     async def delete_image_files(self, photo_data: dict):

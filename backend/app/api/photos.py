@@ -19,8 +19,10 @@ from fastapi.responses import FileResponse
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.core.file_access import file_access_controller
 from app.core.rate_limiter import FileAccessRateLimiter
+from app.core.vips_processor import VipsImageProcessor
 from app.core.vips_processor import vips_image_processor as image_processor
 from app.crud.photo import (
     bulk_reorder_photos,
@@ -380,6 +382,7 @@ async def upload_photo(
     featured: Annotated[bool, Form()] = False,
     db: AsyncSession = _session_dependency,
     current_user=_current_admin_user_dependency,
+    request: Request,
 ):
     """Upload a new photo (admin only)."""
 
@@ -394,8 +397,19 @@ async def upload_photo(
         )
 
     try:
+        # Optional upload id for real-time progress over WebSocket
+        upload_id = request.headers.get("X-Upload-Id")
+        progress_processor = (
+            VipsImageProcessor(
+                settings.upload_dir,
+                settings.compressed_dir,
+                upload_id=upload_id,
+            )
+            if upload_id
+            else image_processor
+        )
         # Process image
-        processed_data = await image_processor.process_image(
+        processed_data = await progress_processor.process_image(
             file.file, file.filename or "image.jpg", title or file.filename
         )
 

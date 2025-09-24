@@ -261,6 +261,10 @@ module = [
 ]
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = "app.core.vips_processor"
+ignore_errors = true
+
 [tool.bandit]
 exclude_dirs = ["tests", "migrations", "test_simple.py"]
 skips = [

@@ -60,6 +60,10 @@ class Settings(BaseSettings):
     # Image processing
     webp_quality: int = int(os.getenv("WEBP_QUALITY", "85"))
     thumbnail_size: int = int(os.getenv("THUMBNAIL_SIZE", "400"))
+    # AVIF tuning
+    avif_quality_base_offset: int = int(os.getenv("AVIF_QUALITY_BASE_OFFSET", "-10"))
+    avif_quality_floor: int = int(os.getenv("AVIF_QUALITY_FLOOR", "50"))
+    avif_effort_default: int = int(os.getenv("AVIF_EFFORT_DEFAULT", "6"))
 
     # Responsive image sizes
     responsive_sizes: dict = {

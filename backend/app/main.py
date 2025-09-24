@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
-from fastapi import APIRouter, FastAPI, Request
+from fastapi import APIRouter, FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -21,6 +21,7 @@ from app.api import (
     subapps,
 )
 from app.config import settings
+from app.core.progress import progress_manager
 from app.core.rate_limiter import RateLimitMiddleware
 from app.core.redis import close_redis, init_redis
 
@@ -105,6 +106,18 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "timestamp": "2025-09-09T07:30:00Z"}
+
+
+@app.websocket("/ws/uploads/{upload_id}")
+async def uploads_progress_ws(websocket: WebSocket, upload_id: str):
+    """WebSocket channel for real-time upload/compression progress."""
+    await progress_manager.connect(upload_id, websocket)
+    try:
+        while True:
+            # Keep the connection alive; clients don't need to send messages
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        await progress_manager.disconnect(upload_id, websocket)
 
 
 @app.get("/api/health")
