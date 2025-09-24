@@ -5,11 +5,22 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install minimal system dependencies required for setuptools-scm
+# Install system dependencies, including libvips and AVIF support for pyvips
 # hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     ca-certificates \
+    gcc \
+    g++ \
+    libpq-dev \
+    curl \
+    libvips-dev \
+    libheif-dev \
+    libde265-dev \
+    libx265-dev \
+    libaom-dev \
+    libdav1d-dev \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
 # With backend/ as build context, copy files directly
