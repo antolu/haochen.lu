@@ -452,7 +452,7 @@ class ImageProcessor:
             return f"{base_url}/{path}" if base_url else path
 
         # Fallback to available sizes in order of preference
-        fallback_sizes = ["medium", "small", "large", "thumbnail", "xlarge"]
+        fallback_sizes = ["medium", "small", "large", "thumbnail", "micro", "xlarge"]
         for fallback_size in fallback_sizes:
             if fallback_size in variants:
                 path = variants[fallback_size]["path"]
