@@ -67,6 +67,7 @@ class Settings(BaseSettings):
 
     # Responsive image sizes
     responsive_sizes: dict = {
+        "micro": 200,
         "thumbnail": 400,
         "small": 800,
         "medium": 1200,
@@ -76,6 +77,7 @@ class Settings(BaseSettings):
 
     # Quality settings per size
     quality_settings: dict = {
+        "micro": 70,
         "thumbnail": 75,
         "small": 80,
         "medium": 85,
