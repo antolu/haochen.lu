@@ -110,9 +110,7 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
     outer.style.width = "44px";
     outer.style.height = "44px";
     outer.style.borderRadius = "9999px";
-    outer.style.boxShadow = "0 2px 8px rgba(0,0,0,0.25)";
-    outer.style.border = "2px solid #fff";
-    outer.style.overflow = "hidden";
+    outer.style.overflow = "visible"; // allow scaled child to extend
     outer.style.cursor = "pointer";
     outer.style.position = "relative";
 
@@ -121,16 +119,20 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
     inner.style.position = "absolute";
     inner.style.inset = "0";
     inner.style.background = `center/cover no-repeat url('${getThumbnailUrl(photo)}')`;
+    inner.style.border = "2px solid #fff";
+    inner.style.borderRadius = "9999px";
+    inner.style.boxShadow = "0 2px 8px rgba(0,0,0,0.25)";
+    inner.style.overflow = "hidden";
     inner.style.transition = "transform 150ms ease";
     inner.style.transformOrigin = "center center";
 
     outer.addEventListener("mouseenter", () => {
       inner.style.transform = "scale(1.2)";
-      outer.style.boxShadow = "0 4px 16px rgba(0,0,0,0.35)";
+      inner.style.boxShadow = "0 4px 16px rgba(0,0,0,0.35)";
     });
     outer.addEventListener("mouseleave", () => {
       inner.style.transform = "scale(1)";
-      outer.style.boxShadow = "0 2px 8px rgba(0,0,0,0.25)";
+      inner.style.boxShadow = "0 2px 8px rgba(0,0,0,0.25)";
     });
 
     outer.appendChild(inner);
@@ -146,11 +148,8 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
     container.style.width = "56px";
     container.style.height = "56px";
     container.style.borderRadius = "9999px";
-    container.style.background = "#1d4ed8";
-    container.style.boxShadow = "0 2px 12px rgba(0,0,0,0.3)";
-    container.style.border = "2px solid #fff";
     container.style.position = "relative";
-    container.style.overflow = "hidden";
+    container.style.overflow = "visible"; // allow scaled child to extend
     container.style.cursor = "pointer";
 
     // Inner scales on hover
@@ -159,6 +158,10 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
     scaleWrap.style.inset = "0";
     scaleWrap.style.transition = "transform 150ms ease";
     scaleWrap.style.transformOrigin = "center center";
+    scaleWrap.style.background = "#1d4ed8";
+    scaleWrap.style.border = "2px solid #fff";
+    scaleWrap.style.borderRadius = "9999px";
+    scaleWrap.style.boxShadow = "0 2px 12px rgba(0,0,0,0.3)";
     container.appendChild(scaleWrap);
 
     const grid = document.createElement("div");
@@ -192,11 +195,11 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
 
     container.addEventListener("mouseenter", () => {
       scaleWrap.style.transform = "scale(1.12)";
-      container.style.boxShadow = "0 4px 18px rgba(0,0,0,0.4)";
+      scaleWrap.style.boxShadow = "0 4px 18px rgba(0,0,0,0.4)";
     });
     container.addEventListener("mouseleave", () => {
       scaleWrap.style.transform = "scale(1)";
-      container.style.boxShadow = "0 2px 12px rgba(0,0,0,0.3)";
+      scaleWrap.style.boxShadow = "0 2px 12px rgba(0,0,0,0.3)";
     });
 
     return container;
