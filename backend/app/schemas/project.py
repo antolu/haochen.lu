@@ -89,6 +89,13 @@ class ProjectImagePhoto(BaseModel):
     original_url: str | None = None
     download_url: str | None = None
 
+    @field_validator("id", mode="before")
+    @classmethod
+    def convert_uuid_to_str(cls, v):  # type: ignore[no-untyped-def]
+        if isinstance(v, UUID):
+            return str(v)
+        return v
+
     class Config:
         from_attributes = True
 
