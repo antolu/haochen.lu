@@ -105,31 +105,43 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
   };
 
   const createPhotoMarkerElement = (photo: Photo): HTMLDivElement => {
-    const div = document.createElement("div");
-    div.style.width = "44px";
-    div.style.height = "44px";
-    div.style.borderRadius = "9999px";
-    div.style.boxShadow = "0 2px 8px rgba(0,0,0,0.25)";
-    div.style.border = "2px solid #fff";
-    div.style.overflow = "hidden";
-    div.style.background = `center/cover no-repeat url('${getThumbnailUrl(photo)}')`;
-    div.style.cursor = "pointer";
-    div.style.transition = "transform 150ms ease, box-shadow 150ms ease";
-    div.addEventListener("mouseenter", () => {
-      div.style.transform = "scale(1.2)";
-      div.style.boxShadow = "0 4px 16px rgba(0,0,0,0.35)";
+    // Outer wrapper keeps constant size so the marker anchor doesn't shift
+    const outer = document.createElement("div");
+    outer.style.width = "44px";
+    outer.style.height = "44px";
+    outer.style.borderRadius = "9999px";
+    outer.style.boxShadow = "0 2px 8px rgba(0,0,0,0.25)";
+    outer.style.border = "2px solid #fff";
+    outer.style.overflow = "hidden";
+    outer.style.cursor = "pointer";
+    outer.style.position = "relative";
+
+    // Inner element scales on hover
+    const inner = document.createElement("div");
+    inner.style.position = "absolute";
+    inner.style.inset = "0";
+    inner.style.background = `center/cover no-repeat url('${getThumbnailUrl(photo)}')`;
+    inner.style.transition = "transform 150ms ease";
+    inner.style.transformOrigin = "center center";
+
+    outer.addEventListener("mouseenter", () => {
+      inner.style.transform = "scale(1.2)";
+      outer.style.boxShadow = "0 4px 16px rgba(0,0,0,0.35)";
     });
-    div.addEventListener("mouseleave", () => {
-      div.style.transform = "scale(1)";
-      div.style.boxShadow = "0 2px 8px rgba(0,0,0,0.25)";
+    outer.addEventListener("mouseleave", () => {
+      inner.style.transform = "scale(1)";
+      outer.style.boxShadow = "0 2px 8px rgba(0,0,0,0.25)";
     });
-    return div;
+
+    outer.appendChild(inner);
+    return outer;
   };
 
   const createClusterMarkerElement = (
     imageUrls: string[],
     count: number,
   ): HTMLDivElement => {
+    // Outer wrapper keeps constant size so the marker anchor doesn't shift
     const container = document.createElement("div");
     container.style.width = "56px";
     container.style.height = "56px";
@@ -140,15 +152,14 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
     container.style.position = "relative";
     container.style.overflow = "hidden";
     container.style.cursor = "pointer";
-    container.style.transition = "transform 150ms ease, box-shadow 150ms ease";
-    container.addEventListener("mouseenter", () => {
-      container.style.transform = "scale(1.12)";
-      container.style.boxShadow = "0 4px 18px rgba(0,0,0,0.4)";
-    });
-    container.addEventListener("mouseleave", () => {
-      container.style.transform = "scale(1)";
-      container.style.boxShadow = "0 2px 12px rgba(0,0,0,0.3)";
-    });
+
+    // Inner scales on hover
+    const scaleWrap = document.createElement("div");
+    scaleWrap.style.position = "absolute";
+    scaleWrap.style.inset = "0";
+    scaleWrap.style.transition = "transform 150ms ease";
+    scaleWrap.style.transformOrigin = "center center";
+    container.appendChild(scaleWrap);
 
     const grid = document.createElement("div");
     grid.style.position = "absolute";
@@ -156,7 +167,7 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
     grid.style.display = "grid";
     grid.style.gridTemplateColumns = "1fr 1fr";
     grid.style.gridTemplateRows = "1fr 1fr";
-    container.appendChild(grid);
+    scaleWrap.appendChild(grid);
 
     for (let i = 0; i < Math.min(4, imageUrls.length); i++) {
       const cell = document.createElement("div");
@@ -178,6 +189,15 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
     badge.style.padding = "2px 6px";
     badge.style.borderTopLeftRadius = "10px";
     container.appendChild(badge);
+
+    container.addEventListener("mouseenter", () => {
+      scaleWrap.style.transform = "scale(1.12)";
+      container.style.boxShadow = "0 4px 18px rgba(0,0,0,0.4)";
+    });
+    container.addEventListener("mouseleave", () => {
+      scaleWrap.style.transform = "scale(1)";
+      container.style.boxShadow = "0 2px 12px rgba(0,0,0,0.3)";
+    });
 
     return container;
   };
