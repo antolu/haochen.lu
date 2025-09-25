@@ -1,10 +1,11 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import type { Content, ContentCreate, ContentUpdate } from "../../types";
 import { Sheet, SheetContent } from "../ui/sheet";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
+import { Switch } from "../ui/switch";
 import {
   Select,
   SelectContent,
@@ -24,7 +25,7 @@ interface ContentEditorProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   value: Content | null;
-  onCreate: (data: ContentCreate) => void;
+  onCreate?: (data: ContentCreate) => void;
   onUpdate: (id: string, data: ContentUpdate) => void;
 }
 
@@ -36,16 +37,34 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
   onUpdate,
 }) => {
   const isEditing = !!value;
-  const [keyField, setKeyField] = useState<string>(value?.key ?? "");
-  const [title, setTitle] = useState<string>(value?.title ?? "");
-  const [category, setCategory] = useState<string>(
-    value?.category ?? "general",
-  );
-  const [contentType, setContentType] = useState<EditorMode>(
-    (value?.content_type as EditorMode) ?? "text",
-  );
-  const [content, setContent] = useState<string>(value?.content ?? "");
-  const [isActive, setIsActive] = useState<boolean>(value?.is_active ?? true);
+  const [keyField, setKeyField] = useState<string>("");
+  const [title, setTitle] = useState<string>("");
+  const [category, setCategory] = useState<string>("general");
+  const [contentType, setContentType] = useState<EditorMode>("text");
+  const [content, setContent] = useState<string>("");
+  const [isActive, setIsActive] = useState<boolean>(true);
+
+  // Reset form when value changes or modal opens/closes
+  useEffect(() => {
+    if (open) {
+      if (value) {
+        setKeyField(value.key);
+        setTitle(value.title);
+        setCategory(value.category);
+        setContentType(value.content_type as EditorMode);
+        setContent(value.content);
+        setIsActive(value.is_active);
+      } else {
+        // Reset to defaults for new content
+        setKeyField("");
+        setTitle("");
+        setCategory("general");
+        setContentType("text");
+        setContent("");
+        setIsActive(true);
+      }
+    }
+  }, [open, value]);
 
   const canSubmit = useMemo(
     () =>
@@ -64,7 +83,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
         content,
         is_active: isActive,
       });
-    } else {
+    } else if (onCreate) {
       onCreate({
         key: keyField,
         title,
@@ -211,7 +230,18 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
             </Tabs>
           )}
 
-          <div className="flex items-center justify-end gap-2 pt-2">
+          <div className="flex items-center gap-2">
+            <Switch
+              id="is_active"
+              checked={isActive}
+              onCheckedChange={setIsActive}
+            />
+            <Label htmlFor="is_active" className="text-sm">
+              Active (content will be displayed on the website)
+            </Label>
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-4">
             <Button variant="ghost" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>

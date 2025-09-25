@@ -1,34 +1,35 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
+import { toast } from "react-hot-toast";
 import { content } from "../../api/client";
-import type { Content, ContentCreate, ContentUpdate } from "../../types";
+import type { Content, ContentUpdate } from "../../types";
+import { Input } from "../ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { Alert } from "../ui/alert";
+import { Skeleton } from "../ui/skeleton";
+import ContentCard from "./ContentCard";
+import ContentEditor from "./ContentEditor";
+import ContentSection from "./ContentSection";
+import CategoryTabs, { type ContentCategory } from "./CategoryTabs";
+import { groupContentBySections, CONTENT_SECTIONS } from "./contentSections";
 
-interface ContentFormData {
-  key: string;
-  title: string;
-  content: string;
-  content_type: string;
-  category: string;
-  is_active: boolean;
-}
+type StatusFilter = "active" | "inactive" | "all";
 
 const ContentManager: React.FC = () => {
+  const [editorOpen, setEditorOpen] = useState(false);
   const [editingContent, setEditingContent] = useState<Content | null>(null);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [formData, setFormData] = useState<ContentFormData>({
-    key: "",
-    title: "",
-    content: "",
-    content_type: "text",
-    category: "general",
-    is_active: true,
-  });
-  const [filter, setFilter] = useState({
-    category: "",
-    search: "",
-    is_active: true,
-  });
+  const [search, setSearch] = useState<string>("");
+  const [category, setCategory] = useState<ContentCategory>("all");
+  const [status, setStatus] = useState<StatusFilter>("active");
+  const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set());
+  const [viewMode] = useState<"grouped" | "grid">("grouped");
 
   const queryClient = useQueryClient();
 
@@ -38,21 +39,14 @@ const ContentManager: React.FC = () => {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["admin-content", filter],
-    queryFn: () => content.list(filter),
-  });
-
-  // Create content mutation
-  const createMutation = useMutation({
-    mutationFn: (data: ContentCreate) => content.create(data),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["admin-content"] });
-      setShowCreateForm(false);
-      resetForm();
-    },
-    onError: (error: AxiosError) => {
-      console.error("Error creating content:", error);
-    },
+    queryKey: ["admin-content", { category, search, status }],
+    queryFn: () =>
+      content.list({
+        category: category === "all" ? undefined : category,
+        search: search || undefined,
+        is_active: status === "all" ? undefined : status === "active",
+        per_page: 100,
+      }),
   });
 
   // Update content mutation
@@ -62,419 +56,169 @@ const ContentManager: React.FC = () => {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["admin-content"] });
       setEditingContent(null);
-      resetForm();
+      setEditorOpen(false);
+      toast.success("Content updated successfully");
     },
     onError: (error: AxiosError) => {
       console.error("Error updating content:", error);
+      const errorData = error.response?.data as { detail?: string } | undefined;
+      toast.error(
+        `Failed to update content: ${errorData?.detail ?? error.message}`,
+      );
     },
   });
 
-  // Delete content mutation
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => content.delete(id),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["admin-content"] });
-    },
-    onError: (error: AxiosError) => {
-      console.error("Error deleting content:", error);
-    },
-  });
-
-  const resetForm = () => {
-    setFormData({
-      key: "",
-      title: "",
-      content: "",
-      content_type: "text",
-      category: "general",
-      is_active: true,
-    });
+  const handleEdit = (item: Content) => {
+    setEditingContent(item);
+    setEditorOpen(true);
   };
 
-  const handleEdit = (contentItem: Content) => {
-    setEditingContent(contentItem);
-    setFormData({
-      key: contentItem.key,
-      title: contentItem.title,
-      content: contentItem.content,
-      content_type: contentItem.content_type,
-      category: contentItem.category,
-      is_active: contentItem.is_active,
-    });
-    setShowCreateForm(true);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (editingContent) {
-      updateMutation.mutate({
-        id: editingContent.id,
-        data: {
-          title: formData.title,
-          content: formData.content,
-          content_type: formData.content_type,
-          category: formData.category,
-          is_active: formData.is_active,
+  const handleToggleActive = (id: string, isActive: boolean) => {
+    setTogglingIds((prev) => new Set(prev).add(id));
+    updateMutation.mutate(
+      { id, data: { is_active: isActive } },
+      {
+        onSettled: () => {
+          setTogglingIds((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(id);
+            return newSet;
+          });
         },
-      });
-    } else {
-      createMutation.mutate(formData);
-    }
+      },
+    );
   };
 
-  const handleDelete = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this content?")) {
-      deleteMutation.mutate(id);
-    }
-  };
+  const counts = useMemo(() => {
+    const base: Record<ContentCategory, number> = {
+      all: contentList?.total ?? 0,
+      hero: 0,
+      about: 0,
+      contact: 0,
+      navigation: 0,
+      general: 0,
+    };
+    contentList?.content.forEach((c) => {
+      const k = c.category as ContentCategory;
+      if (k in base) base[k] += 1;
+    });
+    return base;
+  }, [contentList]);
 
-  const categories = ["hero", "about", "contact", "navigation", "general"];
+  const groupedContent = useMemo(() => {
+    if (!contentList?.content) return {};
+    return groupContentBySections(contentList.content);
+  }, [contentList]);
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Skeleton key={i} className="h-40" />
+        ))}
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded">
+      <Alert variant="destructive">
         Error loading content:{" "}
         {error instanceof Error ? error.message : "Unknown error"}
-      </div>
+      </Alert>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">Content Management</h2>
-        <button
-          onClick={() => setShowCreateForm(true)}
-          className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors"
-        >
-          Add Content
-        </button>
-      </div>
-
-      {/* Filters */}
-      <div className="bg-white p-4 rounded-lg border space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Category
-            </label>
-            <select
-              value={filter.category}
-              onChange={(e) =>
-                setFilter({ ...filter, category: e.target.value })
-              }
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-            >
-              <option value="">All Categories</option>
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Status
-            </label>
-            <select
-              value={filter.is_active ? "active" : "inactive"}
-              onChange={(e) =>
-                setFilter({ ...filter, is_active: e.target.value === "active" })
-              }
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-            >
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Search
-            </label>
-            <input
-              type="text"
-              value={filter.search}
-              onChange={(e) => setFilter({ ...filter, search: e.target.value })}
-              placeholder="Search by title, key, or content..."
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
-          </div>
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <h2 className="text-2xl font-semibold">Content Management</h2>
+        <div className="flex gap-2">
+          <Input
+            placeholder="Search by title, key, or content..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full md:w-80"
+          />
+          <Select
+            value={status}
+            onValueChange={(v) => setStatus(v as StatusFilter)}
+          >
+            <SelectTrigger className="w-36">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+              <SelectItem value="all">All</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      {/* Content List */}
-      <div className="bg-white rounded-lg border overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Key
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Title
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Category
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Type
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Content Preview
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {contentList?.content.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {item.key}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {item.title}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {item.category}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {item.content_type}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        item.is_active
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {item.is_active ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
-                    <div className="max-w-xs truncate">
-                      {item.content.length > 50
-                        ? `${item.content.substring(0, 50)}...`
-                        : item.content}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                    <button
-                      onClick={() => handleEdit(item)}
-                      className="text-primary-600 hover:text-primary-900"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <CategoryTabs
+        value={category}
+        counts={counts}
+        onValueChange={(v) => setCategory(v)}
+      />
 
-        {contentList?.content.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            No content found. Create your first content item to get started.
-          </div>
-        )}
-      </div>
+      {viewMode === "grouped" ? (
+        <div className="space-y-6">
+          {CONTENT_SECTIONS.map((sectionConfig) => {
+            const sectionItems = groupedContent[sectionConfig.id] || [];
+            if (sectionItems.length === 0 && category !== "all") return null;
 
-      {/* Create/Edit Form Modal */}
-      {showCreateForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">
-                {editingContent ? "Edit Content" : "Create Content"}
-              </h3>
-              <button
-                onClick={() => {
-                  setShowCreateForm(false);
-                  setEditingContent(null);
-                  resetForm();
-                }}
-                className="text-gray-400 hover:text-gray-600"
+            return (
+              <ContentSection
+                key={sectionConfig.id}
+                title={sectionConfig.title}
+                description={sectionConfig.description}
+                items={sectionItems}
+                defaultExpanded={sectionConfig.defaultExpanded}
               >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M6 18L18 6M6 6l12 12"
+                {sectionItems.map((item) => (
+                  <ContentCard
+                    key={item.id}
+                    item={item}
+                    variant="compact"
+                    onEdit={handleEdit}
+                    onToggleActive={handleToggleActive}
+                    isToggling={togglingIds.has(item.id)}
                   />
-                </svg>
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Key *
-                </label>
-                <input
-                  type="text"
-                  value={formData.key}
-                  onChange={(e) =>
-                    setFormData({ ...formData, key: e.target.value })
-                  }
-                  disabled={!!editingContent}
-                  required
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100"
-                  placeholder="e.g., hero.title, about.description"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Unique identifier for this content (cannot be changed after
-                  creation)
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Title *
-                </label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
-                  required
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  placeholder="Human-readable title"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Category
-                  </label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) =>
-                      setFormData({ ...formData, category: e.target.value })
-                    }
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  >
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Content Type
-                  </label>
-                  <select
-                    value={formData.content_type}
-                    onChange={(e) =>
-                      setFormData({ ...formData, content_type: e.target.value })
-                    }
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value="text">Text</option>
-                    <option value="html">HTML</option>
-                    <option value="markdown">Markdown</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Content *
-                </label>
-                <textarea
-                  value={formData.content}
-                  onChange={(e) =>
-                    setFormData({ ...formData, content: e.target.value })
-                  }
-                  required
-                  rows={6}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  placeholder="Enter your content here..."
-                />
-              </div>
-
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="is_active"
-                  checked={formData.is_active}
-                  onChange={(e) =>
-                    setFormData({ ...formData, is_active: e.target.checked })
-                  }
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                />
-                <label
-                  htmlFor="is_active"
-                  className="ml-2 text-sm text-gray-700"
-                >
-                  Active (content will be displayed on the website)
-                </label>
-              </div>
-
-              <div className="flex justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowCreateForm(false);
-                    setEditingContent(null);
-                    resetForm();
-                  }}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={
-                    createMutation.isPending || updateMutation.isPending
-                  }
-                  className="px-4 py-2 bg-primary-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50"
-                >
-                  {createMutation.isPending || updateMutation.isPending
-                    ? "Saving..."
-                    : editingContent
-                      ? "Update"
-                      : "Create"}
-                </button>
-              </div>
-            </form>
-          </div>
+                ))}
+              </ContentSection>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {contentList?.content.map((item) => (
+            <ContentCard
+              key={item.id}
+              item={item}
+              onEdit={handleEdit}
+              onToggleActive={handleToggleActive}
+              isToggling={togglingIds.has(item.id)}
+            />
+          ))}
         </div>
       )}
+
+      {contentList?.content.length === 0 && (
+        <Alert className="mt-4">No content found.</Alert>
+      )}
+
+      <ContentEditor
+        open={editorOpen}
+        onOpenChange={(o) => {
+          setEditorOpen(o);
+          if (!o) setEditingContent(null);
+        }}
+        value={editingContent}
+        onUpdate={(id: string, data: ContentUpdate) =>
+          updateMutation.mutate({ id, data })
+        }
+      />
     </div>
   );
 };
