@@ -70,3 +70,23 @@
 .h-28 {
   /* Force include h-28 for expanded header */
 }
+
+/* Force include design system color classes */
+.bg-primary {
+  /* Force include bg-primary */
+}
+.text-primary-foreground {
+  /* Force include text-primary-foreground */
+}
+.bg-card {
+  /* Force include bg-card */
+}
+.bg-muted {
+  /* Force include bg-muted */
+}
+.bg-background {
+  /* Force include bg-background */
+}
+.border-border {
+  /* Force include border-border */
+}
