@@ -152,7 +152,7 @@ const AdminSubApps: React.FC = () => {
           <div className="flex gap-3">
             <Link
               to="/admin/subapps/integrate"
-              className="px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 dark:text-blue-400 dark:bg-blue-950 dark:hover:bg-blue-900 rounded-lg transition-colors"
+              className="px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 dark:text-blue-400 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
             >
               <span className="flex items-center">
                 <svg

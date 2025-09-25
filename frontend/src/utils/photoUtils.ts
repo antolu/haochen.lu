@@ -126,7 +126,7 @@ export const sortPhotosByOrder = (
  * Calculates which pages need to be fetched for a given photo count and page size
  */
 export const calculateMissingPages = (
-  currentPhotoCount: number,
+  _currentPhotoCount: number,
   targetPhotoCount: number,
   pageSize: number,
   loadedPages: Set<number>,
@@ -158,8 +158,8 @@ export interface PhotoLoadStrategy {
 }
 
 export const calculateLoadStrategy = (
-  currentOrder: OrderByOption,
-  newOrder: OrderByOption,
+  _currentOrder: OrderByOption,
+  _newOrder: OrderByOption,
   currentPhotos: Photo[],
   cachedPhotos: Photo[],
   targetTotal: number,

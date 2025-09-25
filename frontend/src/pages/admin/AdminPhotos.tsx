@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { GripVertical, RefreshCcw, Menu } from "lucide-react";
+import { RefreshCcw } from "lucide-react";
 import { Switch } from "@headlessui/react";
 // photoswipe not used in admin (editor replaces lightbox)
 
@@ -155,7 +155,7 @@ const AdminPhotos: React.FC = () => {
   if (photosError) {
     return (
       <div className="text-center py-12">
-        <div className="text-red-600 mb-4">
+        <div className="text-destructive mb-4">
           <svg
             className="h-12 w-12 mx-auto mb-4"
             fill="none"
@@ -171,10 +171,10 @@ const AdminPhotos: React.FC = () => {
           </svg>
           Error loading photos
         </div>
-        <p className="text-gray-600">{photosError.message}</p>
+        <p className="text-muted-foreground">{photosError.message}</p>
         <button
           onClick={() => window.location.reload()}
-          className="mt-4 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+          className="mt-4 px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors"
         >
           Retry
         </button>
@@ -188,19 +188,21 @@ const AdminPhotos: React.FC = () => {
       <div className="mb-8 space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Photos</h1>
-            <p className="mt-2 text-gray-600">Manage your photo collection</p>
+            <h1 className="text-3xl font-bold">Photos</h1>
+            <p className="mt-2 text-muted-foreground">
+              Manage your photo collection
+            </p>
           </div>
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
             <div className="flex items-center gap-2">
-              <div className="flex bg-gray-100 rounded-full p-1">
+              <div className="flex bg-muted rounded-full p-1">
                 <button
                   onClick={() => handleViewModeChange("grid")}
                   className={cn(
                     "px-4 py-1 text-sm font-medium rounded-full transition-colors",
                     viewMode === "grid"
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-600 hover:text-gray-900",
+                      ? "bg-background shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   Grid
@@ -210,15 +212,15 @@ const AdminPhotos: React.FC = () => {
                   className={cn(
                     "px-4 py-1 text-sm font-medium rounded-full transition-colors",
                     viewMode === "list"
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-600 hover:text-gray-900",
+                      ? "bg-background shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   List
                 </button>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-600">
+                <span className="text-sm font-medium text-muted-foreground">
                   Reorder
                 </span>
                 <Switch
@@ -232,12 +234,12 @@ const AdminPhotos: React.FC = () => {
                   }}
                   className={cn(
                     "relative inline-flex h-6 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75",
-                    reorderEnabled ? "bg-amber-400" : "bg-gray-200",
+                    reorderEnabled ? "bg-amber-400" : "bg-muted",
                   )}
                 >
                   <span
                     className={cn(
-                      "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out",
+                      "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-background shadow-lg ring-0 transition duration-200 ease-in-out",
                       reorderEnabled ? "translate-x-6" : "translate-x-0",
                     )}
                   />
@@ -254,7 +256,7 @@ const AdminPhotos: React.FC = () => {
                     onClick={() => {
                       void handleResetOrder();
                     }}
-                    className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 text-sm text-gray-600 transition hover:border-blue-200 hover:text-blue-600"
+                    className="inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-sm text-muted-foreground transition hover:border-primary hover:text-primary"
                   >
                     <RefreshCcw className="h-4 w-4" /> Reset to Upload Order
                   </motion.button>
@@ -266,7 +268,7 @@ const AdminPhotos: React.FC = () => {
             <button
               onClick={() => setShowUpload(true)}
               disabled={showUpload || reorderEnabled || isReordering}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
+              className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
             >
               <span className="flex items-center">
                 <svg
@@ -291,12 +293,12 @@ const AdminPhotos: React.FC = () => {
         {/* Stats Cards */}
         {!isLoadingStats && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="bg-card rounded-lg border p-4">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="h-8 w-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <div className="h-8 w-8 bg-primary/10 rounded-lg flex items-center justify-center">
                     <svg
-                      className="h-4 w-4 text-blue-600"
+                      className="h-4 w-4 text-primary"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -311,22 +313,20 @@ const AdminPhotos: React.FC = () => {
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-900">
-                    Total Photos
-                  </p>
-                  <p className="text-2xl font-bold text-blue-600">
+                  <p className="text-sm font-medium">Total Photos</p>
+                  <p className="text-2xl font-bold text-primary">
                     {stats.total_photos || photos.length}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="bg-card rounded-lg border p-4">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="h-8 w-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+                  <div className="h-8 w-8 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg flex items-center justify-center">
                     <svg
-                      className="h-4 w-4 text-yellow-600"
+                      className="h-4 w-4 text-yellow-600 dark:text-yellow-400"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -335,8 +335,8 @@ const AdminPhotos: React.FC = () => {
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-900">Featured</p>
-                  <p className="text-2xl font-bold text-yellow-600">
+                  <p className="text-sm font-medium">Featured</p>
+                  <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                     {stats.featured_photos ||
                       photos.filter((p) => p.featured).length}
                   </p>
@@ -344,12 +344,12 @@ const AdminPhotos: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="bg-card rounded-lg border p-4">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="h-8 w-8 bg-green-100 rounded-lg flex items-center justify-center">
+                  <div className="h-8 w-8 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
                     <svg
-                      className="h-4 w-4 text-green-600"
+                      className="h-4 w-4 text-green-600 dark:text-green-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -364,10 +364,8 @@ const AdminPhotos: React.FC = () => {
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-900">
-                    Storage Used
-                  </p>
-                  <p className="text-2xl font-bold text-green-600">
+                  <p className="text-sm font-medium">Storage Used</p>
+                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                     {formatFileSize(
                       stats.total_size ||
                         photos.reduce((sum, p) => sum + (p.file_size || 0), 0),
@@ -377,12 +375,12 @@ const AdminPhotos: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="bg-card rounded-lg border p-4">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="h-8 w-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <div className="h-8 w-8 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">
                     <svg
-                      className="h-4 w-4 text-purple-600"
+                      className="h-4 w-4 text-purple-600 dark:text-purple-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -403,8 +401,8 @@ const AdminPhotos: React.FC = () => {
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-900">Selected</p>
-                  <p className="text-2xl font-bold text-purple-600">
+                  <p className="text-sm font-medium">Selected</p>
+                  <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                     {selectedPhotos.size}
                   </p>
                 </div>
@@ -416,9 +414,9 @@ const AdminPhotos: React.FC = () => {
 
       {/* Bulk Actions */}
       {selectedPhotos.size > 0 && (
-        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="mb-6 p-4 bg-primary/5 border border-primary/20 rounded-lg">
           <div className="flex items-center justify-between">
-            <div className="text-sm text-blue-800">
+            <div className="text-sm text-primary">
               {selectedPhotos.size} photo{selectedPhotos.size > 1 ? "s" : ""}{" "}
               selected
             </div>
@@ -427,7 +425,7 @@ const AdminPhotos: React.FC = () => {
                 onClick={() => {
                   void handleBulkToggleFeatured(true);
                 }}
-                className="px-3 py-1 text-xs font-medium text-yellow-700 bg-yellow-100 hover:bg-yellow-200 rounded border border-yellow-300 transition-colors"
+                className="px-3 py-1 text-xs font-medium text-yellow-700 bg-yellow-100 hover:bg-yellow-200 dark:text-yellow-400 dark:bg-yellow-900/20 dark:hover:bg-yellow-900/30 rounded border border-yellow-300 dark:border-yellow-700 transition-colors"
               >
                 ⭐ Feature
               </button>
@@ -435,7 +433,7 @@ const AdminPhotos: React.FC = () => {
                 onClick={() => {
                   void handleBulkToggleFeatured(false);
                 }}
-                className="px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded border border-gray-300 transition-colors"
+                className="px-3 py-1 text-xs font-medium text-muted-foreground bg-muted hover:bg-muted/80 rounded border transition-colors"
               >
                 Remove Feature
               </button>
@@ -443,13 +441,13 @@ const AdminPhotos: React.FC = () => {
                 onClick={() => {
                   void handleBulkDelete();
                 }}
-                className="px-3 py-1 text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded border border-red-300 transition-colors"
+                className="px-3 py-1 text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 dark:text-red-400 dark:bg-red-900/20 dark:hover:bg-red-900/30 rounded border border-red-300 dark:border-red-700 transition-colors"
               >
                 🗑 Delete
               </button>
               <button
                 onClick={() => setSelectedPhotos(new Set())}
-                className="px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded border border-gray-300 transition-colors"
+                className="px-3 py-1 text-xs font-medium text-muted-foreground bg-muted hover:bg-muted/80 rounded border transition-colors"
               >
                 Clear
               </button>
@@ -476,17 +474,15 @@ const AdminPhotos: React.FC = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+              className="bg-background border rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-bold text-gray-900">
-                    Upload Photos
-                  </h2>
+                  <h2 className="text-xl font-bold">Upload Photos</h2>
                   <button
                     onClick={() => setShowUpload(false)}
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <svg
                       className="h-6 w-6"
@@ -516,16 +512,14 @@ const AdminPhotos: React.FC = () => {
       </AnimatePresence>
 
       {/* Photos Display */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-card rounded-lg border p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-medium text-gray-900">
-            All Photos ({photos.length})
-          </h2>
+          <h2 className="text-lg font-medium">All Photos ({photos.length})</h2>
 
           {photos.length > 0 && !editingPhoto && (
             <button
               onClick={() => handleSelectAll()}
-              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+              className="text-sm text-primary hover:text-primary/80 font-medium"
             >
               {selectedPhotos.size === photos.length
                 ? "Deselect All"

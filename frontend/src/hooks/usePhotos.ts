@@ -8,7 +8,6 @@ import { photos } from "../api/client";
 import type { Photo, PhotoListResponse, PhotoStatsSummary } from "../types";
 import type { OrderByOption } from "../components/OrderBySelector";
 import { usePhotoCacheStore } from "../stores/photoCache";
-import { calculateLoadStrategy, mergePhotoArrays } from "../utils/photoUtils";
 import toast from "react-hot-toast";
 import { useCallback, useMemo, useEffect } from "react";
 
@@ -39,7 +38,6 @@ export const useOptimizedPhotos = (
 ) => {
   const {
     cache,
-    photoIndex,
     activeOrder,
     setPhotos,
     switchOrder,

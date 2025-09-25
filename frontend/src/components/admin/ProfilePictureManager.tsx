@@ -65,7 +65,7 @@ const ProfilePictureManager: React.FC = () => {
   if (error) {
     return (
       <div className="text-center py-12">
-        <div className="text-red-600 mb-4">
+        <div className="text-destructive mb-4">
           <svg
             className="h-12 w-12 mx-auto mb-4"
             fill="none"
@@ -81,10 +81,10 @@ const ProfilePictureManager: React.FC = () => {
           </svg>
           Error loading profile pictures
         </div>
-        <p className="text-gray-600">{error.message}</p>
+        <p className="text-muted-foreground">{error.message}</p>
         <button
           onClick={() => window.location.reload()}
-          className="mt-4 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+          className="mt-4 px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors"
         >
           Retry
         </button>
@@ -98,16 +98,14 @@ const ProfilePictureManager: React.FC = () => {
       <div className="mb-8">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Profile Pictures
-            </h1>
-            <p className="mt-2 text-gray-600">
+            <h1 className="text-3xl font-bold">Profile Pictures</h1>
+            <p className="mt-2 text-muted-foreground">
               Manage your profile pictures. Only one can be active at a time.
             </p>
           </div>
           <button
             onClick={() => setShowUpload(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
           >
             Upload New Picture
           </button>
@@ -116,11 +114,11 @@ const ProfilePictureManager: React.FC = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
+        <div className="bg-card p-6 rounded-lg border">
           <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
+            <div className="p-2 bg-primary/10 rounded-lg">
               <svg
-                className="w-6 h-6 text-blue-600"
+                className="w-6 h-6 text-primary"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -134,21 +132,19 @@ const ProfilePictureManager: React.FC = () => {
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">
+              <p className="text-sm font-medium text-muted-foreground">
                 Total Pictures
               </p>
-              <p className="text-2xl font-bold text-gray-900">
-                {profilePictures.length}
-              </p>
+              <p className="text-2xl font-bold">{profilePictures.length}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
+        <div className="bg-card p-6 rounded-lg border">
           <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
+            <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
               <svg
-                className="w-6 h-6 text-green-600"
+                className="w-6 h-6 text-green-600 dark:text-green-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -162,21 +158,21 @@ const ProfilePictureManager: React.FC = () => {
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">
+              <p className="text-sm font-medium text-muted-foreground">
                 Active Picture
               </p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-2xl font-bold">
                 {activeProfilePicture ? "1" : "0"}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
+        <div className="bg-card p-6 rounded-lg border">
           <div className="flex items-center">
-            <div className="p-2 bg-purple-100 rounded-lg">
+            <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
               <svg
-                className="w-6 h-6 text-purple-600"
+                className="w-6 h-6 text-purple-600 dark:text-purple-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -190,8 +186,10 @@ const ProfilePictureManager: React.FC = () => {
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Size</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm font-medium text-muted-foreground">
+                Total Size
+              </p>
+              <p className="text-2xl font-bold">
                 {formatFileSize(
                   profilePictures.reduce(
                     (total, pic) => total + (pic.file_size ?? 0),
@@ -230,20 +228,18 @@ const ProfilePictureManager: React.FC = () => {
       </AnimatePresence>
 
       {/* Profile Pictures Grid */}
-      <div className="bg-white rounded-lg border border-gray-200">
+      <div className="bg-card rounded-lg border">
         <div className="p-6">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">
-            All Profile Pictures
-          </h2>
+          <h2 className="text-lg font-medium mb-4">All Profile Pictures</h2>
 
           {isLoading ? (
             <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
           ) : profilePictures.length === 0 ? (
             <div className="text-center py-12">
               <svg
-                className="h-12 w-12 mx-auto text-gray-400 mb-4"
+                className="h-12 w-12 mx-auto text-muted-foreground mb-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -255,12 +251,12 @@ const ProfilePictureManager: React.FC = () => {
                   d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
               </svg>
-              <p className="text-gray-600 mb-4">
+              <p className="text-muted-foreground mb-4">
                 No profile pictures uploaded yet
               </p>
               <button
                 onClick={() => setShowUpload(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
               >
                 Upload Your First Picture
               </button>
@@ -284,23 +280,23 @@ const ProfilePictureManager: React.FC = () => {
                 return (
                   <div
                     key={profilePicture.id}
-                    className={`relative bg-white rounded-lg border-2 overflow-hidden transition-colors ${
+                    className={`relative bg-card rounded-lg border-2 overflow-hidden transition-colors ${
                       isActive
                         ? "border-green-500"
-                        : "border-gray-200 hover:border-gray-300"
+                        : "border-border hover:border-muted-foreground"
                     }`}
                   >
                     {/* Active Badge */}
                     {isActive && (
                       <div className="absolute top-2 left-2 z-10">
-                        <span className="bg-green-500 text-white text-xs font-medium px-2 py-1 rounded-full">
+                        <span className="bg-green-500 text-white dark:bg-green-600 text-xs font-medium px-2 py-1 rounded-full">
                           Active
                         </span>
                       </div>
                     )}
 
                     {/* Image */}
-                    <div className="aspect-square bg-gray-100">
+                    <div className="aspect-square bg-muted">
                       <img
                         src={optimalImage.url}
                         alt={profilePicture.title ?? "Profile Picture"}
@@ -310,14 +306,14 @@ const ProfilePictureManager: React.FC = () => {
 
                     {/* Info */}
                     <div className="p-4">
-                      <h3 className="font-medium text-gray-900 truncate">
+                      <h3 className="font-medium truncate">
                         {profilePicture.title ?? "Untitled"}
                       </h3>
-                      <p className="text-sm text-gray-500 mt-1">
+                      <p className="text-sm text-muted-foreground mt-1">
                         {profilePicture.width}×{profilePicture.height} •{" "}
                         {formatFileSize(profilePicture.file_size ?? 0)}
                       </p>
-                      <p className="text-xs text-gray-400 mt-1">
+                      <p className="text-xs text-muted-foreground/70 mt-1">
                         {new Date(
                           profilePicture.created_at,
                         ).toLocaleDateString()}
@@ -331,7 +327,7 @@ const ProfilePictureManager: React.FC = () => {
                               void handleActivate(profilePicture.id)
                             }
                             disabled={activateMutation.isPending}
-                            className="flex-1 px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50"
+                            className="flex-1 px-3 py-1 text-sm bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors disabled:opacity-50"
                           >
                             {activateMutation.isPending
                               ? "Setting..."
@@ -341,7 +337,7 @@ const ProfilePictureManager: React.FC = () => {
                         <button
                           onClick={() => void handleDelete(profilePicture)}
                           disabled={deleteMutation.isPending}
-                          className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors disabled:opacity-50"
+                          className="px-3 py-1 text-sm bg-destructive text-destructive-foreground rounded hover:bg-destructive/90 transition-colors disabled:opacity-50"
                         >
                           {deleteMutation.isPending ? "Deleting..." : "Delete"}
                         </button>

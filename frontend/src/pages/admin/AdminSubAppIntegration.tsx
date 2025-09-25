@@ -144,8 +144,8 @@ const AdminSubAppIntegration: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Integrate Subapp</h1>
-        <p className="mt-1 text-sm text-gray-600">
+        <h1 className="text-2xl font-bold">Integrate Subapp</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Add a new subapp by pasting its YAML configuration below. The
           configuration will be validated in real-time.
         </p>
@@ -155,14 +155,14 @@ const AdminSubAppIntegration: React.FC = () => {
       <div className="flex items-center gap-4">
         <button
           onClick={() => setShowExample(!showExample)}
-          className="px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 rounded-lg transition-colors"
+          className="px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 dark:text-blue-400 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
         >
           {showExample ? "Hide Example" : "Show Example"}
         </button>
 
         <button
           onClick={handleClear}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+          className="px-4 py-2 text-sm font-medium text-muted-foreground bg-muted hover:bg-muted/80 rounded-lg transition-colors"
         >
           Clear
         </button>
@@ -174,20 +174,18 @@ const AdminSubAppIntegration: React.FC = () => {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}
-          className="bg-gray-50 border border-gray-200 rounded-lg p-4"
+          className="bg-muted/50 border rounded-lg p-4"
         >
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-medium text-gray-700">
-              Example Configuration
-            </h3>
+            <h3 className="text-sm font-medium">Example Configuration</h3>
             <button
               onClick={handleLoadExample}
-              className="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 rounded transition-colors"
+              className="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 dark:text-blue-400 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 rounded transition-colors"
             >
               Load Example
             </button>
           </div>
-          <pre className="text-xs text-gray-600 overflow-x-auto whitespace-pre-wrap">
+          <pre className="text-xs text-muted-foreground overflow-x-auto whitespace-pre-wrap">
             {EXAMPLE_CONFIG}
           </pre>
         </motion.div>
@@ -206,36 +204,32 @@ const AdminSubAppIntegration: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white border border-gray-200 rounded-lg p-6"
+          className="bg-card border rounded-lg p-6"
         >
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
-            Ready to Integrate
-          </h3>
+          <h3 className="text-lg font-medium mb-4">Ready to Integrate</h3>
 
           {validationResult.config && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">
-                  Subapp Details
-                </h4>
+                <h4 className="text-sm font-medium mb-2">Subapp Details</h4>
                 <dl className="space-y-1 text-sm">
                   <div className="flex">
-                    <dt className="w-20 text-gray-500">Name:</dt>
-                    <dd className="text-gray-900">
+                    <dt className="w-20 text-muted-foreground">Name:</dt>
+                    <dd>
                       {(validationResult.config as { meta?: { name?: string } })
                         ?.meta?.name ?? ""}
                     </dd>
                   </div>
                   <div className="flex">
-                    <dt className="w-20 text-gray-500">Slug:</dt>
-                    <dd className="font-mono text-gray-900">
+                    <dt className="w-20 text-muted-foreground">Slug:</dt>
+                    <dd className="font-mono">
                       {(validationResult.config as { meta?: { slug?: string } })
                         ?.meta?.slug ?? ""}
                     </dd>
                   </div>
                   <div className="flex">
-                    <dt className="w-20 text-gray-500">Version:</dt>
-                    <dd className="text-gray-900">
+                    <dt className="w-20 text-muted-foreground">Version:</dt>
+                    <dd>
                       {(
                         validationResult.config as {
                           meta?: { version?: string };
@@ -247,13 +241,11 @@ const AdminSubAppIntegration: React.FC = () => {
               </div>
 
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">
-                  Access URLs
-                </h4>
+                <h4 className="text-sm font-medium mb-2">Access URLs</h4>
                 <dl className="space-y-1 text-sm">
                   <div className="flex">
-                    <dt className="w-20 text-gray-500">Frontend:</dt>
-                    <dd className="font-mono text-blue-600">
+                    <dt className="w-20 text-muted-foreground">Frontend:</dt>
+                    <dd className="font-mono text-primary">
                       {(
                         validationResult.config as {
                           integration?: { frontend_path?: string };
@@ -262,8 +254,8 @@ const AdminSubAppIntegration: React.FC = () => {
                     </dd>
                   </div>
                   <div className="flex">
-                    <dt className="w-20 text-gray-500">API:</dt>
-                    <dd className="font-mono text-blue-600">
+                    <dt className="w-20 text-muted-foreground">API:</dt>
+                    <dd className="font-mono text-primary">
                       {(
                         validationResult.config as {
                           integration?: { api_path?: string };
@@ -277,8 +269,8 @@ const AdminSubAppIntegration: React.FC = () => {
                     }
                   )?.integration?.has_admin && (
                     <div className="flex">
-                      <dt className="w-20 text-gray-500">Admin:</dt>
-                      <dd className="font-mono text-blue-600">
+                      <dt className="w-20 text-muted-foreground">Admin:</dt>
+                      <dd className="font-mono text-primary">
                         /admin/subapps/
                         {
                           (
@@ -304,14 +296,14 @@ const AdminSubAppIntegration: React.FC = () => {
               px-6 py-3 font-medium rounded-lg transition-colors
               ${
                 isIntegrating
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-blue-600 text-white hover:bg-blue-700"
+                  ? "bg-muted text-muted-foreground cursor-not-allowed"
+                  : "bg-primary text-primary-foreground hover:bg-primary/90"
               }
             `}
           >
             {isIntegrating ? (
               <div className="flex items-center">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
                 Integrating...
               </div>
             ) : (
@@ -330,15 +322,15 @@ const AdminSubAppIntegration: React.FC = () => {
             border rounded-lg p-6
             ${
               integrationResult.success
-                ? "bg-green-50 border-green-200"
-                : "bg-red-50 border-red-200"
+                ? "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-700"
+                : "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-700"
             }
           `}
         >
           <div className="flex items-center mb-4">
             {integrationResult.success ? (
               <svg
-                className="h-6 w-6 text-green-600 mr-3"
+                className="h-6 w-6 text-green-600 dark:text-green-400 mr-3"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -350,7 +342,7 @@ const AdminSubAppIntegration: React.FC = () => {
               </svg>
             ) : (
               <svg
-                className="h-6 w-6 text-red-600 mr-3"
+                className="h-6 w-6 text-red-600 dark:text-red-400 mr-3"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -362,7 +354,7 @@ const AdminSubAppIntegration: React.FC = () => {
               </svg>
             )}
             <h3
-              className={`text-lg font-medium ${integrationResult.success ? "text-green-800" : "text-red-800"}`}
+              className={`text-lg font-medium ${integrationResult.success ? "text-green-800 dark:text-green-300" : "text-red-800 dark:text-red-300"}`}
             >
               {integrationResult.success
                 ? "Integration Successful!"
@@ -372,10 +364,12 @@ const AdminSubAppIntegration: React.FC = () => {
 
           {integrationResult.success ? (
             <div className="space-y-2">
-              <p className="text-green-700">{integrationResult.message}</p>
+              <p className="text-green-700 dark:text-green-300">
+                {integrationResult.message}
+              </p>
               {integrationResult.frontend_url && (
                 <div className="space-y-1">
-                  <p className="text-sm text-green-600">
+                  <p className="text-sm text-green-600 dark:text-green-400">
                     Your subapp is now available at:
                   </p>
                   <div className="space-y-1 text-sm">
@@ -385,7 +379,7 @@ const AdminSubAppIntegration: React.FC = () => {
                         href={integrationResult.frontend_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline"
+                        className="text-primary hover:underline"
                       >
                         {integrationResult.frontend_url}
                       </a>
@@ -395,7 +389,7 @@ const AdminSubAppIntegration: React.FC = () => {
                         <strong>Admin:</strong>{" "}
                         <a
                           href={integrationResult.admin_url}
-                          className="text-blue-600 hover:underline"
+                          className="text-primary hover:underline"
                         >
                           {integrationResult.admin_url}
                         </a>
@@ -406,7 +400,9 @@ const AdminSubAppIntegration: React.FC = () => {
               )}
             </div>
           ) : (
-            <p className="text-red-700">{integrationResult.error}</p>
+            <p className="text-red-700 dark:text-red-300">
+              {integrationResult.error}
+            </p>
           )}
         </motion.div>
       )}

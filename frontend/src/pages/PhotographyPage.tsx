@@ -42,7 +42,6 @@ const PhotographyPage: React.FC = () => {
     loadMore,
     handleOrderSwitch,
     total,
-    cacheStats,
   } = useOptimizedPhotos(orderBy);
 
   const isTransitioning = useIsTransitioning();

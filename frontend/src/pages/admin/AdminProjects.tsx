@@ -93,16 +93,14 @@ const AdminProjects: React.FC = () => {
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Project Management
-            </h1>
-            <p className="mt-2 text-gray-600">
+            <h1 className="text-3xl font-bold">Project Management</h1>
+            <p className="mt-2 text-muted-foreground">
               Create and manage your project portfolio
             </p>
           </div>
           <button
             onClick={handleCreateProject}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
           >
             <svg
               className="w-4 h-4 mr-2"
@@ -124,12 +122,12 @@ const AdminProjects: React.FC = () => {
         {/* Stats */}
         {stats && (
           <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white p-4 rounded-lg border border-gray-200">
+            <div className="bg-card p-4 rounded-lg border">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
                     <svg
-                      className="w-4 h-4 text-blue-600"
+                      className="w-4 h-4 text-primary"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -144,22 +142,22 @@ const AdminProjects: React.FC = () => {
                   </div>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-500">
+                  <p className="text-sm font-medium text-muted-foreground">
                     Total Projects
                   </p>
-                  <p className="text-2xl font-semibold text-gray-900">
+                  <p className="text-2xl font-semibold">
                     {stats.total_projects}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white p-4 rounded-lg border border-gray-200">
+            <div className="bg-card p-4 rounded-lg border">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg flex items-center justify-center">
                     <svg
-                      className="w-4 h-4 text-yellow-600"
+                      className="w-4 h-4 text-yellow-600 dark:text-yellow-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -174,20 +172,22 @@ const AdminProjects: React.FC = () => {
                   </div>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-500">Featured</p>
-                  <p className="text-2xl font-semibold text-gray-900">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Featured
+                  </p>
+                  <p className="text-2xl font-semibold">
                     {stats.featured_projects}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white p-4 rounded-lg border border-gray-200">
+            <div className="bg-card p-4 rounded-lg border">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
                     <svg
-                      className="w-4 h-4 text-green-600"
+                      className="w-4 h-4 text-green-600 dark:text-green-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -202,8 +202,10 @@ const AdminProjects: React.FC = () => {
                   </div>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-500">Active</p>
-                  <p className="text-2xl font-semibold text-gray-900">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Active
+                  </p>
+                  <p className="text-2xl font-semibold">
                     {projects.filter((p) => p.status === "active").length}
                   </p>
                 </div>
@@ -214,7 +216,7 @@ const AdminProjects: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="mb-6 bg-white p-4 rounded-lg border border-gray-200">
+      <div className="mb-6 bg-card p-4 rounded-lg border">
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Search */}
           <div className="flex-1">
@@ -223,7 +225,7 @@ const AdminProjects: React.FC = () => {
               placeholder="Search projects..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -232,7 +234,7 @@ const AdminProjects: React.FC = () => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             >
               <option value="">All Statuses</option>
               <option value="active">Active</option>
@@ -244,12 +246,12 @@ const AdminProjects: React.FC = () => {
       </div>
 
       {/* Projects List */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="bg-card rounded-lg border overflow-hidden">
         {isLoading ? (
           <ProjectListSkeleton />
         ) : error ? (
           <div className="p-8 text-center">
-            <div className="text-red-500 mb-2">
+            <div className="text-destructive mb-2">
               <svg
                 className="w-12 h-12 mx-auto"
                 fill="none"
@@ -264,16 +266,16 @@ const AdminProjects: React.FC = () => {
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <h3 className="text-lg font-medium mb-2">
               Failed to load projects
             </h3>
-            <p className="text-gray-500">
+            <p className="text-muted-foreground">
               There was an error loading your projects. Please try again.
             </p>
           </div>
         ) : projects.length === 0 ? (
           <div className="p-8 text-center">
-            <div className="text-gray-400 mb-4">
+            <div className="text-muted-foreground mb-4">
               <svg
                 className="w-12 h-12 mx-auto"
                 fill="none"
@@ -288,10 +290,8 @@ const AdminProjects: React.FC = () => {
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No projects found
-            </h3>
-            <p className="text-gray-500 mb-4">
+            <h3 className="text-lg font-medium mb-2">No projects found</h3>
+            <p className="text-muted-foreground mb-4">
               {searchQuery || statusFilter
                 ? "Try adjusting your search or filters."
                 : "Get started by creating your first project."}
@@ -299,14 +299,14 @@ const AdminProjects: React.FC = () => {
             {!searchQuery && !statusFilter && (
               <button
                 onClick={handleCreateProject}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
               >
                 Create Your First Project
               </button>
             )}
           </div>
         ) : (
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y">
             <AnimatePresence>
               {projects.map((project) => (
                 <ProjectListItem
@@ -346,13 +346,13 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({
   const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
-        return "bg-green-100 text-green-800";
+        return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300";
       case "in_progress":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300";
       case "archived":
-        return "bg-gray-100 text-gray-800";
+        return "bg-secondary text-secondary-foreground";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-secondary text-secondary-foreground";
     }
   };
 
@@ -375,7 +375,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="p-6 hover:bg-gray-50 transition-colors"
+      className="p-6 hover:bg-muted/50 transition-colors"
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4 min-w-0 flex-1">
@@ -388,9 +388,9 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({
                 className="w-16 h-16 rounded-lg object-cover"
               />
             ) : (
-              <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
+              <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center">
                 <svg
-                  className="w-6 h-6 text-gray-400"
+                  className="w-6 h-6 text-muted-foreground"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -409,23 +409,21 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({
           {/* Project Info */}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-lg font-medium text-gray-900 truncate">
-                {project.title}
-              </h3>
+              <h3 className="text-lg font-medium truncate">{project.title}</h3>
               <span
                 className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}
               >
                 {getStatusText(project.status)}
               </span>
               {project.featured && (
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
                   ⭐ Featured
                 </span>
               )}
             </div>
 
             {project.short_description && (
-              <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+              <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
                 {project.short_description}
               </p>
             )}
@@ -435,13 +433,13 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({
                 {technologies.slice(0, 4).map((tech, index) => (
                   <span
                     key={index}
-                    className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700"
+                    className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-secondary text-secondary-foreground"
                   >
                     {tech}
                   </span>
                 ))}
                 {technologies.length > 4 && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-500">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-secondary text-muted-foreground">
                     +{technologies.length - 4}
                   </span>
                 )}
@@ -455,7 +453,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({
           <Link
             to={`/projects/${project.slug}`}
             target="_blank"
-            className="inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+            className="inline-flex items-center px-3 py-1 border text-sm font-medium rounded-md bg-background hover:bg-muted transition-colors"
           >
             <svg
               className="w-4 h-4 mr-1"
@@ -475,7 +473,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({
 
           <button
             onClick={onEdit}
-            className="inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+            className="inline-flex items-center px-3 py-1 border text-sm font-medium rounded-md bg-background hover:bg-muted transition-colors"
           >
             <svg
               className="w-4 h-4 mr-1"
@@ -496,7 +494,7 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({
           <button
             onClick={onDelete}
             disabled={isDeleting}
-            className="inline-flex items-center px-3 py-1 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="inline-flex items-center px-3 py-1 border border-destructive text-sm font-medium rounded-md text-destructive bg-background hover:bg-destructive/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <svg
               className="w-4 h-4 mr-1"
@@ -522,24 +520,24 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({
 // Loading skeleton
 const ProjectListSkeleton: React.FC = () => {
   return (
-    <div className="divide-y divide-gray-200">
+    <div className="divide-y">
       {Array.from({ length: 5 }).map((_, index) => (
         <div key={index} className="p-6 animate-pulse">
           <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 bg-gray-200 rounded-lg"></div>
+            <div className="w-16 h-16 bg-muted rounded-lg"></div>
             <div className="flex-1 min-w-0">
-              <div className="h-5 bg-gray-200 rounded w-1/3 mb-2"></div>
-              <div className="h-4 bg-gray-200 rounded w-2/3 mb-2"></div>
+              <div className="h-5 bg-muted rounded w-1/3 mb-2"></div>
+              <div className="h-4 bg-muted rounded w-2/3 mb-2"></div>
               <div className="flex gap-2">
-                <div className="h-5 w-16 bg-gray-200 rounded"></div>
-                <div className="h-5 w-20 bg-gray-200 rounded"></div>
-                <div className="h-5 w-14 bg-gray-200 rounded"></div>
+                <div className="h-5 w-16 bg-muted rounded"></div>
+                <div className="h-5 w-20 bg-muted rounded"></div>
+                <div className="h-5 w-14 bg-muted rounded"></div>
               </div>
             </div>
             <div className="flex space-x-2">
-              <div className="h-8 w-16 bg-gray-200 rounded"></div>
-              <div className="h-8 w-12 bg-gray-200 rounded"></div>
-              <div className="h-8 w-16 bg-gray-200 rounded"></div>
+              <div className="h-8 w-16 bg-muted rounded"></div>
+              <div className="h-8 w-12 bg-muted rounded"></div>
+              <div className="h-8 w-16 bg-muted rounded"></div>
             </div>
           </div>
         </div>

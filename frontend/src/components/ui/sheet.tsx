@@ -22,11 +22,12 @@ export const SheetContent = React.forwardRef<
       <DialogPrimitive.Content
         ref={ref}
         className={cn(
-          "fixed z-50 bg-card p-6 shadow-lg",
+          "fixed z-50 bg-card p-6 shadow-lg border-l border-border",
           side === "right" && cn("top-0 right-0 h-full", widthClassName),
-          side === "left" && cn("top-0 left-0 h-full", widthClassName),
-          side === "top" && "top-0 left-0 w-full",
-          side === "bottom" && "bottom-0 left-0 w-full",
+          side === "left" &&
+            cn("top-0 left-0 h-full border-l-0 border-r", widthClassName),
+          side === "top" && "top-0 left-0 w-full border-l-0 border-b",
+          side === "bottom" && "bottom-0 left-0 w-full border-l-0 border-t",
           className,
         )}
         {...props}
