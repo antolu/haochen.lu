@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   DndContext,
   type DragEndEvent,
@@ -15,6 +16,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import {
   GripVertical,
+  Menu,
   Star,
   Edit3,
   Trash2,
@@ -39,6 +41,7 @@ import { Badge } from "../ui/badge";
 interface SortablePhotoListProps {
   photos: Photo[];
   reorderEnabled: boolean;
+  viewMode: "grid" | "list";
   onReorder: (ordered: Photo[]) => void;
   onEdit: (photo: Photo) => void;
   onToggleFeatured: (photo: Photo) => void;
@@ -49,6 +52,7 @@ interface SortablePhotoListProps {
 const SortablePhotoList: React.FC<SortablePhotoListProps> = ({
   photos,
   reorderEnabled,
+  viewMode,
   onReorder,
   onEdit,
   onToggleFeatured,
@@ -120,11 +124,13 @@ const SortablePhotoList: React.FC<SortablePhotoListProps> = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {photos.map((photo) => (
+              {photos.map((photo, index) => (
                 <SortableRow
                   key={photo.id}
                   photo={photo}
+                  index={index}
                   reorderEnabled={reorderEnabled}
+                  viewMode={viewMode}
                   onEdit={onEdit}
                   onToggleFeatured={onToggleFeatured}
                   onDelete={onDelete}
@@ -140,7 +146,9 @@ const SortablePhotoList: React.FC<SortablePhotoListProps> = ({
 
 interface SortableRowProps {
   photo: Photo;
+  index: number;
   reorderEnabled: boolean;
+  viewMode: "grid" | "list";
   onEdit: (photo: Photo) => void;
   onToggleFeatured: (photo: Photo) => void;
   onDelete: (photo: Photo) => void;
@@ -148,7 +156,9 @@ interface SortableRowProps {
 
 const SortableRow: React.FC<SortableRowProps> = ({
   photo,
+  index,
   reorderEnabled,
+  viewMode,
   onEdit,
   onToggleFeatured,
   onDelete,
@@ -172,13 +182,19 @@ const SortableRow: React.FC<SortableRowProps> = ({
   };
 
   return (
-    <TableRow
+    <motion.tr
       ref={setNodeRef}
       style={style}
+      animate={{
+        backgroundColor: reorderEnabled
+          ? "rgb(255 251 235)" // amber-50
+          : "rgb(255 255 255)", // white
+      }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
       className={cn(
-        "group",
+        "group border-b border-gray-200 transition-colors",
         reorderEnabled ? "cursor-move" : "cursor-pointer",
-        isDragging && "bg-amber-50",
+        isDragging && "bg-amber-100 shadow-sm",
       )}
       onClick={() => {
         if (!reorderEnabled) {
@@ -187,28 +203,31 @@ const SortableRow: React.FC<SortableRowProps> = ({
       }}
     >
       <TableCell className="w-12">
-        <button
-          type="button"
-          {...listeners}
-          {...attributes}
-          className={cn(
-            "mx-auto flex h-8 w-8 items-center justify-center rounded-full border border-dashed border-gray-300 text-gray-500 transition",
-            reorderEnabled
-              ? "hover:border-amber-400 hover:text-amber-500"
-              : "opacity-0 group-hover:opacity-100",
-            !reorderEnabled && "cursor-default",
+        <AnimatePresence>
+          {reorderEnabled && (
+            <motion.button
+              type="button"
+              initial={{ opacity: 0, scale: 0.8, x: -10 }}
+              animate={{ opacity: 1, scale: 1, x: 0 }}
+              exit={{ opacity: 0, scale: 0.8, x: -10 }}
+              transition={{
+                duration: 0.2,
+                ease: "easeOut",
+                delay: index * 0.02,
+              }}
+              {...listeners}
+              {...attributes}
+              className="mx-auto flex h-8 w-8 items-center justify-center rounded-full border border-dashed border-gray-300 text-gray-500 transition hover:border-amber-400 hover:text-amber-500"
+              aria-label="Drag to reorder"
+            >
+              {viewMode === "list" ? (
+                <Menu className="h-4 w-4" />
+              ) : (
+                <GripVertical className="h-4 w-4" />
+              )}
+            </motion.button>
           )}
-          disabled={!reorderEnabled}
-          aria-label="Drag to reorder"
-          onClick={(event) => {
-            if (!reorderEnabled) {
-              event.preventDefault();
-              event.stopPropagation();
-            }
-          }}
-        >
-          <GripVertical className="h-4 w-4" />
-        </button>
+        </AnimatePresence>
       </TableCell>
       <TableCell className="w-24">
         <div className="relative h-14 w-20 overflow-hidden rounded-md">
@@ -235,7 +254,6 @@ const SortableRow: React.FC<SortableRowProps> = ({
               {photo.description}
             </div>
           )}
-          <div className="text-[11px] text-gray-400">Order #{photo.order}</div>
         </div>
       </TableCell>
       <TableCell>
@@ -314,7 +332,7 @@ const SortableRow: React.FC<SortableRowProps> = ({
           </button>
         </div>
       </TableCell>
-    </TableRow>
+    </motion.tr>
   );
 };
 
