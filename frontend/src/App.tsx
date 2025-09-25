@@ -15,6 +15,7 @@ import ProjectDetailPage from "./pages/ProjectDetailPage";
 import BlogPage from "./pages/BlogPage";
 import BlogPostPage from "./pages/BlogPostPage";
 import LoginPage from "./pages/LoginPage";
+import NotFoundPage from "./pages/NotFoundPage";
 
 // Admin pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -94,6 +95,9 @@ function App() {
               />
               <Route path="content" element={<AdminContent />} />
             </Route>
+
+            {/* 404 Catch-all route */}
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
 
           <Toaster
