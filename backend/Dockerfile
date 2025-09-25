@@ -22,14 +22,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy pyproject.toml first for better caching
+# Copy pyproject first to leverage Docker layer cache for dependencies
 COPY pyproject.toml ./
 
-# Install Python dependencies
-RUN pip install --no-cache-dir --upgrade pip==23.3.1 && \
-    pip install --no-cache-dir -e .
+# Install Python dependencies and package (non-editable) using only pyproject for cache key
+RUN pip install --no-cache-dir .
 
-# Copy application code
+# Copy application code after dependencies are cached
 COPY . .
 
 # Create directories for uploads and compressed images

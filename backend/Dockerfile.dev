@@ -23,16 +23,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
-# With backend/ as build context, copy files directly
-# Copy project metadata first for better caching
-COPY . ./
+## Install dev tools first (stable cache)
+RUN pip install --no-cache-dir watchfiles==0.24.0
 
-# Install Python dependencies and development dependencies
-# hadolint ignore=DL3013
-# Prefer editable install to generate version file using setuptools-scm with ephemeral .git
-RUN --mount=type=bind,from=gitdir,src=.,target=/app/.git \
-    pip install --no-cache-dir -e . && \
-    pip install --no-cache-dir watchfiles==0.24.0
+# Copy project metadata next for dependency layer caching
+COPY pyproject.toml ./
+
+# Install Python dependencies using cacheable layer
+RUN pip install --no-cache-dir .
+
+# Copy source code after deps cached
+COPY . ./
 
 # Create uploads and compressed directories
 RUN mkdir -p /app/uploads /app/compressed
