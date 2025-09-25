@@ -50,7 +50,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
       return;
     }
 
-    const availableSlots = Math.max(maxFiles - uploadFiles.length, 0);
+    const availableSlots = Math.max((maxFiles ?? 0) - uploadFiles.length, 0);
     if (availableSlots === 0) {
       return;
     }
@@ -75,11 +75,14 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
         stage?: string;
         progress?: number;
       };
-      if (!detail?.progress) return;
+      if (typeof detail?.progress !== "number") return;
       setUploadFiles((prev) =>
         prev.map((f) =>
           f.id === file.id
-            ? { ...f, progress: Math.max(0, Math.min(100, detail.progress)) }
+            ? {
+                ...f,
+                progress: Math.max(0, Math.min(100, detail.progress ?? 0)),
+              }
             : f,
         ),
       );

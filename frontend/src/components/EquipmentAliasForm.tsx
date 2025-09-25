@@ -157,7 +157,7 @@ const EquipmentAliasForm: React.FC<EquipmentAliasFormProps> = ({
       const initialData: Record<string, string | boolean> = { is_active: true };
 
       currentFields.forEach((field) => {
-        const value = (alias as Record<string, unknown>)[field.key];
+        const value = (alias as unknown as Record<string, unknown>)[field.key];
         initialData[field.key] = (value as string) ?? "";
       });
 

@@ -61,7 +61,7 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
   const [title, setTitle] = useState<string>("");
   const [originalFile, setOriginalFile] = useState<File | null>(null);
-  const [isDragOver, setIsDragOver] = useState(false);
+  const [, setIsDragOver] = useState(false);
 
   const imgRef = useRef<HTMLImageElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -156,6 +156,11 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
     },
     [selectFile],
   );
+
+  // Silence unused handler warnings in contexts where drag events aren't bound
+  void onDragOver;
+  void onDragLeave;
+  void onDrop;
 
   const getCroppedImg = useCallback(async (): Promise<File | null> => {
     const image = imgRef.current;
