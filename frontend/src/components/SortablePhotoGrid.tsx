@@ -18,13 +18,17 @@ import SortablePhotoCard from "./SortablePhotoItem";
 interface SortablePhotoGridProps {
   photos: Photo[];
   onReorder: (photos: Photo[]) => void;
+  reorderEnabled?: boolean;
   disabled?: boolean;
+  onPhotoClick?: (photo: Photo, index: number) => void;
 }
 
 const SortablePhotoGrid: React.FC<SortablePhotoGridProps> = ({
   photos,
   onReorder,
+  reorderEnabled = true,
   disabled = false,
+  onPhotoClick,
 }) => {
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -38,7 +42,7 @@ const SortablePhotoGrid: React.FC<SortablePhotoGridProps> = ({
   const items = useMemo(() => photos.map((photo) => photo.id), [photos]);
 
   const handleDragEnd = (event: DragEndEvent) => {
-    if (disabled) {
+    if (disabled || !reorderEnabled) {
       return;
     }
     const { active, over } = event;
@@ -63,11 +67,14 @@ const SortablePhotoGrid: React.FC<SortablePhotoGridProps> = ({
             disabled && "opacity-60",
           )}
         >
-          {photos.map((photo) => (
+          {photos.map((photo, index) => (
             <SortablePhotoCard
               key={photo.id}
               photo={photo}
+              index={index}
+              reorderEnabled={reorderEnabled}
               disabled={disabled}
+              onPhotoClick={onPhotoClick}
             />
           ))}
         </div>
