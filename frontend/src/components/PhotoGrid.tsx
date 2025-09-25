@@ -258,14 +258,15 @@ const PhotoGrid = memo(
         >
           <div className="photo-grid">
             {photos.map((photo, index) => (
-              <PhotoCard
-                key={photo.id}
-                photo={photo}
-                index={index}
-                onClick={onPhotoClick}
-                showMetadata={showMetadata}
-                isHighlighted={highlightedPhotoId === photo.id}
-              />
+              <div key={photo.id} className="photo-grid-item">
+                <PhotoCard
+                  photo={photo}
+                  index={index}
+                  onClick={onPhotoClick}
+                  showMetadata={showMetadata}
+                  isHighlighted={highlightedPhotoId === photo.id}
+                />
+              </div>
             ))}
           </div>
         </div>

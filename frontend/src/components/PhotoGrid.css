@@ -7,6 +7,7 @@
   height: 100%;
   overflow: auto;
   padding: 1.5rem;
+  padding-bottom: 3.5rem;
 }
 
 .photo-grid {
@@ -14,6 +15,32 @@
   gap: 0.5rem;
   width: 100%;
   grid-template-columns: repeat(1, 1fr); /* Default: 1 column */
+  padding-bottom: 2rem;
+}
+
+.photo-grid-item {
+  display: block;
+  padding: 0.4rem;
+  position: relative;
+}
+
+.photo-grid-item::before {
+  content: "";
+  position: absolute;
+  inset: 0.2rem;
+  border-radius: 0.75rem;
+  background: rgba(15, 23, 42, 0.04);
+  transition:
+    transform 200ms ease,
+    opacity 200ms ease;
+  transform: scale(1.02);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.photo-grid-item:hover::before {
+  opacity: 1;
+  transform: scale(1.06);
 }
 
 /* Container Query Breakpoints for Grid */

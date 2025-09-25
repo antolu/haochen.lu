@@ -180,7 +180,7 @@ const PhotographyPage: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="text-center"
+            className="text-center mt-4"
           >
             <button
               onClick={handleLoadMore}
