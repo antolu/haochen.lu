@@ -79,7 +79,12 @@ const SortableItem: React.FC<ProjectImageItemProps> = ({ item, onRemove }) => {
         </div>
       </div>
       <button
-        onClick={() => onRemove(item.id)}
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onRemove(item.id);
+        }}
         className="inline-flex items-center px-3 py-1 border border-destructive text-sm font-medium rounded-md text-destructive bg-background hover:bg-destructive/10"
       >
         Remove
@@ -91,7 +96,7 @@ const SortableItem: React.FC<ProjectImageItemProps> = ({ item, onRemove }) => {
 const ProjectImagesManager: React.FC<ProjectImagesManagerProps> = ({
   projectId,
 }) => {
-  const { data: images = [], isLoading } = useProjectImages(projectId);
+  const { data: images = [], isLoading, refetch } = useProjectImages(projectId);
   const attachMutation = useAttachProjectImage(projectId);
   const removeMutation = useRemoveProjectImage(projectId);
   const reorderMutation = useReorderProjectImages(projectId);
@@ -136,7 +141,10 @@ const ProjectImagesManager: React.FC<ProjectImagesManagerProps> = ({
         <SimplePhotoUpload
           maxFiles={10}
           category="projects"
-          onComplete={onUploadComplete}
+          onComplete={(p) => {
+            onUploadComplete(p);
+            void refetch();
+          }}
         />
       </div>
 
@@ -160,7 +168,11 @@ const ProjectImagesManager: React.FC<ProjectImagesManagerProps> = ({
                     <SortableItem
                       key={img.id}
                       item={img}
-                      onRemove={(id) => void removeMutation.mutate(id)}
+                      onRemove={(id) => {
+                        void removeMutation.mutate(id, {
+                          onSuccess: () => void refetch(),
+                        });
+                      }}
                     />
                   ))}
                 </ul>

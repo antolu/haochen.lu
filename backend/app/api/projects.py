@@ -4,7 +4,7 @@ import json
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.repository_service import RepositoryInfo, repository_service
@@ -28,6 +28,7 @@ from app.dependencies import (
     _session_dependency,
 )
 from app.models.project import Project as ProjectModel
+from app.models.project_image import ProjectImage
 from app.schemas.project import (
     ProjectCreate,
     ProjectImageAttach,
@@ -42,6 +43,7 @@ from app.schemas.project import (
 )
 
 router = APIRouter()
+MAX_PROJECT_IMAGES = 10
 
 
 def _populate_photo_urls(photo_dict: dict) -> None:
@@ -82,17 +84,44 @@ async def list_projects(
 
     total = await get_project_count(db)
 
-    return ProjectListResponse(
-        projects=[ProjectResponse.model_validate(project) for project in projects],
-        total=total,
-    )
+    # Build responses with cover_image_url populated from first project image
+    responses: list[ProjectResponse] = []
+    for project in projects:
+        resp = ProjectResponse.model_validate(project).model_dump()
+        images = await list_project_images(db, project.id)
+        if images:
+            img_dict = ProjectImageResponse.model_validate(images[0]).model_dump()
+            photo_dict = img_dict.get("photo") or {}
+            _populate_photo_urls(photo_dict)
+            resp["cover_image_url"] = (
+                photo_dict.get("variants", {}).get("thumbnail", {}).get("url")
+                or photo_dict.get("variants", {}).get("small", {}).get("url")
+                or photo_dict.get("original_url")
+            )
+        responses.append(ProjectResponse.model_validate(resp))
+
+    return ProjectListResponse(projects=responses, total=total)
 
 
 @router.get("/featured", response_model=list[ProjectResponse])
 async def list_featured_projects(db: AsyncSession = _session_dependency):
     """Get featured projects."""
     projects = await get_projects(db, featured_only=True)
-    return [ProjectResponse.model_validate(project) for project in projects]
+    responses: list[ProjectResponse] = []
+    for project in projects:
+        resp = ProjectResponse.model_validate(project).model_dump()
+        images = await list_project_images(db, project.id)
+        if images:
+            img_dict = ProjectImageResponse.model_validate(images[0]).model_dump()
+            photo_dict = img_dict.get("photo") or {}
+            _populate_photo_urls(photo_dict)
+            resp["cover_image_url"] = (
+                photo_dict.get("variants", {}).get("thumbnail", {}).get("url")
+                or photo_dict.get("variants", {}).get("small", {}).get("url")
+                or photo_dict.get("original_url")
+            )
+        responses.append(ProjectResponse.model_validate(resp))
+    return responses
 
 
 @router.get("/technologies", response_model=list[str])
@@ -209,7 +238,18 @@ async def get_project_detail(
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
 
-    return ProjectResponse.model_validate(project)
+    resp = ProjectResponse.model_validate(project).model_dump()
+    images = await list_project_images(db, project.id)
+    if images:
+        img_dict = ProjectImageResponse.model_validate(images[0]).model_dump()
+        photo_dict = img_dict.get("photo") or {}
+        _populate_photo_urls(photo_dict)
+        resp["cover_image_url"] = (
+            photo_dict.get("variants", {}).get("thumbnail", {}).get("url")
+            or photo_dict.get("variants", {}).get("small", {}).get("url")
+            or photo_dict.get("original_url")
+        )
+    return ProjectResponse.model_validate(resp)
 
 
 @router.post("/reorder")
@@ -245,6 +285,18 @@ async def add_project_image(
     db: AsyncSession = _session_dependency,
     current_user=_current_admin_user_dependency,
 ):
+    # Enforce hard limit of 10 images per project
+    count_res = await db.execute(
+        select(func.count())
+        .select_from(ProjectImage)
+        .where(ProjectImage.project_id == project_id)
+    )
+    if (count_res.scalar() or 0) >= MAX_PROJECT_IMAGES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Maximum images per project is {MAX_PROJECT_IMAGES}",
+        )
+
     pi = await attach_project_image(
         db,
         project_id=project_id,

@@ -49,6 +49,7 @@ class ProjectResponse(ProjectBase):
     created_at: datetime
     updated_at: datetime
     order: int | None = 0
+    cover_image_url: str | None = None
 
     @field_validator("id", mode="before")
     @classmethod
