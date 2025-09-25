@@ -1,6 +1,6 @@
 """add access_level to photos
 
-Revision ID: 003_add_access_level_to_photos
+Revision ID: 002_add_access_level_to_photos
 Revises: 001_initial_schema
 Create Date: 2025-09-20 21:00:00.000000
 
@@ -14,7 +14,7 @@ from sqlalchemy.dialects import postgresql
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "003_add_access_level_to_photos"
+revision = "002_add_access_level_to_photos"
 down_revision = "001_initial_schema"
 branch_labels = None
 depends_on = None

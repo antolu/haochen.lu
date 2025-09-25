@@ -1,7 +1,7 @@
 """add camera and lens alias tables
 
-Revision ID: 004_add_camera_and_lens_alias_tables
-Revises: 003_add_access_level_to_photos
+Revision ID: 003_add_camera_and_lens_alias_tables
+Revises: 002_add_access_level_to_photos
 Create Date: 2025-09-21 01:31:24.516317
 
 """
@@ -14,8 +14,8 @@ from sqlalchemy.dialects.postgresql import UUID
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "004_add_alias_tables"
-down_revision = "003_add_access_level_to_photos"
+revision = "003_add_alias_tables"
+down_revision = "002_add_access_level_to_photos"
 branch_labels = None
 depends_on = None
 

@@ -1,7 +1,7 @@
 """Add profile pictures table
 
-Revision ID: 005_add_profile_pictures_table
-Revises: 004_add_alias_tables
+Revision ID: 004_add_profile_pictures_table
+Revises: 003_add_alias_tables
 Create Date: 2025-09-22 21:38:20.120181
 
 """
@@ -14,8 +14,8 @@ from sqlalchemy.dialects import postgresql
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "005_add_profile_pictures_table"
-down_revision = "004_add_alias_tables"
+revision = "004_add_profile_pictures_table"
+down_revision = "003_add_alias_tables"
 branch_labels = None
 depends_on = None
 

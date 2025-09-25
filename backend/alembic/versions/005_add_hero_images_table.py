@@ -1,7 +1,7 @@
 """Add hero_images table for hero image management
 
-Revision ID: 006_add_hero_images_table
-Revises: 005_add_profile_pictures_table
+Revision ID: 005_add_hero_images_table
+Revises: 004_add_profile_pictures_table
 Create Date: 2025-09-24 12:00:00.000000
 
 """
@@ -14,8 +14,8 @@ from sqlalchemy.dialects.postgresql import JSON, UUID
 from alembic import op
 
 # revision identifiers
-revision = "006_add_hero_images_table"
-down_revision = "005_add_profile_pictures_table"
+revision = "005_add_hero_images_table"
+down_revision = "004_add_profile_pictures_table"
 branch_labels = None
 depends_on = None
 
