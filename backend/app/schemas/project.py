@@ -115,3 +115,11 @@ class ProjectImageAttach(BaseModel):
 class ProjectImageReorderRequest(BaseModel):
     items: list[ReorderItem]
     normalize: bool = True
+
+
+class ProjectPreviewResponse(BaseModel):
+    content: str
+    repo_url: str
+    raw_url: str | None = None
+    last_updated: datetime | None = None
+    source: str | None = None

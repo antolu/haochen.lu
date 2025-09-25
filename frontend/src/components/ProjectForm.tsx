@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import MDEditor from "@uiw/react-md-editor";
 import { motion } from "framer-motion";
 import RepositoryConnector from "./RepositoryConnector";
+import ProjectImagesManager from "./admin/ProjectImagesManager";
 import TagMultiSelect from "./admin/TagMultiSelect";
 import {
   useCreateProject,
@@ -30,7 +31,6 @@ interface FormData {
   short_description: string;
   github_url: string;
   demo_url: string;
-  image_url: string;
   technologies: string;
   featured: boolean;
   status: "active" | "archived" | "in_progress";
@@ -73,7 +73,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
       short_description: "",
       github_url: "",
       demo_url: "",
-      image_url: "",
       technologies: "",
       featured: false,
       status: "active",
@@ -99,7 +98,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
         short_description: project.short_description ?? "",
         github_url: project.github_url ?? "",
         demo_url: project.demo_url ?? "",
-        image_url: project.image_url ?? "",
         technologies: technologies.join(", "),
         featured: project.featured,
         status: project.status,
@@ -187,7 +185,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
         short_description: data.short_description || undefined,
         github_url: data.github_url || undefined,
         demo_url: data.demo_url || undefined,
-        image_url: data.image_url || undefined,
         technologies: formatTechnologies(technologies),
         featured: data.featured,
         status: data.status,
@@ -365,22 +362,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
               </p>
             </div>
 
-            {/* Featured */}
-            <div className="md:col-span-2">
-              <label className="flex items-center">
-                <input
-                  {...register("featured")}
-                  type="checkbox"
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <span className="ml-2 text-sm text-gray-700">
-                  Mark as featured project
-                </span>
-              </label>
-              <p className="mt-1 text-xs text-gray-500">
-                Featured projects appear on the homepage and in special sections
-              </p>
-            </div>
+            {/* Removed Featured project toggle */}
           </div>
         </div>
 
@@ -412,18 +394,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
               />
             </div>
 
-            {/* Image URL */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Project Image URL
-              </label>
-              <input
-                {...register("image_url")}
-                type="url"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="https://example.com/image.jpg"
-              />
-            </div>
+            {/* Removed Image URL: project uses gallery images */}
           </div>
         </div>
 
@@ -433,25 +404,9 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
             Project Description
           </h3>
 
-          {/* README Integration */}
+          {/* README Integration - only available after successful preview */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
-              <label className="flex items-center">
-                <input
-                  {...register("use_readme")}
-                  type="checkbox"
-                  checked={useReadme}
-                  onChange={(e) => {
-                    setUseReadme(e.target.checked);
-                    setValue("use_readme", e.target.checked);
-                  }}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <span className="ml-2 text-sm font-medium text-gray-700">
-                  Use README.md from repository
-                </span>
-              </label>
-
               {watchedGithubUrl && (
                 <button
                   type="button"
@@ -465,6 +420,27 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                 </button>
               )}
             </div>
+
+            {/* Enable toggle only after we have a preview */}
+            {readmePreview && (
+              <div className="mb-2">
+                <label className="flex items-center">
+                  <input
+                    {...register("use_readme")}
+                    type="checkbox"
+                    checked={useReadme}
+                    onChange={(e) => {
+                      setUseReadme(e.target.checked);
+                      setValue("use_readme", e.target.checked);
+                    }}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <span className="ml-2 text-sm font-medium text-gray-700">
+                    Use README.md from repository
+                  </span>
+                </label>
+              </div>
+            )}
 
             {readmePreview && (
               <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -522,6 +498,16 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
             </p>
           </div>
         </div>
+
+        {/* Images Manager */}
+        {project && (
+          <div className="bg-white p-6 rounded-lg border border-gray-200">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Project Images
+            </h3>
+            <ProjectImagesManager projectId={project.id} />
+          </div>
+        )}
 
         {/* Form Actions */}
         <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">

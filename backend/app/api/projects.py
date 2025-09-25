@@ -34,6 +34,7 @@ from app.schemas.project import (
     ProjectImageReorderRequest,
     ProjectImageResponse,
     ProjectListResponse,
+    ProjectPreviewResponse,
     ProjectReorderRequest,
     ProjectResponse,
     ProjectUpdate,
@@ -164,6 +165,30 @@ async def validate_repository_url(
         "url": repo_info.url,
         "valid": True,
     }
+
+
+@router.post("/preview-readme", response_model=ProjectPreviewResponse)
+async def preview_readme(request: dict, current_user=_current_admin_user_dependency):
+    """Fetch README content directly from a repository URL (admin only)."""
+    repo_url = request.get("repo_url")
+    if not repo_url:
+        raise HTTPException(status_code=400, detail="repo_url is required")
+
+    repo_info = repository_service.parse_repository_url(repo_url)
+    if not repo_info:
+        raise HTTPException(status_code=400, detail="Invalid repository URL")
+
+    content, last_updated = await repository_service.fetch_readme(repo_info)
+    if not content:
+        raise HTTPException(status_code=404, detail="README not found")
+
+    return ProjectPreviewResponse(
+        content=content,
+        repo_url=repo_url,
+        raw_url=None,
+        last_updated=last_updated,
+        source=repo_info.type,
+    )
 
 
 @router.get("/{project_identifier}", response_model=ProjectResponse)

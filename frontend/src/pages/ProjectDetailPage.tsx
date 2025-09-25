@@ -1,11 +1,19 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   useProject,
   useProjectReadme,
   parseTechnologies,
+  useProjectImages,
 } from "../hooks/useProjects";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "../components/ui/carousel";
 type ProjectReadmeResponse = {
   content?: string;
   last_updated?: string;
@@ -22,6 +30,7 @@ const ProjectDetailPage: React.FC = () => {
     project?.id ?? "",
     project?.use_readme ? project?.github_url : undefined,
   );
+  const { data: projectImages = [] } = useProjectImages(project?.id ?? "");
 
   if (isLoading) {
     return <ProjectDetailSkeleton />;
@@ -127,35 +136,65 @@ const ProjectDetailPage: React.FC = () => {
       <section className="bg-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Project Image */}
+            {/* Project Images Carousel (falls back to single cover image) */}
             <div className="lg:col-span-2">
               <motion.div
-                className="aspect-video bg-gray-100 rounded-xl overflow-hidden shadow-lg"
+                className="rounded-xl overflow-hidden shadow-lg"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.6 }}
               >
-                {project.image_url ? (
-                  <img
-                    src={project.image_url}
-                    alt={project.title}
-                    className="w-full h-full object-cover"
-                  />
+                {projectImages.length > 0 ? (
+                  <Carousel className="w-full">
+                    <CarouselContent>
+                      {projectImages.map((pi: any) => {
+                        const src =
+                          pi.photo?.variants?.large?.url ||
+                          pi.photo?.variants?.medium?.url ||
+                          pi.photo?.original_url;
+                        return (
+                          <CarouselItem key={pi.id}>
+                            <div className="aspect-video bg-gray-100">
+                              {src && (
+                                <img
+                                  src={src}
+                                  alt={pi.alt_text ?? project?.title ?? ""}
+                                  className="w-full h-full object-cover"
+                                />
+                              )}
+                            </div>
+                          </CarouselItem>
+                        );
+                      })}
+                    </CarouselContent>
+                    <CarouselPrevious />
+                    <CarouselNext />
+                  </Carousel>
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                    <svg
-                      className="w-24 h-24 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1}
-                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                  <div className="aspect-video bg-gray-100 flex items-center justify-center">
+                    {project?.image_url ? (
+                      <img
+                        src={project.image_url}
+                        alt={project.title}
+                        className="w-full h-full object-cover"
                       />
-                    </svg>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                        <svg
+                          className="w-24 h-24 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1}
+                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                          />
+                        </svg>
+                      </div>
+                    )}
                   </div>
                 )}
               </motion.div>
