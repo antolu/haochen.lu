@@ -108,10 +108,10 @@ const SortablePhotoList: React.FC<SortablePhotoListProps> = ({
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
       <SortableContext items={items} strategy={verticalListSortingStrategy}>
-        <div className="overflow-hidden rounded-lg border border-gray-200">
+        <div className="overflow-hidden rounded-lg border bg-card">
           <Table>
             <TableHeader>
-              <TableRow className="bg-gray-50">
+              <TableRow className="bg-muted">
                 <TableHead
                   className="w-12"
                   aria-label="Reorder handle"
@@ -186,13 +186,11 @@ const SortableRow: React.FC<SortableRowProps> = ({
       ref={setNodeRef}
       style={style}
       animate={{
-        backgroundColor: reorderEnabled
-          ? "rgb(255 251 235)" // amber-50
-          : "rgb(255 255 255)", // white
+        backgroundColor: reorderEnabled ? "rgb(255 251 235)" : undefined,
       }}
       transition={{ duration: 0.3, ease: "easeOut" }}
       className={cn(
-        "group border-b border-gray-200 transition-colors",
+        "group border-b border-border transition-colors",
         reorderEnabled ? "cursor-move" : "cursor-pointer",
         isDragging && "bg-amber-100 shadow-sm",
       )}
@@ -217,7 +215,7 @@ const SortableRow: React.FC<SortableRowProps> = ({
               }}
               {...listeners}
               {...attributes}
-              className="mx-auto flex h-8 w-8 items-center justify-center rounded-full border border-dashed border-gray-300 text-gray-500 transition hover:border-amber-400 hover:text-amber-500"
+              className="mx-auto flex h-8 w-8 items-center justify-center rounded-full border border-dashed border-border text-muted-foreground transition hover:border-amber-400 hover:text-amber-500"
               aria-label="Drag to reorder"
             >
               {viewMode === "list" ? (
@@ -246,18 +244,16 @@ const SortableRow: React.FC<SortableRowProps> = ({
       </TableCell>
       <TableCell>
         <div className="space-y-1">
-          <div className="font-medium text-gray-900">
-            {photo.title || "Untitled"}
-          </div>
+          <div className="font-medium">{photo.title || "Untitled"}</div>
           {photo.description && (
-            <div className="line-clamp-2 text-xs text-gray-500">
+            <div className="line-clamp-2 text-xs text-muted-foreground">
               {photo.description}
             </div>
           )}
         </div>
       </TableCell>
       <TableCell>
-        <div className="space-y-1 text-xs text-gray-500">
+        <div className="space-y-1 text-xs text-muted-foreground">
           {photo.date_taken && (
             <div className="flex items-center gap-1">
               <Calendar className="h-3 w-3" />
@@ -296,7 +292,7 @@ const SortableRow: React.FC<SortableRowProps> = ({
               event.stopPropagation();
               onToggleFeatured(photo);
             }}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition hover:bg-gray-100 hover:text-yellow-600"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-yellow-600"
             aria-label={
               photo.featured ? "Remove from featured" : "Mark as featured"
             }
@@ -314,7 +310,7 @@ const SortableRow: React.FC<SortableRowProps> = ({
               event.stopPropagation();
               onEdit(photo);
             }}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition hover:bg-gray-100 hover:text-blue-600"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-blue-600"
             aria-label="Edit photo"
           >
             <Edit3 className="h-4 w-4" />
@@ -325,7 +321,7 @@ const SortableRow: React.FC<SortableRowProps> = ({
               event.stopPropagation();
               onDelete(photo);
             }}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-red-500 transition hover:bg-red-100"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-red-500 transition hover:bg-red-100 dark:hover:bg-red-900/30"
             aria-label="Delete photo"
           >
             <Trash2 className="h-4 w-4" />

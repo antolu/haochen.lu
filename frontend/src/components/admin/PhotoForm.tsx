@@ -12,6 +12,7 @@ import { useUpdatePhoto, usePhotoTags } from "../../hooks/usePhotos";
 import TagMultiSelect from "./TagMultiSelect";
 import { formatDateTime } from "../../utils/dateFormat";
 import { selectOptimalImage, ImageUseCase } from "../../utils/imageUtils";
+import { Button } from "../ui/button";
 // Remove direct import of MapPicker and lazy-load it instead
 const LazyMapPicker = lazy(() => import("../MapPicker"));
 
@@ -150,36 +151,28 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
       >
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Edit Photo</h2>
-            <p className="text-sm text-gray-600 mt-1">
+            <h2 className="text-2xl font-bold">Edit Photo</h2>
+            <p className="text-sm text-muted-foreground mt-1">
               Update photo information and tags
             </p>
           </div>
           <div className="flex gap-3">
             {onCancel && (
-              <button
-                type="button"
-                onClick={onCancel}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-              >
+              <Button type="button" variant="outline" onClick={onCancel}>
                 Cancel
-              </button>
+              </Button>
             )}
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+            <Button type="submit" disabled={isSaving}>
               {isSaving ? "Saving..." : "Save Changes"}
-            </button>
+            </Button>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Preview Panel */}
           <div className="md:col-span-1">
-            <div className="bg-white p-3 rounded-lg border border-gray-200 sticky top-6">
-              <div className="aspect-square w-full overflow-hidden rounded-md bg-gray-100 group cursor-zoom-in relative">
+            <div className="bg-card p-3 rounded-lg border sticky top-6">
+              <div className="aspect-square w-full overflow-hidden rounded-md bg-muted group cursor-zoom-in relative">
                 {/* Prefer a medium/large variant, fallback to original */}
                 {(() => {
                   const optimalImage = selectOptimalImage(
@@ -207,18 +200,18 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
                   aria-label="Open full image"
                 />
               </div>
-              <div className="mt-3 text-xs text-gray-600 space-y-1">
+              <div className="mt-3 text-xs text-muted-foreground space-y-1">
                 <div className="truncate">
-                  <span className="font-medium text-gray-700">Filename:</span>{" "}
+                  <span className="font-medium text-foreground">Filename:</span>{" "}
                   {photo.filename}
                 </div>
                 <div>
-                  <span className="font-medium text-gray-700">Size:</span>{" "}
+                  <span className="font-medium text-foreground">Size:</span>{" "}
                   {photo.width}×{photo.height}
                 </div>
                 {photo.date_taken && (
                   <div>
-                    <span className="font-medium text-gray-700">Taken:</span>{" "}
+                    <span className="font-medium text-foreground">Taken:</span>{" "}
                     {formatDateTime(photo.date_taken)}
                   </div>
                 )}
@@ -228,13 +221,11 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
 
           {/* Form Fields */}
           <div className="md:col-span-2">
-            <div className="bg-white p-6 rounded-lg border border-gray-200 space-y-6">
+            <div className="bg-card p-6 rounded-lg border space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Title
-                </label>
+                <label className="block text-sm font-medium">Title</label>
                 <input
-                  className="mt-1 w-full border border-gray-300 rounded px-3 py-2"
+                  className="mt-1 w-full border border-input bg-background text-foreground rounded px-3 py-2"
                   value={form.title}
                   onChange={(e) =>
                     setForm((f) => ({ ...f, title: e.target.value }))
@@ -243,11 +234,9 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Description
-                </label>
+                <label className="block text-sm font-medium">Description</label>
                 <textarea
-                  className="mt-1 w-full border border-gray-300 rounded px-3 py-2"
+                  className="mt-1 w-full border border-input bg-background text-foreground rounded px-3 py-2"
                   rows={6}
                   value={form.description}
                   onChange={(e) =>
@@ -258,11 +247,9 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Category
-                  </label>
+                  <label className="block text-sm font-medium">Category</label>
                   <input
-                    className="mt-1 w-full border border-gray-300 rounded px-3 py-2"
+                    className="mt-1 w-full border border-input bg-background text-foreground rounded px-3 py-2"
                     value={form.category}
                     onChange={(e) =>
                       setForm((f) => ({ ...f, category: e.target.value }))
@@ -270,11 +257,9 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Comments
-                  </label>
+                  <label className="block text-sm font-medium">Comments</label>
                   <input
-                    className="mt-1 w-full border border-gray-300 rounded px-3 py-2"
+                    className="mt-1 w-full border border-input bg-background text-foreground rounded px-3 py-2"
                     value={form.comments}
                     onChange={(e) =>
                       setForm((f) => ({ ...f, comments: e.target.value }))
@@ -284,9 +269,7 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Tags
-                </label>
+                <label className="block text-sm font-medium">Tags</label>
                 <TagMultiSelect
                   value={(form.tags ?? "")
                     .split(",")
@@ -309,20 +292,18 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
                       setForm((f) => ({ ...f, featured: e.target.checked }))
                     }
                   />
-                  <span className="text-sm text-gray-700">Featured</span>
+                  <span className="text-sm">Featured</span>
                 </label>
               </div>
 
               {/* Location Section */}
-              <div className="pt-2 border-t border-gray-200">
+              <div className="pt-2 border-t">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-medium text-gray-900">
-                    Location
-                  </h3>
+                  <h3 className="text-sm font-medium">Location</h3>
                   <div className="flex gap-2">
                     <button
                       type="button"
-                      className="text-sm text-gray-600 hover:text-gray-800 underline"
+                      className="text-sm text-muted-foreground hover:text-foreground underline"
                       onClick={() =>
                         setForm((f) => ({
                           ...f,
@@ -339,7 +320,7 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
                       typeof photo.location_lon === "number" && (
                         <button
                           type="button"
-                          className="text-sm text-gray-600 hover:text-gray-800 underline"
+                          className="text-sm text-muted-foreground hover:text-foreground underline"
                           onClick={() =>
                             setForm((f) => ({
                               ...f,
@@ -357,7 +338,7 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
                 <div className="grid grid-cols-1 gap-4">
                   <Suspense
                     fallback={
-                      <div className="h-[320px] w-full rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center text-gray-500">
+                      <div className="h-[320px] w-full rounded-lg border bg-muted flex items-center justify-center text-muted-foreground">
                         Loading map...
                       </div>
                     }
@@ -383,11 +364,11 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">
+                      <label className="block text-sm font-medium">
                         Latitude
                       </label>
                       <input
-                        className="mt-1 w-full border border-gray-300 rounded px-3 py-2"
+                        className="mt-1 w-full border border-input bg-background text-foreground rounded px-3 py-2"
                         inputMode="decimal"
                         value={
                           typeof form.location_lat === "number"
@@ -402,11 +383,11 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">
+                      <label className="block text-sm font-medium">
                         Longitude
                       </label>
                       <input
-                        className="mt-1 w-full border border-gray-300 rounded px-3 py-2"
+                        className="mt-1 w-full border border-input bg-background text-foreground rounded px-3 py-2"
                         inputMode="decimal"
                         value={
                           typeof form.location_lon === "number"
@@ -424,11 +405,11 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
 
                   <div className="grid grid-cols-1 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">
+                      <label className="block text-sm font-medium">
                         Location Name
                       </label>
                       <input
-                        className="mt-1 w-full border border-gray-300 rounded px-3 py-2"
+                        className="mt-1 w-full border border-input bg-background text-foreground rounded px-3 py-2"
                         value={form.location_name}
                         onChange={(e) =>
                           setForm((f) => ({
@@ -440,11 +421,11 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">
+                      <label className="block text-sm font-medium">
                         Address
                       </label>
                       <input
-                        className="mt-1 w-full border border-gray-300 rounded px-3 py-2"
+                        className="mt-1 w-full border border-input bg-background text-foreground rounded px-3 py-2"
                         value={form.location_address}
                         onChange={(e) =>
                           setForm((f) => ({

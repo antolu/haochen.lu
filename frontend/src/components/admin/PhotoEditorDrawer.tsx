@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import type { Photo } from "../../types";
 import { useUpdatePhoto, usePhotoTags } from "../../hooks/usePhotos";
 import TagMultiSelect from "./TagMultiSelect";
+import { Button } from "../ui/button";
 
 interface PhotoEditorDrawerProps {
   photo: Photo | null;
@@ -72,7 +73,7 @@ const PhotoEditorDrawer: React.FC<PhotoEditorDrawerProps> = ({
       />
 
       <motion.div
-        className="absolute top-0 right-0 h-full w-full max-w-md bg-white shadow-xl p-6 overflow-y-auto"
+        className="absolute top-0 right-0 h-full w-full max-w-md bg-card text-card-foreground border-l p-6 overflow-y-auto"
         initial={{ x: "100%" }}
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
@@ -80,12 +81,9 @@ const PhotoEditorDrawer: React.FC<PhotoEditorDrawerProps> = ({
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Edit Photo</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
+          <Button variant="ghost" onClick={onClose} className="h-8 w-8 p-0">
             ✕
-          </button>
+          </Button>
         </div>
 
         <div className="space-y-4">
@@ -94,7 +92,7 @@ const PhotoEditorDrawer: React.FC<PhotoEditorDrawerProps> = ({
               Title
             </label>
             <input
-              className="mt-1 w-full border border-gray-300 rounded px-3 py-2"
+              className="mt-1 w-full border border-input bg-background text-foreground rounded px-3 py-2"
               value={form.title}
               onChange={(e) =>
                 setForm((f) => ({ ...f, title: e.target.value }))
@@ -107,7 +105,7 @@ const PhotoEditorDrawer: React.FC<PhotoEditorDrawerProps> = ({
               Description
             </label>
             <textarea
-              className="mt-1 w-full border border-gray-300 rounded px-3 py-2"
+              className="mt-1 w-full border border-input bg-background text-foreground rounded px-3 py-2"
               rows={4}
               value={form.description}
               onChange={(e) =>
@@ -121,7 +119,7 @@ const PhotoEditorDrawer: React.FC<PhotoEditorDrawerProps> = ({
               Category
             </label>
             <input
-              className="mt-1 w-full border border-gray-300 rounded px-3 py-2"
+              className="mt-1 w-full border border-input bg-background text-foreground rounded px-3 py-2"
               value={form.category}
               onChange={(e) =>
                 setForm((f) => ({ ...f, category: e.target.value }))
@@ -154,25 +152,21 @@ const PhotoEditorDrawer: React.FC<PhotoEditorDrawerProps> = ({
                   setForm((f) => ({ ...f, featured: e.target.checked }))
                 }
               />
-              <span className="text-sm text-gray-700">Featured</span>
+              <span className="text-sm">Featured</span>
             </label>
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 rounded border border-gray-300"
-            >
+            <Button variant="outline" onClick={onClose}>
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => {
                 void handleSave();
               }}
-              className="px-4 py-2 rounded bg-blue-600 text-white"
             >
               Save
-            </button>
+            </Button>
           </div>
         </div>
       </motion.div>
