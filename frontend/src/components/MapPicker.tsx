@@ -1,31 +1,15 @@
 import React, {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
-  useMemo,
 } from "react";
-import L from "leaflet";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  useMapEvents,
-  useMap,
-} from "react-leaflet";
-import { getTileConfig } from "../utils/mapUtils";
-
-// Fix for default markers in react-leaflet
-delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })
-  ._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
-  iconUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
-  shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
-});
+import maplibregl, {
+  Map as MapLibreMap,
+  Marker as MapLibreMarker,
+} from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 
 interface MapPickerProps {
   latitude?: number;
@@ -39,47 +23,12 @@ interface MapPickerProps {
   className?: string;
 }
 
-interface MapEventsProps {
-  onLocationSelect?: (lat: number, lng: number) => void;
-  disabled?: boolean;
-}
-
 interface SearchResult {
   location_name: string;
   location_address?: string;
   latitude: number;
   longitude: number;
 }
-
-// Component to handle map click events
-const MapEvents: React.FC<MapEventsProps> = ({
-  onLocationSelect,
-  disabled,
-}) => {
-  useMapEvents({
-    click: (e) => {
-      if (!disabled && onLocationSelect) {
-        onLocationSelect(e.latlng.lat, e.latlng.lng);
-      }
-    },
-  });
-  return null;
-};
-
-// Component to update map view when coordinates change
-const MapController: React.FC<{
-  latitude: number;
-  longitude: number;
-  zoom: number;
-}> = ({ latitude, longitude, zoom }) => {
-  const map = useMap();
-
-  useEffect(() => {
-    map.setView([latitude, longitude], zoom);
-  }, [map, latitude, longitude, zoom]);
-
-  return null;
-};
 
 // Search component for location lookup
 const LocationSearch: React.FC<{
@@ -204,9 +153,21 @@ const MapPicker: React.FC<MapPickerProps> = ({
   showSearch = true,
   className = "",
 }) => {
-  const tileConfig = useMemo(() => getTileConfig(), []);
   const [currentLat, setCurrentLat] = useState(latitude);
   const [currentLng, setCurrentLng] = useState(longitude);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<MapLibreMap | null>(null);
+  const markerRef = useRef<MapLibreMarker | null>(null);
+
+  const PREFERRED_DEFAULT_STYLE_URL =
+    "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
+  const FALLBACK_STYLE_URL = PREFERRED_DEFAULT_STYLE_URL;
+  const DEFAULT_STYLE_URL = useMemo(
+    () =>
+      (import.meta as unknown as { env: { VITE_MAP_STYLE_URL?: string } }).env
+        .VITE_MAP_STYLE_URL || PREFERRED_DEFAULT_STYLE_URL,
+    [],
+  );
 
   // Update internal state when props change
   useEffect(() => {
@@ -231,6 +192,60 @@ const MapPicker: React.FC<MapPickerProps> = ({
     [handleLocationSelect],
   );
 
+  useEffect(() => {
+    if (!containerRef.current || mapRef.current) return;
+
+    const map = new maplibregl.Map({
+      container: containerRef.current,
+      style: DEFAULT_STYLE_URL,
+      center: [currentLng, currentLat],
+      zoom: zoom,
+      attributionControl: false,
+    });
+    mapRef.current = map;
+    map.addControl(
+      new maplibregl.NavigationControl({ visualizePitch: false }),
+      "top-right",
+    );
+    map.addControl(new maplibregl.AttributionControl({ compact: true }));
+
+    map.on("error", (e: any) => {
+      const msg = String(e?.error?.message || "");
+      if (msg.includes("404") || msg.includes("Failed to fetch")) {
+        try {
+          map.setStyle(FALLBACK_STYLE_URL);
+        } catch {}
+      }
+    });
+
+    const marker = new maplibregl.Marker({ color: "#2563eb" })
+      .setLngLat([currentLng, currentLat])
+      .addTo(map);
+    markerRef.current = marker;
+
+    map.on("click", (e) => {
+      if (disabled) return;
+      const { lng, lat } = e.lngLat;
+      marker.setLngLat([lng, lat]);
+      handleLocationSelect(lat, lng);
+    });
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
+      markerRef.current = null;
+    };
+  }, []);
+
+  // Sync view/marker when state changes
+  useEffect(() => {
+    const map = mapRef.current;
+    const marker = markerRef.current;
+    if (!map || !marker) return;
+    marker.setLngLat([currentLng, currentLat]);
+    map.easeTo({ center: [currentLng, currentLat], zoom });
+  }, [currentLat, currentLng, zoom]);
+
   return (
     <div className={className}>
       {showSearch && (
@@ -238,32 +253,11 @@ const MapPicker: React.FC<MapPickerProps> = ({
       )}
 
       <div className="relative">
-        <MapContainer
-          center={[currentLat, currentLng]}
-          zoom={zoom}
-          style={{ height: `${height}px`, width: "100%" }}
+        <div
+          ref={containerRef}
           className="rounded-lg overflow-hidden"
-        >
-          <TileLayer
-            url={tileConfig.url}
-            tileSize={tileConfig.tileSize}
-            zoomOffset={tileConfig.zoomOffset}
-            attribution={tileConfig.attribution}
-          />
-
-          <MapEvents
-            onLocationSelect={handleLocationSelect}
-            disabled={disabled}
-          />
-
-          <MapController
-            latitude={currentLat}
-            longitude={currentLng}
-            zoom={zoom}
-          />
-
-          <Marker position={[currentLat, currentLng]} />
-        </MapContainer>
+          style={{ height: `${height}px`, width: "100%" }}
+        />
 
         {disabled && (
           <div className="absolute inset-0 bg-gray-200 bg-opacity-50 flex items-center justify-center rounded-lg">

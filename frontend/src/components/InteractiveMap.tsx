@@ -1,7 +1,6 @@
-import React, { useMemo } from "react";
-import L from "leaflet";
-import { MapContainer, TileLayer, Marker } from "react-leaflet";
-import { getTileConfig, getOptimizedMarkerIcon } from "../utils/mapUtils";
+import React, { useEffect, useMemo, useRef } from "react";
+import maplibregl, { Map as MapLibreMap } from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 
 interface InteractiveMapProps {
   latitude: number;
@@ -24,38 +23,47 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   minZoom = 3,
   maxZoom = 18,
 }) => {
-  const tileConfig = useMemo(() => getTileConfig(), []);
-  const marker = useMemo(() => {
-    const iconConfig = getOptimizedMarkerIcon("large");
-    return L.icon(iconConfig);
-  }, []);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<MapLibreMap | null>(null);
+
+  const DEFAULT_STYLE_URL = useMemo(
+    () =>
+      (import.meta as unknown as { env: { VITE_MAP_STYLE_URL?: string } }).env
+        .VITE_MAP_STYLE_URL ||
+      "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+    [],
+  );
+
+  useEffect(() => {
+    if (!containerRef.current || mapRef.current) return;
+    const map = new maplibregl.Map({
+      container: containerRef.current,
+      style: DEFAULT_STYLE_URL,
+      center: [longitude, latitude],
+      zoom,
+      minZoom,
+      maxZoom,
+      attributionControl: false,
+    });
+    mapRef.current = map;
+    map.addControl(new maplibregl.AttributionControl({ compact: true }));
+
+    new maplibregl.Marker({ color: "#2563eb" })
+      .setLngLat([longitude, latitude])
+      .addTo(map);
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
+  }, [latitude, longitude, zoom, minZoom, maxZoom, DEFAULT_STYLE_URL]);
 
   return (
     <div
       className={`relative overflow-hidden rounded border border-gray-200 ${className}`}
       style={{ width, height }}
     >
-      <MapContainer
-        center={[latitude, longitude]}
-        zoom={zoom}
-        minZoom={minZoom}
-        maxZoom={maxZoom}
-        style={{ width: "100%", height: "100%" }}
-        zoomControl={true}
-        scrollWheelZoom={true}
-        dragging={true}
-        touchZoom={true}
-        doubleClickZoom={true}
-        attributionControl={true}
-      >
-        <TileLayer
-          url={tileConfig.url}
-          tileSize={tileConfig.tileSize}
-          zoomOffset={tileConfig.zoomOffset}
-          attribution={tileConfig.attribution}
-        />
-        <Marker position={[latitude, longitude]} icon={marker} />
-      </MapContainer>
+      <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
     </div>
   );
 };

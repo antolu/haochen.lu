@@ -1,7 +1,6 @@
-import React, { useMemo } from "react";
-import L from "leaflet";
-import { MapContainer, TileLayer, Marker } from "react-leaflet";
-import { getTileConfig, getOptimizedMarkerIcon } from "../utils/mapUtils";
+import React, { useEffect, useMemo, useRef } from "react";
+import maplibregl, { Map as MapLibreMap } from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 
 interface MiniMapProps {
   latitude: number;
@@ -24,11 +23,16 @@ const MiniMap: React.FC<MiniMapProps> = ({
   className = "",
   onClick,
 }) => {
-  const tileConfig = useMemo(() => getTileConfig(), []);
-  const marker = useMemo(() => {
-    const iconConfig = getOptimizedMarkerIcon("small");
-    return L.icon(iconConfig);
-  }, []);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<MapLibreMap | null>(null);
+
+  const DEFAULT_STYLE_URL = useMemo(
+    () =>
+      (import.meta as unknown as { env: { VITE_MAP_STYLE_URL?: string } }).env
+        .VITE_MAP_STYLE_URL ||
+      "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+    [],
+  );
 
   const getMapDimensions = () => {
     if (responsive) {
@@ -41,6 +45,29 @@ const MiniMap: React.FC<MiniMapProps> = ({
     return { width: `${size}px`, height: `${size}px` };
   };
 
+  useEffect(() => {
+    if (!containerRef.current || mapRef.current) return;
+    const map = new maplibregl.Map({
+      container: containerRef.current,
+      style: DEFAULT_STYLE_URL,
+      center: [longitude, latitude],
+      zoom,
+      interactive: false,
+      attributionControl: false,
+    });
+    mapRef.current = map;
+    map.addControl(new maplibregl.AttributionControl({ compact: true }));
+
+    new maplibregl.Marker({ color: "#1f2937" })
+      .setLngLat([longitude, latitude])
+      .addTo(map);
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
+  }, []);
+
   return (
     <div
       className={`relative overflow-hidden rounded border border-gray-200 ${
@@ -49,25 +76,7 @@ const MiniMap: React.FC<MiniMapProps> = ({
       style={getMapDimensions()}
       onClick={onClick}
     >
-      <MapContainer
-        center={[latitude, longitude]}
-        zoom={zoom}
-        style={{ width: "100%", height: "100%" }}
-        zoomControl={false}
-        scrollWheelZoom={false}
-        dragging={false}
-        touchZoom={false}
-        doubleClickZoom={false}
-        attributionControl={false}
-      >
-        <TileLayer
-          url={tileConfig.url}
-          tileSize={tileConfig.tileSize}
-          zoomOffset={tileConfig.zoomOffset}
-          attribution={tileConfig.attribution}
-        />
-        <Marker position={[latitude, longitude]} icon={marker} />
-      </MapContainer>
+      <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
 
       {onClick && (
         <div

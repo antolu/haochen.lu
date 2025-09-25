@@ -6,7 +6,8 @@ import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { photos } from "../api/client";
 import PhotoGrid from "../components/PhotoGrid";
 import PhotoLightbox from "../components/PhotoLightbox";
-import PhotoMap from "../components/PhotoMap";
+// import PhotoMap from "../components/PhotoMap";
+import MapLibrePhotoMap from "../components/MapLibrePhotoMap";
 import type { Photo, PhotoListResponse } from "../types";
 import OrderBySelector, {
   type OrderByOption,
@@ -306,10 +307,10 @@ const PhotographyPage: React.FC = () => {
                 view photos from that location.
               </p>
             </div>
-            <PhotoMap
+            <MapLibrePhotoMap
               photos={allPhotos}
               onPhotoClick={handleMapPhotoClick}
-              height={500}
+              height={650}
               className="rounded-lg shadow-lg"
             />
           </motion.div>
