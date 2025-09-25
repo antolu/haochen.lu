@@ -1,16 +1,14 @@
-import React, { useRef, useState, useEffect, memo, forwardRef } from "react";
-import { useVirtualizer } from "@tanstack/react-virtual";
+import React, { useRef, useState, memo, forwardRef } from "react";
 import { useInView } from "react-intersection-observer";
 import type { Photo } from "../types";
 import { formatDateSimple } from "../utils/dateFormat";
 import { selectOptimalImage, ImageUseCase } from "../utils/imageUtils";
+import "./PhotoGrid.css";
 
 interface PhotoGridProps {
   photos: Photo[];
   isLoading?: boolean;
   onPhotoClick?: (photo: Photo, index: number) => void;
-  columns?: number;
-  gap?: number;
   showMetadata?: boolean;
   className?: string;
   highlightedPhotoId?: string | null;
@@ -21,8 +19,6 @@ interface PhotoCardProps {
   index: number;
   onClick?: (photo: Photo, index: number) => void;
   showMetadata?: boolean;
-  width: number;
-  height: number;
   isHighlighted?: boolean;
 }
 
@@ -31,8 +27,6 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
   index,
   onClick,
   showMetadata = false,
-  width,
-  height,
   isHighlighted = false,
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -62,8 +56,8 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
 
   // Use DPI-aware image selection for optimal quality based on device and viewport
   const optimalImage = selectOptimalImage(photo, ImageUseCase.GALLERY, {
-    width,
-    height,
+    width: 400, // Standard grid item size
+    height: 400,
   });
   const imageUrl = optimalImage.url;
   const srcSet = optimalImage.srcset;
@@ -74,16 +68,14 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
       ref={ref}
       data-testid={`photo-card-${index + 1}`}
       className={`
-        group relative bg-gray-100 rounded-lg overflow-hidden cursor-pointer
+        photo-card group relative bg-gray-100 rounded-lg overflow-hidden cursor-pointer
         transform transition-all duration-300 hover:scale-105 md:hover:scale-110
         ${onClick ? "hover:shadow-xl" : ""}
         ${isHighlighted ? "ring-4 ring-blue-500 ring-opacity-75 shadow-2xl scale-105" : ""}
         opacity-0 animate-fade-in
       `}
       style={{
-        width,
-        height,
-        zIndex: isHighlighted ? 50 : 1, // Higher z-index for highlighted photos
+        zIndex: isHighlighted ? 50 : 1,
         animationDelay: `${index * 20}ms`,
       }}
       onMouseEnter={(e) => {
@@ -92,7 +84,9 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
       }}
       onMouseLeave={(e) => {
         // Reset z-index when not hovered
-        (e.currentTarget as HTMLElement).style.zIndex = "1";
+        (e.currentTarget as HTMLElement).style.zIndex = isHighlighted
+          ? "50"
+          : "1";
       }}
       onClick={handleClick}
     >
@@ -200,8 +194,6 @@ const PhotoGrid = memo(
         photos,
         isLoading = false,
         onPhotoClick,
-        columns,
-        gap = 8,
         showMetadata = false,
         className = "",
         highlightedPhotoId = null,
@@ -211,59 +203,21 @@ const PhotoGrid = memo(
       const parentRef = useRef<HTMLDivElement>(null);
       const containerRef =
         (ref as React.RefObject<HTMLDivElement>) || parentRef;
-      const [containerWidth, setContainerWidth] = useState(0);
-
-      // Auto-calculate columns based on container width - reduced for larger square photos
-      const getColumns = () => {
-        if (columns) return columns;
-        if (containerWidth < 640) return 1; // sm - single column on mobile
-        if (containerWidth < 1024) return 2; // md - two columns on tablet
-        if (containerWidth < 1280) return 3; // lg - three columns on desktop
-        if (containerWidth < 1536) return 4; // xl - four columns on large desktop
-        return 5; // 2xl - five columns on very large screens
-      };
-
-      const numColumns = getColumns();
-      const itemWidth = Math.max(
-        300, // Reduced from 400px to 300px
-        Math.floor((containerWidth - gap * (numColumns - 1)) / numColumns),
-      );
-      const itemHeight = itemWidth; // 1:1 aspect ratio (square)
-
-      // Update container width on resize
-      useEffect(() => {
-        const updateWidth = () => {
-          if (containerRef.current) {
-            setContainerWidth(containerRef.current.offsetWidth);
-          }
-        };
-
-        updateWidth();
-        window.addEventListener("resize", updateWidth);
-        return () => window.removeEventListener("resize", updateWidth);
-      }, [containerRef]);
-
-      // Calculate rows for virtualization - add extra height for hover effects
-      const rowCount = Math.ceil(photos.length / numColumns);
-      const rowHeight = itemHeight + gap + 32; // Extra 32px for padding and hover effects
-
-      const virtualizer = useVirtualizer({
-        count: rowCount,
-        getScrollElement: () => containerRef.current,
-        estimateSize: () => rowHeight,
-        overscan: 5,
-      });
 
       // Loading skeleton
       if (isLoading) {
         return (
-          <div className={`space-y-4 ${className}`} data-testid="loading-grid">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3 gap-2">
+          <div
+            className={`photo-grid-container ${className}`}
+            data-testid="loading-grid"
+            ref={containerRef}
+          >
+            <div className="loading-grid">
               {Array.from({ length: 20 }).map((_, i) => (
                 <div
                   key={i}
                   data-testid="skeleton-item"
-                  className="aspect-square bg-gray-200 rounded-lg animate-pulse"
+                  className="skeleton-item"
                 />
               ))}
             </div>
@@ -300,67 +254,19 @@ const PhotoGrid = memo(
         <div
           ref={containerRef}
           data-testid="photo-grid-container"
-          className={`h-full overflow-auto ${className}`}
-          style={{ height: "100%", width: "100%", padding: "24px" }}
+          className={`photo-grid-container ${className}`}
         >
-          <div
-            style={{
-              height: `${virtualizer.getTotalSize()}px`,
-              width: "100%",
-              position: "relative",
-            }}
-          >
-            {virtualizer.getVirtualItems().map((virtualRow) => {
-              const startIndex = virtualRow.index * numColumns;
-              const endIndex = Math.min(startIndex + numColumns, photos.length);
-              const rowPhotos = photos.slice(startIndex, endIndex);
-
-              return (
-                <div
-                  key={virtualRow.key}
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: `${rowHeight}px`,
-                    transform: `translateY(${virtualRow.start}px)`,
-                  }}
-                >
-                  <div
-                    className="flex overflow-visible"
-                    style={{ gap: `${gap}px`, padding: "16px" }}
-                  >
-                    {rowPhotos.map((photo, colIndex) => {
-                      const photoIndex = startIndex + colIndex;
-
-                      return (
-                        <PhotoCard
-                          key={photo.id}
-                          photo={photo}
-                          index={photoIndex}
-                          onClick={onPhotoClick}
-                          showMetadata={showMetadata}
-                          width={itemWidth}
-                          height={itemHeight}
-                          isHighlighted={highlightedPhotoId === photo.id}
-                        />
-                      );
-                    })}
-                    {/* Fill remaining columns if the last row is incomplete */}
-                    {rowPhotos.length < numColumns &&
-                      Array.from({ length: numColumns - rowPhotos.length }).map(
-                        (_, i) => (
-                          <div
-                            key={`empty-${i}`}
-                            style={{ width: itemWidth, height: itemHeight }}
-                          />
-                        ),
-                      )}
-                  </div>
-                </div>
-              );
-            })}
+          <div className="photo-grid">
+            {photos.map((photo, index) => (
+              <PhotoCard
+                key={photo.id}
+                photo={photo}
+                index={index}
+                onClick={onPhotoClick}
+                showMetadata={showMetadata}
+                isHighlighted={highlightedPhotoId === photo.id}
+              />
+            ))}
           </div>
         </div>
       );

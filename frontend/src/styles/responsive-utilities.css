@@ -1,0 +1,315 @@
+/* Responsive Utilities - 2025 Modern CSS */
+
+/* CSS Custom Properties for Responsive Design */
+:root {
+  /* Breakpoint values matching Tailwind config */
+  --breakpoint-xs: 480px;
+  --breakpoint-sm: 768px;
+  --breakpoint-md: 1024px;
+  --breakpoint-lg: 1440px;
+  --breakpoint-xl: 1680px;
+  --breakpoint-2xl: 1920px;
+
+  /* Base spacing scale using rem units */
+  --spacing-xs: 0.25rem; /* 4px */
+  --spacing-sm: 0.5rem; /* 8px */
+  --spacing-md: 0.75rem; /* 12px */
+  --spacing-lg: 1rem; /* 16px */
+  --spacing-xl: 1.25rem; /* 20px */
+  --spacing-2xl: 1.5rem; /* 24px */
+  --spacing-3xl: 2rem; /* 32px */
+
+  /* Fluid typography scale */
+  --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+  --text-sm: clamp(0.875rem, 0.8rem + 0.375vw, 1rem);
+  --text-base: clamp(1rem, 0.9rem + 0.5vw, 1.125rem);
+  --text-lg: clamp(1.125rem, 1rem + 0.625vw, 1.25rem);
+  --text-xl: clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem);
+  --text-2xl: clamp(1.5rem, 1.3rem + 1vw, 2rem);
+  --text-3xl: clamp(1.875rem, 1.6rem + 1.375vw, 2.5rem);
+  --text-4xl: clamp(2.25rem, 1.9rem + 1.75vw, 3rem);
+  --text-5xl: clamp(3rem, 2.5rem + 2.5vw, 4rem);
+
+  /* Container query support detection */
+  --has-container-queries: 1;
+}
+
+/* Fallback for browsers without container query support */
+@supports not (container-type: inline-size) {
+  :root {
+    --has-container-queries: 0;
+  }
+}
+
+/* Modern CSS Grid utilities with container awareness */
+.responsive-grid {
+  container-type: inline-size;
+  display: grid;
+  gap: var(--spacing-lg);
+  grid-template-columns: repeat(1, 1fr);
+}
+
+/* Container queries for responsive grid */
+@container (min-width: 480px) {
+  .responsive-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@container (min-width: 768px) {
+  .responsive-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@container (min-width: 1024px) {
+  .responsive-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@container (min-width: 1440px) {
+  .responsive-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+@container (min-width: 1680px) {
+  .responsive-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+/* DPI-aware spacing adjustments */
+@media (min-resolution: 1.5dppx) {
+  .responsive-grid {
+    gap: var(--spacing-md);
+  }
+}
+
+@media (min-resolution: 2dppx) {
+  .responsive-grid {
+    gap: var(--spacing-sm);
+  }
+}
+
+/* Responsive text utilities using fluid typography */
+.text-fluid-xs {
+  font-size: var(--text-xs);
+}
+.text-fluid-sm {
+  font-size: var(--text-sm);
+}
+.text-fluid-base {
+  font-size: var(--text-base);
+}
+.text-fluid-lg {
+  font-size: var(--text-lg);
+}
+.text-fluid-xl {
+  font-size: var(--text-xl);
+}
+.text-fluid-2xl {
+  font-size: var(--text-2xl);
+}
+.text-fluid-3xl {
+  font-size: var(--text-3xl);
+}
+.text-fluid-4xl {
+  font-size: var(--text-4xl);
+}
+.text-fluid-5xl {
+  font-size: var(--text-5xl);
+}
+
+/* Responsive spacing utilities */
+.spacing-fluid-xs {
+  margin: var(--spacing-xs);
+}
+.spacing-fluid-sm {
+  margin: var(--spacing-sm);
+}
+.spacing-fluid-md {
+  margin: var(--spacing-md);
+}
+.spacing-fluid-lg {
+  margin: var(--spacing-lg);
+}
+.spacing-fluid-xl {
+  margin: var(--spacing-xl);
+}
+.spacing-fluid-2xl {
+  margin: var(--spacing-2xl);
+}
+.spacing-fluid-3xl {
+  margin: var(--spacing-3xl);
+}
+
+.padding-fluid-xs {
+  padding: var(--spacing-xs);
+}
+.padding-fluid-sm {
+  padding: var(--spacing-sm);
+}
+.padding-fluid-md {
+  padding: var(--spacing-md);
+}
+.padding-fluid-lg {
+  padding: var(--spacing-lg);
+}
+.padding-fluid-xl {
+  padding: var(--spacing-xl);
+}
+.padding-fluid-2xl {
+  padding: var(--spacing-2xl);
+}
+.padding-fluid-3xl {
+  padding: var(--spacing-3xl);
+}
+
+/* CSS Logical Properties utilities for internationalization */
+.margin-inline-start-auto {
+  margin-inline-start: auto;
+}
+.margin-inline-end-auto {
+  margin-inline-end: auto;
+}
+.margin-inline-auto {
+  margin-inline: auto;
+}
+.padding-inline-start {
+  padding-inline-start: var(--spacing-lg);
+}
+.padding-inline-end {
+  padding-inline-end: var(--spacing-lg);
+}
+.padding-block-start {
+  padding-block-start: var(--spacing-lg);
+}
+.padding-block-end {
+  padding-block-end: var(--spacing-lg);
+}
+
+/* Responsive aspect ratios */
+.aspect-square {
+  aspect-ratio: 1 / 1;
+}
+.aspect-video {
+  aspect-ratio: 16 / 9;
+}
+.aspect-photo {
+  aspect-ratio: 3 / 2;
+}
+.aspect-portrait {
+  aspect-ratio: 2 / 3;
+}
+
+/* Modern hover and interaction states */
+.interactive-element {
+  transition:
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.interactive-element:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 10px 15px -3px rgb(0 0 0 / 0.1),
+    0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+@media (hover: none) {
+  .interactive-element:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+/* Reduced motion respect */
+@media (prefers-reduced-motion: reduce) {
+  .interactive-element,
+  .responsive-grid,
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Focus visible for accessibility */
+.focus-visible-element:focus-visible {
+  outline: 2px solid rgb(59 130 246);
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+/* Screen reader only utilities */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Container query utilities for legacy browsers */
+@supports not (container-type: inline-size) {
+  .responsive-grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+
+  @media (min-width: 480px) {
+    .responsive-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 768px) {
+    .responsive-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .responsive-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  @media (min-width: 1440px) {
+    .responsive-grid {
+      grid-template-columns: repeat(5, 1fr);
+    }
+  }
+
+  @media (min-width: 1680px) {
+    .responsive-grid {
+      grid-template-columns: repeat(6, 1fr);
+    }
+  }
+}
+
+/* Utility for detecting touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .touch-device-only {
+    display: block;
+  }
+  .no-touch-device {
+    display: none;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .touch-device-only {
+    display: none;
+  }
+  .no-touch-device {
+    display: block;
+  }
+}

@@ -77,6 +77,14 @@ export default {
     "text-center",
   ],
   theme: {
+    screens: {
+      xs: "480px", // Large phones
+      sm: "768px", // Tablets
+      md: "1024px", // Small laptops
+      lg: "1440px", // MacBook Pro 14" & 16", large laptops
+      xl: "1680px", // Large desktops
+      "2xl": "1920px", // Very large screens
+    },
     extend: {
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],

@@ -1,0 +1,188 @@
+/* PhotoGrid Container Query Implementation */
+
+.photo-grid-container {
+  container-type: inline-size;
+  container-name: photo-grid;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  padding: 1.5rem;
+}
+
+.photo-grid {
+  display: grid;
+  gap: 0.5rem;
+  width: 100%;
+  grid-template-columns: repeat(1, 1fr); /* Default: 1 column */
+}
+
+/* Container Query Breakpoints for Grid */
+@container photo-grid (min-width: 480px) {
+  .photo-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+}
+
+@container photo-grid (min-width: 768px) {
+  .photo-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+}
+
+@container photo-grid (min-width: 1024px) {
+  .photo-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+  }
+}
+
+@container photo-grid (min-width: 1440px) {
+  .photo-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@container photo-grid (min-width: 1680px) {
+  .photo-grid {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+/* DPI-aware adjustments for high-resolution displays */
+@media (min-resolution: 1.5dppx) {
+  .photo-grid-container {
+    padding: 1.25rem;
+  }
+}
+
+@media (min-resolution: 2dppx) {
+  .photo-grid-container {
+    padding: 1rem;
+  }
+
+  .photo-grid {
+    gap: 0.75rem;
+  }
+
+  @container photo-grid (min-width: 1024px) {
+    .photo-grid {
+      gap: 1rem;
+    }
+  }
+
+  @container photo-grid (min-width: 1440px) {
+    .photo-grid {
+      gap: 1.25rem;
+    }
+  }
+}
+
+/* Loading skeleton grid */
+.loading-grid {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(1, 1fr);
+}
+
+@container photo-grid (min-width: 480px) {
+  .loading-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@container photo-grid (min-width: 768px) {
+  .loading-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@container photo-grid (min-width: 1024px) {
+  .loading-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@container photo-grid (min-width: 1440px) {
+  .loading-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+@container photo-grid (min-width: 1680px) {
+  .loading-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+/* Photo card styling - minimal since we use Tailwind classes now */
+.photo-card {
+  aspect-ratio: 1 / 1;
+}
+
+/* Highlighted photo styling */
+.photo-card.highlighted {
+  ring: 4px solid rgb(59 130 246);
+  ring-opacity: 0.75;
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  transform: scale(1.05) translateZ(0);
+  z-index: 50;
+}
+
+/* Loading skeleton */
+.skeleton-item {
+  aspect-ratio: 1 / 1;
+  background-color: rgb(229 231 235);
+  border-radius: 0.5rem;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Container query fallback for browsers without support */
+@supports not (container-type: inline-size) {
+  .photo-grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+
+  @media (min-width: 480px) {
+    .photo-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 768px) {
+    .photo-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .photo-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  @media (min-width: 1440px) {
+    .photo-grid {
+      grid-template-columns: repeat(5, 1fr);
+    }
+  }
+
+  @media (min-width: 1680px) {
+    .photo-grid {
+      grid-template-columns: repeat(6, 1fr);
+    }
+  }
+}

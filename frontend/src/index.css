@@ -6,6 +6,9 @@
 /* Import safelist file to ensure all required classes are generated */
 @import "./tailwind-safelist.css";
 
+/* Import modern responsive utilities */
+@import "./styles/responsive-utilities.css";
+
 @layer base {
   :root {
     --primary-50: #f0f9ff;

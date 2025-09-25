@@ -76,25 +76,17 @@ const PhotographyPage: React.FC = () => {
 
       // Scroll to the photo in the grid
       if (photoGridRef.current) {
-        // Calculate approximate position in grid
-        const columns =
-          window.innerWidth < 640
-            ? 1
-            : window.innerWidth < 1024
-              ? 2
-              : window.innerWidth < 1280
-                ? 3
-                : window.innerWidth < 1536
-                  ? 4
-                  : 5;
-        const rowIndex = Math.floor(index / columns);
-        const itemHeight = 300 + 8 + 32; // item height + gap + padding
-        const scrollTop = rowIndex * itemHeight;
-
-        photoGridRef.current.scrollTo({
-          top: scrollTop,
-          behavior: "smooth",
-        });
+        // Find the photo element and scroll to it
+        const photoElement = photoGridRef.current.querySelector(
+          `[data-testid="photo-card-${index + 1}"]`,
+        );
+        if (photoElement) {
+          photoElement.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+            inline: "nearest",
+          });
+        }
       }
 
       // Clear highlight after a delay
