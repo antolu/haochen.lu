@@ -147,10 +147,10 @@ export const calculateTargetSize = (
   // Base target sizes for different use cases and screen sizes
   const targetSizes = {
     [ImageUseCase.THUMBNAIL]: {
-      [ScreenSize.SMALL]: 200,
-      [ScreenSize.MEDIUM]: 250,
-      [ScreenSize.LARGE]: 300,
-      [ScreenSize.XLARGE]: 350,
+      [ScreenSize.SMALL]: 150,
+      [ScreenSize.MEDIUM]: 180,
+      [ScreenSize.LARGE]: 200,
+      [ScreenSize.XLARGE]: 220,
     },
     [ImageUseCase.GALLERY]: {
       [ScreenSize.SMALL]: 400,
@@ -250,7 +250,7 @@ export const generateSizesAttribute = (useCase: ImageUseCase): string => {
   // Default sizes based on use case
   const defaultSizes = {
     [ImageUseCase.THUMBNAIL]:
-      "(max-width: 640px) 200px, (max-width: 1024px) 250px, (max-width: 1536px) 300px, 350px",
+      "(max-width: 640px) 150px, (max-width: 1024px) 180px, (max-width: 1536px) 200px, 220px",
     [ImageUseCase.GALLERY]:
       "(max-width: 640px) 400px, (max-width: 1024px) 600px, (max-width: 1536px) 800px, 1000px",
     [ImageUseCase.LIGHTBOX]:
