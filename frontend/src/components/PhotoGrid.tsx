@@ -8,6 +8,7 @@ import "./PhotoGrid.css";
 interface PhotoGridProps {
   photos: Photo[];
   isLoading?: boolean;
+  isTransitioning?: boolean;
   onPhotoClick?: (photo: Photo, index: number) => void;
   showMetadata?: boolean;
   className?: string;
@@ -193,6 +194,7 @@ const PhotoGrid = memo(
       {
         photos,
         isLoading = false,
+        isTransitioning = false,
         onPhotoClick,
         showMetadata = false,
         className = "",
@@ -204,8 +206,8 @@ const PhotoGrid = memo(
       const containerRef =
         (ref as React.RefObject<HTMLDivElement>) || parentRef;
 
-      // Loading skeleton
-      if (isLoading) {
+      // Loading and transition states
+      if (isLoading && photos.length === 0) {
         return (
           <div
             className={`photo-grid-container ${className}`}
@@ -254,9 +256,14 @@ const PhotoGrid = memo(
         <div
           ref={containerRef}
           data-testid="photo-grid-container"
-          className={`photo-grid-container ${className}`}
+          className={`photo-grid-container ${className} ${isTransitioning ? "transitioning" : ""}`}
         >
-          <div className="photo-grid">
+          {isTransitioning && (
+            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 z-10 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium">
+              Loading new order...
+            </div>
+          )}
+          <div className={`photo-grid ${isTransitioning ? "opacity-75" : ""}`}>
             {photos.map((photo, index) => (
               <div key={photo.id} className="photo-grid-item">
                 <PhotoCard

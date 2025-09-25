@@ -1,22 +1,19 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 
-import { photos } from "../api/client";
 import PhotoGrid from "../components/PhotoGrid";
 import PhotoLightbox from "../components/PhotoLightbox";
-// import PhotoMap from "../components/PhotoMap";
 import MapLibrePhotoMap from "../components/MapLibrePhotoMap";
-import type { Photo, PhotoListResponse } from "../types";
+import { useOptimizedPhotos } from "../hooks/usePhotos";
+import { useIsTransitioning } from "../stores/photoCache";
+import { monitorCachePerformance } from "../utils/optimizationTest";
+import type { Photo } from "../types";
 import OrderBySelector, {
   type OrderByOption,
 } from "../components/OrderBySelector";
 
 const PhotographyPage: React.FC = () => {
-  const [allPhotos, setAllPhotos] = useState<Photo[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isPhotoSwipeOpen, setIsPhotoSwipeOpen] = useState(false);
   const [isLGOpening, setIsLGOpening] = useState(false);
   const [photoSwipeIndex, setPhotoSwipeIndex] = useState(0);
@@ -24,7 +21,6 @@ const PhotographyPage: React.FC = () => {
     null,
   );
   const photoGridRef = useRef<HTMLDivElement>(null);
-  const photosPerPage = 24;
   const location = useLocation() as { state?: { photoId?: string } };
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -36,44 +32,25 @@ const PhotographyPage: React.FC = () => {
     return "created_at";
   }, [searchParams]);
 
-  const hasInitializedOrderRef = useRef(false);
-
-  useEffect(() => {
-    if (!hasInitializedOrderRef.current) {
-      hasInitializedOrderRef.current = true;
-      return;
-    }
-    setCurrentPage(1);
-    setAllPhotos([]);
-    setIsLoadingMore(false);
-  }, [orderBy]);
-
-  // Fetch photos from API
+  // Use optimized photos hook with caching
   const {
-    data: photoData,
+    photos: allPhotos,
     isLoading,
+    isLoadingMore,
     error,
-  } = useQuery<PhotoListResponse>({
-    queryKey: ["photos", "list", orderBy, currentPage],
-    queryFn: () =>
-      photos.list({
-        page: currentPage,
-        per_page: photosPerPage,
-        order_by: orderBy,
-      }),
-  });
+    hasMore,
+    loadMore,
+    handleOrderSwitch,
+    total,
+    cacheStats,
+  } = useOptimizedPhotos(orderBy);
 
-  // Handle new data
+  const isTransitioning = useIsTransitioning();
+
+  // Initialize performance monitoring in development
   useEffect(() => {
-    if (photoData) {
-      if (currentPage === 1) {
-        setAllPhotos(photoData.photos);
-      } else {
-        setAllPhotos((prev) => [...prev, ...photoData.photos]);
-      }
-      setIsLoadingMore(false);
-    }
-  }, [photoData, currentPage]);
+    monitorCachePerformance();
+  }, []);
 
   // If navigated with a specific photoId, open the lightbox at that index
   useEffect(() => {
@@ -122,9 +99,7 @@ const PhotographyPage: React.FC = () => {
   };
 
   const handleOrderChange = (value: OrderByOption) => {
-    setCurrentPage(1);
-    setAllPhotos([]);
-    setIsLoadingMore(false);
+    // Update URL parameters
     setSearchParams(
       (params) => {
         const next = new URLSearchParams(params);
@@ -137,6 +112,9 @@ const PhotographyPage: React.FC = () => {
       },
       { replace: true },
     );
+
+    // The optimized hook will handle the smart caching automatically
+    handleOrderSwitch(value);
   };
 
   const handlePhotoSwipeClose = () => {
@@ -148,9 +126,8 @@ const PhotographyPage: React.FC = () => {
   };
 
   const handleLoadMore = () => {
-    if (photoData && currentPage < photoData.pages) {
-      setIsLoadingMore(true);
-      setCurrentPage((prev) => prev + 1);
+    if (hasMore && !isLoadingMore) {
+      loadMore();
     }
   };
 
@@ -212,6 +189,7 @@ const PhotographyPage: React.FC = () => {
           <PhotoGrid
             photos={allPhotos}
             isLoading={isLoading}
+            isTransitioning={isTransitioning}
             onPhotoClick={handlePhotoClick}
             showMetadata={true}
             className="min-h-[600px]"
@@ -221,7 +199,7 @@ const PhotographyPage: React.FC = () => {
         </motion.div>
 
         {/* Load More Button */}
-        {photoData && currentPage < photoData.pages && (
+        {hasMore && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -279,14 +257,17 @@ const PhotographyPage: React.FC = () => {
         )}
 
         {/* Photo Count Info */}
-        {photoData && allPhotos.length > 0 && (
+        {allPhotos.length > 0 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
             className="text-center mt-8 text-gray-500 text-sm"
           >
-            Showing {allPhotos.length} of {photoData.total} photos
+            Showing {allPhotos.length} of {total} photos
+            {isTransitioning && (
+              <span className="ml-2 text-blue-500">(transitioning...)</span>
+            )}
           </motion.div>
         )}
 

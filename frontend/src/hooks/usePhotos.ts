@@ -6,7 +6,11 @@ import {
 } from "@tanstack/react-query";
 import { photos } from "../api/client";
 import type { Photo, PhotoListResponse, PhotoStatsSummary } from "../types";
+import type { OrderByOption } from "../components/OrderBySelector";
+import { usePhotoCacheStore } from "../stores/photoCache";
+import { calculateLoadStrategy, mergePhotoArrays } from "../utils/photoUtils";
 import toast from "react-hot-toast";
+import { useCallback, useMemo, useEffect } from "react";
 
 // Query Keys
 export const photoKeys = {
@@ -26,6 +30,126 @@ export const usePhotos = () => {
     queryFn: () => photos.list({ order_by: "order" }),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
+};
+
+// Optimized hook for photography page with intelligent caching
+export const useOptimizedPhotos = (
+  orderBy: OrderByOption,
+  photosPerPage = 24,
+) => {
+  const {
+    cache,
+    photoIndex,
+    activeOrder,
+    setPhotos,
+    switchOrder,
+    setActiveOrder,
+    setTransitioning,
+    isCacheValid,
+  } = usePhotoCacheStore();
+
+  const currentCache = cache[orderBy];
+  const isValidCache = isCacheValid(orderBy);
+
+  // Smart order switching logic
+  const handleOrderSwitch = useCallback(
+    (newOrder: OrderByOption) => {
+      if (newOrder === activeOrder)
+        return { photos: currentCache.photos, isFromCache: true };
+
+      const result = switchOrder(newOrder);
+      setActiveOrder(newOrder);
+
+      if (result.shouldShowCached && result.cachedPhotos.length > 0) {
+        return { photos: result.cachedPhotos, isFromCache: true };
+      }
+
+      return { photos: [], isFromCache: false };
+    },
+    [activeOrder, currentCache, switchOrder, setActiveOrder],
+  );
+
+  // Main query that respects cache
+  const photosQuery = useQuery({
+    queryKey: ["optimized-photos", orderBy],
+    queryFn: async () => {
+      const response = await photos.list({
+        page: 1,
+        per_page: photosPerPage,
+        order_by: orderBy,
+      });
+      setPhotos(orderBy, response, 1);
+      return response;
+    },
+    enabled: !isValidCache || currentCache.photos.length === 0,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // Load more functionality
+  const loadMoreQuery = useQuery({
+    queryKey: ["load-more-photos", orderBy, currentCache.loadedPages.size + 1],
+    queryFn: async () => {
+      const nextPage = currentCache.loadedPages.size + 1;
+      const response = await photos.list({
+        page: nextPage,
+        per_page: photosPerPage,
+        order_by: orderBy,
+      });
+      setPhotos(orderBy, response, nextPage);
+      return response;
+    },
+    enabled: false, // Only trigger manually
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // Determine photos to show
+  const displayPhotos = useMemo(() => {
+    if (isValidCache && currentCache.photos.length > 0) {
+      return currentCache.photos;
+    }
+    return photosQuery.data?.photos || [];
+  }, [isValidCache, currentCache.photos, photosQuery.data?.photos]);
+
+  // Loading states
+  const isLoading = !isValidCache && photosQuery.isLoading;
+  const isLoadingMore = loadMoreQuery.isFetching;
+
+  // Pagination info
+  const hasMore = useMemo(() => {
+    if (!currentCache.total) return false;
+    return displayPhotos.length < currentCache.total;
+  }, [currentCache.total, displayPhotos.length]);
+
+  const loadMore = useCallback(() => {
+    if (!isLoadingMore && hasMore) {
+      loadMoreQuery.refetch();
+    }
+  }, [isLoadingMore, hasMore, loadMoreQuery]);
+
+  // Clear loading state when photos are loaded
+  const isTransitioning = usePhotoCacheStore((state) => state.isTransitioning);
+
+  useEffect(() => {
+    if (isTransitioning && displayPhotos.length > 0) {
+      setTransitioning(false);
+    }
+  }, [isTransitioning, displayPhotos.length, setTransitioning]);
+
+  return {
+    photos: displayPhotos,
+    isLoading,
+    isLoadingMore,
+    error: photosQuery.error || loadMoreQuery.error,
+    total: currentCache.total,
+    hasMore,
+    loadMore,
+    handleOrderSwitch,
+    cacheStats: {
+      cached: currentCache.photos.length,
+      total: currentCache.total,
+      pagesLoaded: currentCache.loadedPages.size,
+    },
+  };
 };
 
 // Hook to get photos with infinite scrolling for large galleries
