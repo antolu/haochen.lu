@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useInfiniteProjects, type ProjectFilters } from "../hooks/useProjects";
 import ProjectGrid from "../components/ProjectGrid";
 
 const ProjectsPage: React.FC = () => {
-  const [filters, setFilters] = useState<ProjectFilters>({});
+  const [filters, setFilters] = useState<ProjectFilters>({ order_by: "order" });
   const [searchQuery, setSearchQuery] = useState("");
 
   const {
@@ -153,6 +153,21 @@ const ProjectsPage: React.FC = () => {
                 >
                   All
                 </FilterButton>
+                {/* Order selector */}
+                <select
+                  value={filters.order_by ?? "order"}
+                  onChange={(e) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      order_by: e.target.value as any,
+                    }))
+                  }
+                  className="px-3 py-2 border rounded-lg bg-white text-gray-700"
+                >
+                  <option value="order">Default</option>
+                  <option value="created_at">Created Date</option>
+                  <option value="updated_at">Last Updated</option>
+                </select>
                 <FilterButton
                   active={filters.featured === true}
                   onClick={() =>

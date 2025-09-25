@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import asc, desc, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.repository_service import repository_service
@@ -21,6 +21,7 @@ async def get_projects(
     *,
     featured_only: bool = False,
     status: str | None = None,
+    order_by: str = "created_at",
 ) -> list[Project]:
     query = select(Project)
 
@@ -30,9 +31,56 @@ async def get_projects(
     if status:
         query = query.where(Project.status == status)
 
-    query = query.order_by(Project.created_at.desc())
+    # Ordering
+    if order_by == "order":
+        query = query.order_by(
+            asc(Project.order), desc(Project.updated_at), desc(Project.created_at)
+        )
+    elif order_by == "updated_at":
+        query = query.order_by(desc(Project.updated_at))
+    else:
+        query = query.order_by(desc(Project.created_at))
     result = await db.execute(query)
     return list(result.scalars().all())
+
+
+async def bulk_reorder_projects(
+    db: AsyncSession,
+    items: list[tuple[str, int]] | list[dict],
+    *,
+    normalize: bool = False,
+) -> None:
+    """Bulk update the order of multiple projects.
+
+    Args:
+        db: database session
+        items: list of (project_id, order) or dicts {id, order}
+        normalize: if True, reassign orders to 0..n-1 based on ascending provided order
+    """
+    if not items:
+        return
+
+    pairs: list[tuple[UUID, int]] = []
+    for it in items:
+        if isinstance(it, dict):
+            pairs.append((UUID(str(it["id"])), int(it["order"])))
+        else:
+            pairs.append((UUID(str(it[0])), int(it[1])))
+
+    if normalize:
+        pairs = [
+            (pid, idx)
+            for idx, (pid, _ord) in enumerate(sorted(pairs, key=lambda x: x[1]))
+        ]
+
+    ids = [pid for pid, _ in pairs]
+    order_case = func.case(
+        *[(Project.id == pid, ord_val) for pid, ord_val in pairs], else_=Project.order
+    )
+    await db.execute(
+        update(Project).where(Project.id.in_(ids)).values(order=order_case)
+    )
+    await db.commit()
 
 
 async def get_project_count(db: AsyncSession) -> int:

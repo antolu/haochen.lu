@@ -69,3 +69,13 @@ class ReadmeResponse(BaseModel):
 class ProjectListResponse(BaseModel):
     projects: list[ProjectResponse]
     total: int
+
+
+class ReorderItem(BaseModel):
+    id: str
+    order: int
+
+
+class ProjectReorderRequest(BaseModel):
+    items: list[ReorderItem]
+    normalize: bool = True

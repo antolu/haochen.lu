@@ -80,6 +80,7 @@ export interface Project {
   technologies?: string;
   featured: boolean;
   status: string;
+  order: number;
   created_at: string;
   updated_at: string;
 }

@@ -48,6 +48,7 @@ export interface ProjectFilters {
   technologies?: string[];
   category?: string;
   search?: string;
+  order_by?: "order" | "created_at" | "updated_at";
 }
 
 export interface ProjectCreate {
@@ -125,6 +126,9 @@ export function useProjects(filters: ProjectFilters = {}) {
         params.append("search", filters.search);
       }
 
+      if (filters.order_by) {
+        params.append("order_by", filters.order_by);
+      }
       const response = await apiClient.get(`/projects?${params.toString()}`);
       return response.data as ProjectListResponse;
     },
@@ -153,6 +157,9 @@ export function useInfiniteProjects(filters: ProjectFilters = {}) {
         params.append("search", filters.search);
       }
 
+      if (filters.order_by) {
+        params.append("order_by", filters.order_by);
+      }
       const response = await apiClient.get(`/projects?${params.toString()}`);
       return response.data as ProjectListResponse;
     },

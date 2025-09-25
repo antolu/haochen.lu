@@ -3,12 +3,13 @@ from __future__ import annotations
 import json
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.repository_service import RepositoryInfo, repository_service
 from app.crud.project import (
+    bulk_reorder_projects,
     create_project,
     delete_project,
     get_project,
@@ -26,6 +27,7 @@ from app.models.project import Project as ProjectModel
 from app.schemas.project import (
     ProjectCreate,
     ProjectListResponse,
+    ProjectReorderRequest,
     ProjectResponse,
     ProjectUpdate,
     ReadmeResponse,
@@ -39,10 +41,13 @@ async def list_projects(
     *,
     featured_only: bool = False,
     status: str | None = None,
+    order_by: str = Query("created_at", regex="^(created_at|updated_at|order)$"),
     db: AsyncSession = _session_dependency,
 ):
     """List all projects."""
-    projects = await get_projects(db, featured_only=featured_only, status=status)
+    projects = await get_projects(
+        db, featured_only=featured_only, status=status, order_by=order_by
+    )
 
     total = await get_project_count(db)
 
@@ -150,6 +155,18 @@ async def get_project_detail(
         raise HTTPException(status_code=404, detail="Project not found")
 
     return ProjectResponse.model_validate(project)
+
+
+@router.post("/reorder")
+async def reorder_projects(
+    payload: ProjectReorderRequest,
+    db: AsyncSession = _session_dependency,
+    current_user=_current_admin_user_dependency,
+):
+    """Bulk reorder projects (admin only)."""
+    items = [{"id": it.id, "order": it.order} for it in payload.items]
+    await bulk_reorder_projects(db, items, normalize=payload.normalize)
+    return {"message": "Reordered successfully"}
 
 
 @router.post("", response_model=ProjectResponse)
