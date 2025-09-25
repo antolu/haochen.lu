@@ -103,6 +103,8 @@ export const projectKeys = {
   readme: (projectId: string) =>
     [...projectKeys.all, "readme", projectId] as const,
   stats: () => [...projectKeys.all, "stats"] as const,
+  images: (projectId: string) =>
+    [...projectKeys.detail(projectId), "images"] as const,
 };
 
 // Hooks for project data management
@@ -353,6 +355,63 @@ export function useReorderProjects() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
+    },
+  });
+}
+
+// Project images hooks
+export function useProjectImages(projectId: string) {
+  return useQuery({
+    queryKey: projectKeys.images(projectId),
+    queryFn: async () => projectsApi.images.list(projectId),
+    enabled: !!projectId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useAttachProjectImage(projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: {
+      photo_id: string;
+      title?: string;
+      alt_text?: string;
+    }) => projectsApi.images.attach(projectId, payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: projectKeys.images(projectId),
+      });
+    },
+  });
+}
+
+export function useRemoveProjectImage(projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (projectImageId: string) =>
+      projectsApi.images.remove(projectImageId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: projectKeys.images(projectId),
+      });
+    },
+  });
+}
+
+export function useReorderProjectImages(projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      items,
+      normalize = true,
+    }: {
+      items: { id: string; order: number }[];
+      normalize?: boolean;
+    }) => projectsApi.images.reorder(projectId, items, normalize),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: projectKeys.images(projectId),
+      });
     },
   });
 }

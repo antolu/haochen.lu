@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.repository_service import RepositoryInfo, repository_service
 from app.crud.project import (
+    attach_project_image,
     bulk_reorder_projects,
     create_project,
     delete_project,
@@ -16,6 +17,9 @@ from app.crud.project import (
     get_project_by_slug,
     get_project_count,
     get_projects,
+    list_project_images,
+    remove_project_image,
+    reorder_project_images,
     update_project,
     update_project_readme,
 )
@@ -26,6 +30,9 @@ from app.dependencies import (
 from app.models.project import Project as ProjectModel
 from app.schemas.project import (
     ProjectCreate,
+    ProjectImageAttach,
+    ProjectImageReorderRequest,
+    ProjectImageResponse,
     ProjectListResponse,
     ProjectReorderRequest,
     ProjectResponse,
@@ -167,6 +174,54 @@ async def reorder_projects(
     items = [{"id": it.id, "order": it.order} for it in payload.items]
     await bulk_reorder_projects(db, items, normalize=payload.normalize)
     return {"message": "Reordered successfully"}
+
+
+# Project images endpoints
+@router.get("/{project_id}/images", response_model=list[ProjectImageResponse])
+async def get_project_images(project_id: UUID, db: AsyncSession = _session_dependency):
+    images = await list_project_images(db, project_id)
+    return [ProjectImageResponse.model_validate(img) for img in images]
+
+
+@router.post("/{project_id}/images", response_model=ProjectImageResponse)
+async def add_project_image(
+    project_id: UUID,
+    payload: ProjectImageAttach,
+    db: AsyncSession = _session_dependency,
+    current_user=_current_admin_user_dependency,
+):
+    pi = await attach_project_image(
+        db,
+        project_id=project_id,
+        photo_id=UUID(payload.photo_id),
+        title=payload.title,
+        alt_text=payload.alt_text,
+    )
+    return ProjectImageResponse.model_validate(pi)
+
+
+@router.delete("/images/{project_image_id}")
+async def delete_project_image(
+    project_image_id: UUID,
+    db: AsyncSession = _session_dependency,
+    current_user=_current_admin_user_dependency,
+):
+    ok = await remove_project_image(db, project_image_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Project image not found")
+    return {"message": "Deleted"}
+
+
+@router.post("/{project_id}/images/reorder")
+async def reorder_images(
+    project_id: UUID,
+    payload: ProjectImageReorderRequest,
+    db: AsyncSession = _session_dependency,
+    current_user=_current_admin_user_dependency,
+):
+    items = [{"id": it.id, "order": it.order} for it in payload.items]
+    await reorder_project_images(db, project_id, items, normalize=payload.normalize)
+    return {"message": "Reordered"}
 
 
 @router.post("", response_model=ProjectResponse)

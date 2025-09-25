@@ -5,9 +5,11 @@ from uuid import UUID
 
 from sqlalchemy import asc, desc, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.repository_service import repository_service
 from app.models.project import Project
+from app.models.project_image import ProjectImage
 from app.schemas.project import ProjectCreate, ProjectUpdate
 
 
@@ -174,3 +176,82 @@ async def update_project_readme(
         await db.refresh(db_project)
 
     return db_project
+
+
+# Project images helpers
+async def list_project_images(db: AsyncSession, project_id: UUID) -> list[ProjectImage]:
+    result = await db.execute(
+        select(ProjectImage)
+        .options(selectinload(ProjectImage.photo))
+        .where(ProjectImage.project_id == project_id)
+        .order_by(asc(ProjectImage.order), asc(ProjectImage.created_at))
+    )
+    return list(result.scalars().all())
+
+
+async def attach_project_image(
+    db: AsyncSession,
+    *,
+    project_id: UUID,
+    photo_id: UUID,
+    title: str | None = None,
+    alt_text: str | None = None,
+) -> ProjectImage:
+    # Determine next order within project
+    res = await db.execute(
+        select(ProjectImage.order)
+        .where(ProjectImage.project_id == project_id)
+        .order_by(desc(ProjectImage.order))
+        .limit(1)
+    )
+    last_order = res.scalar() or 0
+    pi = ProjectImage(
+        project_id=project_id,
+        photo_id=photo_id,
+        title=title,
+        alt_text=alt_text,
+        order=last_order + 1,
+    )
+    db.add(pi)
+    await db.commit()
+    await db.refresh(pi)
+    return pi
+
+
+async def remove_project_image(db: AsyncSession, project_image_id: UUID) -> bool:
+    res = await db.execute(
+        select(ProjectImage).where(ProjectImage.id == project_image_id)
+    )
+    pi = res.scalar_one_or_none()
+    if not pi:
+        return False
+    await db.delete(pi)
+    await db.commit()
+    return True
+
+
+async def reorder_project_images(
+    db: AsyncSession, project_id: UUID, items: list[dict], *, normalize: bool = True
+) -> None:
+    if not items:
+        return
+    pairs: list[tuple[UUID, int]] = [
+        (UUID(str(it["id"])), int(it["order"])) for it in items
+    ]
+    if normalize:
+        pairs = [
+            (pid, idx)
+            for idx, (pid, _ord) in enumerate(sorted(pairs, key=lambda x: x[1]))
+        ]
+
+    ids = [pid for pid, _ in pairs]
+    order_case = func.case(
+        *[(ProjectImage.id == pid, ord_val) for pid, ord_val in pairs],
+        else_=ProjectImage.order,
+    )
+    await db.execute(
+        update(ProjectImage)
+        .where(ProjectImage.id.in_(ids), ProjectImage.project_id == project_id)
+        .values(order=order_case)
+    )
+    await db.commit()

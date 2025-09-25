@@ -48,6 +48,7 @@ class ProjectResponse(ProjectBase):
     readme_last_updated: datetime | None = None
     created_at: datetime
     updated_at: datetime
+    order: int | None = 0
 
     @field_validator("id", mode="before")
     @classmethod
@@ -77,5 +78,40 @@ class ReorderItem(BaseModel):
 
 
 class ProjectReorderRequest(BaseModel):
+    items: list[ReorderItem]
+    normalize: bool = True
+
+
+# Project images
+class ProjectImagePhoto(BaseModel):
+    id: str
+    variants: dict
+    original_url: str | None = None
+    download_url: str | None = None
+
+    class Config:
+        from_attributes = True
+
+
+class ProjectImageResponse(BaseModel):
+    id: str
+    project_id: str
+    photo_id: str
+    title: str | None = None
+    alt_text: str | None = None
+    order: int
+    photo: ProjectImagePhoto | None = None
+
+    class Config:
+        from_attributes = True
+
+
+class ProjectImageAttach(BaseModel):
+    photo_id: str
+    title: str | None = None
+    alt_text: str | None = None
+
+
+class ProjectImageReorderRequest(BaseModel):
     items: list[ReorderItem]
     normalize: bool = True

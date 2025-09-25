@@ -387,6 +387,55 @@ export const projects = {
     const response = await apiClient.get<string[]>("/projects/technologies");
     return response.data;
   },
+
+  // Project images
+  images: {
+    list: async (projectId: string) => {
+      const res = await apiClient.get(`/projects/${projectId}/images`);
+      return res.data as Array<{
+        id: string;
+        project_id: string;
+        photo_id: string;
+        title?: string | null;
+        alt_text?: string | null;
+        order: number;
+      }>;
+    },
+    attach: async (
+      projectId: string,
+      payload: { photo_id: string; title?: string; alt_text?: string },
+    ) => {
+      const res = await apiClient.post(
+        `/projects/${projectId}/images`,
+        payload,
+      );
+      return res.data as {
+        id: string;
+        project_id: string;
+        photo_id: string;
+        title?: string | null;
+        alt_text?: string | null;
+        order: number;
+      };
+    },
+    remove: async (projectImageId: string) => {
+      await apiClient.delete(`/projects/images/${projectImageId}`);
+    },
+    reorder: async (
+      projectId: string,
+      items: { id: string; order: number }[],
+      normalize = true,
+    ) => {
+      const res = await apiClient.post(
+        `/projects/${projectId}/images/reorder`,
+        {
+          items,
+          normalize,
+        },
+      );
+      return res.data as { message: string };
+    },
+  },
 };
 
 // Blog API
