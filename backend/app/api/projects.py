@@ -43,6 +43,29 @@ from app.schemas.project import (
 router = APIRouter()
 
 
+def _populate_photo_urls(photo_dict: dict) -> None:
+    """Populate photo file and variant URLs similar to hero_images endpoint."""
+    if not photo_dict:
+        return
+    photo_id = photo_dict.get("id")
+    if not photo_id:
+        return
+    photo_dict["original_url"] = f"/api/photos/{photo_id}/file"
+    photo_dict["download_url"] = f"/api/photos/{photo_id}/download"
+    variants = photo_dict.get("variants")
+    if isinstance(variants, dict):
+        for variant_name, variant_data in variants.items():
+            if isinstance(variant_data, dict):
+                # Provide size-level URL where missing
+                variant_data.setdefault(
+                    "url", f"/api/photos/{photo_id}/file/{variant_name}"
+                )
+                # For nested multi-format variants, attach url too
+                for fmt_data in variant_data.values():
+                    if isinstance(fmt_data, dict) and "filename" in fmt_data:
+                        fmt_data["url"] = f"/api/photos/{photo_id}/file/{variant_name}"
+
+
 @router.get("", response_model=ProjectListResponse)
 async def list_projects(
     *,
@@ -180,7 +203,14 @@ async def reorder_projects(
 @router.get("/{project_id}/images", response_model=list[ProjectImageResponse])
 async def get_project_images(project_id: UUID, db: AsyncSession = _session_dependency):
     images = await list_project_images(db, project_id)
-    return [ProjectImageResponse.model_validate(img) for img in images]
+    payload = []
+    for img in images:
+        img_dict = ProjectImageResponse.model_validate(img).model_dump()
+        photo_dict = img_dict.get("photo") or {}
+        _populate_photo_urls(photo_dict)
+        img_dict["photo"] = photo_dict
+        payload.append(ProjectImageResponse.model_validate(img_dict))
+    return payload
 
 
 @router.post("/{project_id}/images", response_model=ProjectImageResponse)
