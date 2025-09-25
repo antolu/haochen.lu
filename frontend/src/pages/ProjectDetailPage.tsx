@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -21,6 +21,15 @@ type ProjectReadmeResponse = {
 };
 import MarkdownRenderer from "../components/MarkdownRenderer";
 import { formatDate } from "../utils/dateFormat";
+
+type ProjectImageLight = {
+  id: string;
+  alt_text?: string | null;
+  photo?: {
+    variants?: Record<string, { url?: string }>;
+    original_url?: string;
+  };
+};
 
 const ProjectDetailPage: React.FC = () => {
   const params = useParams<{ slug: string }>();
@@ -147,25 +156,27 @@ const ProjectDetailPage: React.FC = () => {
                 {projectImages.length > 0 ? (
                   <Carousel className="w-full">
                     <CarouselContent>
-                      {projectImages.map((pi: any) => {
-                        const src =
-                          pi.photo?.variants?.large?.url ||
-                          pi.photo?.variants?.medium?.url ||
-                          pi.photo?.original_url;
-                        return (
-                          <CarouselItem key={pi.id}>
-                            <div className="aspect-video bg-gray-100">
-                              {src && (
-                                <img
-                                  src={src}
-                                  alt={pi.alt_text ?? project?.title ?? ""}
-                                  className="w-full h-full object-cover"
-                                />
-                              )}
-                            </div>
-                          </CarouselItem>
-                        );
-                      })}
+                      {(projectImages as unknown as ProjectImageLight[]).map(
+                        (pi) => {
+                          const src =
+                            pi.photo?.variants?.large?.url ||
+                            pi.photo?.variants?.medium?.url ||
+                            pi.photo?.original_url;
+                          return (
+                            <CarouselItem key={pi.id}>
+                              <div className="aspect-video bg-gray-100">
+                                {src && (
+                                  <img
+                                    src={src}
+                                    alt={pi.alt_text ?? project?.title ?? ""}
+                                    className="w-full h-full object-cover"
+                                  />
+                                )}
+                              </div>
+                            </CarouselItem>
+                          );
+                        },
+                      )}
                     </CarouselContent>
                     <CarouselPrevious />
                     <CarouselNext />

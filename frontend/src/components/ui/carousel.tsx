@@ -5,12 +5,15 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 type CarouselProps = React.HTMLAttributes<HTMLDivElement> & {
   opts?: EmblaOptionsType;
   setApi?: (api?: ReturnType<typeof useEmblaCarousel>[1]) => void;
-  plugins?: any[];
+  plugins?: unknown[];
 };
 
 export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
   ({ className, children, opts, setApi, plugins, ...props }, ref) => {
-    const [emblaRef, api] = useEmblaCarousel(opts, plugins);
+    const [emblaRef, api] = useEmblaCarousel(
+      opts as EmblaOptionsType | undefined,
+      plugins as [] | undefined,
+    );
     React.useEffect(() => {
       setApi?.(api);
     }, [api, setApi]);

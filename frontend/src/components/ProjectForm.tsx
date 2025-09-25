@@ -52,6 +52,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 
   const [technologiesInput, setTechnologiesInput] = useState("");
   const [markdownContent, setMarkdownContent] = useState("");
+  const [isEditorExpanded, setIsEditorExpanded] = useState(false);
   const [useReadme, setUseReadme] = useState(false);
   const [readmePreview, setReadmePreview] = useState<string | null>(null);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
@@ -381,8 +382,8 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
               />
             </div>
 
-            {/* Demo URL */}
-            <div>
+            {/* Demo URL - spans full width now that image URL is removed */}
+            <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Demo URL
               </label>
@@ -404,7 +405,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
             Project Description
           </h3>
 
-          {/* README Integration - only available after successful preview */}
+          {/* README Integration */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
               {watchedGithubUrl && (
@@ -421,8 +422,8 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
               )}
             </div>
 
-            {/* Enable toggle only after we have a preview */}
-            {readmePreview && (
+            {/* Show toggle when a repo is provided or preview is available */}
+            {watchedGithubUrl && (
               <div className="mb-2">
                 <label className="flex items-center">
                   <input
@@ -475,22 +476,37 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
             )}
           </div>
 
-          {/* Markdown Editor */}
+          {/* Description: start as single-line, expand to advanced editor on focus */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               {useReadme
                 ? "Custom Description (overrides README)"
                 : "Project Description *"}
             </label>
-            <div data-color-mode="light">
-              <MDEditor
+            {!isEditorExpanded ? (
+              <input
+                type="text"
                 value={markdownContent}
-                onChange={(val) => setMarkdownContent(val ?? "")}
-                preview="edit"
-                height={400}
-                visibleDragbar={false}
+                onChange={(e) => setMarkdownContent(e.target.value)}
+                onFocus={() => setIsEditorExpanded(true)}
+                placeholder={
+                  useReadme
+                    ? "Click to expand editor to override README"
+                    : "Click to expand editor"
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-            </div>
+            ) : (
+              <div data-color-mode="light">
+                <MDEditor
+                  value={markdownContent}
+                  onChange={(val) => setMarkdownContent(val ?? "")}
+                  preview="edit"
+                  height={400}
+                  visibleDragbar={false}
+                />
+              </div>
+            )}
             <p className="mt-1 text-xs text-gray-500">
               {useReadme
                 ? "Leave empty to use README content, or add custom description to override"

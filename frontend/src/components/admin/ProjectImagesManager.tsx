@@ -21,12 +21,22 @@ import {
   useReorderProjectImages,
 } from "../../hooks/useProjects";
 
+type ProjectImage = {
+  id: string;
+  title?: string | null;
+  alt_text?: string | null;
+  photo?: {
+    variants?: Record<string, { url?: string }>;
+    original_url?: string;
+  };
+};
+
 type ProjectImagesManagerProps = {
   projectId: string;
 };
 
 type ProjectImageItemProps = {
-  item: any;
+  item: ProjectImage;
   onRemove: (id: string) => void;
 };
 
@@ -92,10 +102,14 @@ const ProjectImagesManager: React.FC<ProjectImagesManagerProps> = ({
     }),
   );
 
-  const itemIds = useMemo(() => images.map((img: any) => img.id), [images]);
+  const typedImages = (images as unknown as ProjectImage[]) ?? [];
+  const itemIds = useMemo(
+    () => typedImages.map((img) => img.id),
+    [typedImages],
+  );
 
-  const onUploadComplete = (photo: any) => {
-    void attachMutation.mutate({ photo_id: photo.id });
+  const onUploadComplete = (photo: { id: string }) => {
+    void attachMutation.mutate({ photo_id: String(photo.id) });
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -104,8 +118,8 @@ const ProjectImagesManager: React.FC<ProjectImagesManagerProps> = ({
     const oldIndex = itemIds.indexOf(String(active.id));
     const newIndex = itemIds.indexOf(String(over.id));
     if (oldIndex < 0 || newIndex < 0) return;
-    const reordered = arrayMove(images, oldIndex, newIndex);
-    const items = reordered.map((pi: any, idx: number) => ({
+    const reordered = arrayMove(typedImages, oldIndex, newIndex);
+    const items = reordered.map((pi, idx: number) => ({
       id: pi.id,
       order: idx,
     }));
@@ -115,7 +129,6 @@ const ProjectImagesManager: React.FC<ProjectImagesManagerProps> = ({
   return (
     <div className="space-y-6">
       <div className="bg-card border rounded-lg p-4">
-        <h3 className="text-lg font-medium mb-2">Project Images</h3>
         <p className="text-sm text-muted-foreground mb-3">
           Upload multiple images. They are processed into AVIF/WebP/JPEG
           variants automatically.
@@ -134,7 +147,7 @@ const ProjectImagesManager: React.FC<ProjectImagesManagerProps> = ({
         <div className="p-4">
           {isLoading ? (
             <div className="text-sm text-muted-foreground">Loading images…</div>
-          ) : images.length === 0 ? (
+          ) : typedImages.length === 0 ? (
             <div className="text-sm text-muted-foreground">No images yet.</div>
           ) : (
             <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
@@ -143,7 +156,7 @@ const ProjectImagesManager: React.FC<ProjectImagesManagerProps> = ({
                 strategy={verticalListSortingStrategy}
               >
                 <ul className="divide-y">
-                  {images.map((img: any) => (
+                  {typedImages.map((img) => (
                     <SortableItem
                       key={img.id}
                       item={img}
