@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
@@ -67,60 +67,84 @@ const HomePage: React.FC = () => {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [selectedPhoto]);
 
+  const heroContainerRef = useRef<HTMLDivElement | null>(null);
+
+  const heroMemo = useMemo(() => {
+    if (!activeHeroImage) return null;
+    const optimalImage = selectOptimalImage(
+      activeHeroImage.photo,
+      ImageUseCase.HERO,
+    );
+    const mobileFocalPoint = activeHeroImage.focal_points_responsive
+      ?.mobile ?? {
+      x: activeHeroImage.focal_point_x,
+      y: activeHeroImage.focal_point_y,
+    };
+    const tabletFocalPoint = activeHeroImage.focal_points_responsive
+      ?.tablet ?? {
+      x: activeHeroImage.focal_point_x,
+      y: activeHeroImage.focal_point_y,
+    };
+    const desktopFocalPoint = activeHeroImage.focal_points_responsive
+      ?.desktop ?? {
+      x: activeHeroImage.focal_point_x,
+      y: activeHeroImage.focal_point_y,
+    };
+    return {
+      optimalImage,
+      mobileFocalPoint,
+      tabletFocalPoint,
+      desktopFocalPoint,
+    };
+  }, [activeHeroImage]);
+
+  // Set CSS variables only when focal points change
+  useEffect(() => {
+    if (!heroMemo || !heroContainerRef.current) return;
+    const el = heroContainerRef.current;
+    el.style.setProperty("--hero-mobile-x", `${heroMemo.mobileFocalPoint.x}%`);
+    el.style.setProperty("--hero-mobile-y", `${heroMemo.mobileFocalPoint.y}%`);
+    el.style.setProperty("--hero-tablet-x", `${heroMemo.tabletFocalPoint.x}%`);
+    el.style.setProperty("--hero-tablet-y", `${heroMemo.tabletFocalPoint.y}%`);
+    el.style.setProperty(
+      "--hero-desktop-x",
+      `${heroMemo.desktopFocalPoint.x}%`,
+    );
+    el.style.setProperty(
+      "--hero-desktop-y",
+      `${heroMemo.desktopFocalPoint.y}%`,
+    );
+  }, [heroMemo]);
+
   return (
     <div className="min-h-screen w-full m-0 p-0 mobile-safe">
       {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
         {/* Dynamic Hero Background Image */}
-        {activeHeroImage ? (
-          (() => {
-            const optimalImage = selectOptimalImage(
-              activeHeroImage.photo,
-              ImageUseCase.HERO,
-            );
-
-            // Generate responsive focal points with fallbacks
-            const mobileFocalPoint = activeHeroImage.focal_points_responsive
-              ?.mobile ?? {
-              x: activeHeroImage.focal_point_x,
-              y: activeHeroImage.focal_point_y,
-            };
-            const tabletFocalPoint = activeHeroImage.focal_points_responsive
-              ?.tablet ?? {
-              x: activeHeroImage.focal_point_x,
-              y: activeHeroImage.focal_point_y,
-            };
-            const desktopFocalPoint = activeHeroImage.focal_points_responsive
-              ?.desktop ?? {
-              x: activeHeroImage.focal_point_x,
-              y: activeHeroImage.focal_point_y,
-            };
-
-            return (
-              <div
-                className="absolute inset-0 w-full h-full hero-image-container"
-                style={
-                  {
-                    "--hero-mobile-x": `${mobileFocalPoint.x}%`,
-                    "--hero-mobile-y": `${mobileFocalPoint.y}%`,
-                    "--hero-tablet-x": `${tabletFocalPoint.x}%`,
-                    "--hero-tablet-y": `${tabletFocalPoint.y}%`,
-                    "--hero-desktop-x": `${desktopFocalPoint.x}%`,
-                    "--hero-desktop-y": `${desktopFocalPoint.y}%`,
-                  } as React.CSSProperties
-                }
-              >
-                <img
-                  src={optimalImage.url}
-                  srcSet={optimalImage.srcset}
-                  sizes={optimalImage.sizes}
-                  alt={activeHeroImage.photo.title || "Hero image"}
-                  className="w-full h-full object-cover dynamic-hero-focal-point"
-                  loading="eager"
-                />
-              </div>
-            );
-          })()
+        {heroMemo ? (
+          <div
+            ref={heroContainerRef}
+            className="absolute inset-0 w-full h-full hero-image-container"
+          >
+            {/* Preload primary hero image */}
+            <link
+              rel="preload"
+              as="image"
+              href={heroMemo.optimalImage.url}
+              imageSrcSet={heroMemo.optimalImage.srcset}
+              imageSizes={heroMemo.optimalImage.sizes}
+            />
+            <img
+              src={heroMemo.optimalImage.url}
+              srcSet={heroMemo.optimalImage.srcset}
+              sizes={heroMemo.optimalImage.sizes}
+              alt={activeHeroImage?.photo.title || "Hero image"}
+              className="w-full h-full object-cover dynamic-hero-focal-point"
+              loading="eager"
+              decoding="async"
+              fetchPriority="high"
+            />
+          </div>
         ) : (
           /* Fallback to static hero image */
           <picture className="absolute inset-0 w-full h-full">
@@ -165,7 +189,7 @@ const HomePage: React.FC = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-5xl md:text-7xl font-serif font-bold mb-4 animate-fade-in"
+            className="text-5xl md:text-7xl font-serif font-bold mb-4"
           >
             Anton Lu
           </motion.h1>
@@ -173,7 +197,7 @@ const HomePage: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.3 }}
-            className="text-xl md:text-2xl mb-12 animate-fade-in-delay"
+            className="text-xl md:text-2xl mb-12"
           >
             <span className="block mb-2">
               {homeContent?.["hero.tagline"]?.content ??
@@ -188,7 +212,7 @@ const HomePage: React.FC = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.2, delay: 0.6 }}
-            className="flex flex-col sm:flex-row gap-4 sm:gap-8 justify-center items-center animate-fade-in-delay-2 px-4 max-w-full"
+            className="flex flex-col sm:flex-row gap-4 sm:gap-8 justify-center items-center px-4 max-w-full"
           >
             <Link
               to="/photography"
