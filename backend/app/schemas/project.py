@@ -102,6 +102,13 @@ class ProjectImageResponse(BaseModel):
     order: int
     photo: ProjectImagePhoto | None = None
 
+    @field_validator("id", "project_id", "photo_id", mode="before")
+    @classmethod
+    def convert_uuid_to_str(cls, v):  # type: ignore[no-untyped-def]
+        if isinstance(v, UUID):
+            return str(v)
+        return v
+
     class Config:
         from_attributes = True
 

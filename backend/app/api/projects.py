@@ -252,7 +252,16 @@ async def add_project_image(
         title=payload.title,
         alt_text=payload.alt_text,
     )
-    return ProjectImageResponse.model_validate(pi)
+    # Eager-load photo for URL population
+    images = await list_project_images(db, project_id)
+    match = next((x for x in images if x.id == pi.id), None)
+    if not match:
+        return ProjectImageResponse.model_validate(pi)
+    img_dict = ProjectImageResponse.model_validate(match).model_dump()
+    photo_dict = img_dict.get("photo") or {}
+    _populate_photo_urls(photo_dict)
+    img_dict["photo"] = photo_dict
+    return ProjectImageResponse.model_validate(img_dict)
 
 
 @router.delete("/images/{project_image_id}")
