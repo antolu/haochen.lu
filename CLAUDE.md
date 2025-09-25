@@ -2,381 +2,207 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
-
-This is a modern, full-stack portfolio website built with **FastAPI (Python) backend** and **React (TypeScript) frontend**. Features photo uploads with automatic EXIF extraction and responsive image processing, blog system, project showcase, and authenticated sub-applications access. The site uses a landing page approach with a separate album page for seamless photo browsing.
-
-## Development Commands
-
-### Development Script (Recommended)
-The project includes a `dev.sh` script that simplifies common development tasks:
-
-- Start development environment: `./dev.sh start` or `./dev.sh dev`
-- Stop development environment: `./dev.sh stop`
-- Restart development environment: `./dev.sh restart`
-- View logs: `./dev.sh logs [service]`
-- Start production environment: `./dev.sh prod`
-- Stop production environment: `./dev.sh prod-stop`
-- Build frontend: `./dev.sh build`
-- Run tests: `./dev.sh test`
-- Show help: `./dev.sh help`
-
-**Development Environment Features:**
-- Source code mounting for live reload
-- Frontend with Vite HMR on development server
-- Backend with Uvicorn auto-reload
-- Nginx proxy handling routing
-
-**Access URLs (Development):**
-- Application: http://localhost (proxied through nginx)
-- Direct backend: http://localhost:8000 (for debugging)
-- API: http://localhost/api
-
-### Docker Deployment (Manual)
-- Start services: `docker compose up -d`
-- View logs: `docker compose logs -f backend/frontend`
-- Complete rebuild: `docker system prune -f && docker compose build --no-cache && docker compose up -d`
-- Run migrations: `docker compose run --rm migrate`
-
-### Multi-platform Docker Builds
-For building and pushing images to registry:
-- Backend: `docker buildx build --platform linux/amd64,linux/arm64 -t antonlu/arcadia-backend:latest backend --push`
-- Frontend: `docker buildx build --platform linux/amd64,linux/arm64 -t antonlu/arcadia-frontend:latest frontend --push`
-
-For local development (loads images locally):
-- Backend: `docker buildx build --platform linux/amd64,linux/arm64 -t antonlu/arcadia-backend:latest backend --load`
-- Frontend: `docker buildx build --platform linux/amd64,linux/arm64 -t antonlu/arcadia-frontend:latest frontend --load`
-
-**Note**: Use `--load` for local development, `--push` for registry deployment. When using `--push`, images are not stored locally and Docker Compose may not find them.
-
-**Access URLs:**
-- Website: http://localhost
-- API Documentation: http://localhost/api/docs
-- Admin Login: admin/admin
-
-### Local Development
-
-#### Backend (FastAPI)
-- Install: `cd backend && pip install -e .`
-- Migrations: `alembic upgrade head`
-- Run: `uvicorn app.main:app --reload --port 8000`
-
-#### Frontend (React + Vite)
-- Install: `cd frontend && npm install`
-- Development: `npm run dev`
-- Build: `npm run build`
-- Preview: `npm run preview`
-
-### Testing Commands
-
-**Frontend:**
-- `npm run test` (Vitest unit tests)
-- `npm run test:e2e` (Playwright E2E tests)
-- `npm run test:coverage` (Coverage report)
-- `npm run test:components` (Component tests only)
-- `npm run test:security` (Security tests only)
-- `npm run test:all` (All tests including E2E)
-- `npm run lint` (ESLint)
-
-**Backend:**
-- `pytest` (all tests)
-- `pytest tests/unit/` (unit tests only)
-- `pytest tests/integration/` (integration tests only)
-- `pytest --cov=app` (with coverage)
-- `ruff check --fix --unsafe-fixes --preview` (linting with fixes)
-- `mypy app/ tests/` (type checking)
-
-**Docker-based:** `docker compose exec backend python -m pytest tests/`
-
-### Pre-commit Configuration
-- Install: `pre-commit install`
-- Run all: `pre-commit run --all-files`
-- Manual checks: `ruff check --fix`, `ruff format`, `mypy app/ tests/`
-
-**Configured Hooks:** end-of-file-fixer, trailing-whitespace, check-yaml/json/toml, ruff, mypy, prettier, bandit
-
-## Architecture & Structure
-
-### Tech Stack
-- **Backend**: FastAPI, SQLAlchemy 2.0, PostgreSQL, Redis, Alembic
-- **Frontend**: React 18, TypeScript, Vite, TanStack Query, Zustand, Tailwind CSS v4
-- **Maps & Clustering**: Leaflet, react-leaflet, react-leaflet-cluster, OpenStreetMap
-- **Infrastructure**: Docker Compose, Nginx (in frontend container)
-
-### Project Structure
-- **backend/**: FastAPI backend with API routes, core services, CRUD operations, models, schemas, and tests
-- **frontend/**: React frontend with components, hooks, pages, layouts, stores, and comprehensive test suites
-- **uploads/**: Original uploaded images
-- **compressed/**: Processed responsive images (WebP variants)
-
-### Key Components
-- **API routes**: Authentication, photos, projects, blog management, location services
-- **Photo locations API**: `/api/photos/locations` endpoint for map clustering data
-- **Image processing**: EXIF extraction, responsive variants generation
-- **Repository integration**: GitHub/GitLab URL validation and README fetching
-- **Photo system**: Upload, processing, gallery with lightbox and interactive map
-- **Project management**: CRUD operations with repository integration
-- **Location services**: Geocoding, reverse geocoding, location search using OpenStreetMap Nominatim
-- **Admin interface**: Full management dashboard with location editing
-
-### Page Architecture
-- **HomePage**: Landing page with hero image and latest projects
-- **AlbumPage**: Full-screen photo gallery with lightbox
-- **ProjectsPage**: Project listing with filtering and infinite scroll
-- **Admin pages**: Complete management interface
-
-### Image Processing Pipeline
-1. **Upload**: Multipart form with metadata
-2. **EXIF Extraction**: Camera settings, GPS coordinates using ExifRead
-3. **Processing**: Auto-rotation, responsive size generation (5 variants: 400px-2400px)
-4. **Storage**: Original in `/uploads`, responsive variants in `/compressed`
-5. **Database**: Metadata and variant information stored in PostgreSQL
-
-### Responsive Image Processing
-Generates 5 optimized WebP variants per image:
-- **thumbnail**: 400px (75% quality) - Grid thumbnails, previews
-- **small**: 800px (80% quality) - Mobile viewing
-- **medium**: 1200px (85% quality) - Desktop viewing
-- **large**: 1600px (90% quality) - High-res viewing
-- **xlarge**: 2400px (95% quality) - Print quality
-
-**Key Features:**
-- Smart processing skips variants larger than original
-- Quality optimization with higher compression for smaller sizes
-- Variants stored as JSON in database with comprehensive metadata
-- Utility functions for responsive loading and srcset generation
-
-### Photo Upload System
-
-**Frontend Components:**
-- **PhotoUpload.tsx**: Drag-and-drop upload with validation and progress tracking
-- **usePhotos.ts**: TanStack Query hook with optimistic updates
-- **PhotoGrid.tsx**: Virtualized infinite scroll gallery
-- **PhotoLightbox.tsx**: PhotoSwipe integration for full-screen viewing
-
-**Key Design Patterns:**
-- File object composition over inheritance for upload handling
-- Defensive programming with safe file size formatting and form data preparation
-- Comprehensive HTTP error handling with specific status code responses
-- Real-time upload progress tracking and status management
-
-**Backend Architecture:**
-- **ImageProcessor**: EXIF extraction and responsive image generation
-- **PhotoCRUD**: Async database operations with variants JSON storage
-- **PhotoResponse**: Pydantic schema with UUID serialization
-- **File Storage**: Absolute path handling for security
-
-### Project Management System
-
-**Frontend Components:**
-- **ProjectCard.tsx**: Display with status badges, technology tags, and hover animations
-- **ProjectGrid.tsx**: Infinite scroll grid with intersection observer
-- **ProjectForm.tsx**: Complex form with repository integration and README preview
-- **ProjectDetailPage.tsx**: Individual project view with markdown rendering
-- **RepositoryConnector.tsx**: URL validation and metadata extraction
-- **MarkdownRenderer.tsx**: Secure markdown display with XSS prevention
-
-**Key Features:**
-- Comprehensive project data model with repository integration fields
-- GitHub/GitLab URL parsing and validation (including self-hosted)
-- Automatic README fetching with caching and last-updated tracking
-- Real-time repository existence checking with rate limiting
-- Advanced UI patterns including infinite scroll and optimistic updates
-
-**Backend Architecture:**
-- **RepositoryService**: GitHub/GitLab API integration with authentication
-- **ProjectCRUD**: Database operations with slug generation and filtering
-- **README Caching**: Intelligent caching system with refresh capabilities
-- **Project Validation**: URL parsing, repository validation, and sanitization
-
-### Repository Integration System
-
-Provides seamless connection to GitHub and GitLab repositories with automatic README fetching and validation.
-
-**Core Features:**
-- **URL Parsing**: Supports GitHub, GitLab (including self-hosted), various URL formats
-- **README Fetching**: Tries multiple filenames, supports main/master branches
-- **Caching**: Database storage with commit timestamp tracking for cache invalidation
-- **Authentication**: Optional GitHub/GitLab tokens for increased rate limits
-- **Error Handling**: Graceful degradation with fallback to project descriptions
-
-**Frontend Integration:**
-- Real-time URL validation with visual feedback
-- README preview integration in project forms
-- Mutation-based validation with loading states
-- Parent form updates on successful validation
-
-**Security Considerations:**
-- Strict URL validation patterns prevent injection
-- API tokens stored as environment variables
-- Respects GitHub/GitLab rate limits
-- Proper markdown content sanitization
-
-### Frontend Component Patterns
-
-**1. Form Management with Repository Integration**
-- Complex form handling with external API validation
-- Repository URL watching and automatic field population
-- Integration between form state and repository validation components
-
-**2. Infinite Scroll with Intersection Observer**
-- Performance-optimized infinite scroll implementation
-- Intersection observer with configurable thresholds and root margins
-- Automatic loading trigger based on viewport intersection
-
-**3. Real-time Validation with Visual Feedback**
-- Live URL validation with state management
-- Visual feedback system with loading, success, and error states
-- Mutation-based validation with parent component communication
-
-**4. Secure Markdown Rendering**
-- XSS prevention with DOMPurify sanitization
-- Syntax highlighting with rehype plugins
-- Custom component mapping for secure code rendering
-
-**5. Optimistic Updates with Error Recovery**
-- TanStack Query implementation with optimistic updates
-- Error recovery with state rollback mechanisms
-- Query invalidation for data consistency
-
-### Admin Photo Management System
-
-Advanced photo editing interface with comprehensive metadata management and location services integration.
-
-**PhotoEditForm Features:**
-- **Tabbed Interface**: Organized editing across Basic Info, Location, Technical, and Custom Fields tabs
-- **Location Integration**: Full map-based location editing with coordinate input and search
-- **Technical Metadata**: Complete EXIF data editing including camera settings, lens, and capture details
-- **Custom Fields**: Dynamic custom field system supporting text, number, date, boolean, and textarea types
-- **Real-time Validation**: Form validation with error handling and success feedback
-- **Responsive Design**: Mobile-friendly interface with touch-optimized map interactions
-
-**Key Design Patterns:**
-- **Tab-based Organization**: Motion-animated tab switching for intuitive navigation
-- **Form State Management**: React Hook Form integration with comprehensive validation
-- **Dynamic Field System**: Runtime custom field creation and management
-- **Location Services Integration**: Seamless integration with location services for automatic geocoding
-- **Preview Integration**: Live photo preview with variant support and file information display
-
-**Location Editing Features:**
-- **Interactive Map**: Leaflet-based map with click-to-select location functionality
-- **Coordinate Input**: Manual coordinate entry with automatic location name resolution
-- **Location Search**: Real-time location search with autocomplete suggestions
-- **Current Location**: Browser geolocation integration for quick location selection
-- **Address Override**: Manual location name and address override capabilities
-
-**Custom Metadata System:**
-- **Dynamic Fields**: Runtime addition of custom metadata fields with type selection
-- **Multiple Types**: Support for text, number, date, boolean, select, and textarea field types
-- **Field Management**: Add, edit, and remove custom fields with validation
-- **JSON Storage**: Efficient storage of custom metadata in PostgreSQL JSONB columns
-- **Type Safety**: Frontend type validation and conversion for different field types
-
-### Shrinking Header Implementation
-
-Dynamic navigation header that shrinks gracefully on scroll for optimal user experience.
-
-**Key Features:**
-- **Dynamic Height Scaling**: Responsive height adaptation (h-20 md:h-24 → h-16)
-- **Typography Scaling**: Dramatic logo scaling with font weight changes (text-4xl → text-xl)
-- **Performance**: Passive scroll listeners with 10px trigger threshold
-- **Smooth Animations**: Staggered transition timing for layout and typography
-- **Responsive Design**: Different scaling ratios for mobile vs desktop
-- **Accessibility**: Maintains functionality while optimizing content space
-
-**Implementation Details:**
-- Scroll-based state management with granular positioning
-- Enhanced typography scaling with font weight and letter spacing
-- Hardware-accelerated transitions for smooth performance
-- Professional appearance matching modern web design standards
-
-### Location Services System
-
-Modern location management using OpenStreetMap Nominatim for geocoding and search functionality.
-
-**Backend API (`/api/locations`):**
-- **Reverse Geocoding**: Convert coordinates to location names and addresses
-- **Forward Geocoding**: Convert addresses to coordinates
-- **Location Search**: Search for locations by name with auto-complete
-- **Nearby Locations**: Find points of interest near given coordinates
-
-**Core Features:**
-- **OpenStreetMap Integration**: Uses Nominatim API for all location services
-- **Async Operations**: Non-blocking geocoding operations using asyncio
-- **Intelligent Parsing**: Smart location name generation prioritizing city > town > village
-- **Distance Calculations**: Haversine formula for accurate distance measurements
-- **Rate Limiting**: Respectful API usage with proper timeouts and error handling
-
-**Frontend Components:**
-- **LocationInput**: Comprehensive location input with coordinates, name override, and current location
-- **MapPicker**: Interactive Leaflet map with click-to-select and search functionality
-- **MiniMap**: Compact map display for showing photo locations
-- **PhotoMap**: Interactive photo map with clustering, custom markers, and popup integration
-- **InteractiveMap**: Base interactive map component for photo editing
-- **MapModal**: Modal component for map-based photo selection
-
-**Frontend Integration:**
-- **Interactive Maps**: Leaflet-based maps with OpenStreetMap tiles
-- **Location Search**: Real-time location search with debounced autocomplete
-- **Current Location**: Browser geolocation API integration
-- **Visual Feedback**: Loading states, error handling, and success indicators
-
-**Admin Integration:**
-- **PhotoEditForm**: Full location editing with map picker and coordinate input
-- **Location Override**: Manual location name override capability
-- **GPS Data Enhancement**: Automatic location name resolution from EXIF GPS coordinates
-
-### Interactive Photo Map with Clustering
-
-Advanced photo gallery map integration with intelligent location clustering and interactive navigation.
-
-**Core Features:**
-- **Location Clustering**: Automatically groups nearby photos using react-leaflet-cluster
-- **Zoom-based Separation**: Clusters dynamically separate as users zoom in for granular exploration
-- **Custom Photo Markers**: Photo thumbnail previews embedded in map markers
-- **Interactive Cluster Popups**: Click clusters to see all photos with thumbnail grid and metadata
-- **Grid Synchronization**: Map clicks highlight and scroll to corresponding photos in the gallery
-- **Global Distribution**: Handles worldwide photo locations with responsive clustering algorithms
-
-**Technical Implementation:**
-- **API Endpoint**: `/api/photos/locations` provides optimized location data for map rendering
-- **PhotoMap Component**: React-leaflet integration with MarkerClusterGroup for clustering
-- **Custom Cluster Icons**: Dynamic cluster sizing with thumbnail preview grid (4+ photos)
-- **Event Handling**: Custom cluster click events with popup generation and photo navigation
-- **CSS Styling**: Comprehensive styling for cluster markers, popups, and animations
-
-**User Experience:**
-- **Photography Page Integration**: Map positioned at bottom of gallery for location exploration
-- **Real-time Highlighting**: Photos highlighted in grid when selected from map
-- **Smooth Scrolling**: Automatic scroll to photo position in virtualized grid
-- **Mobile Responsive**: Touch-optimized interactions with appropriate clustering thresholds
-- **Visual Feedback**: Hover effects, transitions, and loading states for professional UX
-
-**Performance Optimizations:**
-- **Chunked Loading**: Efficient marker rendering for large photo collections
-- **Optimized Clustering**: Configurable cluster radius and zoom thresholds
-- **Thumbnail Variants**: Uses compressed thumbnail images for fast marker rendering
-- **Event Debouncing**: Smooth interaction handling without performance degradation
-
-### Frontend State Management
-- **TanStack Query**: Server state, caching, optimistic updates
-- **Zustand**: Client state (auth, UI state)
-- **React Router v6**: Client-side routing with nested layouts
-
-### Styling System
-- **Tailwind CSS v4**: Utility-first styling with safelist for dynamic classes
-- **Responsive Images**: Hero images in multiple resolutions (WebP + JPEG fallbacks)
-- **Typography**: Merriweather serif for headings, Inter for body text
-
-### Docker Architecture
-- **frontend**: Nginx serving React build + reverse proxy to backend
-- **backend**: FastAPI app with health checks
-- **db**: PostgreSQL 15 with persistent volumes
-- **redis**: Redis 7 for caching and sessions
-- **migrate**: One-time migration runner for database schema updates
-
-**Container Naming:** Containers use `haochenlu-` prefix in development, `portfolio-` in production (frontend, backend, db, redis, migrate)
-**Database:** Default name is `portfolio`
+## Architecture
+
+This is a full-stack photography portfolio platform with FastAPI backend and React frontend. The system features:
+
+- **Backend**: FastAPI with SQLAlchemy 2.0, PostgreSQL 15, Redis 7, async operations
+- **Frontend**: React 18 with TypeScript, Vite, TanStack Query, Zustand, Leaflet maps
+- **Infrastructure**: Docker Compose with nginx reverse proxy
+- **Image Processing**: Multi-variant WebP generation (400px-2400px) with EXIF extraction
+
+Core features include interactive photo mapping with clustering, location-based photo organization, project portfolio with GitHub integration, blog system, and comprehensive admin interface.
+
+## Development Setup
+
+### Environment Setup
+Required environment variables (create `.env` file):
+- `SECRET_KEY`: JWT signing key (minimum 32 characters)
+- `SESSION_SECRET_KEY`: Session encryption key (minimum 32 characters)
+- `ADMIN_PASSWORD`: Admin user password (minimum 8 characters)
+
+### Development Commands
+
+**Primary development workflow:**
+```bash
+# Start development environment with live reload
+./dev.sh start
+
+# View logs (optional service name and -f to follow)
+./dev.sh logs [service] [-f]
+
+# Stop development environment
+./dev.sh stop
+
+# Restart development environment
+./dev.sh restart
+```
+
+**Manual Docker commands:**
+```bash
+# Start all services
+docker compose -f docker-compose.dev.yml up -d
+
+# Stop all services
+docker compose -f docker-compose.dev.yml down
+
+# View logs for specific service
+docker compose -f docker-compose.dev.yml logs -f backend
+docker compose -f docker-compose.dev.yml logs -f frontend
+```
+
+**Local development (without Docker):**
+```bash
+# Backend
+cd backend
+pip install -e .
+alembic upgrade head
+uvicorn app.main:app --reload --port 8000
+
+# Frontend
+cd frontend
+npm install
+npm run dev
+```
+
+### Database Management
+
+```bash
+# Create new migration
+docker compose -f docker-compose.dev.yml exec backend alembic revision --autogenerate -m "description"
+
+# Apply migrations
+docker compose -f docker-compose.dev.yml exec backend alembic upgrade head
+
+# View migration history
+docker compose -f docker-compose.dev.yml exec backend alembic history
+```
+
+### Testing
+
+**Backend testing:**
+```bash
+# Via Docker
+docker compose -f docker-compose.dev.yml exec backend python -m pytest
+docker compose -f docker-compose.dev.yml exec backend python -m pytest tests/unit/
+docker compose -f docker-compose.dev.yml exec backend python -m pytest tests/integration/
+
+# Local
+cd backend
+pytest
+pytest --cov=app tests/
+```
+
+**Frontend testing:**
+```bash
+cd frontend
+npm run test              # Unit tests with Vitest
+npm run test:e2e          # E2E tests with Playwright
+npm run test:components   # Component tests only
+npm run test:coverage     # Generate coverage report
+```
+
+### Code Quality
+
+**Backend linting/formatting:**
+```bash
+# Run ruff with recommended flags
+ruff check --fix --unsafe-fixes --preview
+ruff format
+mypy app/ tests/
+```
+
+**Frontend linting/formatting:**
+```bash
+cd frontend
+npm run lint              # ESLint checking
+npm run lint:fix          # ESLint with auto-fix
+npm run format            # Prettier formatting
+```
+
+**Pre-commit hooks:**
+```bash
+pre-commit install
+pre-commit run --all-files
+```
+
+## Testing Framework
+
+**Backend pytest markers:**
+- `unit`: Unit tests
+- `integration`: Integration tests
+- `security`: Security tests
+- `performance`: Performance tests
+- `auth`: Authentication tests
+- `upload`: File upload tests
+- `database`: Database tests
+- `api`: API tests
+- `image`: Image processing tests
+
+Test configuration in `backend/pyproject.toml` with coverage requirements (40% minimum).
+
+## Key File Locations
+
+**Backend structure:**
+- `backend/app/main.py`: FastAPI application entry point
+- `backend/app/api/`: API route handlers (auth, photos, projects, blog, locations)
+- `backend/app/core/`: Core services (security, image processing, Redis, location service)
+- `backend/app/models/`: SQLAlchemy database models
+- `backend/app/schemas/`: Pydantic request/response schemas
+- `backend/app/crud/`: Database operations layer
+- `backend/alembic/`: Database migration files
+
+**Frontend structure:**
+- `frontend/src/components/`: Reusable UI components
+- `frontend/src/components/admin/`: Admin interface components
+- `frontend/src/pages/`: Route-level components
+- `frontend/src/hooks/`: Custom React hooks
+- `frontend/src/api/`: API client with TypeScript types
+- `frontend/src/stores/`: Zustand state management
+- `frontend/src/types/`: TypeScript type definitions
+
+**Storage:**
+- `uploads/`: Original uploaded images
+- `compressed/`: Processed WebP image variants
+
+## API Architecture
+
+**Key endpoints:**
+- Authentication: `/api/auth/login`, `/api/auth/logout`, `/api/auth/me`
+- Photos: `/api/photos`, `/api/photos/locations` (optimized for map clustering)
+- Location Services: `/api/locations/search`, `/api/locations/geocode`, `/api/locations/reverse`
+- Projects: `/api/projects` (with GitHub/GitLab integration)
+- Blog: `/api/blog`
+
+**Image processing pipeline:**
+1. Upload with EXIF extraction (GPS, camera settings, timestamps)
+2. Auto-rotation correction and responsive variant generation
+3. Automatic location name resolution via OpenStreetMap Nominatim
+4. Storage with structured metadata in JSONB database column
+
+## Access URLs
+
+**Development:**
+- Application: http://localhost
+- Admin interface: http://localhost/admin
+- API documentation: http://localhost/api/docs
+- Direct backend: http://localhost:8000 (debugging)
+
+## Code Conventions
+
+- **Backend**: Python 3.11+, type hints required, use `from __future__ import annotations`
+- **Frontend**: TypeScript strict mode, functional components with hooks
+- **Imports**: Prefer absolute imports, avoid wildcard imports
+- **Pre-commit**: All commits must pass pre-commit hooks (ruff, mypy, eslint, prettier, security checks)
+- **Testing**: Functional tests preferred over class-based tests in Python
+
+## Performance Considerations
+
+- Photos processed into 5 WebP variants for responsive loading
+- Location data optimized for map clustering at `/api/photos/locations`
+- Redis caching for sessions and geocoding responses
+- Virtualized photo grids for large collections
+- Database indexes on location and timestamp fields
 
 ## Common Development Issues
 
@@ -420,7 +246,7 @@ Tailwind v4 requires all reset styles inside `@layer base` in `/frontend/src/ind
 
 **General Troubleshooting:**
 - Check file size limits (50MB default) and upload directory permissions
-- Check backend logs: `docker compose logs -f backend`
+- Check backend logs: `docker compose logs backend`
 - EXIF processing requires valid image files
 - Use browser dev tools to inspect FormData being sent
 
@@ -438,115 +264,7 @@ If getting "File is too large" errors for files under 50MB:
 - **Frontend**: Set `VITE_API_URL=` (empty) to prevent double prefixing
 
 ### Authentication
-- Default admin credentials: `admin` / `admin`
+- Default admin credentials: `admin` / `adminpassword`
 - JWT tokens stored in browser localStorage
 - Clear localStorage if auth issues persist
-
-## Code Quality & Linting
-
-### Python (Backend)
-- **Ruff**: Fast Python linter (replaces flake8, isort, black)
-- **MyPy**: Static type checking with strict configuration
-- **Bandit**: Security vulnerability scanning
-
-### TypeScript (Frontend)
-- **ESLint**: Code quality and error detection
-- **Prettier**: Code formatting and style consistency
-- **TypeScript**: Strict type checking
-
-**Quick Fixes:**
-- Python: `ruff check --fix && ruff format && mypy app/ tests/`
-- Frontend: `npm run lint -- --fix && npm run format`
-
-### Pre-commit Integration
-Automatic quality checks on commit ensure:
-- No formatting inconsistencies
-- Type errors caught before commit
-- Security vulnerabilities detected early
-- All tests pass before integration
-
-## Testing Strategy
-
-### Backend Tests
-- **Unit Tests**: Individual functions, business logic
-- **Integration Tests**: API endpoints, database operations
-- **Security Tests**: Authentication, input validation
-- **Performance Tests**: Large file uploads, concurrent requests
-- **Repository Integration Tests**: GitHub/GitLab API mocking, README fetching, URL validation
-- **Project CRUD Tests**: Database operations, slug generation, filtering
-
-### Frontend Tests
-- **Unit Tests**: Components, utilities (Vitest + Testing Library)
-- **E2E Tests**: User flows, admin operations (Playwright)
-- **Visual Tests**: Hero image, album grid layout
-- **Upload Tests**: File handling, validation, error scenarios
-- **Project Management Tests**: CRUD operations, infinite scroll, repository integration
-
-**Component Testing Coverage:**
-- ProjectCard, ProjectGrid, ProjectForm, RepositoryConnector, MarkdownRenderer
-- LocationInput, MapPicker, MiniMap, PhotoMap components with clustering functionality
-- PhotoEditForm with location editing functionality
-- InteractiveMap and MapModal components for photo management
-- Hook testing for useProjects, infinite scroll, repository validation
-- E2E flows for project creation, management, repository integration, location services
-- Map interaction testing for location selection, clustering, and photo navigation
-- Photo map clustering behavior testing with zoom-based separation
-- Grid synchronization testing for map-to-grid photo highlighting
-- Accessibility compliance (WCAG 2.1 AA), keyboard navigation, screen reader support
-
-## Deployment Notes
-
-### Environment Variables (.env)
-**Required Security Variables** (Application will not start without these):
-- `SECRET_KEY` - JWT signing key (minimum 32 characters)
-- `SESSION_SECRET_KEY` - Session encryption key (minimum 32 characters)
-- `ADMIN_PASSWORD` - Admin user password (minimum 8 characters)
-
-**Optional Configuration:**
-- `POSTGRES_DB=portfolio`, `POSTGRES_PASSWORD` - Database settings
-- `ENVIRONMENT=development` or `production` - Environment detection
-- `WEBP_QUALITY=85`, `THUMBNAIL_SIZE=400` - Image processing
-- `COOKIE_SECURE=true`, `CORS_ORIGINS` - Production security settings
-
-### Security Validation
-- **Startup Validation**: Checks all required environment variables before starting
-- **No Fallbacks**: Removed hardcoded secrets and default values
-- **Production Mode**: Enhanced validation when `ENVIRONMENT=production`
-
-### Production Checklist
-- Set secure passwords in `.env`
-- Configure proper CORS origins and SSL certificates
-- Set up PostgreSQL and upload directory backups
-- Monitor disk space for image storage
-
-### Performance Optimizations
-- **Backend**: Async operations, database indexing, Redis caching
-- **Frontend**: Code splitting, image optimization, CDN for static assets
-- **Images**: 5 responsive WebP variants with quality optimization per size
-- **Performance Benefits**: 90% smaller thumbnails, 70% mobile bandwidth reduction, 43% desktop file size reduction
-
-## Responsive Image Configuration
-
-### Backend Configuration
-- **Responsive sizes**: thumbnail (400px), small (800px), medium (1200px), large (1600px), xlarge (2400px)
-- **Quality settings**: Higher compression for smaller images (75%-95% quality)
-- **Usage functions**: `get_image_url()` and `get_image_srcset()` for responsive loading
-
-### Frontend Usage
-- Responsive image components with automatic size selection
-- Srcset generation for optimal loading across devices
-- Fallback handling for legacy image paths
-
-### Database Schema
-The initial schema in `001_initial_schema.py` includes comprehensive photo metadata support:
-- **Variants Column**: JSONB storage for all responsive image variants with metadata
-- **Enhanced Location**: Location fields for comprehensive geocoding support (lat/lon, name, address, altitude, timezone)
-- **Custom Metadata**: JSONB column for flexible custom field storage
-- **Technical Metadata**: Camera, lens, and EXIF data fields
-
-### Location Data Structure
-Enhanced photo location storage includes:
-- **Coordinates**: `location_lat`, `location_lon` for precise positioning
-- **Names**: `location_name` for display, `location_address` for full geocoded address
-- **Elevation**: `altitude` field for GPS elevation data
-- **Timezone**: `timezone` field for accurate datetime handling
+- normally there is no need to restart if we are doing superficial changes without new files

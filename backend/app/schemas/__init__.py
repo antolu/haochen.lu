@@ -37,11 +37,11 @@ from app.schemas.content import (
 from app.schemas.content import (
     ContentUpdate as ContentUpdate,
 )
+
+# Hero image schemas
 from app.schemas.hero_image import (
     HeroImageActivate as HeroImageActivate,
 )
-
-# Hero image schemas
 from app.schemas.hero_image import (
     HeroImageCreate as HeroImageCreate,
 )

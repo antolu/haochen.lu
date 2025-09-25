@@ -1,13 +1,16 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 
 import { photos } from "../api/client";
 import PhotoGrid from "../components/PhotoGrid";
 import PhotoLightbox from "../components/PhotoLightbox";
 import PhotoMap from "../components/PhotoMap";
 import type { Photo, PhotoListResponse } from "../types";
+import OrderBySelector, {
+  type OrderByOption,
+} from "../components/OrderBySelector";
 
 const PhotographyPage: React.FC = () => {
   const [allPhotos, setAllPhotos] = useState<Photo[]>([]);
@@ -22,6 +25,27 @@ const PhotographyPage: React.FC = () => {
   const photoGridRef = useRef<HTMLDivElement>(null);
   const photosPerPage = 24;
   const location = useLocation() as { state?: { photoId?: string } };
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const orderBy = useMemo<OrderByOption>(() => {
+    const param = searchParams.get("order_by");
+    if (param === "date_taken" || param === "order") {
+      return param;
+    }
+    return "created_at";
+  }, [searchParams]);
+
+  const hasInitializedOrderRef = useRef(false);
+
+  useEffect(() => {
+    if (!hasInitializedOrderRef.current) {
+      hasInitializedOrderRef.current = true;
+      return;
+    }
+    setCurrentPage(1);
+    setAllPhotos([]);
+    setIsLoadingMore(false);
+  }, [orderBy]);
 
   // Fetch photos from API
   const {
@@ -29,12 +53,12 @@ const PhotographyPage: React.FC = () => {
     isLoading,
     error,
   } = useQuery<PhotoListResponse>({
-    queryKey: ["photos", "list", currentPage],
+    queryKey: ["photos", "list", orderBy, currentPage],
     queryFn: () =>
       photos.list({
         page: currentPage,
         per_page: photosPerPage,
-        order_by: "created_at",
+        order_by: orderBy,
       }),
   });
 
@@ -94,6 +118,24 @@ const PhotographyPage: React.FC = () => {
         setHighlightedPhotoId(null);
       }, 3000);
     }
+  };
+
+  const handleOrderChange = (value: OrderByOption) => {
+    setCurrentPage(1);
+    setAllPhotos([]);
+    setIsLoadingMore(false);
+    setSearchParams(
+      (params) => {
+        const next = new URLSearchParams(params);
+        if (value === "created_at") {
+          next.delete("order_by");
+        } else {
+          next.set("order_by", value);
+        }
+        return next;
+      },
+      { replace: true },
+    );
   };
 
   const handlePhotoSwipeClose = () => {
@@ -163,6 +205,9 @@ const PhotographyPage: React.FC = () => {
           transition={{ duration: 0.8, delay: 0.2 }}
           className="mb-12"
         >
+          <div className="flex justify-end mb-6">
+            <OrderBySelector value={orderBy} onChange={handleOrderChange} />
+          </div>
           <PhotoGrid
             photos={allPhotos}
             isLoading={isLoading}

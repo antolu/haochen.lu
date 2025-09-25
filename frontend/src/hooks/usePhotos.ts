@@ -22,20 +22,9 @@ export const photoKeys = {
 // Hook to get all photos (admin view)
 export const usePhotos = () => {
   return useQuery({
-    queryKey: photoKeys.list("admin"),
-    queryFn: () => photos.list(),
+    queryKey: photoKeys.list("admin-order"),
+    queryFn: () => photos.list({ order_by: "order" }),
     staleTime: 1000 * 60 * 5, // 5 minutes
-    select: (data: PhotoListResponse) => ({
-      ...data,
-      photos: data.photos.sort((a, b) => {
-        // Sort by order first, then by date taken (newest first)
-        if (a.order !== b.order) return a.order - b.order;
-        return (
-          new Date(b.date_taken ?? b.created_at).getTime() -
-          new Date(a.date_taken ?? a.created_at).getTime()
-        );
-      }),
-    }),
   });
 };
 
@@ -174,12 +163,12 @@ export const useUploadPhoto = () => {
 
       // Snapshot the previous value
       const previousData = queryClient.getQueryData<PhotoListResponse>(
-        photoKeys.list("admin"),
+        photoKeys.list("admin-order"),
       );
 
       // Optimistically update with placeholder
       queryClient.setQueryData<PhotoListResponse>(
-        photoKeys.list("admin"),
+        photoKeys.list("admin-order"),
         (old) => {
           if (!old)
             return {
@@ -220,7 +209,10 @@ export const useUploadPhoto = () => {
     onError: (_err, _variables, context) => {
       // If the mutation fails, use the context returned from onMutate to roll back
       if (context?.previousData) {
-        queryClient.setQueryData(photoKeys.list("admin"), context.previousData);
+        queryClient.setQueryData(
+          photoKeys.list("admin-order"),
+          context.previousData,
+        );
       }
       toast.error("Failed to upload photo. Please try again.");
     },
@@ -256,7 +248,7 @@ export const useUpdatePhoto = () => {
 
       // Snapshot the previous values
       const previousListData = queryClient.getQueryData<PhotoListResponse>(
-        photoKeys.list("admin"),
+        photoKeys.list("admin-order"),
       );
       const previousDetailData = queryClient.getQueryData<Photo>(
         photoKeys.detail(id),
@@ -264,7 +256,7 @@ export const useUpdatePhoto = () => {
 
       // Optimistically update the list
       queryClient.setQueryData<PhotoListResponse>(
-        photoKeys.list("admin"),
+        photoKeys.list("admin-order"),
         (old) => {
           if (!old) return old as unknown as PhotoListResponse;
           return {
@@ -295,7 +287,7 @@ export const useUpdatePhoto = () => {
       // If the mutation fails, roll back
       if (context?.previousListData) {
         queryClient.setQueryData(
-          photoKeys.list("admin"),
+          photoKeys.list("admin-order"),
           context.previousListData,
         );
       }
@@ -338,12 +330,12 @@ export const useDeletePhoto = () => {
 
       // Snapshot the previous value
       const previousData = queryClient.getQueryData<PhotoListResponse>(
-        photoKeys.list("admin"),
+        photoKeys.list("admin-order"),
       );
 
       // Optimistically update by removing the photo
       queryClient.setQueryData<PhotoListResponse>(
-        photoKeys.list("admin"),
+        photoKeys.list("admin-order"),
         (old) => {
           if (!old) return old as unknown as PhotoListResponse;
           return {
@@ -360,7 +352,10 @@ export const useDeletePhoto = () => {
     onError: (_err, _variables, context) => {
       // If the mutation fails, roll back
       if (context?.previousData) {
-        queryClient.setQueryData(photoKeys.list("admin"), context.previousData);
+        queryClient.setQueryData(
+          photoKeys.list("admin-order"),
+          context.previousData,
+        );
       }
       toast.error("Failed to delete photo. Please try again.");
     },
@@ -390,12 +385,12 @@ export const useTogglePhotoFeatured = () => {
 
       // Snapshot the previous value
       const previousData = queryClient.getQueryData<PhotoListResponse>(
-        photoKeys.list("admin"),
+        photoKeys.list("admin-order"),
       );
 
       // Optimistically update
       queryClient.setQueryData<PhotoListResponse>(
-        photoKeys.list("admin"),
+        photoKeys.list("admin-order"),
         (old) => {
           if (!old) return old as unknown as PhotoListResponse;
           return {
@@ -415,7 +410,10 @@ export const useTogglePhotoFeatured = () => {
     onError: (_err, _variables, context) => {
       // If the mutation fails, roll back
       if (context?.previousData) {
-        queryClient.setQueryData(photoKeys.list("admin"), context.previousData);
+        queryClient.setQueryData(
+          photoKeys.list("admin-order"),
+          context.previousData,
+        );
       }
       toast.error("Failed to update photo status. Please try again.");
     },
@@ -450,29 +448,35 @@ export const useReorderPhotos = () => {
       await queryClient.cancelQueries({ queryKey: photoKeys.lists() });
 
       const previousData = queryClient.getQueryData<PhotoListResponse>(
-        photoKeys.list("admin"),
+        photoKeys.list("admin-order"),
       );
 
-      // Optimistically apply new order
       queryClient.setQueryData<PhotoListResponse>(
-        photoKeys.list("admin"),
+        photoKeys.list("admin-order"),
         (old) => {
           if (!old) return old as unknown as PhotoListResponse;
-          const orderMap = new Map(items.map((i) => [i.id, i.order]));
-          const updated = old.photos.map((p: Photo) =>
-            orderMap.has(p.id)
-              ? { ...p, order: orderMap.get(p.id) ?? p.order }
-              : p,
+          const orderMap = new Map(items.map((item) => [item.id, item.order]));
+          const updated = old.photos.map((photo) =>
+            orderMap.has(photo.id)
+              ? {
+                  ...photo,
+                  order: orderMap.get(photo.id) ?? photo.order,
+                }
+              : photo,
           );
-          // Keep list sorted by order then date
-          updated.sort((a: Photo, b: Photo) => {
-            if (a.order !== b.order) return a.order - b.order;
+          updated.sort((a, b) => {
+            if (a.order !== b.order) {
+              return a.order - b.order;
+            }
             return (
               new Date(b.date_taken ?? b.created_at).getTime() -
               new Date(a.date_taken ?? a.created_at).getTime()
             );
           });
-          return { ...old, photos: updated };
+          return {
+            ...old,
+            photos: updated,
+          };
         },
       );
 
@@ -481,7 +485,10 @@ export const useReorderPhotos = () => {
 
     onError: (_err, _vars, context) => {
       if (context?.previousData) {
-        queryClient.setQueryData(photoKeys.list("admin"), context.previousData);
+        queryClient.setQueryData(
+          photoKeys.list("admin-order"),
+          context.previousData,
+        );
       }
       toast.error("Failed to reorder photos. Please try again.");
     },

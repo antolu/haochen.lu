@@ -1,25 +1,31 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { GripVertical, RefreshCcw } from "lucide-react";
 // photoswipe not used in admin (editor replaces lightbox)
 
 import PhotoUpload from "../../components/PhotoUpload";
 import PhotoGrid from "../../components/PhotoGrid";
-import PhotoListTable from "../../components/admin/PhotoListTable";
+import SortablePhotoGrid from "../../components/SortablePhotoGrid";
 import PhotoEditorDrawer from "../../components/admin/PhotoEditorDrawer";
 import PhotoForm from "../../components/admin/PhotoForm";
+import SortablePhotoList from "../../components/admin/SortablePhotoList";
 import {
   usePhotos,
   usePhotoStats,
   useDeletePhoto,
   useTogglePhotoFeatured,
+  useReorderPhotos,
 } from "../../hooks/usePhotos";
 import type { Photo } from "../../types";
+import toast from "react-hot-toast";
+import { cn } from "../../lib/utils";
 
 const AdminPhotos: React.FC = () => {
   const [showUpload, setShowUpload] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [editingPhoto, setEditingPhoto] = useState<Photo | null>(null);
+  const [reorderEnabled, setReorderEnabled] = useState(false);
 
   // Query hooks
   const {
@@ -32,6 +38,8 @@ const AdminPhotos: React.FC = () => {
   // Mutation hooks
   const deleteMutation = useDeletePhoto();
   const toggleFeaturedMutation = useTogglePhotoFeatured();
+  const reorderMutation = useReorderPhotos();
+  const isReordering = reorderMutation.isPending;
 
   const photos = photosData?.photos ?? [];
   const stats = statsData ?? {
@@ -97,6 +105,54 @@ const AdminPhotos: React.FC = () => {
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
   };
 
+  const buildOrderPayload = (orderedPhotos: Photo[]) =>
+    orderedPhotos.map((photo, index) => ({ id: photo.id, order: index + 1 }));
+
+  const handleReorder = async (orderedPhotos: Photo[]) => {
+    if (orderedPhotos.length === 0) {
+      return;
+    }
+
+    const items = buildOrderPayload(orderedPhotos);
+    try {
+      await reorderMutation.mutateAsync({ items, normalize: true });
+      toast.success("Photo order updated.");
+    } catch {
+      // errors handled by hook toast
+    }
+  };
+
+  const handleResetOrder = async () => {
+    if (photos.length === 0) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Reset photo ordering back to upload date? Any custom ordering will be lost.",
+    );
+    if (!confirmed) return;
+
+    const resetOrder = [...photos].sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
+
+    try {
+      await reorderMutation.mutateAsync({
+        items: buildOrderPayload(resetOrder),
+        normalize: true,
+      });
+      toast.success("Photo order reset to upload order.");
+    } catch {
+      // handled by hook
+    }
+  };
+
+  const handleViewModeChange = (mode: "grid" | "list") => {
+    setReorderEnabled(false);
+    setViewMode(mode);
+  };
+
   if (photosError) {
     return (
       <div className="text-center py-12">
@@ -130,41 +186,75 @@ const AdminPhotos: React.FC = () => {
   return (
     <div>
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex justify-between items-start">
+      <div className="mb-8 space-y-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Photos</h1>
             <p className="mt-2 text-gray-600">Manage your photo collection</p>
           </div>
-          <div className="flex space-x-3">
-            {/* View Mode Toggle */}
-            <div className="flex bg-gray-100 rounded-lg p-1">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center">
+            <div className="flex items-center gap-2">
+              <div className="flex bg-gray-100 rounded-full p-1">
+                <button
+                  onClick={() => handleViewModeChange("grid")}
+                  className={cn(
+                    "px-4 py-1 text-sm font-medium rounded-full transition-colors",
+                    viewMode === "grid"
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-600 hover:text-gray-900",
+                  )}
+                >
+                  Grid
+                </button>
+                <button
+                  onClick={() => handleViewModeChange("list")}
+                  className={cn(
+                    "px-4 py-1 text-sm font-medium rounded-full transition-colors",
+                    viewMode === "list"
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-600 hover:text-gray-900",
+                  )}
+                >
+                  List
+                </button>
+              </div>
               <button
-                onClick={() => setViewMode("grid")}
-                className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                  viewMode === "grid"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
+                type="button"
+                onClick={() => {
+                  if (!photos.length) {
+                    toast.error("Add some photos before reordering.");
+                    return;
+                  }
+                  setReorderEnabled((prev) => !prev);
+                }}
+                className={cn(
+                  "flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium transition",
+                  reorderEnabled
+                    ? "border-amber-300 bg-amber-50 text-amber-700"
+                    : "border-gray-200 bg-white text-gray-600 hover:border-amber-200 hover:text-amber-600",
+                )}
+                aria-pressed={reorderEnabled}
               >
-                Grid
+                <GripVertical className="h-4 w-4" />
+                {reorderEnabled ? "Reorder On" : "Enable Reorder"}
               </button>
-              <button
-                onClick={() => setViewMode("list")}
-                className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                  viewMode === "list"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                List
-              </button>
+              {reorderEnabled && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    void handleResetOrder();
+                  }}
+                  className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 text-sm text-gray-600 transition hover:border-blue-200 hover:text-blue-600"
+                >
+                  <RefreshCcw className="h-4 w-4" /> Reset to Upload Order
+                </button>
+              )}
             </div>
 
             {/* Upload Button */}
             <button
               onClick={() => setShowUpload(true)}
-              disabled={showUpload}
+              disabled={showUpload || reorderEnabled || isReordering}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
             >
               <span className="flex items-center">
@@ -440,6 +530,12 @@ const AdminPhotos: React.FC = () => {
               onCancel={() => setEditingPhoto(null)}
               onSuccess={() => setEditingPhoto(null)}
             />
+          ) : reorderEnabled ? (
+            <SortablePhotoGrid
+              photos={photos}
+              onReorder={handleReorder}
+              disabled={isReordering}
+            />
           ) : (
             <div className="min-h-[600px]">
               <PhotoGrid
@@ -452,10 +548,28 @@ const AdminPhotos: React.FC = () => {
             </div>
           )
         ) : (
-          <PhotoListTable
+          <SortablePhotoList
             photos={photos}
+            reorderEnabled={reorderEnabled}
+            onReorder={(ordered) => {
+              void handleReorder(ordered);
+            }}
+            onEdit={(photo) => {
+              if (reorderEnabled) return;
+              setEditingPhoto(photo);
+            }}
+            onToggleFeatured={(photo) => {
+              if (reorderEnabled) return;
+              void toggleFeaturedMutation.mutateAsync({
+                id: photo.id,
+                featured: !photo.featured,
+              });
+            }}
+            onDelete={(photo) => {
+              if (reorderEnabled) return;
+              void deleteMutation.mutateAsync(photo.id);
+            }}
             isLoading={isLoadingPhotos}
-            onEdit={setEditingPhoto}
           />
         )}
       </div>
