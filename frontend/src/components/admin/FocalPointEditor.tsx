@@ -208,7 +208,7 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
       exit={{ opacity: 0 }}
     >
       <motion.div
-        className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-y-auto"
+        className="bg-card text-card-foreground rounded-xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-y-auto border"
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
@@ -217,29 +217,27 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-xl font-semibold text-gray-900">
-                Edit Focal Points
-              </h3>
-              <p className="text-gray-600">{heroImage.title}</p>
+              <h3 className="text-xl font-semibold">Edit Focal Points</h3>
+              <p className="text-muted-foreground">{heroImage.title}</p>
             </div>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-xl"
+              className="text-muted-foreground hover:text-foreground text-xl"
             >
               ✕
             </button>
           </div>
 
           {/* Device Tabs */}
-          <div className="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg">
+          <div className="flex space-x-1 mb-6 bg-muted p-1 rounded-lg">
             {(["mobile", "tablet", "desktop"] as DeviceType[]).map((device) => (
               <button
                 key={device}
                 onClick={() => setActiveDevice(device)}
                 className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                   activeDevice === device
-                    ? "bg-white text-blue-600 shadow-sm"
-                    : "text-gray-600 hover:text-gray-900"
+                    ? "bg-background text-blue-600 shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {device.charAt(0).toUpperCase() + device.slice(1)}
@@ -278,7 +276,7 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
                     </div>
                   </div>
                 </div>
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-muted-foreground">
                   {previewFocalPoint ? (
                     <>
                       <span className="text-blue-600 font-medium">
@@ -286,7 +284,7 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
                       </span>{" "}
                       {previewFocalPoint.x.toFixed(1)}%,{" "}
                       {previewFocalPoint.y.toFixed(1)}%{" "}
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-muted-foreground">
                         (click to confirm)
                       </span>
                     </>
@@ -301,7 +299,7 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
 
               <div
                 ref={containerRef}
-                className={`mx-auto relative ${deviceStyles[activeDevice]} bg-gray-100 rounded-lg overflow-hidden shadow-lg`}
+                className={`mx-auto relative ${deviceStyles[activeDevice]} bg-muted rounded-lg overflow-hidden shadow-lg`}
               >
                 <img
                   ref={imageRef}
@@ -366,13 +364,11 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
             {/* Controls */}
             <div className="lg:w-80 space-y-6">
               {/* Manual Input */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-900 mb-4">
-                  Manual Adjustment
-                </h4>
+              <div className="bg-muted rounded-lg p-4">
+                <h4 className="font-semibold mb-4">Manual Adjustment</h4>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium mb-1">
                       X Position ({currentFocalPoint.x.toFixed(1)}%)
                     </label>
                     <input
@@ -392,7 +388,7 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium mb-1">
                       Y Position ({currentFocalPoint.y.toFixed(1)}%)
                     </label>
                     <input
@@ -415,10 +411,8 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
               </div>
 
               {/* Quick Presets */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-900 mb-4">
-                  Quick Presets
-                </h4>
+              <div className="bg-muted rounded-lg p-4">
+                <h4 className="font-semibold mb-4">Quick Presets</h4>
                 <div className="grid grid-cols-3 gap-2">
                   {[
                     { label: "Top Left", x: 25, y: 25 },
@@ -437,7 +431,7 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
                         setCurrentFocalPoint({ x: preset.x, y: preset.y });
                         setPreviewFocalPoint(null); // Clear preview when using preset
                       }}
-                      className="text-xs p-2 bg-white border border-gray-200 rounded hover:bg-gray-50 transition-colors"
+                      className="text-xs p-2 bg-background border rounded hover:bg-accent hover:text-accent-foreground transition-colors"
                     >
                       {preset.label}
                     </button>
@@ -446,27 +440,25 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
               </div>
 
               {/* Current Settings Summary */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-900 mb-4">
-                  All Device Settings
-                </h4>
+              <div className="bg-muted rounded-lg p-4">
+                <h4 className="font-semibold mb-4">All Device Settings</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Mobile:</span>
+                    <span className="text-muted-foreground">Mobile:</span>
                     <span className="font-mono">
                       {focalPoints.responsive.mobile?.x.toFixed(1)}%,{" "}
                       {focalPoints.responsive.mobile?.y.toFixed(1)}%
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Tablet:</span>
+                    <span className="text-muted-foreground">Tablet:</span>
                     <span className="font-mono">
                       {focalPoints.responsive.tablet?.x.toFixed(1)}%,{" "}
                       {focalPoints.responsive.tablet?.y.toFixed(1)}%
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Desktop:</span>
+                    <span className="text-muted-foreground">Desktop:</span>
                     <span className="font-mono">
                       {focalPoints.responsive.desktop?.x.toFixed(1)}%,{" "}
                       {focalPoints.responsive.desktop?.y.toFixed(1)}%
@@ -481,20 +473,20 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
           <div className="flex space-x-4 mt-8 pt-6 border-t">
             <button
               onClick={handleReset}
-              className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex-1 border text-foreground px-4 py-2 rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors"
             >
               Reset to Original
             </button>
             <button
               onClick={onClose}
-              className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex-1 border text-foreground px-4 py-2 rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={updateMutation.isPending}
-              className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+              className="flex-1 bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
             >
               {updateMutation.isPending ? "Saving..." : "Save Changes"}
             </button>
