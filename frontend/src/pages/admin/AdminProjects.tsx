@@ -7,7 +7,9 @@ import {
   useProjectStats,
   parseTechnologies,
   type Project,
+  useReorderProjects,
 } from "../../hooks/useProjects";
+import SortableProjectList from "../../components/admin/SortableProjectList";
 import ProjectForm from "../../components/ProjectForm";
 
 type ViewMode = "list" | "create" | "edit";
@@ -17,6 +19,7 @@ const AdminProjects: React.FC = () => {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const [reorderEnabled, setReorderEnabled] = useState(false);
 
   const {
     data: projectsData,
@@ -37,9 +40,19 @@ const AdminProjects: React.FC = () => {
     })(),
   });
   const { data: stats } = useProjectStats();
+  const reorderMutation = useReorderProjects();
   const deleteMutation = useDeleteProject();
 
   const projects = projectsData?.projects ?? [];
+  const handleReorder = async (ordered: Project[]) => {
+    if (!ordered.length) return;
+    const items = ordered.map((p, idx) => ({ id: p.id, order: idx + 1 }));
+    try {
+      await reorderMutation.mutateAsync({ items, normalize: true });
+    } catch {
+      // error toast handled in hook
+    }
+  };
 
   const handleCreateProject = () => {
     setEditingProject(null);
@@ -217,7 +230,7 @@ const AdminProjects: React.FC = () => {
 
       {/* Filters */}
       <div className="mb-6 bg-card p-4 rounded-lg border">
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           {/* Search */}
           <div className="flex-1">
             <input
@@ -229,8 +242,8 @@ const AdminProjects: React.FC = () => {
             />
           </div>
 
-          {/* Status Filter */}
-          <div>
+          {/* Status Filter & Reorder toggle */}
+          <div className="flex items-center gap-3">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -241,6 +254,14 @@ const AdminProjects: React.FC = () => {
               <option value="in_progress">In Progress</option>
               <option value="archived">Archived</option>
             </select>
+            <label className="text-sm text-muted-foreground flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={reorderEnabled}
+                onChange={(e) => setReorderEnabled(e.target.checked)}
+              />
+              Reorder
+            </label>
           </div>
         </div>
       </div>
@@ -306,21 +327,14 @@ const AdminProjects: React.FC = () => {
             )}
           </div>
         ) : (
-          <div className="divide-y">
-            <AnimatePresence>
-              {projects.map((project) => (
-                <ProjectListItem
-                  key={project.id}
-                  project={project}
-                  onEdit={() => handleEditProject(project)}
-                  onDelete={() => {
-                    void handleDeleteProject(project);
-                  }}
-                  isDeleting={deleteMutation.isPending}
-                />
-              ))}
-            </AnimatePresence>
-          </div>
+          <SortableProjectList
+            projects={projects}
+            reorderEnabled={reorderEnabled}
+            onReorder={handleReorder}
+            onEdit={(p) => handleEditProject(p)}
+            onDelete={(p) => void handleDeleteProject(p)}
+            isLoading={isLoading}
+          />
         )}
       </div>
     </div>

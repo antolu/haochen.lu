@@ -337,6 +337,27 @@ export function useDeleteProject() {
 }
 
 /**
+ * Hook for reordering projects
+ */
+export function useReorderProjects() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      items,
+      normalize = true,
+    }: {
+      items: { id: string; order: number }[];
+      normalize?: boolean;
+    }) => {
+      return projectsApi.reorder(items, normalize);
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
+    },
+  });
+}
+
+/**
  * Hook for fetching README preview (admin use)
  */
 export function usePreviewReadme() {
