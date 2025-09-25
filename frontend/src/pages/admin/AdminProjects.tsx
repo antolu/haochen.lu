@@ -395,9 +395,9 @@ const ProjectListItem: React.FC<ProjectListItemProps> = ({
         <div className="flex items-center space-x-4 min-w-0 flex-1">
           {/* Project Image */}
           <div className="flex-shrink-0">
-            {project.image_url ? (
+            {project.cover_image_url ? (
               <img
-                src={project.image_url}
+                src={project.cover_image_url}
                 alt={project.title}
                 className="w-16 h-16 rounded-lg object-cover"
               />

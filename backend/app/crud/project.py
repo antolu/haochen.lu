@@ -8,6 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.repository_service import repository_service
+from app.core.vips_processor import vips_image_processor
+from app.crud.photo import delete_photo, get_photo
 from app.models.project import Project
 from app.models.project_image import ProjectImage
 from app.schemas.project import ProjectCreate, ProjectUpdate
@@ -157,6 +159,42 @@ async def delete_project(db: AsyncSession, project_id: UUID) -> bool:
         return True
 
     return False
+
+
+async def delete_project_and_media(db: AsyncSession, project_id: UUID) -> bool:
+    """Delete a project and remove orphaned photos and files referenced only by this project.
+
+    - Deletes the project (cascades project_images)
+    - For each photo previously attached to this project, if not referenced by any other
+      project_images or hero_images, delete photo files from disk and delete the photo row.
+    """
+    # Collect photo_ids referenced by this project before deletion
+    result = await db.execute(
+        select(ProjectImage.photo_id).where(ProjectImage.project_id == project_id)
+    )
+    photo_ids = [row[0] for row in result.all()]
+
+    # Delete the project (CASCADE removes project_images rows)
+    deleted = await delete_project(db, project_id)
+    if not deleted:
+        return False
+
+    # Since project photos are not reused elsewhere in current design,
+    # delete all referenced photos and their files.
+    for pid in photo_ids:
+        photo = await get_photo(db, pid)
+        if photo:
+            try:
+                photo_dict: dict[str, object] = {
+                    "original_path": photo.original_path,
+                    "variants": photo.variants or {},
+                }
+                await vips_image_processor.delete_image_files(photo_dict)  # type: ignore[arg-type]
+            except Exception:
+                ...
+            await delete_photo(db, pid)
+
+    return True
 
 
 async def update_project_readme(

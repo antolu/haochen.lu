@@ -12,7 +12,7 @@ from app.crud.project import (
     attach_project_image,
     bulk_reorder_projects,
     create_project,
-    delete_project,
+    delete_project_and_media,
     get_project,
     get_project_by_slug,
     get_project_count,
@@ -378,7 +378,7 @@ async def delete_project_endpoint(
     current_user=_current_admin_user_dependency,
 ):
     """Delete project (admin only)."""
-    success = await delete_project(db, project_id)
+    success = await delete_project_and_media(db, project_id)
     if not success:
         raise HTTPException(status_code=404, detail="Project not found")
 

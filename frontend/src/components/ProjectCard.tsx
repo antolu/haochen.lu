@@ -44,9 +44,9 @@ const ProjectCard: React.FC<ProjectCardProps> = memo(
         <div className="relative">
           {/* Project Image */}
           <div className="relative aspect-video bg-gray-100 overflow-hidden">
-            {project.image_url ? (
+            {project.cover_image_url ? (
               <img
-                src={project.image_url}
+                src={project.cover_image_url}
                 alt={project.title}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 loading="lazy"
