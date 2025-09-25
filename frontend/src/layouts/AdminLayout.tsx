@@ -329,7 +329,9 @@ const AdminLayoutContent: React.FC = () => {
 const AdminLayout: React.FC = () => {
   return (
     <ThemeProvider defaultTheme="system" storageKey="admin-ui-theme">
-      <AdminLayoutContent />
+      <div className="min-h-screen bg-background text-foreground">
+        <AdminLayoutContent />
+      </div>
     </ThemeProvider>
   );
 };
