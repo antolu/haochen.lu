@@ -1,4 +1,5 @@
 import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Move } from "lucide-react";
@@ -9,12 +10,18 @@ import { selectOptimalImage, ImageUseCase } from "../utils/imageUtils";
 
 interface SortablePhotoCardProps {
   photo: Photo;
+  index: number;
+  reorderEnabled?: boolean;
   disabled?: boolean;
+  onPhotoClick?: (photo: Photo, index: number) => void;
 }
 
 const SortablePhotoCard: React.FC<SortablePhotoCardProps> = ({
   photo,
+  index,
+  reorderEnabled = true,
   disabled = false,
+  onPhotoClick,
 }) => {
   const {
     attributes,
@@ -25,7 +32,7 @@ const SortablePhotoCard: React.FC<SortablePhotoCardProps> = ({
     isDragging,
   } = useSortable({
     id: photo.id,
-    disabled,
+    disabled: disabled || !reorderEnabled,
   });
 
   const style: React.CSSProperties = {
@@ -41,26 +48,50 @@ const SortablePhotoCard: React.FC<SortablePhotoCardProps> = ({
     height: 400,
   });
 
+  const handleClick = () => {
+    if (!reorderEnabled && onPhotoClick) {
+      onPhotoClick(photo, index);
+    }
+  };
+
   return (
-    <div
+    <motion.div
       ref={setNodeRef}
       style={style}
+      animate={{
+        borderColor: reorderEnabled ? "rgb(251 191 36)" : "rgb(229 231 235)", // amber-400 : gray-200
+        boxShadow: reorderEnabled
+          ? "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 0 0 1px rgb(251 191 36 / 0.2)"
+          : "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+      }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
       className={cn(
-        "group relative overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-shadow",
+        "group relative overflow-hidden rounded-lg border bg-white transition-all duration-300",
         isDragging && "shadow-xl ring-2 ring-amber-400",
         disabled && "opacity-60",
+        !reorderEnabled && onPhotoClick && "cursor-pointer",
+        reorderEnabled && "border-amber-400/30 bg-amber-50/20",
       )}
+      onClick={handleClick}
     >
-      <button
-        type="button"
-        {...listeners}
-        {...attributes}
-        className="absolute right-2 top-2 z-10 inline-flex items-center rounded-full bg-white/95 px-2 py-1 text-xs font-medium text-gray-600 shadow group-hover:bg-white"
-        aria-label="Drag to reorder"
-      >
-        <GripVertical className="mr-1 h-3 w-3" aria-hidden />
-        Drag
-      </button>
+      <AnimatePresence>
+        {reorderEnabled && (
+          <motion.button
+            type="button"
+            initial={{ opacity: 0, scale: 0.8, y: -10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: -10 }}
+            transition={{ duration: 0.2, ease: "easeOut", delay: index * 0.03 }}
+            {...listeners}
+            {...attributes}
+            className="absolute right-2 top-2 z-10 inline-flex items-center rounded-full bg-white/95 px-2 py-1 text-xs font-medium text-gray-600 shadow group-hover:bg-white"
+            aria-label="Drag to reorder"
+          >
+            <GripVertical className="mr-1 h-3 w-3" aria-hidden />
+            Drag
+          </motion.button>
+        )}
+      </AnimatePresence>
       <div className="relative h-48 w-full overflow-hidden bg-gray-100">
         <img
           src={optimalImage.url}
@@ -79,12 +110,9 @@ const SortablePhotoCard: React.FC<SortablePhotoCardProps> = ({
         )}
       </div>
       <div className="space-y-2 p-4">
-        <div className="flex items-center justify-between text-sm font-semibold text-gray-900">
+        <div className="text-sm font-semibold text-gray-900">
           <span className="truncate" title={photo.title ?? "Untitled"}>
             {photo.title ?? "Untitled"}
-          </span>
-          <span className="text-xs font-medium text-gray-500">
-            #{photo.order}
           </span>
         </div>
         <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
@@ -94,16 +122,8 @@ const SortablePhotoCard: React.FC<SortablePhotoCardProps> = ({
           <span>Uploaded {formatDateSimple(photo.created_at)}</span>
           {photo.location_name && <span>📍 {photo.location_name}</span>}
         </div>
-        <div className="rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-500">
-          <p>
-            Order value: <strong>{photo.order}</strong>
-          </p>
-          <p className="text-[11px] text-gray-400">
-            Auto-updated when reordering
-          </p>
-        </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
