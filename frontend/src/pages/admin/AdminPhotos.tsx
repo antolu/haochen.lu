@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { GripVertical, RefreshCcw } from "lucide-react";
+import { GripVertical, RefreshCcw, Menu } from "lucide-react";
+import { Switch } from "@headlessui/react";
 // photoswipe not used in admin (editor replaces lightbox)
 
 import PhotoUpload from "../../components/PhotoUpload";
-import PhotoGrid from "../../components/PhotoGrid";
 import SortablePhotoGrid from "../../components/SortablePhotoGrid";
 import PhotoEditorDrawer from "../../components/admin/PhotoEditorDrawer";
 import PhotoForm from "../../components/admin/PhotoForm";
@@ -149,7 +149,6 @@ const AdminPhotos: React.FC = () => {
   };
 
   const handleViewModeChange = (mode: "grid" | "list") => {
-    setReorderEnabled(false);
     setViewMode(mode);
   };
 
@@ -218,37 +217,49 @@ const AdminPhotos: React.FC = () => {
                   List
                 </button>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  if (!photos.length) {
-                    toast.error("Add some photos before reordering.");
-                    return;
-                  }
-                  setReorderEnabled((prev) => !prev);
-                }}
-                className={cn(
-                  "flex items-center gap-2 rounded-full border px-3 py-1 text-sm font-medium transition",
-                  reorderEnabled
-                    ? "border-amber-300 bg-amber-50 text-amber-700"
-                    : "border-gray-200 bg-white text-gray-600 hover:border-amber-200 hover:text-amber-600",
-                )}
-                aria-pressed={reorderEnabled}
-              >
-                <GripVertical className="h-4 w-4" />
-                {reorderEnabled ? "Reorder On" : "Enable Reorder"}
-              </button>
-              {reorderEnabled && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    void handleResetOrder();
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-600">
+                  Reorder
+                </span>
+                <Switch
+                  checked={reorderEnabled}
+                  onChange={(checked) => {
+                    if (!photos.length && checked) {
+                      toast.error("Add some photos before reordering.");
+                      return;
+                    }
+                    setReorderEnabled(checked);
                   }}
-                  className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 text-sm text-gray-600 transition hover:border-blue-200 hover:text-blue-600"
+                  className={cn(
+                    "relative inline-flex h-6 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75",
+                    reorderEnabled ? "bg-amber-400" : "bg-gray-200",
+                  )}
                 >
-                  <RefreshCcw className="h-4 w-4" /> Reset to Upload Order
-                </button>
-              )}
+                  <span
+                    className={cn(
+                      "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out",
+                      reorderEnabled ? "translate-x-6" : "translate-x-0",
+                    )}
+                  />
+                </Switch>
+              </div>
+              <AnimatePresence>
+                {reorderEnabled && (
+                  <motion.button
+                    type="button"
+                    initial={{ opacity: 0, scale: 0.95, x: -20 }}
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, x: -20 }}
+                    transition={{ duration: 0.2 }}
+                    onClick={() => {
+                      void handleResetOrder();
+                    }}
+                    className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 text-sm text-gray-600 transition hover:border-blue-200 hover:text-blue-600"
+                  >
+                    <RefreshCcw className="h-4 w-4" /> Reset to Upload Order
+                  </motion.button>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Upload Button */}
@@ -530,20 +541,14 @@ const AdminPhotos: React.FC = () => {
               onCancel={() => setEditingPhoto(null)}
               onSuccess={() => setEditingPhoto(null)}
             />
-          ) : reorderEnabled ? (
-            <SortablePhotoGrid
-              photos={photos}
-              onReorder={handleReorder}
-              disabled={isReordering}
-            />
           ) : (
             <div className="min-h-[600px]">
-              <PhotoGrid
+              <SortablePhotoGrid
                 photos={photos}
-                isLoading={isLoadingPhotos}
+                reorderEnabled={reorderEnabled}
+                onReorder={handleReorder}
+                disabled={isReordering}
                 onPhotoClick={handlePhotoClick}
-                showMetadata={true}
-                className="h-[600px]"
               />
             </div>
           )
@@ -551,6 +556,7 @@ const AdminPhotos: React.FC = () => {
           <SortablePhotoList
             photos={photos}
             reorderEnabled={reorderEnabled}
+            viewMode={viewMode}
             onReorder={(ordered) => {
               void handleReorder(ordered);
             }}
