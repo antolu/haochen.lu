@@ -344,39 +344,86 @@ const HomePage: React.FC = () => {
           </motion.div>
 
           {latestPhotos?.photos && latestPhotos.photos.length > 0 && (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-10">
-              {latestPhotos.photos.slice(0, 6).map((photo, index) => (
-                <motion.button
-                  key={photo.id}
-                  type="button"
-                  onClick={() => setSelectedPhoto(photo)}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                  className="group cursor-pointer text-left"
+            <div className="mb-10">
+              {/* Mobile: Horizontal scroll */}
+              <div className="md:hidden overflow-x-auto scrollbar-hide">
+                <div
+                  className="flex gap-4 px-4 pb-2"
+                  style={{
+                    width: "max-content",
+                    scrollSnapType: "x mandatory",
+                  }}
                 >
-                  <div className="aspect-square rounded-lg overflow-hidden bg-gray-200">
-                    {(() => {
-                      // Use DPI-aware selection for hero/gallery display
-                      const optimalImage = selectOptimalImage(
-                        photo,
-                        ImageUseCase.HERO,
-                      );
-                      return (
-                        <img
-                          src={optimalImage.url}
-                          srcSet={optimalImage.srcset}
-                          sizes={optimalImage.sizes}
-                          alt={photo.title ?? "Photo"}
-                          className="w-full h-full object-cover group-hover:scale-102 md:group-hover:scale-105 transition-transform duration-300"
-                          loading="lazy"
-                        />
-                      );
-                    })()}
-                  </div>
-                </motion.button>
-              ))}
+                  {latestPhotos.photos.slice(0, 6).map((photo, index) => (
+                    <motion.button
+                      key={photo.id}
+                      type="button"
+                      onClick={() => setSelectedPhoto(photo)}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.6, delay: index * 0.1 }}
+                      viewport={{ once: true }}
+                      className="group cursor-pointer text-left flex-shrink-0 w-48"
+                      style={{ scrollSnapAlign: "start" }}
+                    >
+                      <div className="aspect-square rounded-lg overflow-hidden bg-gray-200">
+                        {(() => {
+                          const optimalImage = selectOptimalImage(
+                            photo,
+                            ImageUseCase.HERO,
+                          );
+                          return (
+                            <img
+                              src={optimalImage.url}
+                              srcSet={optimalImage.srcset}
+                              sizes={optimalImage.sizes}
+                              alt={photo.title ?? "Photo"}
+                              className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
+                              loading="lazy"
+                            />
+                          );
+                        })()}
+                      </div>
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Desktop: Fixed grid row */}
+              <div className="hidden md:grid md:grid-cols-5 lg:grid-cols-6 gap-6">
+                {latestPhotos.photos.slice(0, 6).map((photo, index) => (
+                  <motion.button
+                    key={photo.id}
+                    type="button"
+                    onClick={() => setSelectedPhoto(photo)}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: index * 0.1 }}
+                    viewport={{ once: true }}
+                    className="group cursor-pointer text-left"
+                  >
+                    <div className="aspect-square rounded-lg overflow-hidden bg-gray-200">
+                      {(() => {
+                        // Use DPI-aware selection for hero/gallery display
+                        const optimalImage = selectOptimalImage(
+                          photo,
+                          ImageUseCase.HERO,
+                        );
+                        return (
+                          <img
+                            src={optimalImage.url}
+                            srcSet={optimalImage.srcset}
+                            sizes={optimalImage.sizes}
+                            alt={photo.title ?? "Photo"}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            loading="lazy"
+                          />
+                        );
+                      })()}
+                    </div>
+                  </motion.button>
+                ))}
+              </div>
             </div>
           )}
 
