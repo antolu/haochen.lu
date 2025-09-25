@@ -26,10 +26,11 @@ const PhotographyPage: React.FC = () => {
 
   const orderBy = useMemo<OrderByOption>(() => {
     const param = searchParams.get("order_by");
-    if (param === "date_taken" || param === "order") {
-      return param;
+    if (param === "created_at" || param === "date_taken" || param === "order") {
+      return param as OrderByOption;
     }
-    return "created_at";
+    // Default to manual order when no param
+    return "order";
   }, [searchParams]);
 
   // Use optimized photos hook with caching

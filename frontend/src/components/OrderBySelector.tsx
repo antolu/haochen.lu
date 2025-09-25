@@ -25,7 +25,7 @@ const OPTIONS: Array<{
   },
   {
     value: "order",
-    label: "Manual Order",
+    label: "Default",
     description: "Arranged sequence",
   },
 ];
