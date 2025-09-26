@@ -422,7 +422,7 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
 
       const bounds = computeBounds();
       if (bounds) {
-        map.fitBounds(bounds, { padding: 40, animate: true, duration: 800 });
+        map.fitBounds(bounds, { padding: 200, animate: true, duration: 800 });
       }
     });
 
@@ -458,7 +458,7 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
     if (!map) return;
     const bounds = computeBounds();
     if (bounds) {
-      map.fitBounds(bounds, { padding: 40, animate: true, duration: 600 });
+      map.fitBounds(bounds, { padding: 200, animate: true, duration: 600 });
     }
     map.fire("moveend");
   }, [clusterIndex, computeBounds]);
