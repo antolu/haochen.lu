@@ -217,7 +217,9 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
     if (photosWithLocation.length === 0) return null;
     const bounds = new maplibregl.LngLatBounds();
     for (const p of photosWithLocation) {
-      bounds.extend([p.location_lon, p.location_lat]);
+      if (p.location_lon != null && p.location_lat != null) {
+        bounds.extend([p.location_lon, p.location_lat]);
+      }
     }
     return bounds;
   }, [photosWithLocation]);
@@ -288,9 +290,9 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
         const visiblePhotoIds = new Set<string>();
 
         for (const f of clusters) {
-          const coords = f.geometry.coordinates;
+          const coords = f.geometry.coordinates as [number, number];
           const props = f.properties;
-          if (props.cluster) {
+          if (props && "cluster" in props && props.cluster) {
             const clusterProps = props as ClusterProps;
             const clusterId = clusterProps.cluster_id;
             visibleClusterIds.add(clusterId);

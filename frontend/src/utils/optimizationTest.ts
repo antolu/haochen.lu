@@ -103,18 +103,19 @@ export const monitorCachePerformance = () => {
     console.warn("🔍 Photo Cache Performance Monitor Active");
 
     // Listen for cache events
-    window.addEventListener("photo-cache-hit", (_e: CustomEvent) => {
+    window.addEventListener("photo-cache-hit", (_e: Event) => {
       // Disabled console logging for production
       // console.log("🎯 Cache Hit:", e.detail);
     });
 
-    window.addEventListener("photo-cache-miss", (_e: CustomEvent) => {
+    window.addEventListener("photo-cache-miss", (_e: Event) => {
       // Disabled console logging for production
       // console.log("❌ Cache Miss:", e.detail);
     });
 
-    window.addEventListener("photo-order-switch", (e: CustomEvent) => {
-      const detail = e.detail as {
+    window.addEventListener("photo-order-switch", (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const detail = customEvent.detail as {
         from: string;
         to: string;
         cached: Photo[];

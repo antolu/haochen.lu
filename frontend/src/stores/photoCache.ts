@@ -393,7 +393,7 @@ export const usePhotoCacheStore = create<PhotoCacheStore>()(
                 )
               ) {
                 const loadedPagesArray = (
-                  orderCache as { loadedPages: unknown[] }
+                  orderCache as unknown as { loadedPages: unknown[] }
                 ).loadedPages;
                 (orderCache as { loadedPages: Set<number> }).loadedPages =
                   new Set(loadedPagesArray as number[]);

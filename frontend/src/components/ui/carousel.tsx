@@ -1,5 +1,6 @@
 import * as React from "react";
-import useEmblaCarousel, { type EmblaOptionsType } from "embla-carousel-react";
+import useEmblaCarousel from "embla-carousel-react";
+import type { EmblaOptionsType } from "embla-carousel";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 type CarouselProps = React.HTMLAttributes<HTMLDivElement> & {

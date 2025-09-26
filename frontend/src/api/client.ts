@@ -56,19 +56,6 @@ const apiClient = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  reorder: async (
-    items: { id: string; order: number }[],
-    normalize = true,
-  ): Promise<{ message: string }> => {
-    const response = await apiClient.post<{ message: string }>(
-      `/projects/reorder`,
-      {
-        items,
-        normalize,
-      },
-    );
-    return response.data;
-  },
   withCredentials: true, // This ensures cookies are sent with requests
 });
 
@@ -455,6 +442,20 @@ export const projects = {
       );
       return res.data as { message: string };
     },
+  },
+
+  reorder: async (
+    items: { id: string; order: number }[],
+    normalize = true,
+  ): Promise<{ message: string }> => {
+    const response = await apiClient.post<{ message: string }>(
+      `/projects/reorder`,
+      {
+        items,
+        normalize,
+      },
+    );
+    return response.data;
   },
 };
 

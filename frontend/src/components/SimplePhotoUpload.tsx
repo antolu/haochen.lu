@@ -13,7 +13,7 @@ interface SimplePhotoUploadProps {
   maxFileSize?: number;
   category?: string;
   autoUpload?: boolean;
-  customUpload?: (file: File) => Promise<Photo>;
+  customUpload?: (file: File) => Promise<unknown>;
 }
 
 const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
@@ -49,7 +49,9 @@ const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
                 : f,
             ),
           );
-          setUploadedPhotos((prev) => new Map(prev.set(file.id, uploaded)));
+          setUploadedPhotos(
+            (prev) => new Map(prev.set(file.id, uploaded as Photo)),
+          );
         } catch (error) {
           console.error("Upload failed:", error);
           const axiosError = error as AxiosError;
