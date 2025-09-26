@@ -3,41 +3,37 @@ import { render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import MiniMap from "../../components/MiniMap";
 
-// Mock Leaflet and react-leaflet
-vi.mock("leaflet", () => {
-  const mockIcon = vi.fn((config: unknown) => ({
-    options: config,
-  }));
+// Mock MapLibre GL JS
+vi.mock("maplibre-gl", () => {
+  const mockMap = {
+    on: vi.fn(),
+    off: vi.fn(),
+    addControl: vi.fn(),
+    setCenter: vi.fn(),
+    setZoom: vi.fn(),
+    remove: vi.fn(),
+    getCanvas: vi.fn(() => ({ style: {} })),
+  };
+
+  const mockMarker = {
+    setLngLat: vi.fn(() => mockMarker),
+    addTo: vi.fn(() => mockMarker),
+    remove: vi.fn(),
+  };
+
+  const mockAttributionControl = vi.fn();
 
   return {
-    icon: mockIcon,
+    Map: vi.fn(() => mockMap),
+    Marker: vi.fn(() => mockMarker),
+    AttributionControl: mockAttributionControl,
     default: {
-      icon: mockIcon,
+      Map: vi.fn(() => mockMap),
+      Marker: vi.fn(() => mockMarker),
+      AttributionControl: mockAttributionControl,
     },
   };
 });
-
-vi.mock("react-leaflet", () => ({
-  MapContainer: ({
-    children,
-    style,
-    ...props
-  }: {
-    children: React.ReactNode;
-    style?: React.CSSProperties;
-    [key: string]: unknown;
-  }) => (
-    <div data-testid="mini-map-container" style={style} {...props}>
-      {children}
-    </div>
-  ),
-  TileLayer: (props: Record<string, unknown>) => (
-    <div data-testid="mini-tile-layer" {...props} />
-  ),
-  Marker: (props: Record<string, unknown>) => (
-    <div data-testid="mini-marker" {...props} />
-  ),
-}));
 
 describe("MiniMap", () => {
   const defaultProps = {

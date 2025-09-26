@@ -4,13 +4,14 @@ import React, {
   useRef,
   useMemo,
   useCallback,
+  lazy,
+  Suspense,
 } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 
 import PhotoGrid from "../components/PhotoGrid";
 import PhotoLightbox from "../components/PhotoLightbox";
-import MapLibrePhotoMap from "../components/MapLibrePhotoMap";
 import { useOptimizedPhotos } from "../hooks/usePhotos";
 import { useIsTransitioning } from "../stores/photoCache";
 import { monitorCachePerformance } from "../utils/optimizationTest";
@@ -18,6 +19,9 @@ import type { Photo } from "../types";
 import OrderBySelector, {
   type OrderByOption,
 } from "../components/OrderBySelector";
+
+// Lazy load the map component to reduce initial bundle size
+const MapLibrePhotoMap = lazy(() => import("../components/MapLibrePhotoMap"));
 
 const PhotographyPage: React.FC = () => {
   const [triggerGallery, setTriggerGallery] = useState<{
@@ -143,7 +147,7 @@ const PhotographyPage: React.FC = () => {
         </div>
 
         {/* Header Section */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
@@ -156,11 +160,11 @@ const PhotographyPage: React.FC = () => {
             A collection of my favorite captures from travels, adventures, and
             everyday moments around the world.
           </p>
-        </motion.div>
+        </m.div>
 
         {/* Error State */}
         {error && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="text-center py-12"
@@ -170,11 +174,11 @@ const PhotographyPage: React.FC = () => {
                 Failed to load photos. Please try again later.
               </p>
             </div>
-          </motion.div>
+          </m.div>
         )}
 
         {/* Photo Grid */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
@@ -193,11 +197,11 @@ const PhotographyPage: React.FC = () => {
             ref={photoGridRef}
             highlightedPhotoId={highlightedPhotoId}
           />
-        </motion.div>
+        </m.div>
 
         {/* Load More Button */}
         {hasMore && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
@@ -250,12 +254,12 @@ const PhotographyPage: React.FC = () => {
                 </>
               )}
             </button>
-          </motion.div>
+          </m.div>
         )}
 
         {/* Photo Count Info */}
         {allPhotos.length > 0 && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
@@ -265,12 +269,12 @@ const PhotographyPage: React.FC = () => {
             {isTransitioning && (
               <span className="ml-2 text-blue-500">(transitioning...)</span>
             )}
-          </motion.div>
+          </m.div>
         )}
 
         {/* Photo Map */}
         {allPhotos.length > 0 && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.8 }}
@@ -285,13 +289,24 @@ const PhotographyPage: React.FC = () => {
                 view photos from that location.
               </p>
             </div>
-            <MapLibrePhotoMap
-              photos={allPhotos}
-              onPhotoClick={handleMapPhotoClick}
-              height={650}
-              className="rounded-lg shadow-lg"
-            />
-          </motion.div>
+            <Suspense
+              fallback={
+                <div className="rounded-lg shadow-lg bg-gray-100 h-[650px] flex items-center justify-center">
+                  <div className="flex flex-col items-center space-y-4">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <p className="text-gray-600">Loading map...</p>
+                  </div>
+                </div>
+              }
+            >
+              <MapLibrePhotoMap
+                photos={allPhotos}
+                onPhotoClick={handleMapPhotoClick}
+                height={650}
+                className="rounded-lg shadow-lg"
+              />
+            </Suspense>
+          </m.div>
         )}
       </div>
 

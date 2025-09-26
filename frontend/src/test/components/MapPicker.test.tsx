@@ -3,36 +3,41 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import MapPicker from "../../components/MapPicker";
 
-// Mock Leaflet and react-leaflet
-vi.mock("leaflet", () => {
-  const Icon = {
-    Default: {
-      prototype: { _getIconUrl: vi.fn() },
-      mergeOptions: vi.fn(),
+// Mock MapLibre GL JS
+vi.mock("maplibre-gl", () => {
+  const mockMap = {
+    on: vi.fn(),
+    off: vi.fn(),
+    addControl: vi.fn(),
+    setCenter: vi.fn(),
+    setZoom: vi.fn(),
+    easeTo: vi.fn(), // Add easeTo method
+    remove: vi.fn(),
+    getCanvas: vi.fn(() => ({ style: {} })),
+  };
+
+  const mockMarker = {
+    setLngLat: vi.fn(() => mockMarker),
+    addTo: vi.fn(() => mockMarker),
+    remove: vi.fn(),
+  };
+
+  const mockNavigationControl = vi.fn();
+  const mockAttributionControl = vi.fn();
+
+  return {
+    Map: vi.fn(() => mockMap),
+    Marker: vi.fn(() => mockMarker),
+    NavigationControl: mockNavigationControl,
+    AttributionControl: mockAttributionControl,
+    default: {
+      Map: vi.fn(() => mockMap),
+      Marker: vi.fn(() => mockMarker),
+      NavigationControl: mockNavigationControl,
+      AttributionControl: mockAttributionControl,
     },
   };
-  return {
-    default: { Icon },
-    Icon,
-  };
 });
-
-vi.mock("react-leaflet", () => ({
-  MapContainer: ({ children, ...props }: any) => (
-    <div data-testid="map-container" {...props}>
-      {children}
-    </div>
-  ),
-  TileLayer: (props: any) => <div data-testid="tile-layer" {...props} />,
-  Marker: (props: any) => <div data-testid="marker" {...props} />,
-  useMapEvents: () => {
-    // Simulate click event handling - currently unused but could be used for integration tests
-    return null;
-  },
-  useMap: () => ({
-    setView: vi.fn(),
-  }),
-}));
 
 // Mock fetch for location search
 global.fetch = vi.fn();

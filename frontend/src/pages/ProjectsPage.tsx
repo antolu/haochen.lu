@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { useInfiniteProjects, type ProjectFilters } from "../hooks/useProjects";
 import ProjectGrid from "../components/ProjectGrid";
 
@@ -75,15 +75,15 @@ const ProjectsPage: React.FC = () => {
       <section className="bg-gradient-to-br from-blue-50 to-indigo-100 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <motion.h1
+            <m.h1
               className="text-4xl md:text-5xl font-serif font-bold text-gray-900 mb-6"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
               Projects & Work
-            </motion.h1>
-            <motion.p
+            </m.h1>
+            <m.p
               className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -92,10 +92,10 @@ const ProjectsPage: React.FC = () => {
               Explore my portfolio of applications, tools, and experiments. From
               web applications to open-source contributions, here's what I've
               been building.
-            </motion.p>
+            </m.p>
 
             {/* Stats */}
-            <motion.div
+            <m.div
               className="flex justify-center gap-8 text-sm text-gray-500"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -106,7 +106,7 @@ const ProjectsPage: React.FC = () => {
               <span>Open Source & Commercial</span>
               <span>•</span>
               <span>Continuously Updated</span>
-            </motion.div>
+            </m.div>
           </div>
         </div>
       </section>
