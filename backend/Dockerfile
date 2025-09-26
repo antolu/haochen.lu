@@ -4,7 +4,7 @@
 ARG BUILD_TYPE=production
 
 # Base stage with common dependencies
-FROM python:3.11-slim as base
+FROM python:3.11-slim AS base
 
 # Set working directory
 WORKDIR /app
@@ -26,7 +26,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Development stage
-FROM base as development
+FROM base AS development
 # Install additional dev packages
 # hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -38,7 +38,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN pip install --no-cache-dir watchfiles==0.24.0
 
 # Production stage
-FROM base as production
+FROM base AS production
 # Install additional production packages including git for setuptools-scm
 # hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -49,11 +49,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Final stage selection based on build type
-FROM ${BUILD_TYPE} as final
+FROM ${BUILD_TYPE} AS final
 
 # Copy pyproject first to leverage Docker layer cache for dependencies
 # hadolint ignore=DL3045
-COPY pyproject.toml ./
+COPY backend/pyproject.toml ./
 
 # Install dependencies only (not the package itself) to avoid setuptools-scm issues
 # hadolint ignore=DL3013,SC2046
@@ -61,23 +61,21 @@ RUN pip install --no-cache-dir $(python -c "import tomllib; print(' '.join(tomll
 
 # Copy application code after dependencies are cached
 # hadolint ignore=DL3045
-COPY . .
+COPY backend/ .
 
 # Install the package itself with git context for proper setuptools-scm versioning
-RUN --mount=type=bind,from=gitdir,src=.,target=/app/.git \
+RUN --mount=type=bind,source=.git,target=/app/.git \
     pip install --no-cache-dir --no-deps .
 
 # Create directories for uploads and compressed images
 RUN mkdir -p uploads compressed
 
-# Handle entrypoint setup for production builds only
-RUN if [ "$BUILD_TYPE" = "production" ]; then \
-        cp docker-entrypoint.sh /docker-entrypoint.sh && \
-        chmod +x /docker-entrypoint.sh; \
-    fi
-
 # Expose port
 EXPOSE 8000
+
+# Set up entrypoint for production (always copy the entrypoint script)
+RUN cp docker-entrypoint.sh /docker-entrypoint.sh && \
+    chmod +x /docker-entrypoint.sh
 
 # Set command based on build type
 ARG BUILD_TYPE=production
