@@ -1,5 +1,5 @@
 # Version control
-.git
+# .git - commented out to allow setuptools-scm versioning in Docker builds
 .gitignore
 
 # Node.js
