@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
 import { motion } from "framer-motion";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 
@@ -20,6 +26,13 @@ const PhotographyPage: React.FC = () => {
   const [highlightedPhotoId, setHighlightedPhotoId] = useState<string | null>(
     null,
   );
+
+  console.log("[PhotographyPage] Render state:", {
+    isPhotoSwipeOpen,
+    isLGOpening,
+    photoSwipeIndex,
+    highlightedPhotoId,
+  });
   const photoGridRef = useRef<HTMLDivElement>(null);
   const location = useLocation() as { state?: { photoId?: string } };
   const [searchParams, setSearchParams] = useSearchParams();
@@ -64,39 +77,57 @@ const PhotographyPage: React.FC = () => {
     }
   }, [location?.state, allPhotos]);
 
-  const handlePhotoClick = (_photo: Photo, index: number) => {
-    setPhotoSwipeIndex(index);
-    setIsLGOpening(true);
-    setIsPhotoSwipeOpen(true);
-  };
+  const handlePhotoClick = useCallback(
+    (_photo: Photo, index: number) => {
+      console.log("[PhotographyPage] Photo clicked:", {
+        photoId: _photo.id,
+        photoTitle: _photo.title,
+        index,
+        currentState: { isPhotoSwipeOpen, isLGOpening, photoSwipeIndex },
+      });
 
-  const handleMapPhotoClick = (photo: Photo) => {
-    const index = allPhotos.findIndex((p) => p.id === photo.id);
-    if (index >= 0) {
-      // Highlight the photo in the grid
-      setHighlightedPhotoId(photo.id);
+      console.log("[PhotographyPage] Setting state - index:", index);
+      setPhotoSwipeIndex(index);
 
-      // Scroll to the photo in the grid
-      if (photoGridRef.current) {
-        // Find the photo element and scroll to it
-        const photoElement = photoGridRef.current.querySelector(
-          `[data-testid="photo-card-${index + 1}"]`,
-        );
-        if (photoElement) {
-          photoElement.scrollIntoView({
-            behavior: "smooth",
-            block: "center",
-            inline: "nearest",
-          });
+      console.log("[PhotographyPage] Setting isLGOpening to true");
+      setIsLGOpening(true);
+
+      console.log("[PhotographyPage] Setting isPhotoSwipeOpen to true");
+      setIsPhotoSwipeOpen(true);
+    },
+    [isPhotoSwipeOpen, isLGOpening, photoSwipeIndex],
+  );
+
+  const handleMapPhotoClick = useCallback(
+    (photo: Photo) => {
+      const index = allPhotos.findIndex((p) => p.id === photo.id);
+      if (index >= 0) {
+        // Highlight the photo in the grid
+        setHighlightedPhotoId(photo.id);
+
+        // Scroll to the photo in the grid
+        if (photoGridRef.current) {
+          // Find the photo element and scroll to it
+          const photoElement = photoGridRef.current.querySelector(
+            `[data-testid="photo-card-${index + 1}"]`,
+          );
+          if (photoElement) {
+            photoElement.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+              inline: "nearest",
+            });
+          }
         }
-      }
 
-      // Clear highlight after a delay
-      setTimeout(() => {
-        setHighlightedPhotoId(null);
-      }, 3000);
-    }
-  };
+        // Clear highlight after a delay
+        setTimeout(() => {
+          setHighlightedPhotoId(null);
+        }, 3000);
+      }
+    },
+    [allPhotos],
+  );
 
   const handleOrderChange = (value: OrderByOption) => {
     // Update URL parameters
@@ -117,13 +148,31 @@ const PhotographyPage: React.FC = () => {
     handleOrderSwitch(value);
   };
 
-  const handlePhotoSwipeClose = () => {
+  const handlePhotoSwipeClose = useCallback(() => {
+    console.log("[PhotographyPage] Close handler called:", {
+      isLGOpening,
+      isPhotoSwipeOpen,
+      willIgnore: isLGOpening,
+    });
+
     if (isLGOpening) {
+      console.log(
+        "[PhotographyPage] Ignoring close request - gallery is opening",
+      );
       // Ignore close requests while opening to avoid destroy-loop
       return;
     }
+
+    console.log("[PhotographyPage] Setting isPhotoSwipeOpen to false");
     setIsPhotoSwipeOpen(false);
-  };
+  }, [isLGOpening, isPhotoSwipeOpen]);
+
+  const handlePhotoSwipeOpened = useCallback(() => {
+    console.log(
+      "[PhotographyPage] Gallery opened callback - setting isLGOpening to false",
+    );
+    setIsLGOpening(false);
+  }, []);
 
   const handleLoadMore = () => {
     if (hasMore && !isLoadingMore) {
@@ -304,7 +353,7 @@ const PhotographyPage: React.FC = () => {
         isOpen={isPhotoSwipeOpen}
         initialIndex={photoSwipeIndex}
         onClose={handlePhotoSwipeClose}
-        onOpened={() => setIsLGOpening(false)}
+        onOpened={handlePhotoSwipeOpened}
         defaultShowInfo={!!location?.state?.photoId}
       />
     </div>

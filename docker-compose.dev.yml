@@ -21,12 +21,10 @@ services:
   backend:
     # Override the image to use a development base
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
       args:
         BUILD_TYPE: development
-      additional_contexts:
-        gitdir: ./.git
     image: antonlu/arcadia-backend:dev
     volumes:
       # Mount source code for live reload

@@ -5,8 +5,8 @@
 services:
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: ./
+      dockerfile: ./backend/Dockerfile
       args:
         BUILD_TYPE: production
       additional_contexts:
