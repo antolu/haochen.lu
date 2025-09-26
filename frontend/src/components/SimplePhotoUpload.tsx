@@ -7,12 +7,13 @@ import type { Photo } from "../types";
 import type { AxiosError } from "axios";
 
 interface SimplePhotoUploadProps {
-  onComplete?: (photo: Photo) => void;
+  onComplete?: (photo: Photo | unknown) => void;
   onCancel?: () => void;
   maxFiles?: number;
   maxFileSize?: number;
   category?: string;
   autoUpload?: boolean;
+  customUpload?: (file: File) => Promise<unknown>;
 }
 
 const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
@@ -22,6 +23,7 @@ const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
   maxFileSize = 50 * 1024 * 1024, // 50MB
   category = "hero",
   autoUpload = true,
+  customUpload,
 }) => {
   const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([]);
   const [uploadedPhotos, setUploadedPhotos] = useState<Map<string, Photo>>(
@@ -30,12 +32,49 @@ const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
   const uploadMutation = useUploadPhoto();
 
   const handleUpload = useCallback(
-    (file: UploadFile) => {
+    async (file: UploadFile) => {
       // Update status to uploading
       setUploadFiles((prev) =>
         prev.map((f) => (f.id === file.id ? { ...f, status: "uploading" } : f)),
       );
 
+      // If a custom uploader is provided (e.g., project images), use it
+      if (customUpload) {
+        try {
+          const uploaded = await customUpload(file.file);
+          setUploadFiles((prev) =>
+            prev.map((f) =>
+              f.id === file.id
+                ? { ...f, status: "completed", progress: 100 }
+                : f,
+            ),
+          );
+          setUploadedPhotos(
+            (prev) => new Map(prev.set(file.id, uploaded as Photo)),
+          );
+        } catch (error) {
+          console.error("Upload failed:", error);
+          const axiosError = error as AxiosError;
+          const errorMessage =
+            (axiosError.response?.data as { detail?: string })?.detail ??
+            (axiosError.message as string) ??
+            "Upload failed";
+          setUploadFiles((prev) =>
+            prev.map((f) =>
+              f.id === file.id
+                ? {
+                    ...f,
+                    status: "error",
+                    error: errorMessage,
+                  }
+                : f,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Default: upload to /photos
       uploadMutation.mutate(
         {
           file: file.file,
@@ -82,7 +121,7 @@ const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
         },
       );
     },
-    [uploadMutation, category, setUploadFiles, setUploadedPhotos],
+    [uploadMutation, category, setUploadFiles, setUploadedPhotos, customUpload],
   );
 
   // Auto-upload files when they're added (if enabled)

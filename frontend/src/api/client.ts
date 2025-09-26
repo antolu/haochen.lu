@@ -418,6 +418,42 @@ export const projects = {
         order: number;
       };
     },
+    upload: async (
+      projectId: string,
+      file: File,
+      metadata: { title?: string; alt_text?: string } = {},
+    ) => {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      if (metadata.title) {
+        formData.append("title", metadata.title);
+      }
+      if (metadata.alt_text) {
+        formData.append("alt_text", metadata.alt_text);
+      }
+
+      const res = await apiClient.post(
+        `/projects/${projectId}/images/upload`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        },
+      );
+      return res.data as {
+        id: string;
+        project_id: string;
+        photo_id: string | null;
+        filename: string | null;
+        original_path: string | null;
+        variants: Record<string, any> | null;
+        title?: string | null;
+        alt_text?: string | null;
+        order: number;
+      };
+    },
     remove: async (projectImageId: string) => {
       await apiClient.delete(`/projects/images/${projectImageId}`);
     },

@@ -20,6 +20,7 @@ import {
   useRemoveProjectImage,
   useReorderProjectImages,
 } from "../../hooks/useProjects";
+import SimplePhotoUpload from "../SimplePhotoUpload";
 
 type ProjectImage = {
   id: string;
@@ -113,14 +114,8 @@ const ProjectImagesManager: React.FC<ProjectImagesManagerProps> = ({
     [typedImages],
   );
 
-  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
-  const handleFilesSelected = (files: FileList | null) => {
-    if (!files) return;
-    Array.from(files)
-      .slice(0, 10)
-      .forEach((file) => {
-        void attachMutation.mutate({ file });
-      });
+  const handleCustomUpload = async (file: File) => {
+    return attachMutation.mutateAsync({ file });
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -144,20 +139,12 @@ const ProjectImagesManager: React.FC<ProjectImagesManagerProps> = ({
           Upload multiple images. They are processed into AVIF/WebP/JPEG
           variants automatically.
         </p>
-        <div className="flex items-center gap-3">
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={(e) => {
-              handleFilesSelected(e.currentTarget.files);
-              e.currentTarget.value = ""; // allow re-selecting same files
-              void refetch();
-            }}
-            className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border file:text-sm file:font-semibold file:bg-background file:text-foreground hover:file:bg-accent"
-          />
-        </div>
+        <SimplePhotoUpload
+          maxFiles={10}
+          autoUpload
+          customUpload={handleCustomUpload}
+          onComplete={() => void refetch()}
+        />
       </div>
 
       <div className="bg-card border rounded-lg">

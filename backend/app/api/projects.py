@@ -27,6 +27,7 @@ from app.crud.project import (
 )
 from app.dependencies import (
     _current_admin_user_dependency,
+    _current_user_optional_dependency,
     _session_dependency,
 )
 from app.models.project import Project as ProjectModel
@@ -292,6 +293,7 @@ async def get_project_images(project_id: UUID, db: AsyncSession = _session_depen
     for img in images:
         base = ProjectImageResponse.model_validate(img).model_dump()
         photo_like = {
+            "id": str(img.id),
             "variants": img.variants or {},
             "original_url": img.original_path,
         }
@@ -378,6 +380,7 @@ async def upload_project_image(
     # Shape response with URLs
     img_dict = ProjectImageResponse.model_validate(pi).model_dump()
     photo_like = {
+        "id": str(pi.id),  # Use the project image ID as the photo ID for direct uploads
         "variants": processed.get("variants", {}),
         "original_url": processed.get("original_path"),
     }
@@ -415,7 +418,7 @@ async def serve_project_image_original(
     project_image_id: UUID,
     request: Request,
     db: AsyncSession = _session_dependency,
-    current_user: object | None = _current_admin_user_dependency,
+    current_user: object | None = _current_user_optional_dependency,
 ):
     res = await db.execute(
         select(ProjectImage).where(ProjectImage.id == project_image_id)
@@ -447,7 +450,7 @@ async def serve_project_image_variant(
     variant: str,
     request: Request,
     db: AsyncSession = _session_dependency,
-    current_user: object | None = _current_admin_user_dependency,
+    current_user: object | None = _current_user_optional_dependency,
 ):
     res = await db.execute(
         select(ProjectImage).where(ProjectImage.id == project_image_id)
