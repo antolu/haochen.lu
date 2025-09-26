@@ -1,0 +1,22 @@
+# Build configuration for creating production images with git context
+# Usage: docker compose -f docker-compose.build.yml build
+# This creates production-ready images with proper setuptools-scm versioning
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        BUILD_TYPE: production
+      additional_contexts:
+        gitdir: ./.git
+    image: antonlu/arcadia-backend:latest
+    # This service is only for building - no runtime configuration needed
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: antonlu/arcadia-frontend:latest
+    # This service is only for building - no runtime configuration needed

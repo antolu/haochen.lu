@@ -1,10 +1,15 @@
+# Multi-stage Dockerfile for both development and production builds
+# syntax=docker/dockerfile:1.4
 # hadolint ignore=DL3008
-FROM python:3.11-slim
+ARG BUILD_TYPE=production
+
+# Base stage with common dependencies
+FROM python:3.11-slim as base
 
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies including libvips and AVIF support
+# Install base system dependencies including libvips and AVIF support
 # hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
@@ -17,34 +22,72 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libx265-dev \
     libaom-dev \
     libdav1d-dev \
-    libwebp-dev \
-    libjpeg62-turbo-dev \
     pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
+# Development stage
+FROM base as development
+# Install additional dev packages
+# hadolint ignore=DL3008
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install dev tools first (stable cache)
+RUN pip install --no-cache-dir watchfiles==0.24.0
+
+# Production stage
+FROM base as production
+# Install additional production packages including git for setuptools-scm
+# hadolint ignore=DL3008
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    ca-certificates \
+    libwebp-dev \
+    libjpeg62-turbo-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Final stage selection based on build type
+FROM ${BUILD_TYPE} as final
+
 # Copy pyproject first to leverage Docker layer cache for dependencies
+# hadolint ignore=DL3045
 COPY pyproject.toml ./
 
 # Install dependencies only (not the package itself) to avoid setuptools-scm issues
 # hadolint ignore=DL3013,SC2046
-RUN pip install --no-cache-dir "$(python -c "import tomllib; print(' '.join(tomllib.load(open('pyproject.toml', 'rb'))['project']['dependencies']))")"
+RUN pip install --no-cache-dir $(python -c "import tomllib; print(' '.join(tomllib.load(open('pyproject.toml', 'rb'))['project']['dependencies']))")
 
 # Copy application code after dependencies are cached
+# hadolint ignore=DL3045
 COPY . .
 
-# Install the package itself after all source code is available
-RUN pip install --no-cache-dir --no-deps .
+# Install the package itself with git context for proper setuptools-scm versioning
+RUN --mount=type=bind,from=gitdir,src=.,target=/app/.git \
+    pip install --no-cache-dir --no-deps .
 
 # Create directories for uploads and compressed images
-# hadolint ignore=DL3059
 RUN mkdir -p uploads compressed
 
-# Copy and make entrypoint script executable
-COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
+# Handle entrypoint setup for production builds only
+RUN if [ "$BUILD_TYPE" = "production" ]; then \
+        cp docker-entrypoint.sh /docker-entrypoint.sh && \
+        chmod +x /docker-entrypoint.sh; \
+    fi
 
 # Expose port
 EXPOSE 8000
 
-# Use custom entrypoint that handles migrations
-ENTRYPOINT ["/docker-entrypoint.sh"]
+# Set command based on build type
+ARG BUILD_TYPE=production
+RUN if [ "$BUILD_TYPE" = "development" ]; then \
+        printf '#!/bin/bash\nexec uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload\n' > /start.sh && \
+        chmod +x /start.sh; \
+    else \
+        printf '#!/bin/bash\nexec /docker-entrypoint.sh\n' > /start.sh && \
+        chmod +x /start.sh; \
+    fi
+
+# Use the dynamically created start script
+ENTRYPOINT ["/start.sh"]

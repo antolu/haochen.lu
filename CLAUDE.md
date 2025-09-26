@@ -65,6 +65,20 @@ npm install
 npm run dev
 ```
 
+**Production Image Builds:**
+```bash
+# Build production images with git context for proper versioning (local development)
+docker compose -f docker-compose.build.yml build
+
+# Build and push multi-platform production images (CI/CD or release)
+docker buildx build --platform linux/amd64,linux/arm64 -t antonlu/arcadia-backend:latest --push ./backend
+docker buildx build --platform linux/amd64,linux/arm64 -t antonlu/arcadia-frontend:latest --push ./frontend
+
+# Build multi-platform images locally (without push)
+docker buildx build --platform linux/amd64,linux/arm64 -t antonlu/arcadia-backend:latest --load ./backend
+docker buildx build --platform linux/amd64,linux/arm64 -t antonlu/arcadia-frontend:latest --load ./frontend
+```
+
 ### Database Management
 
 ```bash
