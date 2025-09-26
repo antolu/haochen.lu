@@ -29,11 +29,16 @@ RUN pip install --no-cache-dir watchfiles==0.24.0
 # Copy project metadata next for dependency layer caching
 COPY pyproject.toml ./
 
-# Install Python dependencies using cacheable layer
-RUN pip install --no-cache-dir .
+# Install dependencies only (not the package itself) to avoid setuptools-scm issues
+# hadolint ignore=DL3013,SC2046
+RUN pip install --no-cache-dir "$(python -c "import tomllib; print(' '.join(tomllib.load(open('pyproject.toml', 'rb'))['project']['dependencies']))")"
 
 # Copy source code after deps cached
 COPY . ./
+
+# Install the package itself with git context for setuptools-scm versioning
+RUN --mount=type=bind,from=gitdir,src=.,target=/app/.git \
+    pip install --no-cache-dir --no-deps .
 
 # Create uploads and compressed directories
 RUN mkdir -p /app/uploads /app/compressed

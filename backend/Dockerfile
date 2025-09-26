@@ -25,13 +25,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy pyproject first to leverage Docker layer cache for dependencies
 COPY pyproject.toml ./
 
-# Install Python dependencies and package (non-editable) using only pyproject for cache key
-RUN pip install --no-cache-dir .
+# Install dependencies only (not the package itself) to avoid setuptools-scm issues
+# hadolint ignore=DL3013,SC2046
+RUN pip install --no-cache-dir "$(python -c "import tomllib; print(' '.join(tomllib.load(open('pyproject.toml', 'rb'))['project']['dependencies']))")"
 
 # Copy application code after dependencies are cached
 COPY . .
 
+# Install the package itself after all source code is available
+RUN pip install --no-cache-dir --no-deps .
+
 # Create directories for uploads and compressed images
+# hadolint ignore=DL3059
 RUN mkdir -p uploads compressed
 
 # Copy and make entrypoint script executable
