@@ -84,7 +84,7 @@ class ProjectReorderRequest(BaseModel):
 
 
 # Project images
-class ProjectImagePhoto(BaseModel):
+class ProjectImageFile(BaseModel):
     id: str
     variants: dict
     original_url: str | None = None
@@ -104,13 +104,12 @@ class ProjectImagePhoto(BaseModel):
 class ProjectImageResponse(BaseModel):
     id: str
     project_id: str
-    photo_id: str
     title: str | None = None
     alt_text: str | None = None
     order: int
-    photo: ProjectImagePhoto | None = None
+    photo: ProjectImageFile | None = None
 
-    @field_validator("id", "project_id", "photo_id", mode="before")
+    @field_validator("id", "project_id", mode="before")
     @classmethod
     def convert_uuid_to_str(cls, v):  # type: ignore[no-untyped-def]
         if isinstance(v, UUID):

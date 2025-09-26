@@ -12,9 +12,6 @@ services:
     ports:
       - "80:80"
       - "443:443"
-    volumes:
-      - ./uploads:/var/www/uploads:ro
-      - ./compressed:/var/www/compressed:ro
     depends_on:
       - backend
       - frontend

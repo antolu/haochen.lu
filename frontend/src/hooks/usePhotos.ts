@@ -26,7 +26,7 @@ export const photoKeys = {
 export const usePhotos = () => {
   return useQuery({
     queryKey: photoKeys.list("admin-order"),
-    queryFn: () => photos.list({ order_by: "order" }),
+    queryFn: () => photos.list({ order_by: "order", category: "photography" }),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };
@@ -75,6 +75,7 @@ export const useOptimizedPhotos = (
         page: 1,
         per_page: photosPerPage,
         order_by: orderBy,
+        category: "photography",
       });
       setPhotos(orderBy, response, 1);
       return response;
@@ -92,6 +93,7 @@ export const useOptimizedPhotos = (
         page: nextPage,
         per_page: photosPerPage,
         order_by: orderBy,
+        category: "photography",
       });
       setPhotos(orderBy, response, nextPage);
       return response;

@@ -13,7 +13,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { arrayMove } from "@dnd-kit/sortable";
-import SimplePhotoUpload from "../SimplePhotoUpload";
+//
 import {
   useProjectImages,
   useAttachProjectImage,
@@ -113,8 +113,14 @@ const ProjectImagesManager: React.FC<ProjectImagesManagerProps> = ({
     [typedImages],
   );
 
-  const onUploadComplete = (photo: { id: string }) => {
-    void attachMutation.mutate({ photo_id: String(photo.id) });
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+  const handleFilesSelected = (files: FileList | null) => {
+    if (!files) return;
+    Array.from(files)
+      .slice(0, 10)
+      .forEach((file) => {
+        void attachMutation.mutate({ file });
+      });
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -138,14 +144,20 @@ const ProjectImagesManager: React.FC<ProjectImagesManagerProps> = ({
           Upload multiple images. They are processed into AVIF/WebP/JPEG
           variants automatically.
         </p>
-        <SimplePhotoUpload
-          maxFiles={10}
-          category="projects"
-          onComplete={(p) => {
-            onUploadComplete(p);
-            void refetch();
-          }}
-        />
+        <div className="flex items-center gap-3">
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={(e) => {
+              handleFilesSelected(e.currentTarget.files);
+              e.currentTarget.value = ""; // allow re-selecting same files
+              void refetch();
+            }}
+            className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border file:text-sm file:font-semibold file:bg-background file:text-foreground hover:file:bg-accent"
+          />
+        </div>
       </div>
 
       <div className="bg-card border rounded-lg">

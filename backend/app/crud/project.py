@@ -5,7 +5,6 @@ from uuid import UUID
 
 from sqlalchemy import asc, desc, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.core.repository_service import repository_service
 from app.core.vips_processor import vips_image_processor
@@ -220,7 +219,6 @@ async def update_project_readme(
 async def list_project_images(db: AsyncSession, project_id: UUID) -> list[ProjectImage]:
     result = await db.execute(
         select(ProjectImage)
-        .options(selectinload(ProjectImage.photo))
         .where(ProjectImage.project_id == project_id)
         .order_by(asc(ProjectImage.order), asc(ProjectImage.created_at))
     )

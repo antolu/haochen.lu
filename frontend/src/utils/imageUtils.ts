@@ -287,14 +287,9 @@ export const selectOptimalImage = (
 
   // Get URLs with proper fallbacks
   const selectedUrl =
-    variants[selectedVariant]?.url ??
-    photo.original_url ??
-    `/uploads/${photo.filename}`;
+    variants[selectedVariant]?.url ?? photo.original_url ?? "";
   const fallbackUrl =
-    variants.small?.url ??
-    variants.thumbnail?.url ??
-    photo.original_url ??
-    `/uploads/${photo.filename}`;
+    variants.small?.url ?? variants.thumbnail?.url ?? photo.original_url ?? "";
 
   // Generate responsive attributes
   const srcset =

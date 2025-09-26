@@ -373,10 +373,14 @@ export function useAttachProjectImage(projectId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload: {
-      photo_id: string;
+      file: File;
       title?: string;
       alt_text?: string;
-    }) => projectsApi.images.attach(projectId, payload),
+    }) =>
+      projectsApi.images.upload(projectId, payload.file, {
+        title: payload.title,
+        alt_text: payload.alt_text,
+      }),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: projectKeys.images(projectId),

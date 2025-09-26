@@ -101,7 +101,7 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
     const variants = p.variants || {};
     const thumb =
       (variants as any).thumbnail?.url || (variants as any).small?.url;
-    return thumb || p.original_url || `/uploads/${p.filename}`;
+    return thumb || p.original_url;
   };
 
   const createPhotoMarkerElement = (photo: Photo): HTMLDivElement => {

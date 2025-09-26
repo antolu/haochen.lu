@@ -4,8 +4,8 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.dialects.postgresql import JSON, UUID
+from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
 
@@ -21,9 +21,15 @@ class ProjectImage(Base):
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
     )
-    photo_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("photos.id", ondelete="CASCADE"), nullable=False
+    # Legacy link to photos table (deprecated). New uploads store files directly.
+    photo_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("photos.id", ondelete="CASCADE"), nullable=True
     )
+
+    # Direct storage for project image files (new path)
+    filename: Mapped[str | None] = mapped_column(String(255))
+    original_path: Mapped[str | None] = mapped_column(String(500))
+    variants: Mapped[dict | None] = mapped_column(JSON)
 
     # Optional metadata
     title: Mapped[str | None] = mapped_column(String(200))
@@ -36,5 +42,4 @@ class ProjectImage(Base):
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
     )
 
-    # Relationships
-    photo = relationship("Photo", lazy="select")
+    # Relationships (deprecated): intentionally no relationship to Photo to avoid coupling

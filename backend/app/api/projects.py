@@ -3,13 +3,15 @@ from __future__ import annotations
 import json
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Form, HTTPException, Query, Request, UploadFile
+from fastapi.responses import FileResponse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.file_access import file_access_controller
+from app.core.image_processor import image_processor
 from app.core.repository_service import RepositoryInfo, repository_service
 from app.crud.project import (
-    attach_project_image,
     bulk_reorder_projects,
     create_project,
     delete_project_and_media,
@@ -41,32 +43,32 @@ from app.schemas.project import (
     ProjectUpdate,
     ReadmeResponse,
 )
+from app.types.access_control import FileType
 
 router = APIRouter()
 MAX_PROJECT_IMAGES = 10
 
 
-def _populate_photo_urls(photo_dict: dict) -> None:
-    """Populate photo file and variant URLs similar to hero_images endpoint."""
-    if not photo_dict:
-        return
-    photo_id = photo_dict.get("id")
-    if not photo_id:
-        return
-    photo_dict["original_url"] = f"/api/photos/{photo_id}/file"
-    photo_dict["download_url"] = f"/api/photos/{photo_id}/download"
-    variants = photo_dict.get("variants")
+def _populate_project_image_urls(project_image_id: str, photo_like: dict) -> dict:
+    """Populate secure API URLs for project image file access."""
+    if not photo_like:
+        return photo_like
+    photo_like["original_url"] = f"/api/projects/images/{project_image_id}/file"
+    photo_like["download_url"] = f"/api/projects/images/{project_image_id}/download"
+    variants = photo_like.get("variants")
     if isinstance(variants, dict):
         for variant_name, variant_data in variants.items():
             if isinstance(variant_data, dict):
-                # Provide size-level URL where missing
                 variant_data.setdefault(
-                    "url", f"/api/photos/{photo_id}/file/{variant_name}"
+                    "url",
+                    f"/api/projects/images/{project_image_id}/file/{variant_name}",
                 )
-                # For nested multi-format variants, attach url too
                 for fmt_data in variant_data.values():
                     if isinstance(fmt_data, dict) and "filename" in fmt_data:
-                        fmt_data["url"] = f"/api/photos/{photo_id}/file/{variant_name}"
+                        fmt_data["url"] = (
+                            f"/api/projects/images/{project_image_id}/file/{variant_name}"
+                        )
+    return photo_like
 
 
 @router.get("", response_model=ProjectListResponse)
@@ -90,13 +92,19 @@ async def list_projects(
         resp = ProjectResponse.model_validate(project).model_dump()
         images = await list_project_images(db, project.id)
         if images:
-            img_dict = ProjectImageResponse.model_validate(images[0]).model_dump()
-            photo_dict = img_dict.get("photo") or {}
-            _populate_photo_urls(photo_dict)
+            first = images[0]
+            photo_like = {
+                "variants": first.variants or {},
+                "original_url": first.original_path,
+            }
+            _populate_project_image_urls(str(first.id), photo_like)
+            variants: dict = {}
+            if isinstance(photo_like.get("variants"), dict):
+                variants = photo_like.get("variants")  # type: ignore[assignment]
             resp["cover_image_url"] = (
-                photo_dict.get("variants", {}).get("thumbnail", {}).get("url")
-                or photo_dict.get("variants", {}).get("small", {}).get("url")
-                or photo_dict.get("original_url")
+                variants.get("thumbnail", {}).get("url")
+                or variants.get("small", {}).get("url")
+                or photo_like.get("original_url")
             )
         responses.append(ProjectResponse.model_validate(resp))
 
@@ -112,13 +120,19 @@ async def list_featured_projects(db: AsyncSession = _session_dependency):
         resp = ProjectResponse.model_validate(project).model_dump()
         images = await list_project_images(db, project.id)
         if images:
-            img_dict = ProjectImageResponse.model_validate(images[0]).model_dump()
-            photo_dict = img_dict.get("photo") or {}
-            _populate_photo_urls(photo_dict)
+            first = images[0]
+            photo_like = {
+                "variants": first.variants or {},
+                "original_url": first.original_path,
+            }
+            _populate_project_image_urls(str(first.id), photo_like)
+            variants: dict = {}
+            if isinstance(photo_like.get("variants"), dict):
+                variants = photo_like.get("variants")  # type: ignore[assignment]
             resp["cover_image_url"] = (
-                photo_dict.get("variants", {}).get("thumbnail", {}).get("url")
-                or photo_dict.get("variants", {}).get("small", {}).get("url")
-                or photo_dict.get("original_url")
+                variants.get("thumbnail", {}).get("url")
+                or variants.get("small", {}).get("url")
+                or photo_like.get("original_url")
             )
         responses.append(ProjectResponse.model_validate(resp))
     return responses
@@ -241,13 +255,19 @@ async def get_project_detail(
     resp = ProjectResponse.model_validate(project).model_dump()
     images = await list_project_images(db, project.id)
     if images:
-        img_dict = ProjectImageResponse.model_validate(images[0]).model_dump()
-        photo_dict = img_dict.get("photo") or {}
-        _populate_photo_urls(photo_dict)
+        first = images[0]
+        photo_like = {
+            "variants": first.variants or {},
+            "original_url": first.original_path,
+        }
+        _populate_project_image_urls(str(first.id), photo_like)
+        variants: dict = {}
+        if isinstance(photo_like.get("variants"), dict):
+            variants = photo_like.get("variants")  # type: ignore[assignment]
         resp["cover_image_url"] = (
-            photo_dict.get("variants", {}).get("thumbnail", {}).get("url")
-            or photo_dict.get("variants", {}).get("small", {}).get("url")
-            or photo_dict.get("original_url")
+            variants.get("thumbnail", {}).get("url")
+            or variants.get("small", {}).get("url")
+            or photo_like.get("original_url")
         )
     return ProjectResponse.model_validate(resp)
 
@@ -268,13 +288,16 @@ async def reorder_projects(
 @router.get("/{project_id}/images", response_model=list[ProjectImageResponse])
 async def get_project_images(project_id: UUID, db: AsyncSession = _session_dependency):
     images = await list_project_images(db, project_id)
-    payload = []
+    payload: list[ProjectImageResponse] = []
     for img in images:
-        img_dict = ProjectImageResponse.model_validate(img).model_dump()
-        photo_dict = img_dict.get("photo") or {}
-        _populate_photo_urls(photo_dict)
-        img_dict["photo"] = photo_dict
-        payload.append(ProjectImageResponse.model_validate(img_dict))
+        base = ProjectImageResponse.model_validate(img).model_dump()
+        photo_like = {
+            "variants": img.variants or {},
+            "original_url": img.original_path,
+        }
+        base_photo = _populate_project_image_urls(str(img.id), photo_like)
+        base["photo"] = base_photo
+        payload.append(ProjectImageResponse.model_validate(base))
     return payload
 
 
@@ -297,22 +320,68 @@ async def add_project_image(
             detail=f"Maximum images per project is {MAX_PROJECT_IMAGES}",
         )
 
-    pi = await attach_project_image(
-        db,
-        project_id=project_id,
-        photo_id=UUID(payload.photo_id),
-        title=payload.title,
-        alt_text=payload.alt_text,
+    # Deprecated path: attaching existing photos is no longer supported.
+    raise HTTPException(
+        status_code=410,
+        detail="Attaching existing photos is deprecated. Use /images/upload",
     )
-    # Eager-load photo for URL population
-    images = await list_project_images(db, project_id)
-    match = next((x for x in images if x.id == pi.id), None)
-    if not match:
-        return ProjectImageResponse.model_validate(pi)
-    img_dict = ProjectImageResponse.model_validate(match).model_dump()
-    photo_dict = img_dict.get("photo") or {}
-    _populate_photo_urls(photo_dict)
-    img_dict["photo"] = photo_dict
+
+
+@router.post("/{project_id}/images/upload", response_model=ProjectImageResponse)
+async def upload_project_image(
+    project_id: UUID,
+    file: UploadFile,
+    title: str = Form(""),
+    alt_text: str = Form(""),
+    db: AsyncSession = _session_dependency,
+    current_user=_current_admin_user_dependency,
+):
+    """Upload a new image directly to a project (separate from photos)."""
+    # Validate
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image")
+
+    count_res = await db.execute(
+        select(func.count())
+        .select_from(ProjectImage)
+        .where(ProjectImage.project_id == project_id)
+    )
+    if (count_res.scalar() or 0) >= MAX_PROJECT_IMAGES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Maximum images per project is {MAX_PROJECT_IMAGES}",
+        )
+
+    # Process image via shared processor
+    try:
+        processed = await image_processor.process_image(
+            file.file, file.filename or "image.jpg", title or file.filename
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error processing image: {e!s}"
+        ) from e
+
+    # Persist into project_images directly
+    pi = ProjectImage(
+        project_id=project_id,
+        filename=processed.get("filename"),
+        original_path=processed.get("original_path"),
+        variants=processed.get("variants"),
+        title=title or None,
+        alt_text=alt_text or None,
+    )
+    db.add(pi)
+    await db.commit()
+    await db.refresh(pi)
+
+    # Shape response with URLs
+    img_dict = ProjectImageResponse.model_validate(pi).model_dump()
+    photo_like = {
+        "variants": processed.get("variants", {}),
+        "original_url": processed.get("original_path"),
+    }
+    img_dict["photo"] = _populate_project_image_urls(str(pi.id), photo_like)
     return ProjectImageResponse.model_validate(img_dict)
 
 
@@ -338,6 +407,96 @@ async def reorder_images(
     items = [{"id": it.id, "order": it.order} for it in payload.items]
     await reorder_project_images(db, project_id, items, normalize=payload.normalize)
     return {"message": "Reordered"}
+
+
+# Secure file serving for project images (no direct /uploads exposure)
+@router.get("/images/{project_image_id}/file")
+async def serve_project_image_original(
+    project_image_id: UUID,
+    request: Request,
+    db: AsyncSession = _session_dependency,
+    current_user: object | None = _current_admin_user_dependency,
+):
+    res = await db.execute(
+        select(ProjectImage).where(ProjectImage.id == project_image_id)
+    )
+    pi = res.scalar_one_or_none()
+    if not pi:
+        raise HTTPException(status_code=404, detail="Project image not found")
+
+    # Build a photo-like object
+    class _PL:
+        def __init__(self, original_path, variants):
+            self.original_path = original_path
+            self.variants = variants or {}
+
+    file_path = file_access_controller.get_file_path(
+        _PL(pi.original_path, pi.variants), FileType.ORIGINAL
+    )
+    content_type = file_access_controller.get_content_type(file_path)
+    return FileResponse(
+        path=str(file_path),
+        media_type=content_type,
+        headers={"Cache-Control": "private, max-age=3600"},
+    )
+
+
+@router.get("/images/{project_image_id}/file/{variant}")
+async def serve_project_image_variant(
+    project_image_id: UUID,
+    variant: str,
+    request: Request,
+    db: AsyncSession = _session_dependency,
+    current_user: object | None = _current_admin_user_dependency,
+):
+    res = await db.execute(
+        select(ProjectImage).where(ProjectImage.id == project_image_id)
+    )
+    pi = res.scalar_one_or_none()
+    if not pi:
+        raise HTTPException(status_code=404, detail="Project image not found")
+
+    try:
+        file_type = FileType(variant)
+    except ValueError:
+        # Accept bare size names; map to size-preferring any format
+        if variant not in {"thumbnail", "small", "medium", "large", "xlarge"}:
+            raise HTTPException(
+                status_code=400, detail=f"Invalid variant '{variant}'"
+            ) from None
+        # Map bare size to the base enum (same value)
+        file_type = getattr(FileType, variant.upper())  # type: ignore[arg-type]
+
+    class _PL:
+        def __init__(self, original_path, variants):
+            self.original_path = original_path
+            self.variants = variants or {}
+
+    try:
+        file_path = file_access_controller.get_file_path(
+            _PL(pi.original_path, pi.variants), file_type
+        )
+    except HTTPException as e:
+        if e.status_code == 404:
+            # fallback to original
+            file_path = file_access_controller.get_file_path(
+                _PL(pi.original_path, pi.variants), FileType.ORIGINAL
+            )
+            file_type = FileType.ORIGINAL
+        else:
+            raise
+
+    content_type = file_access_controller.get_content_type(file_path)
+    cache_control = (
+        "public, max-age=86400"
+        if file_type in [FileType.THUMBNAIL, FileType.SMALL]
+        else "private, max-age=3600"
+    )
+    return FileResponse(
+        path=str(file_path),
+        media_type=content_type,
+        headers={"Cache-Control": cache_control},
+    )
 
 
 @router.post("", response_model=ProjectResponse)
