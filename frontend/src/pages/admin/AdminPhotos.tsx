@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { RefreshCcw } from "lucide-react";
-import { Switch } from "@headlessui/react";
+import { Switch } from "../../components/ui/switch";
 // photoswipe not used in admin (editor replaces lightbox)
 
 import PhotoUpload from "../../components/PhotoUpload";
@@ -174,7 +174,7 @@ const AdminPhotos: React.FC = () => {
         <p className="text-muted-foreground">{photosError.message}</p>
         <button
           onClick={() => window.location.reload()}
-          className="mt-4 px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg transition-colors"
+          className="mt-4 px-4 py-2 text-sm font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors shadow-sm"
         >
           Retry
         </button>
@@ -225,25 +225,14 @@ const AdminPhotos: React.FC = () => {
                 </span>
                 <Switch
                   checked={reorderEnabled}
-                  onChange={(checked) => {
+                  onCheckedChange={(checked) => {
                     if (!photos.length && checked) {
                       toast.error("Add some photos before reordering.");
                       return;
                     }
                     setReorderEnabled(checked);
                   }}
-                  className={cn(
-                    "relative inline-flex h-6 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75",
-                    reorderEnabled ? "bg-amber-400" : "bg-muted",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-background shadow-lg ring-0 transition duration-200 ease-in-out",
-                      reorderEnabled ? "translate-x-6" : "translate-x-0",
-                    )}
-                  />
-                </Switch>
+                />
               </div>
               <AnimatePresence>
                 {reorderEnabled && (
@@ -268,7 +257,7 @@ const AdminPhotos: React.FC = () => {
             <button
               onClick={() => setShowUpload(true)}
               disabled={showUpload || reorderEnabled || isReordering}
-              className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
+              className="px-4 py-2 text-sm font-medium bg-blue-500 hover:bg-blue-600 text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors shadow-sm"
             >
               <span className="flex items-center">
                 <svg
@@ -296,9 +285,9 @@ const AdminPhotos: React.FC = () => {
             <div className="bg-card rounded-lg border p-4">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="h-8 w-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <div className="h-8 w-8 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
                     <svg
-                      className="h-4 w-4 text-primary"
+                      className="h-4 w-4 text-blue-600 dark:text-blue-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -314,7 +303,7 @@ const AdminPhotos: React.FC = () => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium">Total Photos</p>
-                  <p className="text-2xl font-bold text-primary">
+                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                     {stats.total_photos || photos.length}
                   </p>
                 </div>
@@ -414,9 +403,9 @@ const AdminPhotos: React.FC = () => {
 
       {/* Bulk Actions */}
       {selectedPhotos.size > 0 && (
-        <div className="mb-6 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+        <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg">
           <div className="flex items-center justify-between">
-            <div className="text-sm text-primary">
+            <div className="text-sm text-blue-700 dark:text-blue-400">
               {selectedPhotos.size} photo{selectedPhotos.size > 1 ? "s" : ""}{" "}
               selected
             </div>
@@ -425,7 +414,7 @@ const AdminPhotos: React.FC = () => {
                 onClick={() => {
                   void handleBulkToggleFeatured(true);
                 }}
-                className="px-3 py-1 text-xs font-medium text-yellow-700 bg-yellow-100 hover:bg-yellow-200 dark:text-yellow-400 dark:bg-yellow-900/20 dark:hover:bg-yellow-900/30 rounded border border-yellow-300 dark:border-yellow-700 transition-colors"
+                className="px-3 py-1 text-xs font-medium text-yellow-700 bg-yellow-100 hover:bg-yellow-200 dark:text-yellow-300 dark:bg-yellow-900/30 dark:hover:bg-yellow-900/40 rounded border border-yellow-300 dark:border-yellow-600 transition-colors shadow-sm"
               >
                 ⭐ Feature
               </button>
@@ -441,7 +430,7 @@ const AdminPhotos: React.FC = () => {
                 onClick={() => {
                   void handleBulkDelete();
                 }}
-                className="px-3 py-1 text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 dark:text-red-400 dark:bg-red-900/20 dark:hover:bg-red-900/30 rounded border border-red-300 dark:border-red-700 transition-colors"
+                className="px-3 py-1 text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 dark:text-red-300 dark:bg-red-900/30 dark:hover:bg-red-900/40 rounded border border-red-300 dark:border-red-600 transition-colors shadow-sm"
               >
                 🗑 Delete
               </button>
@@ -519,7 +508,7 @@ const AdminPhotos: React.FC = () => {
           {photos.length > 0 && !editingPhoto && (
             <button
               onClick={() => handleSelectAll()}
-              className="text-sm text-primary hover:text-primary/80 font-medium"
+              className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors"
             >
               {selectedPhotos.size === photos.length
                 ? "Deselect All"

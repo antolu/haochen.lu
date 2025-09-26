@@ -192,8 +192,8 @@ const AdminLayoutContent: React.FC = () => {
                 to={item.href}
                 onClick={() => mobile && setMobileMenuOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-accent",
-                  isActive && "bg-accent text-accent-foreground shadow-sm",
+                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-accent hover:text-accent-foreground",
+                  isActive && "bg-primary text-primary-foreground shadow-sm",
                 )}
               >
                 <Icon className="h-4 w-4 flex-shrink-0" />
@@ -223,7 +223,7 @@ const AdminLayoutContent: React.FC = () => {
         {(!sidebarCollapsed || mobile) && <ThemeToggle />}
 
         {/* User info */}
-        <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/50">
+        <div className="flex items-center gap-3 p-2 rounded-lg bg-secondary/50">
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
             <span className="text-xs font-medium text-white">
               {user.username.charAt(0).toUpperCase()}
@@ -256,7 +256,7 @@ const AdminLayoutContent: React.FC = () => {
         {/* Desktop Sidebar */}
         <aside
           className={cn(
-            "hidden md:flex flex-col bg-card border-r transition-all duration-300",
+            "hidden md:flex flex-col bg-card/50 backdrop-blur-sm border-r transition-all duration-300",
             sidebarCollapsed ? "w-16" : "w-64",
           )}
         >
@@ -281,7 +281,7 @@ const AdminLayoutContent: React.FC = () => {
                 animate={{ x: 0 }}
                 exit={{ x: "-100%" }}
                 transition={{ type: "spring", damping: 20, stiffness: 100 }}
-                className="absolute left-0 top-0 h-full w-64 bg-card"
+                className="absolute left-0 top-0 h-full w-64 bg-card/95 backdrop-blur-sm"
               >
                 <SidebarContent mobile />
               </motion.aside>
@@ -292,7 +292,7 @@ const AdminLayoutContent: React.FC = () => {
         {/* Main Content */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Mobile Header */}
-          <header className="md:hidden flex items-center justify-between p-4 border-b bg-card">
+          <header className="md:hidden flex items-center justify-between p-4 border-b bg-card/50 backdrop-blur-sm">
             <Button
               variant="ghost"
               size="sm"
@@ -305,7 +305,7 @@ const AdminLayoutContent: React.FC = () => {
           </header>
 
           {/* Main Content Area */}
-          <main className="flex-1 p-4 md:p-6 overflow-auto">
+          <main className="flex-1 p-4 md:p-6 overflow-auto bg-card/30 backdrop-blur-sm">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}

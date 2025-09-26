@@ -52,28 +52,28 @@ const AdminDashboard: React.FC = () => {
       name: "Total Photos",
       stat: photoStats?.total_photos ?? 0,
       icon: Camera,
-      gradient: "from-blue-500 to-cyan-500",
+      gradient: "from-blue-500 to-blue-600",
       change: null,
     },
     {
       name: "Featured Photos",
       stat: photoStats?.featured_photos ?? 0,
       icon: Eye,
-      gradient: "from-emerald-500 to-teal-500",
+      gradient: "from-green-500 to-emerald-500",
       change: null,
     },
     {
       name: "Hero Images",
       stat: heroImagesList?.length ?? 0,
       icon: Sparkles,
-      gradient: "from-purple-500 to-pink-500",
+      gradient: "from-indigo-500 to-purple-500",
       change: null,
     },
     {
       name: "Projects",
       stat: projectStats?.total_projects ?? 0,
       icon: FolderOpen,
-      gradient: "from-orange-500 to-red-500",
+      gradient: "from-orange-500 to-amber-500",
       change: null,
     },
     {
@@ -139,7 +139,7 @@ const AdminDashboard: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="px-3 py-1">
+          <Badge className="px-3 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border-blue-200 dark:border-blue-700">
             <BarChart3 className="h-3 w-3 mr-1" />
             Analytics
           </Badge>
@@ -196,9 +196,9 @@ const AdminDashboard: React.FC = () => {
 
       {/* Quick Actions */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5" />
+        <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10">
+          <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-blue-100">
+            <Settings className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             Quick Actions
           </CardTitle>
         </CardHeader>
@@ -216,7 +216,7 @@ const AdminDashboard: React.FC = () => {
                   <Button
                     asChild
                     variant="outline"
-                    className="w-full h-auto p-4 justify-start"
+                    className="w-full h-auto p-4 justify-start hover:border-blue-300 dark:hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-colors"
                   >
                     <Link
                       to={action.href}
