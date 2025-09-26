@@ -142,9 +142,9 @@ const SortableRow: React.FC<RowProps> = ({
           <GripVertical className="h-4 w-4" />
         </button>
         <div className="flex-shrink-0">
-          {project.image_url ? (
+          {project.cover_image_url ? (
             <img
-              src={project.image_url}
+              src={project.cover_image_url}
               alt={project.title}
               className="w-14 h-14 rounded-lg object-cover"
             />
