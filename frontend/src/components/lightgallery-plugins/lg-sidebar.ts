@@ -1,4 +1,5 @@
 import { LightGallery } from "lightgallery/lightgallery";
+import { LgQuery } from "lightgallery/lgQuery";
 import { sidebarSettings, SidebarSettings } from "./lg-sidebar-settings";
 import type { Photo } from "../../types";
 
@@ -15,7 +16,7 @@ export default class LgSidebar {
   private isVisible: boolean = false;
   private currentPhotoData: Photo | null = null;
 
-  constructor(instance: LightGallery) {
+  constructor(instance: LightGallery, _LG: LgQuery) {
     this.core = instance;
     this.settings = { ...sidebarSettings, ...this.core.settings };
     return this;
@@ -44,61 +45,40 @@ export default class LgSidebar {
 
     // Create sidebar container
     this.sidebarEl = document.createElement("div");
-    this.sidebarEl.className =
-      `lg-sidebar ${this.settings.sidebarClass}`.trim();
-    this.sidebarEl.style.cssText = `
-            position: fixed;
-            top: 0;
-            ${this.settings.sidebarPosition}: ${this.isVisible ? "0" : `-${this.settings.sidebarWidth}px`};
-            width: ${this.settings.sidebarWidth}px;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.9);
-            color: white;
-            z-index: 10000;
-            transition: ${this.settings.sidebarPosition} ${this.settings.sidebarAnimationDuration}ms ease-in-out;
-            overflow-y: auto;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        `;
+    this.sidebarEl.className = [
+      "lg-sidebar",
+      `lg-sidebar--${this.settings.sidebarPosition}`,
+      this.settings.sidebarClass,
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    // Set initial position based on visibility
+    if (this.settings.sidebarPosition === "right") {
+      this.sidebarEl.style.right = this.isVisible
+        ? "0"
+        : `-${this.settings.sidebarWidth}px`;
+    } else {
+      this.sidebarEl.style.left = this.isVisible
+        ? "0"
+        : `-${this.settings.sidebarWidth}px`;
+    }
+
+    // Set width if different from default
+    if (this.settings.sidebarWidth !== 400) {
+      this.sidebarEl.style.width = `${this.settings.sidebarWidth}px`;
+    }
 
     // Create sidebar header
     const header = document.createElement("div");
     header.className = "lg-sidebar-header";
-    header.style.cssText = `
-            padding: 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        `;
 
     const title = document.createElement("h3");
     title.textContent = "Photo Information";
-    title.style.cssText = "margin: 0; font-size: 18px; font-weight: 600;";
 
     const closeBtn = document.createElement("button");
     closeBtn.innerHTML = "×";
     closeBtn.className = "lg-sidebar-close";
-    closeBtn.style.cssText = `
-            background: none;
-            border: none;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-            padding: 0;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 4px;
-            transition: background 0.2s;
-        `;
-    closeBtn.addEventListener("mouseenter", () => {
-      closeBtn.style.background = "rgba(255, 255, 255, 0.1)";
-    });
-    closeBtn.addEventListener("mouseleave", () => {
-      closeBtn.style.background = "none";
-    });
     closeBtn.addEventListener("click", () => this.hideSidebar());
 
     header.appendChild(title);
@@ -107,10 +87,6 @@ export default class LgSidebar {
     // Create sidebar content
     this.sidebarContentEl = document.createElement("div");
     this.sidebarContentEl.className = "lg-sidebar-content";
-    this.sidebarContentEl.style.cssText = `
-            padding: 20px;
-            line-height: 1.6;
-        `;
 
     this.sidebarEl.appendChild(header);
     this.sidebarEl.appendChild(this.sidebarContentEl);
@@ -123,26 +99,21 @@ export default class LgSidebar {
     console.log("[LgSidebar] Adding toggle button to toolbar");
 
     // Use the same approach as rotate plugin - directly append to core.$toolbar
-    const toggleButtonHtml = `<button type="button" id="lg-sidebar-toggle" aria-label="Toggle photo information" title="Photo Info (i)" class="lg-icon lg-sidebar-toggle">
-            <span style="font-weight:600;font-family:system-ui">i</span>
-        </button>`;
+    const toggleButtonHtml = `<button type="button" id="lg-sidebar-toggle" aria-label="Toggle photo information" title="Photo Info (i)" class="lg-icon lg-sidebar-toggle"></button>`;
 
     this.core.$toolbar.append(toggleButtonHtml);
+
+    this.core.outer
+      .find("#lg-sidebar-toggle")
+      .first()
+      .on("click.lg", this.toggleSidebar.bind(this));
 
     // Get reference to the created button for event handling
     this.toggleBtnEl = this.core.$toolbar
       .get()
       .querySelector("#lg-sidebar-toggle") as HTMLButtonElement;
 
-    if (this.toggleBtnEl) {
-      this.toggleBtnEl.addEventListener("click", (e) => {
-        e.preventDefault();
-        this.toggleSidebar();
-      });
-      console.log("[LgSidebar] Toggle button added successfully");
-    } else {
-      console.log("[LgSidebar] Failed to get reference to toggle button");
-    }
+    console.log("[LgSidebar] Toggle button added successfully");
   }
 
   private addEventListeners(): void {
@@ -213,19 +184,19 @@ export default class LgSidebar {
 
     const photo = this.currentPhotoData;
 
-    // Build content HTML
+    // Build content HTML using CSS classes
     const content = `
             <div class="lg-sidebar-section">
-                <h4 style="margin: 0 0 10px; font-size: 16px; color: #fff;">${photo.title || "Untitled"}</h4>
-                ${photo.description ? `<p style="margin: 0 0 15px; color: #ccc; font-size: 14px;">${photo.description}</p>` : ""}
+                <h4>${photo.title || "Untitled"}</h4>
+                ${photo.description ? `<p class="description">${photo.description}</p>` : ""}
             </div>
 
             ${
               photo.location_name
                 ? `
-            <div class="lg-sidebar-section" style="margin-bottom: 20px;">
-                <h5 style="margin: 0 0 5px; font-size: 14px; color: #999; text-transform: uppercase; letter-spacing: 0.5px;">Location</h5>
-                <p style="margin: 0; color: #fff;">${photo.location_name}</p>
+            <div class="lg-sidebar-section">
+                <h5>Location</h5>
+                <p>${photo.location_name}</p>
             </div>
             `
                 : ""
@@ -234,9 +205,9 @@ export default class LgSidebar {
             ${
               photo.date_taken
                 ? `
-            <div class="lg-sidebar-section" style="margin-bottom: 20px;">
-                <h5 style="margin: 0 0 5px; font-size: 14px; color: #999; text-transform: uppercase; letter-spacing: 0.5px;">Date Taken</h5>
-                <p style="margin: 0; color: #fff;">${new Date(photo.date_taken).toLocaleDateString()}</p>
+            <div class="lg-sidebar-section">
+                <h5>Date Taken</h5>
+                <p>${new Date(photo.date_taken).toLocaleDateString()}</p>
             </div>
             `
                 : ""
@@ -245,9 +216,9 @@ export default class LgSidebar {
             ${
               photo.camera_make || photo.camera_model
                 ? `
-            <div class="lg-sidebar-section" style="margin-bottom: 20px;">
-                <h5 style="margin: 0 0 5px; font-size: 14px; color: #999; text-transform: uppercase; letter-spacing: 0.5px;">Camera</h5>
-                <p style="margin: 0; color: #fff;">${[photo.camera_make, photo.camera_model].filter(Boolean).join(" ")}</p>
+            <div class="lg-sidebar-section">
+                <h5>Camera</h5>
+                <p>${[photo.camera_make, photo.camera_model].filter(Boolean).join(" ")}</p>
             </div>
             `
                 : ""
@@ -256,9 +227,9 @@ export default class LgSidebar {
             ${
               photo.lens || photo.lens_display_name
                 ? `
-            <div class="lg-sidebar-section" style="margin-bottom: 20px;">
-                <h5 style="margin: 0 0 5px; font-size: 14px; color: #999; text-transform: uppercase; letter-spacing: 0.5px;">Lens</h5>
-                <p style="margin: 0; color: #fff;">${photo.lens_display_name || photo.lens}</p>
+            <div class="lg-sidebar-section">
+                <h5>Lens</h5>
+                <p>${photo.lens_display_name || photo.lens}</p>
             </div>
             `
                 : ""
@@ -270,13 +241,13 @@ export default class LgSidebar {
               photo.shutter_speed ||
               photo.iso
                 ? `
-            <div class="lg-sidebar-section" style="margin-bottom: 20px;">
-                <h5 style="margin: 0 0 5px; font-size: 14px; color: #999; text-transform: uppercase; letter-spacing: 0.5px;">Camera Settings</h5>
-                <div style="display: grid; grid-template-columns: auto auto; gap: 5px 15px; color: #fff; font-size: 14px;">
-                    ${photo.focal_length ? `<span style="color: #999;">Focal Length:</span><span>${photo.focal_length}mm</span>` : ""}
-                    ${photo.aperture ? `<span style="color: #999;">Aperture:</span><span>f/${photo.aperture}</span>` : ""}
-                    ${photo.shutter_speed ? `<span style="color: #999;">Shutter:</span><span>${photo.shutter_speed}s</span>` : ""}
-                    ${photo.iso ? `<span style="color: #999;">ISO:</span><span>${photo.iso}</span>` : ""}
+            <div class="lg-sidebar-section">
+                <h5>Camera Settings</h5>
+                <div class="lg-sidebar-settings-grid">
+                    ${photo.focal_length ? `<span class="label">Focal Length:</span><span class="value">${photo.focal_length}mm</span>` : ""}
+                    ${photo.aperture ? `<span class="label">Aperture:</span><span class="value">f/${photo.aperture}</span>` : ""}
+                    ${photo.shutter_speed ? `<span class="label">Shutter:</span><span class="value">${photo.shutter_speed}s</span>` : ""}
+                    ${photo.iso ? `<span class="label">ISO:</span><span class="value">${photo.iso}</span>` : ""}
                 </div>
             </div>
             `
@@ -286,14 +257,14 @@ export default class LgSidebar {
             ${
               photo.tags
                 ? `
-            <div class="lg-sidebar-section" style="margin-bottom: 20px;">
-                <h5 style="margin: 0 0 10px; font-size: 14px; color: #999; text-transform: uppercase; letter-spacing: 0.5px;">Tags</h5>
-                <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+            <div class="lg-sidebar-section">
+                <h5>Tags</h5>
+                <div class="lg-sidebar-tags">
                     ${photo.tags
                       .split(",")
                       .map(
                         (tag: string) => `
-                        <span style="background: rgba(255, 255, 255, 0.1); padding: 4px 8px; border-radius: 12px; font-size: 12px; color: #fff;">
+                        <span class="lg-sidebar-tag">
                             ${tag.trim()}
                         </span>
                     `,
@@ -313,7 +284,7 @@ export default class LgSidebar {
     if (!this.sidebarEl || this.isVisible) return;
 
     this.isVisible = true;
-    this.sidebarEl.style[this.settings.sidebarPosition as any] = "0";
+    this.sidebarEl.classList.add("lg-sidebar--visible");
 
     // Update toggle button state
     if (this.toggleBtnEl) {
@@ -329,8 +300,7 @@ export default class LgSidebar {
     if (!this.sidebarEl || !this.isVisible) return;
 
     this.isVisible = false;
-    this.sidebarEl.style[this.settings.sidebarPosition as any] =
-      `-${this.settings.sidebarWidth}px`;
+    this.sidebarEl.classList.remove("lg-sidebar--visible");
 
     // Update toggle button state
     if (this.toggleBtnEl) {

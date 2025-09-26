@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useCallback } from "react";
 import lightGallery from "lightgallery";
+// Only import the plugins we actually use
 import lgThumbnail from "lightgallery/plugins/thumbnail";
 import lgZoom from "lightgallery/plugins/zoom";
 import lgFullscreen from "lightgallery/plugins/fullscreen";
@@ -26,14 +27,15 @@ interface LightGalleryInstance {
   destroy(): void;
 }
 
+// Only import CSS for plugins we use
 import "lightgallery/css/lightgallery.css";
 import "lightgallery/css/lg-zoom.css";
 import "lightgallery/css/lg-thumbnail.css";
 import "lightgallery/css/lg-fullscreen.css";
 import "lightgallery/css/lg-share.css";
-import "lightgallery/css/lg-medium-zoom.css";
 import "lightgallery/css/lg-rotate.css";
 import "../styles/lightgallery-captions.css";
+import "../styles/lg-sidebar.css";
 
 import {
   generateCaptionHtml,
@@ -57,77 +59,9 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const galleryRef = useRef<LightGalleryInstance | null>(null);
-  const downloadBtnRef = useRef<HTMLButtonElement | null>(null);
-
-  const currentPhoto = photos[initialIndex] || photos[0];
 
   // Helper to detect if we're on mobile
   const isMobile = () => window.innerWidth <= 768;
-
-  // Helper to handle photo download
-  const handleDownload = async (photo: Photo, variant?: string) => {
-    try {
-      const endpoint = variant
-        ? `/api/photos/${photo.id}/download/${variant}`
-        : `/api/photos/${photo.id}/download`;
-
-      const token = localStorage.getItem("token");
-      const headers: Record<string, string> = {};
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-      }
-
-      const response = await fetch(endpoint, { headers });
-      if (!response.ok) {
-        throw new Error(`Download failed: ${response.statusText}`);
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = variant
-        ? `${photo.title}_${variant}.webp`
-        : `${photo.title}_original.jpg`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Download failed:", error);
-    }
-  };
-
-  // Helper to inject download button using LightGallery event system
-  const injectDownloadButton = useCallback(
-    (lgInstance: LightGalleryInstance) => {
-      const toolbar = lgInstance.outer[0]?.querySelector(".lg-toolbar");
-      if (!toolbar) return;
-
-      // Clear any existing custom download buttons
-      toolbar
-        .querySelectorAll(".lg-custom-download")
-        .forEach((el) => el.remove());
-
-      // Create Download button
-      const downloadBtn = document.createElement("button");
-      downloadBtn.type = "button";
-      downloadBtn.className = "lg-icon lg-custom-download";
-      downloadBtn.setAttribute("aria-label", "Download photo");
-      downloadBtn.title = "Download";
-      downloadBtn.innerHTML =
-        '<span style="font-weight:600;font-family:system-ui">↓</span>';
-      downloadBtn.onclick = (ev) => {
-        ev.preventDefault();
-        void handleDownload(currentPhoto);
-      };
-
-      // Insert download button at the beginning of the toolbar
-      toolbar.insertBefore(downloadBtn, toolbar.firstChild);
-      downloadBtnRef.current = downloadBtn;
-    },
-    [currentPhoto],
-  );
 
   // Create gallery only when needed (when opening)
   const createGallery = useCallback(() => {
@@ -160,6 +94,8 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
         thumb: thumbnailImage.url,
         subHtml: captionHtml,
         photoData: photo, // Add photo data for sidebar plugin
+        downloadUrl: `/api/photos/${photo.id}/download`,
+        download: photo.title.replace(/[^a-zA-Z0-9]/g, "_"),
       };
     });
 
@@ -172,6 +108,8 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
         thumb: string;
         subHtml: string;
         photoData?: Photo;
+        downloadUrl?: string;
+        download?: string;
       }>;
       mode: string;
       speed: number;
@@ -220,8 +158,8 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
         lgZoom,
         lgFullscreen,
         lgShare,
-        lgRotate,
         lgHash,
+        lgRotate,
         lgSidebar,
       ],
       licenseKey: "0000-0000-000-0000",
@@ -237,7 +175,7 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
       zoom: true,
       scale: 1,
       controls: true,
-      download: false,
+      download: true,
       closable: true,
       closeOnTap: false,
       escKey: true,
@@ -247,7 +185,7 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
       // Share plugin settings
       share: true,
       facebook: true,
-      twitter: true,
+      twitter: false,
       pinterest: true,
       // Hash plugin settings
       hash: true,
@@ -294,7 +232,7 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
     }
 
     return galleryRef.current;
-  }, [photos, injectDownloadButton, onClose, defaultShowInfo]);
+  }, [photos, onClose, defaultShowInfo]);
 
   // Create gallery on mount and open it
   useEffect(() => {
