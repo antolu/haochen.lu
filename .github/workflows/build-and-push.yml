@@ -31,58 +31,39 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
-      - name: Extract metadata for frontend
-        id: meta-frontend
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_FRONTEND }}
-          tags: |
-            type=ref,event=tag
-            type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Extract metadata for backend
-        id: meta-backend
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_BACKEND }}
-          tags: |
-            type=ref,event=tag
-            type=raw,value=latest,enable={{is_default_branch}}
+      - name: Build images with docker compose
+        run: |
+          # Extract tag from ref
+          TAG=${GITHUB_REF#refs/tags/}
 
-      - name: Build and push frontend image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./frontend
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.meta-frontend.outputs.tags }}
-          labels: ${{ steps.meta-frontend.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # Build images using docker compose
+          docker compose -f docker-compose.build.yml build
 
-      - name: Build and push backend image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.meta-backend.outputs.tags }}
-          labels: ${{ steps.meta-backend.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # Tag images with the release tag
+          docker tag antonlu/arcadia-backend:latest antonlu/arcadia-backend:$TAG
+          docker tag antonlu/arcadia-frontend:latest antonlu/arcadia-frontend:$TAG
+
+      - name: Push images to registry
+        run: |
+          # Extract tag from ref
+          TAG=${GITHUB_REF#refs/tags/}
+
+          # Push both latest and tagged versions
+          docker push antonlu/arcadia-backend:latest
+          docker push antonlu/arcadia-backend:$TAG
+          docker push antonlu/arcadia-frontend:latest
+          docker push antonlu/arcadia-frontend:$TAG
 
       - name: Summary
         run: |
+          TAG=${GITHUB_REF#refs/tags/}
           echo "## Images Built and Pushed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Frontend Images" >> $GITHUB_STEP_SUMMARY
+          echo "### Images" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          echo "${{ steps.meta-frontend.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+          echo "antonlu/arcadia-frontend:latest" >> $GITHUB_STEP_SUMMARY
+          echo "antonlu/arcadia-frontend:$TAG" >> $GITHUB_STEP_SUMMARY
+          echo "antonlu/arcadia-backend:latest" >> $GITHUB_STEP_SUMMARY
+          echo "antonlu/arcadia-backend:$TAG" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Backend Images" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          echo "${{ steps.meta-backend.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Platforms: linux/amd64, linux/arm64" >> $GITHUB_STEP_SUMMARY

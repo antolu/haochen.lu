@@ -70,14 +70,19 @@ npm run dev
 # Build production images with git context for proper versioning (local development)
 docker compose -f docker-compose.build.yml build
 
-# Build and push multi-platform production images (CI/CD or release)
-docker buildx build --platform linux/amd64,linux/arm64 -t antonlu/arcadia-backend:latest --push ./backend
-docker buildx build --platform linux/amd64,linux/arm64 -t antonlu/arcadia-frontend:latest --push ./frontend
+# Build production images with custom tag
+docker compose -f docker-compose.build.yml build
+docker tag antonlu/arcadia-backend:latest antonlu/arcadia-backend:v1.0.0
+docker tag antonlu/arcadia-frontend:latest antonlu/arcadia-frontend:v1.0.0
 
-# Build multi-platform images locally (without push)
-docker buildx build --platform linux/amd64,linux/arm64 -t antonlu/arcadia-backend:latest --load ./backend
-docker buildx build --platform linux/amd64,linux/arm64 -t antonlu/arcadia-frontend:latest --load ./frontend
+# Push to registry
+docker push antonlu/arcadia-backend:latest
+docker push antonlu/arcadia-backend:v1.0.0
+docker push antonlu/arcadia-frontend:latest
+docker push antonlu/arcadia-frontend:v1.0.0
 ```
+
+**Note:** Multi-platform builds and releases are automated via GitHub Actions when pushing version tags (e.g., `git tag v1.0.0 && git push origin v1.0.0`).
 
 ### Database Management
 

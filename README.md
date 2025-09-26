@@ -320,18 +320,27 @@ echo "CORS_ORIGINS=https://yourdomain.com" >> .env
 docker compose -f docker-compose.yml up -d
 ```
 
-### Multi-platform Docker Images
+### Production Image Building
 
-For cross-platform deployment:
+Use Docker Compose for consistent production builds:
 
 ```bash
-# Build and push to registry
-docker buildx build --platform linux/amd64,linux/arm64 -t yourregistry/backend:latest backend --push
-docker buildx build --platform linux/amd64,linux/arm64 -t yourregistry/frontend:latest frontend --push
+# Build production images with git context for versioning
+docker compose -f docker-compose.build.yml build
 
-# Local multi-platform build
-docker buildx build --platform linux/amd64,linux/arm64 -t backend:latest backend --load
-docker buildx build --platform linux/amd64,linux/arm64 -t frontend:latest frontend --load
+# Tag and push custom versions
+docker tag antonlu/arcadia-backend:latest antonlu/arcadia-backend:v1.0.0
+docker tag antonlu/arcadia-frontend:latest antonlu/arcadia-frontend:v1.0.0
+docker push antonlu/arcadia-backend:latest
+docker push antonlu/arcadia-backend:v1.0.0
+docker push antonlu/arcadia-frontend:latest
+docker push antonlu/arcadia-frontend:v1.0.0
+```
+
+**Automated Releases:** Multi-platform builds and registry pushes are automated via GitHub Actions when pushing version tags:
+```bash
+git tag v1.0.0
+git push origin v1.0.0
 ```
 
 ### TrueNAS Scale Deployment
