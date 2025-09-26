@@ -228,7 +228,10 @@ export function useProjectReadme(projectId: string, repoUrl?: string) {
           );
           return fetchResponse.data;
         }
-        throw error;
+        if (error instanceof Error) {
+          throw error;
+        }
+        throw new Error("Unknown error");
       }
     },
     enabled: !!projectId && !!repoUrl,
@@ -352,7 +355,12 @@ export function useReorderProjects() {
       items: { id: string; order: number }[];
       normalize?: boolean;
     }) => {
-      return projectsApi.reorder(items, normalize);
+      return await (
+        projectsApi.reorder as (
+          items: { id: string; order: number }[],
+          normalize: boolean,
+        ) => Promise<{ message: string }>
+      )(items, normalize);
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: projectKeys.lists() });

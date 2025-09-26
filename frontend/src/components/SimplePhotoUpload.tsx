@@ -7,13 +7,13 @@ import type { Photo } from "../types";
 import type { AxiosError } from "axios";
 
 interface SimplePhotoUploadProps {
-  onComplete?: (photo: Photo | unknown) => void;
+  onComplete?: (photo: Photo) => void;
   onCancel?: () => void;
   maxFiles?: number;
   maxFileSize?: number;
   category?: string;
   autoUpload?: boolean;
-  customUpload?: (file: File) => Promise<unknown>;
+  customUpload?: (file: File) => Promise<Photo>;
 }
 
 const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
@@ -49,16 +49,13 @@ const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
                 : f,
             ),
           );
-          setUploadedPhotos(
-            (prev) => new Map(prev.set(file.id, uploaded as Photo)),
-          );
+          setUploadedPhotos((prev) => new Map(prev.set(file.id, uploaded)));
         } catch (error) {
           console.error("Upload failed:", error);
           const axiosError = error as AxiosError;
-          const errorMessage =
-            (axiosError.response?.data as { detail?: string })?.detail ??
-            (axiosError.message as string) ??
-            "Upload failed";
+          const detail = (axiosError.response?.data as { detail?: string })
+            ?.detail;
+          const errorMessage = detail ?? axiosError.message ?? "Upload failed";
           setUploadFiles((prev) =>
             prev.map((f) =>
               f.id === file.id
@@ -102,10 +99,10 @@ const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
           onError: (error) => {
             console.error("Upload failed:", error);
             const axiosError = error as AxiosError;
+            const detail = (axiosError.response?.data as { detail?: string })
+              ?.detail;
             const errorMessage =
-              (axiosError.response?.data as { detail?: string })?.detail ??
-              error.message ??
-              "Upload failed";
+              detail ?? axiosError.message ?? "Upload failed";
             setUploadFiles((prev) =>
               prev.map((f) =>
                 f.id === file.id
@@ -135,7 +132,7 @@ const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
 
     // Upload the first pending file
     const file = pendingFiles[0];
-    handleUpload(file);
+    void handleUpload(file);
   }, [uploadFiles, autoUpload, handleUpload]);
 
   // Call onComplete when upload is finished
@@ -176,7 +173,7 @@ const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
           f.id === fileId ? { ...f, status: "pending", error: undefined } : f,
         ),
       );
-      handleUpload(file);
+      void handleUpload(file);
     }
   };
 
@@ -239,7 +236,7 @@ const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
                 const pendingFiles = uploadFiles.filter(
                   (f) => f.status === "pending",
                 );
-                pendingFiles.forEach(handleUpload);
+                pendingFiles.forEach((f) => void handleUpload(f));
               }}
               disabled={uploadMutation.isPending}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"

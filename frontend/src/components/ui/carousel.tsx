@@ -9,11 +9,11 @@ type CarouselProps = React.HTMLAttributes<HTMLDivElement> & {
 };
 
 export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
-  ({ className, children, opts, setApi, plugins, ...props }, ref) => {
-    const [emblaRef, api] = useEmblaCarousel(
-      opts as EmblaOptionsType | undefined,
-      plugins as [] | undefined,
-    );
+  (
+    { className, children, opts: _opts, setApi, plugins: _plugins, ...props },
+    ref,
+  ) => {
+    const [emblaRef, api] = useEmblaCarousel({});
     React.useEffect(() => {
       setApi?.(api);
     }, [api, setApi]);

@@ -165,7 +165,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
   const DEFAULT_STYLE_URL = useMemo(
     () =>
       (import.meta as unknown as { env: { VITE_MAP_STYLE_URL?: string } }).env
-        .VITE_MAP_STYLE_URL || PREFERRED_DEFAULT_STYLE_URL,
+        .VITE_MAP_STYLE_URL ?? PREFERRED_DEFAULT_STYLE_URL,
     [],
   );
 
@@ -199,7 +199,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
       container: containerRef.current,
       style: DEFAULT_STYLE_URL,
       center: [currentLng, currentLat],
-      zoom: zoom,
+      zoom,
       attributionControl: false,
     });
     mapRef.current = map;
@@ -209,12 +209,15 @@ const MapPicker: React.FC<MapPickerProps> = ({
     );
     map.addControl(new maplibregl.AttributionControl({ compact: true }));
 
-    map.on("error", (e: any) => {
-      const msg = String(e?.error?.message || "");
+    map.on("error", (e: maplibregl.ErrorEvent) => {
+      const maybeErr = (e as { error?: unknown })?.error;
+      const msg = String((maybeErr as { message?: string })?.message ?? "");
       if (msg.includes("404") || msg.includes("Failed to fetch")) {
         try {
           map.setStyle(FALLBACK_STYLE_URL);
-        } catch {}
+        } catch {
+          // ignore
+        }
       }
     });
 
@@ -235,7 +238,15 @@ const MapPicker: React.FC<MapPickerProps> = ({
       mapRef.current = null;
       markerRef.current = null;
     };
-  }, []);
+  }, [
+    DEFAULT_STYLE_URL,
+    FALLBACK_STYLE_URL,
+    currentLat,
+    currentLng,
+    disabled,
+    handleLocationSelect,
+    zoom,
+  ]);
 
   // Sync view/marker when state changes
   useEffect(() => {

@@ -105,7 +105,7 @@ export const useOptimizedPhotos = (
     if (isValidCache && currentCache.photos.length > 0) {
       return currentCache.photos;
     }
-    return photosQuery.data?.photos || [];
+    return photosQuery.data?.photos ?? [];
   }, [isValidCache, currentCache.photos, photosQuery.data?.photos]);
 
   // Loading states
@@ -120,7 +120,7 @@ export const useOptimizedPhotos = (
 
   const loadMore = useCallback(() => {
     if (!isLoadingMore && hasMore) {
-      loadMoreQuery.refetch();
+      void loadMoreQuery.refetch();
     }
   }, [isLoadingMore, hasMore, loadMoreQuery]);
 
@@ -137,7 +137,7 @@ export const useOptimizedPhotos = (
     photos: displayPhotos,
     isLoading,
     isLoadingMore,
-    error: photosQuery.error || loadMoreQuery.error,
+    error: photosQuery.error ?? loadMoreQuery.error,
     total: currentCache.total,
     hasMore,
     loadMore,

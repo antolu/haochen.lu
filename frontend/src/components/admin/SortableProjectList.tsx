@@ -102,7 +102,7 @@ interface RowProps {
 
 const SortableRow: React.FC<RowProps> = ({
   project,
-  index,
+  index: _index,
   reorderEnabled,
   onEdit,
   onDelete,

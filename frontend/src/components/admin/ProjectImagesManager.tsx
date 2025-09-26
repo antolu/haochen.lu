@@ -10,9 +10,9 @@ import {
   SortableContext,
   verticalListSortingStrategy,
   useSortable,
+  arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { arrayMove } from "@dnd-kit/sortable";
 //
 import {
   useProjectImages,
@@ -49,8 +49,8 @@ const SortableItem: React.FC<ProjectImageItemProps> = ({ item, onRemove }) => {
     transition,
   } as React.CSSProperties;
   const thumbUrl =
-    item.photo?.variants?.thumbnail?.url ||
-    item.photo?.variants?.small?.url ||
+    item.photo?.variants?.thumbnail?.url ??
+    item.photo?.variants?.small?.url ??
     item.photo?.original_url;
   return (
     <li
@@ -73,10 +73,10 @@ const SortableItem: React.FC<ProjectImageItemProps> = ({ item, onRemove }) => {
       </div>
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium truncate">
-          {item.title || "Untitled image"}
+          {item.title ?? "Untitled image"}
         </div>
         <div className="text-xs text-muted-foreground truncate">
-          {item.alt_text || ""}
+          {item.alt_text ?? ""}
         </div>
       </div>
       <button
@@ -108,7 +108,10 @@ const ProjectImagesManager: React.FC<ProjectImagesManagerProps> = ({
     }),
   );
 
-  const typedImages = (images as unknown as ProjectImage[]) ?? [];
+  const typedImages = useMemo(
+    () => (images as unknown as ProjectImage[]) ?? [],
+    [images],
+  );
   const itemIds = useMemo(
     () => typedImages.map((img) => img.id),
     [typedImages],

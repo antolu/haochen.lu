@@ -159,8 +159,8 @@ const ProjectDetailPage: React.FC = () => {
                       {(projectImages as unknown as ProjectImageLight[]).map(
                         (pi) => {
                           const src =
-                            pi.photo?.variants?.large?.url ||
-                            pi.photo?.variants?.medium?.url ||
+                            pi.photo?.variants?.large?.url ??
+                            pi.photo?.variants?.medium?.url ??
                             pi.photo?.original_url;
                           return (
                             <CarouselItem key={pi.id}>

@@ -100,8 +100,8 @@ export const sortPhotosByOrder = (
 
     case "date_taken":
       return sorted.sort((a, b) => {
-        const dateA = new Date(a.date_taken || a.created_at).getTime();
-        const dateB = new Date(b.date_taken || b.created_at).getTime();
+        const dateA = new Date(a.date_taken ?? a.created_at).getTime();
+        const dateB = new Date(b.date_taken ?? b.created_at).getTime();
         return dateB - dateA;
       });
 
@@ -112,8 +112,8 @@ export const sortPhotosByOrder = (
           return a.order - b.order;
         }
         // Secondary sort by date_taken/created_at for same order values
-        const dateA = new Date(a.date_taken || a.created_at).getTime();
-        const dateB = new Date(b.date_taken || b.created_at).getTime();
+        const dateA = new Date(a.date_taken ?? a.created_at).getTime();
+        const dateB = new Date(b.date_taken ?? b.created_at).getTime();
         return dateB - dateA;
       });
 
@@ -169,7 +169,7 @@ export const calculateLoadStrategy = (
   const intersection = analyzePhotoIntersection(currentPhotos, cachedPhotos);
   const useCache = shouldShowCachedPhotos(currentPhotos, cachedPhotos);
 
-  let pagesToFetch: number[] = [];
+  const pagesToFetch: number[] = [];
 
   if (useCache && cachedPhotos.length > 0) {
     // Calculate pages still needed beyond cached photos

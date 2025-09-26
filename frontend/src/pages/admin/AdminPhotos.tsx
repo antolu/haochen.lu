@@ -529,7 +529,7 @@ const AdminPhotos: React.FC = () => {
               <SortablePhotoGrid
                 photos={photos}
                 reorderEnabled={reorderEnabled}
-                onReorder={handleReorder}
+                onReorder={(items) => void handleReorder(items)}
                 disabled={isReordering}
                 onPhotoClick={handlePhotoClick}
               />

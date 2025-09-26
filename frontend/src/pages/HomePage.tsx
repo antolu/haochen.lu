@@ -56,7 +56,7 @@ const HomePage: React.FC = () => {
 
   // Fallbacks for social links if content keys are missing
   const githubUrl =
-    homeContent?.["social.github_url"]?.content ||
+    homeContent?.["social.github_url"]?.content ??
     (import.meta.env.VITE_GITHUB_URL as string | undefined);
 
   useEffect(() => {
@@ -138,7 +138,7 @@ const HomePage: React.FC = () => {
               src={heroMemo.optimalImage.url}
               srcSet={heroMemo.optimalImage.srcset}
               sizes={heroMemo.optimalImage.sizes}
-              alt={activeHeroImage?.photo.title || "Hero image"}
+              alt={activeHeroImage?.photo.title ?? "Hero image"}
               className="w-full h-full object-cover dynamic-hero-focal-point"
               loading="eager"
               decoding="async"

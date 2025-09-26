@@ -395,29 +395,13 @@ export const projects = {
       return res.data as Array<{
         id: string;
         project_id: string;
-        photo_id: string;
+        // photo_id removed in new model
         title?: string | null;
         alt_text?: string | null;
         order: number;
       }>;
     },
-    attach: async (
-      projectId: string,
-      payload: { photo_id: string; title?: string; alt_text?: string },
-    ) => {
-      const res = await apiClient.post(
-        `/projects/${projectId}/images`,
-        payload,
-      );
-      return res.data as {
-        id: string;
-        project_id: string;
-        photo_id: string;
-        title?: string | null;
-        alt_text?: string | null;
-        order: number;
-      };
-    },
+    // attach removed in favor of upload
     upload: async (
       projectId: string,
       file: File,
@@ -445,13 +429,13 @@ export const projects = {
       return res.data as {
         id: string;
         project_id: string;
-        photo_id: string | null;
-        filename: string | null;
-        original_path: string | null;
-        variants: Record<string, any> | null;
         title?: string | null;
         alt_text?: string | null;
         order: number;
+        photo?: {
+          original_url?: string;
+          variants?: Record<string, { url?: string }>;
+        };
       };
     },
     remove: async (projectImageId: string) => {
@@ -681,7 +665,14 @@ export const settings = {
     avif_effort_default: number;
     webp_quality: number;
   }> => {
-    const res = await apiClient.get("/settings/image");
+    const res = await apiClient.get<{
+      responsive_sizes: Record<string, number>;
+      quality_settings: Record<string, number>;
+      avif_quality_base_offset: number;
+      avif_quality_floor: number;
+      avif_effort_default: number;
+      webp_quality: number;
+    }>("/settings/image");
     return res.data;
   },
   updateImage: async (
@@ -694,7 +685,14 @@ export const settings = {
       webp_quality: number;
     }>,
   ) => {
-    const res = await apiClient.put("/settings/image", payload);
+    const res = await apiClient.put<{
+      responsive_sizes: Record<string, number>;
+      quality_settings: Record<string, number>;
+      avif_quality_base_offset: number;
+      avif_quality_floor: number;
+      avif_effort_default: number;
+      webp_quality: number;
+    }>("/settings/image", payload);
     return res.data;
   },
 };

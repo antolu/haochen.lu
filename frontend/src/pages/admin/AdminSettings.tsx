@@ -19,15 +19,17 @@ const AdminSettings: React.FC = () => {
 
   useEffect(() => {
     let mounted = true;
-    (async () => {
+    void (async () => {
       try {
         const data = await settingsApi.getImage();
         if (!mounted) return;
         setImg(data);
         setLoading(false);
-      } catch (e: any) {
+      } catch (e: unknown) {
         if (!mounted) return;
-        setError(e?.message ?? "Failed to load settings");
+        const errorMessage =
+          e instanceof Error ? e.message : "Failed to load settings";
+        setError(errorMessage);
         setLoading(false);
       }
     })();
@@ -73,8 +75,9 @@ const AdminSettings: React.FC = () => {
       const payload = { ...img };
       await settingsApi.updateImage(payload);
       setOk("Settings saved");
-    } catch (e: any) {
-      setError(e?.message ?? "Failed to save");
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : "Failed to save";
+      setError(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -223,7 +226,7 @@ const AdminSettings: React.FC = () => {
 
       <div className="pt-4">
         <button
-          onClick={save}
+          onClick={() => void save()}
           disabled={saving}
           className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
         >

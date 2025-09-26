@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useInfiniteProjects, type ProjectFilters } from "../hooks/useProjects";
 import ProjectGrid from "../components/ProjectGrid";
@@ -159,7 +159,10 @@ const ProjectsPage: React.FC = () => {
                   onChange={(e) =>
                     setFilters((prev) => ({
                       ...prev,
-                      order_by: e.target.value as any,
+                      order_by: e.target.value as
+                        | "order"
+                        | "created_at"
+                        | "updated_at",
                     }))
                   }
                   className="px-3 py-2 border rounded-lg bg-white text-gray-700"

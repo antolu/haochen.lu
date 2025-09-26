@@ -54,25 +54,20 @@ export const testPhotoOptimization = (
 /**
  * Logs optimization test results to console
  */
-export const logOptimizationTest = (result: OptimizationTestResult) => {
-  console.group(`📊 Photo Optimization Test: ${result.scenario}`);
-  console.log(
-    `🔄 Photos Reused: ${result.photosReused}/${result.totalPhotos} (${result.reusePercentage}%)`,
-  );
-  console.log(
-    `🚀 Network Requests Saved: ${result.estimatedSavings.networkRequests}`,
-  );
-  console.log(`💾 Bandwidth Saved: ${result.estimatedSavings.bandwidthSaved}`);
-
-  if (result.reusePercentage >= 50) {
-    console.log("✅ Excellent optimization! High photo reuse rate.");
-  } else if (result.reusePercentage >= 20) {
-    console.log("⚡ Good optimization! Moderate photo reuse rate.");
-  } else {
-    console.log("📈 Low optimization potential for this order switch.");
-  }
-
-  console.groupEnd();
+export const logOptimizationTest = (_result: OptimizationTestResult) => {
+  // Disabled console logging for production - optimization test results
+  // console.group(`📊 Photo Optimization Test: ${result.scenario}`);
+  // console.log(`🔄 Photos Reused: ${result.photosReused}/${result.totalPhotos} (${result.reusePercentage}%)`);
+  // console.log(`🚀 Network Requests Saved: ${result.estimatedSavings.networkRequests}`);
+  // console.log(`💾 Bandwidth Saved: ${result.estimatedSavings.bandwidthSaved}`);
+  // if (result.reusePercentage >= 50) {
+  //   console.log("✅ Excellent optimization! High photo reuse rate.");
+  // } else if (result.reusePercentage >= 20) {
+  //   console.log("⚡ Good optimization! Moderate photo reuse rate.");
+  // } else {
+  //   console.log("📈 Low optimization potential for this order switch.");
+  // }
+  // console.groupEnd();
 };
 
 /**
@@ -105,19 +100,27 @@ export const createTestScenarios = () => {
  */
 export const monitorCachePerformance = () => {
   if (process.env.NODE_ENV === "development") {
-    console.log("🔍 Photo Cache Performance Monitor Active");
+    console.warn("🔍 Photo Cache Performance Monitor Active");
 
     // Listen for cache events
-    window.addEventListener("photo-cache-hit", (e: any) => {
-      console.log("🎯 Cache Hit:", e.detail);
+    window.addEventListener("photo-cache-hit", (_e: CustomEvent) => {
+      // Disabled console logging for production
+      // console.log("🎯 Cache Hit:", e.detail);
     });
 
-    window.addEventListener("photo-cache-miss", (e: any) => {
-      console.log("❌ Cache Miss:", e.detail);
+    window.addEventListener("photo-cache-miss", (_e: CustomEvent) => {
+      // Disabled console logging for production
+      // console.log("❌ Cache Miss:", e.detail);
     });
 
-    window.addEventListener("photo-order-switch", (e: any) => {
-      const { from, to, cached, total } = e.detail;
+    window.addEventListener("photo-order-switch", (e: CustomEvent) => {
+      const detail = e.detail as {
+        from: string;
+        to: string;
+        cached: Photo[];
+        total: Photo[];
+      };
+      const { from, to, cached, total } = detail;
       const result = testPhotoOptimization(cached, total, `${from} → ${to}`);
       logOptimizationTest(result);
     });

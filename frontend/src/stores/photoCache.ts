@@ -323,7 +323,7 @@ export const usePhotoCacheStore = create<PhotoCacheStore>()(
         setTransitioning: (transitioning, fromOrder) => {
           set({
             isTransitioning: transitioning,
-            transitionFromOrder: fromOrder || null,
+            transitionFromOrder: fromOrder ?? null,
           });
         },
 
@@ -386,9 +386,17 @@ export const usePhotoCacheStore = create<PhotoCacheStore>()(
             // Convert loadedPages arrays back to Sets
             Object.keys(state.cache).forEach((orderKey) => {
               const orderBy = orderKey as OrderByOption;
-              const orderCache = state.cache[orderBy] as any;
-              if (Array.isArray(orderCache.loadedPages)) {
-                orderCache.loadedPages = new Set(orderCache.loadedPages);
+              const orderCache = state.cache[orderBy];
+              if (
+                Array.isArray(
+                  (orderCache as { loadedPages: unknown }).loadedPages,
+                )
+              ) {
+                const loadedPagesArray = (
+                  orderCache as { loadedPages: unknown[] }
+                ).loadedPages;
+                (orderCache as { loadedPages: Set<number> }).loadedPages =
+                  new Set(loadedPagesArray as number[]);
               }
             });
           }

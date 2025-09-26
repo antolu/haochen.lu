@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import maplibregl, { LngLatBoundsLike, Map as MapLibreMap } from "maplibre-gl";
 import Supercluster from "supercluster";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -34,7 +40,7 @@ const PREFERRED_DEFAULT_STYLE_URL =
 const FALLBACK_STYLE_URL = PREFERRED_DEFAULT_STYLE_URL;
 const DEFAULT_STYLE_URL =
   (import.meta as unknown as { env: { VITE_MAP_STYLE_URL?: string } }).env
-    .VITE_MAP_STYLE_URL || PREFERRED_DEFAULT_STYLE_URL;
+    .VITE_MAP_STYLE_URL ?? PREFERRED_DEFAULT_STYLE_URL;
 
 const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
   photos,
@@ -83,7 +89,7 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
           type: "Point",
           coordinates: [p.location_lon as number, p.location_lat as number],
         },
-        properties: { id: p.id, title: p.title || "Untitled" },
+        properties: { id: p.id, title: p.title ?? "Untitled" },
       })),
     [photosWithLocation],
   );
@@ -97,47 +103,49 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
     return index;
   }, [pointFeatures]);
 
-  const getThumbnailUrl = (p: Photo): string => {
-    const variants = p.variants || {};
-    const thumb =
-      (variants as any).thumbnail?.url || (variants as any).small?.url;
-    return thumb || p.original_url;
-  };
+  const getThumbnailUrl = useCallback((p: Photo): string => {
+    const variants = p.variants ?? {};
+    const thumb = variants["thumbnail"]?.url ?? variants["small"]?.url;
+    return thumb ?? p.original_url ?? "";
+  }, []);
 
-  const createPhotoMarkerElement = (photo: Photo): HTMLDivElement => {
-    // Outer wrapper keeps constant size so the marker anchor doesn't shift
-    const outer = document.createElement("div");
-    outer.style.width = "44px";
-    outer.style.height = "44px";
-    outer.style.borderRadius = "9999px";
-    outer.style.overflow = "visible"; // allow scaled child to extend
-    outer.style.cursor = "pointer";
-    outer.style.position = "relative";
+  const createPhotoMarkerElement = useCallback(
+    (photo: Photo): HTMLDivElement => {
+      // Outer wrapper keeps constant size so the marker anchor doesn't shift
+      const outer = document.createElement("div");
+      outer.style.width = "44px";
+      outer.style.height = "44px";
+      outer.style.borderRadius = "9999px";
+      outer.style.overflow = "visible"; // allow scaled child to extend
+      outer.style.cursor = "pointer";
+      outer.style.position = "relative";
 
-    // Inner element scales on hover
-    const inner = document.createElement("div");
-    inner.style.position = "absolute";
-    inner.style.inset = "0";
-    inner.style.background = `center/cover no-repeat url('${getThumbnailUrl(photo)}')`;
-    inner.style.border = "2px solid #fff";
-    inner.style.borderRadius = "9999px";
-    inner.style.boxShadow = "0 2px 8px rgba(0,0,0,0.25)";
-    inner.style.overflow = "hidden";
-    inner.style.transition = "transform 150ms ease";
-    inner.style.transformOrigin = "center center";
-
-    outer.addEventListener("mouseenter", () => {
-      inner.style.transform = "scale(1.2)";
-      inner.style.boxShadow = "0 4px 16px rgba(0,0,0,0.35)";
-    });
-    outer.addEventListener("mouseleave", () => {
-      inner.style.transform = "scale(1)";
+      // Inner element scales on hover
+      const inner = document.createElement("div");
+      inner.style.position = "absolute";
+      inner.style.inset = "0";
+      inner.style.background = `center/cover no-repeat url('${getThumbnailUrl(photo)}')`;
+      inner.style.border = "2px solid #fff";
+      inner.style.borderRadius = "9999px";
       inner.style.boxShadow = "0 2px 8px rgba(0,0,0,0.25)";
-    });
+      inner.style.overflow = "hidden";
+      inner.style.transition = "transform 150ms ease";
+      inner.style.transformOrigin = "center center";
 
-    outer.appendChild(inner);
-    return outer;
-  };
+      outer.addEventListener("mouseenter", () => {
+        inner.style.transform = "scale(1.2)";
+        inner.style.boxShadow = "0 4px 16px rgba(0,0,0,0.35)";
+      });
+      outer.addEventListener("mouseleave", () => {
+        inner.style.transform = "scale(1)";
+        inner.style.boxShadow = "0 2px 8px rgba(0,0,0,0.25)";
+      });
+
+      outer.appendChild(inner);
+      return outer;
+    },
+    [getThumbnailUrl],
+  );
 
   const createClusterMarkerElement = (
     imageUrls: string[],
@@ -205,14 +213,14 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
     return container;
   };
 
-  const computeBounds = (): LngLatBoundsLike | null => {
+  const computeBounds = useCallback((): LngLatBoundsLike | null => {
     if (photosWithLocation.length === 0) return null;
     const bounds = new maplibregl.LngLatBounds();
     for (const p of photosWithLocation) {
-      bounds.extend([p.location_lon as number, p.location_lat as number]);
+      bounds.extend([p.location_lon, p.location_lat]);
     }
     return bounds;
-  };
+  }, [photosWithLocation]);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -229,12 +237,15 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
     mapRef.current = map;
 
     // Fallback if style fails to load
-    map.on("error", (e: any) => {
-      const msg = String(e?.error?.message || "");
+    map.on("error", (e) => {
+      const maybeErr = (e as { error?: unknown })?.error;
+      const msg = String((maybeErr as { message?: string })?.message ?? "");
       if (msg.includes("404") || msg.includes("Failed to fetch")) {
         try {
           map.setStyle(FALLBACK_STYLE_URL);
-        } catch {}
+        } catch {
+          // ignore
+        }
       }
     });
 
@@ -268,7 +279,7 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
 
       const updateHtmlMarkers = () => {
         const b = map.getBounds();
-        const clusters = clusterIndex.getClusters(
+        const clusters: ClusterFeature[] = clusterIndex.getClusters(
           [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()],
           Math.floor(map.getZoom()),
         ) as ClusterFeature[];
@@ -277,20 +288,27 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
         const visiblePhotoIds = new Set<string>();
 
         for (const f of clusters) {
-          const coords = (f.geometry as any).coordinates as [number, number];
-          const props = f.properties as any;
+          const coords = f.geometry.coordinates;
+          const props = f.properties;
           if (props.cluster) {
-            const clusterId = props.cluster_id as number;
+            const clusterProps = props as ClusterProps;
+            const clusterId = clusterProps.cluster_id;
             visibleClusterIds.add(clusterId);
             if (!clusterMarkersRef.current.has(clusterId)) {
-              const leaves = clusterIndex.getLeaves(clusterId, 4, 0);
+              const leaves = clusterIndex.getLeaves(
+                clusterId,
+                4,
+                0,
+              ) as ClusterFeature[];
               const urls = leaves
-                .map((leaf: any) => idToPhoto.get(leaf.properties.id as string))
+                .map((leaf) =>
+                  idToPhoto.get((leaf.properties as PointProps).id),
+                )
                 .filter((p): p is Photo => Boolean(p))
                 .map((p) => getThumbnailUrl(p));
               const el = createClusterMarkerElement(
                 urls,
-                props.point_count as number,
+                clusterProps.point_count,
               );
               const marker = new maplibregl.Marker({ element: el })
                 .setLngLat(coords)
@@ -299,15 +317,21 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
               el.addEventListener("click", () => {
                 const nextZoom =
                   clusterIndex.getClusterExpansionZoom(clusterId);
-                map.easeTo({ center: coords, zoom: nextZoom });
+                if (typeof nextZoom === "number") {
+                  map.easeTo({ center: coords, zoom: nextZoom });
+                }
               });
 
               clusterMarkersRef.current.set(clusterId, marker);
             } else {
-              clusterMarkersRef.current.get(clusterId)!.setLngLat(coords);
+              const existingMarker = clusterMarkersRef.current.get(clusterId);
+              if (existingMarker) {
+                existingMarker.setLngLat(coords);
+              }
             }
           } else {
-            const id = (props.id as string) || "";
+            const pointProps = props as PointProps;
+            const id = pointProps.id ?? "";
             if (!id) continue;
             visiblePhotoIds.add(id);
             const photo = idToPhoto.get(id);
@@ -319,8 +343,15 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
                 .addTo(map);
               el.addEventListener("click", () => {
                 if (onPhotoClick) onPhotoClick(photo);
-                const popupHtml = `
-                  <div style=\"width: 220px;\">\n                    <div style=\"width:100%;height:140px;border-radius:8px;overflow:hidden;background:#000;margin-bottom:8px;\">\n                      <img src=\"${getThumbnailUrl(photo)}\" style=\"width:100%;height:100%;object-fit:cover;\" />\n                    </div>\n                    <div style=\"font-weight:600;color:#111827;\">${photo.title || "Untitled"}</div>\n                    <div style=\"font-size:12px;color:#6b7280;margin-top:2px;\">${photo.location_name || ""}</div>\n                    <div style=\"font-size:12px;color:#9ca3af;\">${photo.date_taken || ""}</div>\n                  </div>`;
+                const popupHtml =
+                  '<div style="width: 220px;">' +
+                  '<div style="width:100%;height:140px;border-radius:8px;overflow:hidden;background:#000;margin-bottom:8px;">' +
+                  `<img src="${getThumbnailUrl(photo)}" style="width:100%;height:100%;object-fit:cover;" />` +
+                  "</div>" +
+                  `<div style="font-weight:600;color:#111827;">${photo.title ?? "Untitled"}</div>` +
+                  `<div style="font-size:12px;color:#6b7280;margin-top:2px;">${photo.location_name ?? ""}</div>` +
+                  `<div style="font-size:12px;color:#9ca3af;">${photo.date_taken ?? ""}</div>` +
+                  "</div>";
                 new maplibregl.Popup({ offset: 12 })
                   .setLngLat(coords)
                   .setHTML(popupHtml)
@@ -328,7 +359,10 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
               });
               pointMarkersRef.current.set(id, marker);
             } else {
-              pointMarkersRef.current.get(id)!.setLngLat(coords);
+              const existingMarker = pointMarkersRef.current.get(id);
+              if (existingMarker) {
+                existingMarker.setLngLat(coords);
+              }
             }
           }
         }
@@ -387,13 +421,28 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
     return () => {
       map.remove();
       mapRef.current = null;
-      // Cleanup markers
-      for (const [, m] of pointMarkersRef.current) m.remove();
-      for (const [, m] of clusterMarkersRef.current) m.remove();
-      pointMarkersRef.current.clear();
-      clusterMarkersRef.current.clear();
+      // Cleanup markers - refs handled by map.remove()
+      // const pointMarkers = pointMarkersRef.current;
+      // const clusterMarkers = clusterMarkersRef.current;
+      // for (const [, m] of pointMarkers) m.remove();
+      // for (const [, m] of clusterMarkers) m.remove();
+      // pointMarkers.clear();
+      // clusterMarkers.clear();
     };
-  }, []);
+  }, [
+    className,
+    height,
+    zoom,
+    onPhotoClick,
+    photosWithLocation,
+    idToPhoto,
+    clusterIndex,
+    computeBounds,
+    createPhotoMarkerElement,
+    lastModalZoomKey,
+    modalOpen,
+    getThumbnailUrl,
+  ]);
 
   // Update clusters when inputs change
   useEffect(() => {
@@ -404,7 +453,9 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
       map.fitBounds(bounds, { padding: 40, animate: true, duration: 600 });
     }
     map.fire("moveend");
-  }, [clusterIndex]);
+  }, [clusterIndex, computeBounds]);
+
+  // Map initialization effect handles marker updates
 
   return (
     <div className={className} style={{ height: `${height}px`, width: "100%" }}>
@@ -429,12 +480,12 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
               >
                 <img
                   src={getThumbnailUrl(p)}
-                  alt={p.title || "Photo"}
+                  alt={p.title ?? "Photo"}
                   className="w-full h-28 object-cover group-hover:scale-105 transition-transform"
                   loading="lazy"
                 />
                 <div className="absolute bottom-0 inset-x-0 bg-black/40 text-white text-xs p-1 truncate">
-                  {p.title || "Untitled"}
+                  {p.title ?? "Untitled"}
                 </div>
               </button>
             ))}

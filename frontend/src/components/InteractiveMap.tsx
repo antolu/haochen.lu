@@ -29,7 +29,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const DEFAULT_STYLE_URL = useMemo(
     () =>
       (import.meta as unknown as { env: { VITE_MAP_STYLE_URL?: string } }).env
-        .VITE_MAP_STYLE_URL ||
+        .VITE_MAP_STYLE_URL ??
       "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
     [],
   );
