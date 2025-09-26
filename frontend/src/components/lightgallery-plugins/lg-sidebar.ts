@@ -202,7 +202,7 @@ export default class LgSidebar {
   private onSlideChange(index: number): void {
     // Get photo data from dynamic elements
     const dynamicEl = this.core.galleryItems[index];
-    if (dynamicEl && dynamicEl.photoData) {
+    if (dynamicEl?.photoData) {
       this.currentPhotoData = dynamicEl.photoData as Photo;
       this.updateSidebarContent();
     }

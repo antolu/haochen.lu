@@ -20,19 +20,12 @@ import OrderBySelector, {
 } from "../components/OrderBySelector";
 
 const PhotographyPage: React.FC = () => {
-  const [isPhotoSwipeOpen, setIsPhotoSwipeOpen] = useState(false);
-  const [isLGOpening, setIsLGOpening] = useState(false);
-  const [photoSwipeIndex, setPhotoSwipeIndex] = useState(0);
+  const [triggerGallery, setTriggerGallery] = useState<{
+    index: number;
+  } | null>(null);
   const [highlightedPhotoId, setHighlightedPhotoId] = useState<string | null>(
     null,
   );
-
-  console.log("[PhotographyPage] Render state:", {
-    isPhotoSwipeOpen,
-    isLGOpening,
-    photoSwipeIndex,
-    highlightedPhotoId,
-  });
   const photoGridRef = useRef<HTMLDivElement>(null);
   const location = useLocation() as { state?: { photoId?: string } };
   const [searchParams, setSearchParams] = useSearchParams();
@@ -71,32 +64,13 @@ const PhotographyPage: React.FC = () => {
     if (!targetId || allPhotos.length === 0) return;
     const idx = allPhotos.findIndex((p) => p.id === targetId);
     if (idx >= 0) {
-      setPhotoSwipeIndex(idx);
-      setIsLGOpening(true);
-      setIsPhotoSwipeOpen(true);
+      setTriggerGallery({ index: idx });
     }
   }, [location?.state, allPhotos]);
 
-  const handlePhotoClick = useCallback(
-    (_photo: Photo, index: number) => {
-      console.log("[PhotographyPage] Photo clicked:", {
-        photoId: _photo.id,
-        photoTitle: _photo.title,
-        index,
-        currentState: { isPhotoSwipeOpen, isLGOpening, photoSwipeIndex },
-      });
-
-      console.log("[PhotographyPage] Setting state - index:", index);
-      setPhotoSwipeIndex(index);
-
-      console.log("[PhotographyPage] Setting isLGOpening to true");
-      setIsLGOpening(true);
-
-      console.log("[PhotographyPage] Setting isPhotoSwipeOpen to true");
-      setIsPhotoSwipeOpen(true);
-    },
-    [isPhotoSwipeOpen, isLGOpening, photoSwipeIndex],
-  );
+  const handlePhotoClick = useCallback((_photo: Photo, index: number) => {
+    setTriggerGallery({ index });
+  }, []);
 
   const handleMapPhotoClick = useCallback(
     (photo: Photo) => {
@@ -147,32 +121,6 @@ const PhotographyPage: React.FC = () => {
     // The optimized hook will handle the smart caching automatically
     handleOrderSwitch(value);
   };
-
-  const handlePhotoSwipeClose = useCallback(() => {
-    console.log("[PhotographyPage] Close handler called:", {
-      isLGOpening,
-      isPhotoSwipeOpen,
-      willIgnore: isLGOpening,
-    });
-
-    if (isLGOpening) {
-      console.log(
-        "[PhotographyPage] Ignoring close request - gallery is opening",
-      );
-      // Ignore close requests while opening to avoid destroy-loop
-      return;
-    }
-
-    console.log("[PhotographyPage] Setting isPhotoSwipeOpen to false");
-    setIsPhotoSwipeOpen(false);
-  }, [isLGOpening, isPhotoSwipeOpen]);
-
-  const handlePhotoSwipeOpened = useCallback(() => {
-    console.log(
-      "[PhotographyPage] Gallery opened callback - setting isLGOpening to false",
-    );
-    setIsLGOpening(false);
-  }, []);
 
   const handleLoadMore = () => {
     if (hasMore && !isLoadingMore) {
@@ -347,15 +295,14 @@ const PhotographyPage: React.FC = () => {
         )}
       </div>
 
-      {/* PhotoLightbox - Always mounted */}
-      <PhotoLightbox
-        photos={allPhotos}
-        isOpen={isPhotoSwipeOpen}
-        initialIndex={photoSwipeIndex}
-        onClose={handlePhotoSwipeClose}
-        onOpened={handlePhotoSwipeOpened}
-        defaultShowInfo={!!location?.state?.photoId}
-      />
+      {triggerGallery && (
+        <PhotoLightbox
+          photos={allPhotos}
+          initialIndex={triggerGallery.index}
+          defaultShowInfo={!!location?.state?.photoId}
+          onClose={() => setTriggerGallery(null)}
+        />
+      )}
     </div>
   );
 };

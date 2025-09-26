@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback } from "react";
+import React, { useRef, useEffect, useCallback } from "react";
 import lightGallery from "lightgallery";
 import lgThumbnail from "lightgallery/plugins/thumbnail";
 import lgZoom from "lightgallery/plugins/zoom";
@@ -44,28 +44,22 @@ import type { Photo } from "../types";
 
 interface PhotoLightboxProps {
   photos: Photo[];
-  isOpen: boolean;
   initialIndex: number;
-  onClose: () => void;
-  onOpened?: () => void;
   defaultShowInfo?: boolean;
+  onClose?: () => void;
 }
 
 const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   photos,
-  isOpen,
   initialIndex,
-  onClose,
-  onOpened,
   defaultShowInfo = false,
+  onClose,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const galleryRef = useRef<LightGalleryInstance | null>(null);
-  const galleryOpenedRef = useRef<boolean>(false);
-  const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const downloadBtnRef = useRef<HTMLButtonElement | null>(null);
 
-  const currentPhoto = photos[currentIndex];
+  const currentPhoto = photos[initialIndex] || photos[0];
 
   // Helper to detect if we're on mobile
   const isMobile = () => window.innerWidth <= 768;
@@ -150,7 +144,6 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
         console.error("Error destroying previous gallery:", error);
       }
       galleryRef.current = null;
-      galleryOpenedRef.current = false;
     }
 
     const dynamicElements = photos.map((photo) => {
@@ -284,74 +277,16 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
         lgOptions as unknown as Record<string, unknown>,
       ) as unknown as LightGalleryInstance;
 
-      const onInit = (e: Event) => {
-        const detail = (e as unknown as { detail?: { instance?: unknown } })
-          .detail;
-        const instance = detail?.instance as LightGalleryInstance | undefined;
-        if (instance) {
-          injectDownloadButton(instance);
-        }
-      };
-
-      const onBeforeSlide = (e: Event) => {
-        const detail = (e as unknown as { detail?: { index?: number } }).detail;
-        if (typeof detail?.index === "number") {
-          setCurrentIndex(detail.index);
-        }
-      };
-
-      const onAfterSlide = (e: Event) => {
-        const detail = (e as unknown as { detail?: { index?: number } }).detail;
-        if (typeof detail?.index === "number") {
-          setCurrentIndex(detail.index);
-        }
-      };
-
       const onAfterClose = () => {
-        // Reset gallery state so it can be reopened
-        galleryOpenedRef.current = false;
-        onClose();
+        onClose?.();
       };
 
-      container.addEventListener("lgInit", onInit);
-      container.addEventListener("lgBeforeSlide", onBeforeSlide);
-      container.addEventListener("lgAfterSlide", onAfterSlide);
       container.addEventListener("lgAfterClose", onAfterClose);
-
-      // Store event handlers for cleanup
-      const eventHandlers = {
-        onInit,
-        onBeforeSlide,
-        onAfterSlide,
-        onAfterClose,
-      };
 
       return () => {
         if (container) {
-          container.removeEventListener("lgInit", eventHandlers.onInit);
-          container.removeEventListener(
-            "lgBeforeSlide",
-            eventHandlers.onBeforeSlide,
-          );
-          container.removeEventListener(
-            "lgAfterSlide",
-            eventHandlers.onAfterSlide,
-          );
-          container.removeEventListener(
-            "lgAfterClose",
-            eventHandlers.onAfterClose,
-          );
+          container.removeEventListener("lgAfterClose", onAfterClose);
         }
-        if (galleryRef.current) {
-          try {
-            galleryRef.current.destroy();
-          } catch (error) {
-            console.error("Error destroying gallery:", error);
-          }
-          galleryRef.current = null;
-          galleryOpenedRef.current = false;
-        }
-        downloadBtnRef.current = null;
       };
     } catch (error) {
       console.error("Failed to initialize gallery:", error);
@@ -359,55 +294,28 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
     }
 
     return galleryRef.current;
-  }, [photos, injectDownloadButton, onClose]);
+  }, [photos, injectDownloadButton, onClose, defaultShowInfo]);
 
-  // Handle opening/navigating the gallery - let LightGallery manage its own state
+  // Create gallery on mount and open it
   useEffect(() => {
-    if (!isOpen) return;
-
     if (photos.length === 0) {
       return;
     }
 
-    // Create gallery if it doesn't exist
-    if (!galleryRef.current) {
-      const gallery = createGallery();
-      if (!gallery) {
-        console.error("[PhotoLightbox] Failed to create gallery");
-        return;
-      }
-    }
-
     try {
-      const safeIndex = Math.max(0, Math.min(initialIndex, photos.length - 1));
-      setCurrentIndex(safeIndex);
+      createGallery();
 
-      // Always use openGallery - LightGallery handles duplicate calls internally
-      galleryRef.current?.openGallery(safeIndex);
-
-      // Only call onOpened for the first opening, not navigation
-      if (!galleryOpenedRef.current) {
-        galleryOpenedRef.current = true;
-        onOpened?.();
+      if (galleryRef.current) {
+        const safeIndex = Math.max(
+          0,
+          Math.min(initialIndex, photos.length - 1),
+        );
+        galleryRef.current.openGallery(safeIndex);
       }
     } catch (error) {
-      console.error("Failed to open gallery:", error);
+      console.error("Error creating gallery:", error);
     }
-  }, [isOpen, initialIndex, onOpened, defaultShowInfo, photos.length]);
-
-  // Handle closing the gallery (only when isOpen becomes false after being true)
-  useEffect(() => {
-    if (isOpen || !galleryOpenedRef.current || !galleryRef.current) {
-      return; // Don't close if opening, never opened, or no gallery exists
-    }
-
-    try {
-      galleryRef.current.closeGallery();
-      galleryOpenedRef.current = false;
-    } catch (error) {
-      console.error("Failed to close gallery:", error);
-    }
-  }, [isOpen]);
+  }, [createGallery, initialIndex, photos.length]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -419,7 +327,6 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
           console.error("Error destroying gallery on cleanup:", error);
         }
         galleryRef.current = null;
-        galleryOpenedRef.current = false;
       }
     };
   }, []);
