@@ -91,7 +91,14 @@ apiClient.interceptors.response.use(
       _retry?: boolean;
     };
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Don't intercept 401s from login requests - let them pass through normally
+    const isLoginRequest = originalRequest.url?.includes("/auth/login");
+
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !isLoginRequest
+    ) {
       if (isRefreshing) {
         // If already refreshing, queue this request
         return new Promise((resolve, reject) => {
