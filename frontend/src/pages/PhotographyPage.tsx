@@ -4,14 +4,13 @@ import React, {
   useRef,
   useMemo,
   useCallback,
-  lazy,
-  Suspense,
 } from "react";
-import { m } from "framer-motion";
+import { motion as m } from "framer-motion";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 
 import PhotoGrid from "../components/PhotoGrid";
 import PhotoLightbox from "../components/PhotoLightbox";
+import MapLibrePhotoMap from "../components/MapLibrePhotoMap";
 import { useOptimizedPhotos } from "../hooks/usePhotos";
 import { useIsTransitioning } from "../stores/photoCache";
 import { monitorCachePerformance } from "../utils/optimizationTest";
@@ -19,9 +18,6 @@ import type { Photo } from "../types";
 import OrderBySelector, {
   type OrderByOption,
 } from "../components/OrderBySelector";
-
-// Lazy load the map component to reduce initial bundle size
-const MapLibrePhotoMap = lazy(() => import("../components/MapLibrePhotoMap"));
 
 const PhotographyPage: React.FC = () => {
   const [triggerGallery, setTriggerGallery] = useState<{
@@ -289,23 +285,12 @@ const PhotographyPage: React.FC = () => {
                 view photos from that location.
               </p>
             </div>
-            <Suspense
-              fallback={
-                <div className="rounded-lg shadow-lg bg-gray-100 h-[650px] flex items-center justify-center">
-                  <div className="flex flex-col items-center space-y-4">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                    <p className="text-gray-600">Loading map...</p>
-                  </div>
-                </div>
-              }
-            >
-              <MapLibrePhotoMap
-                photos={allPhotos}
-                onPhotoClick={handleMapPhotoClick}
-                height={650}
-                className="rounded-lg shadow-lg"
-              />
-            </Suspense>
+            <MapLibrePhotoMap
+              photos={allPhotos}
+              onPhotoClick={handleMapPhotoClick}
+              height={650}
+              className="rounded-lg shadow-lg"
+            />
           </m.div>
         )}
       </div>
