@@ -226,7 +226,7 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
   }, [reset, onCancel]);
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-4 max-w-lg mx-auto">
+    <div className="bg-white rounded-lg shadow-lg p-3 max-w-md mx-auto max-h-[85vh] overflow-y-auto">
       <div className="mb-4">
         <p className="text-gray-700 text-sm">
           Select an image and crop it to a square.
@@ -265,7 +265,7 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
           {/* Title removed per request */}
 
           {/* Crop Area */}
-          <div className="border border-gray-300 rounded-lg overflow-hidden max-h-[55vh]">
+          <div className="border border-gray-300 rounded-lg overflow-hidden max-h-[40vh]">
             <ReactCrop
               crop={crop}
               onChange={(newCrop) => setCrop(newCrop)}
@@ -273,13 +273,15 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
               aspect={1} // Square aspect ratio
               minWidth={100}
               minHeight={100}
+              keepSelection={true}
+              locked={false}
             >
               <img
                 ref={imgRef}
                 alt="Crop preview"
                 src={imgSrc}
                 onLoad={onImageLoad}
-                className="max-h-[50vh] w-auto"
+                className="max-h-[35vh] w-auto block mx-auto"
               />
             </ReactCrop>
           </div>
@@ -287,9 +289,7 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
           {/* Preview */}
           {completedCrop && (
             <div className="text-center">
-              <p className="text-sm text-gray-600 mb-2">
-                Preview (cropped area):
-              </p>
+              <p className="text-xs text-gray-600 mb-1">Preview:</p>
               <div className="inline-block border-2 border-gray-300 rounded-full overflow-hidden">
                 <canvas
                   ref={(canvas) => {
@@ -300,8 +300,8 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
                         const scaleX = image.naturalWidth / image.width;
                         const scaleY = image.naturalHeight / image.height;
 
-                        canvas.width = 120;
-                        canvas.height = 120;
+                        canvas.width = 80;
+                        canvas.height = 80;
 
                         ctx.drawImage(
                           image,
@@ -311,27 +311,27 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
                           completedCrop.height * scaleY,
                           0,
                           0,
-                          120,
-                          120,
+                          80,
+                          80,
                         );
                       }
                     }
                   }}
                   className="block"
-                  width={120}
-                  height={120}
+                  width={80}
+                  height={80}
                 />
               </div>
             </div>
           )}
 
           {/* Action Buttons */}
-          <div className="flex justify-end space-x-3">
+          <div className="flex flex-wrap justify-end gap-2">
             <button
               type="button"
               onClick={handleCancel}
               disabled={isUploading}
-              className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className="px-3 py-1.5 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
@@ -342,17 +342,17 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
                 fileInputRef.current?.click();
               }}
               disabled={isUploading}
-              className="px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors disabled:opacity-50"
+              className="px-3 py-1.5 text-sm text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-colors disabled:opacity-50"
             >
-              Choose Different Image
+              Choose Different
             </button>
             <button
               type="button"
               onClick={() => void handleUpload()}
               disabled={isUploading || !completedCrop}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isUploading ? "Uploading..." : "Upload Profile Picture"}
+              {isUploading ? "Uploading..." : "Upload"}
             </button>
           </div>
         </div>
