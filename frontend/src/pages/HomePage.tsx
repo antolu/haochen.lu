@@ -117,9 +117,9 @@ const HomePage: React.FC = () => {
   }, [heroMemo]);
 
   return (
-    <div className="min-h-screen w-full m-0 p-0 mobile-safe">
+    <div className="min-h-screen w-full m-0 p-0 mobile-safe overflow-x-hidden scrollbar-hide">
       {/* Hero Section - Account for header height to fit perfectly in viewport */}
-      <section className="relative h-[calc(100vh-6rem)] md:h-[calc(100vh-7rem)] flex items-center justify-center overflow-hidden">
+      <section className="relative h-[calc(100vh-5rem)] md:h-[calc(100vh-6rem)] flex items-center justify-center overflow-hidden">
         {/* Dynamic Hero Background Image */}
         {heroMemo ? (
           <div
