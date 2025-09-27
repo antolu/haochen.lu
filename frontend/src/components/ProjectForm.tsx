@@ -6,6 +6,16 @@ import RepositoryConnector from "./RepositoryConnector";
 import ProjectImagesManager from "./admin/ProjectImagesManager";
 import TagMultiSelect from "./admin/TagMultiSelect";
 import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "./ui/card";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
+import { Label } from "./ui/label";
+import {
   useCreateProject,
   useUpdateProject,
   usePreviewReadme,
@@ -230,10 +240,10 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-2xl font-bold">
               {isEditing ? "Edit Project" : "Create New Project"}
             </h2>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               {isEditing
                 ? "Update project information and content"
                 : "Add a new project to your portfolio"}
@@ -241,309 +251,293 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
           </div>
           <div className="flex gap-3">
             {onCancel && (
-              <button
+              <Button
                 type="button"
                 onClick={onCancel}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                variant="outline"
+                size="sm"
               >
                 Cancel
-              </button>
+              </Button>
             )}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
+            <Button type="submit" disabled={isLoading} size="sm">
               {isLoading
                 ? "Saving..."
                 : isEditing
                   ? "Update Project"
                   : "Create Project"}
-            </button>
+            </Button>
           </div>
         </div>
 
         {/* Basic Information */}
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
-            Basic Information
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Title */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Project Title *
-              </label>
-              <input
-                {...register("title", { required: "Title is required" })}
-                type="text"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter project title"
-              />
-              {errors.title && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.title.message}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Basic Information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Title */}
+              <div className="md:col-span-2">
+                <Label htmlFor="title">Project Title *</Label>
+                <Input
+                  id="title"
+                  {...register("title", { required: "Title is required" })}
+                  placeholder="Enter project title"
+                />
+                {errors.title && (
+                  <p className="mt-1 text-sm text-destructive">
+                    {errors.title.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Slug */}
+              <div>
+                <Label htmlFor="slug">URL Slug {!isEditing && "*"}</Label>
+                <Input
+                  id="slug"
+                  {...register("slug", {
+                    required: !isEditing ? "Slug is required" : false,
+                  })}
+                  disabled={isEditing}
+                  placeholder="project-url-slug"
+                />
+                {errors.slug && (
+                  <p className="mt-1 text-sm text-destructive">
+                    {errors.slug.message}
+                  </p>
+                )}
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {isEditing
+                    ? "Slug cannot be changed after creation"
+                    : "Auto-generated from title"}
                 </p>
-              )}
-            </div>
+              </div>
 
-            {/* Slug */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                URL Slug {!isEditing && "*"}
-              </label>
-              <input
-                {...register("slug", {
-                  required: !isEditing ? "Slug is required" : false,
-                })}
-                type="text"
-                disabled={isEditing}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-                placeholder="project-url-slug"
-              />
-              {errors.slug && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.slug.message}
+              {/* Status */}
+              <div>
+                <Label htmlFor="status">Status</Label>
+                <select
+                  id="status"
+                  {...register("status")}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  <option value="active">Active</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </div>
+
+              {/* Short Description */}
+              <div className="md:col-span-2">
+                <Label htmlFor="short_description">Short Description</Label>
+                <Input
+                  id="short_description"
+                  {...register("short_description")}
+                  placeholder="Brief description for project cards"
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Optional: Used in project cards and meta descriptions
                 </p>
-              )}
-              <p className="mt-1 text-xs text-gray-500">
-                {isEditing
-                  ? "Slug cannot be changed after creation"
-                  : "Auto-generated from title"}
-              </p>
-            </div>
+              </div>
 
-            {/* Status */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Status
-              </label>
-              <select
-                {...register("status")}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="active">Active</option>
-                <option value="in_progress">In Progress</option>
-                <option value="archived">Archived</option>
-              </select>
-            </div>
+              {/* Technologies */}
+              <div className="md:col-span-2">
+                <Label>Technologies</Label>
+                <TagMultiSelect
+                  value={technologiesInput
+                    .split(",")
+                    .map((t) => t.trim())
+                    .filter(Boolean)}
+                  options={distinctTechnologies}
+                  onChange={(vals) => handleTechnologiesChange(vals.join(", "))}
+                  placeholder="Search or create technologies..."
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Type to search or press Enter to create a new technology
+                </p>
+              </div>
 
-            {/* Short Description */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Short Description
-              </label>
-              <input
-                {...register("short_description")}
-                type="text"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Brief description for project cards"
-              />
-              <p className="mt-1 text-xs text-gray-500">
-                Optional: Used in project cards and meta descriptions
-              </p>
+              {/* Removed Featured project toggle */}
             </div>
-
-            {/* Technologies */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Technologies
-              </label>
-              <TagMultiSelect
-                value={technologiesInput
-                  .split(",")
-                  .map((t) => t.trim())
-                  .filter(Boolean)}
-                options={distinctTechnologies}
-                onChange={(vals) => handleTechnologiesChange(vals.join(", "))}
-                placeholder="Search or create technologies..."
-              />
-              <p className="mt-1 text-xs text-gray-500">
-                Type to search or press Enter to create a new technology
-              </p>
-            </div>
-
-            {/* Removed Featured project toggle */}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Links */}
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
-            Links & Resources
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* GitHub URL */}
-            <div className="md:col-span-2">
-              <RepositoryConnector
-                value={watch("github_url")}
-                onChange={handleRepositoryChange}
-                disabled={isSubmitting}
-              />
-            </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Links & Resources</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* GitHub URL */}
+              <div className="md:col-span-2">
+                <RepositoryConnector
+                  value={watch("github_url")}
+                  onChange={handleRepositoryChange}
+                  disabled={isSubmitting}
+                />
+              </div>
 
-            {/* Demo URL - spans full width now that image URL is removed */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Demo URL
-              </label>
-              <input
-                {...register("demo_url")}
-                type="url"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="https://project-demo.com"
-              />
-            </div>
+              {/* Demo URL - spans full width now that image URL is removed */}
+              <div className="md:col-span-2">
+                <Label htmlFor="demo_url">Demo URL</Label>
+                <Input
+                  id="demo_url"
+                  {...register("demo_url")}
+                  type="url"
+                  placeholder="https://project-demo.com"
+                />
+              </div>
 
-            {/* Removed Image URL: project uses gallery images */}
-          </div>
-        </div>
+              {/* Removed Image URL: project uses gallery images */}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Content Source */}
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
-            Project Description
-          </h3>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Project Description</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {/* README Integration */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-4">
+                {watchedGithubUrl && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      void handlePreviewReadme();
+                    }}
+                    disabled={isLoadingPreview || !watchedGithubUrl}
+                  >
+                    {isLoadingPreview ? "Loading..." : "Preview README"}
+                  </Button>
+                )}
+              </div>
 
-          {/* README Integration */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
+              {/* Show toggle when a repo is provided or preview is available */}
               {watchedGithubUrl && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    void handlePreviewReadme();
-                  }}
-                  disabled={isLoadingPreview || !watchedGithubUrl}
-                  className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 disabled:opacity-50"
-                >
-                  {isLoadingPreview ? "Loading..." : "Preview README"}
-                </button>
+                <div className="mb-2">
+                  <label className="flex items-center">
+                    <input
+                      {...register("use_readme")}
+                      type="checkbox"
+                      checked={useReadme}
+                      onChange={(e) => {
+                        setUseReadme(e.target.checked);
+                        setValue("use_readme", e.target.checked);
+                      }}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <span className="ml-2 text-sm font-medium">
+                      Use README.md from repository
+                    </span>
+                  </label>
+                </div>
+              )}
+
+              {readmePreview && (
+                <div className="mb-4 p-4 bg-muted border rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">README Preview</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setReadmePreview(null)}
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </Button>
+                  </div>
+                  <div className="text-sm text-muted-foreground max-h-32 overflow-y-auto">
+                    {readmePreview.substring(0, 300)}...
+                  </div>
+                </div>
               )}
             </div>
 
-            {/* Show toggle when a repo is provided or preview is available */}
-            {watchedGithubUrl && (
-              <div className="mb-2">
-                <label className="flex items-center">
-                  <input
-                    {...register("use_readme")}
-                    type="checkbox"
-                    checked={useReadme}
-                    onChange={(e) => {
-                      setUseReadme(e.target.checked);
-                      setValue("use_readme", e.target.checked);
-                    }}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <span className="ml-2 text-sm font-medium text-gray-700">
-                    Use README.md from repository
-                  </span>
-                </label>
-              </div>
-            )}
-
-            {readmePreview && (
-              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-blue-800">
-                    README Preview
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setReadmePreview(null)}
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                </div>
-                <div className="text-sm text-blue-700 max-h-32 overflow-y-auto">
-                  {readmePreview.substring(0, 300)}...
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Description: start as single-line, expand to advanced editor on focus */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {useReadme
-                ? "Custom Description (overrides README)"
-                : "Project Description *"}
-            </label>
-            {!isEditorExpanded ? (
-              <input
-                type="text"
-                value={markdownContent}
-                onChange={(e) => setMarkdownContent(e.target.value)}
-                onFocus={() => setIsEditorExpanded(true)}
-                placeholder={
-                  useReadme
-                    ? "Click to expand editor to override README"
-                    : "Click to expand editor"
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            ) : (
-              <div data-color-mode="light">
-                <MDEditor
+            {/* Description: start as single-line, expand to advanced editor on focus */}
+            <div>
+              <Label>
+                {useReadme
+                  ? "Custom Description (overrides README)"
+                  : "Project Description *"}
+              </Label>
+              {!isEditorExpanded ? (
+                <Input
                   value={markdownContent}
-                  onChange={(val) => setMarkdownContent(val ?? "")}
-                  preview="edit"
-                  height={400}
-                  visibleDragbar={false}
+                  onChange={(e) => setMarkdownContent(e.target.value)}
+                  onFocus={() => setIsEditorExpanded(true)}
+                  placeholder={
+                    useReadme
+                      ? "Click to expand editor to override README"
+                      : "Click to expand editor"
+                  }
                 />
-              </div>
-            )}
-            <p className="mt-1 text-xs text-gray-500">
-              {useReadme
-                ? "Leave empty to use README content, or add custom description to override"
-                : "Supports Markdown formatting including code blocks, links, and images"}
-            </p>
-          </div>
-        </div>
+              ) : (
+                <div data-color-mode="auto">
+                  <MDEditor
+                    value={markdownContent}
+                    onChange={(val) => setMarkdownContent(val ?? "")}
+                    preview="edit"
+                    height={400}
+                    visibleDragbar={false}
+                  />
+                </div>
+              )}
+              <p className="mt-1 text-xs text-muted-foreground">
+                {useReadme
+                  ? "Leave empty to use README content, or add custom description to override"
+                  : "Supports Markdown formatting including code blocks, links, and images"}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Images Manager */}
         {project && (
-          <div className="bg-white p-6 rounded-lg border border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
-              Project Images
-            </h3>
-            <ProjectImagesManager projectId={project.id} />
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Project Images</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ProjectImagesManager projectId={project.id} />
+            </CardContent>
+          </Card>
         )}
 
         {/* Form Actions */}
-        <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
+        <div className="flex justify-end gap-3 pt-6 border-t border-border">
           {onCancel && (
-            <button
-              type="button"
-              onClick={onCancel}
-              className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-            >
+            <Button type="button" onClick={onCancel} variant="outline">
               Cancel
-            </button>
+            </Button>
           )}
-          <button
+          <Button
             type="submit"
             disabled={isLoading}
-            className="px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
+            className="flex items-center"
           >
             {isLoading && (
               <svg
-                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                className="animate-spin -ml-1 mr-2 h-4 w-4"
                 fill="none"
                 viewBox="0 0 24 24"
               >
@@ -567,7 +561,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
               : isEditing
                 ? "Update Project"
                 : "Create Project"}
-          </button>
+          </Button>
         </div>
       </form>
     </motion.div>

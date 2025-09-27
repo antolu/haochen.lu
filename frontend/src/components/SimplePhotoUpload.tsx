@@ -3,6 +3,7 @@ import { AnimatePresence } from "framer-motion";
 import PhotoDropzone, { type UploadFile } from "./PhotoDropzone";
 import PhotoPreview from "./PhotoPreview";
 import { useUploadPhoto } from "../hooks/usePhotos";
+import { Button } from "./ui/button";
 import type { Photo } from "../types";
 import type { AxiosError } from "axios";
 
@@ -225,15 +226,12 @@ const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
       {/* Action Buttons */}
       {hasFiles && (
         <div className="flex justify-end space-x-4">
-          <button
-            onClick={handleCancel}
-            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-          >
+          <Button onClick={handleCancel} variant="outline">
             {allCompleted ? "Done" : "Cancel"}
-          </button>
+          </Button>
 
           {!autoUpload && !allCompleted && !hasErrors && (
-            <button
+            <Button
               onClick={() => {
                 const pendingFiles = uploadFiles.filter(
                   (f) => f.status === "pending",
@@ -241,10 +239,9 @@ const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
                 pendingFiles.forEach((f) => void handleUpload(f));
               }}
               disabled={uploadMutation.isPending}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
             >
               {uploadMutation.isPending ? "Uploading..." : "Upload"}
-            </button>
+            </Button>
           )}
         </div>
       )}
