@@ -5,13 +5,7 @@ import { motion } from "framer-motion";
 import RepositoryConnector from "./RepositoryConnector";
 import ProjectImagesManager from "./admin/ProjectImagesManager";
 import TagMultiSelect from "./admin/TagMultiSelect";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "./ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Label } from "./ui/label";

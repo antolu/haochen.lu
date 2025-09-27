@@ -95,6 +95,7 @@ const ContentManager: React.FC = () => {
       hero: 0,
       about: 0,
       contact: 0,
+      social: 0,
       navigation: 0,
       general: 0,
     };

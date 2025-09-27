@@ -6,6 +6,7 @@ export type ContentCategory =
   | "hero"
   | "about"
   | "contact"
+  | "social"
   | "navigation"
   | "general";
 
@@ -25,6 +26,7 @@ export const CategoryTabs: React.FC<CategoryTabsProps> = ({
     "hero",
     "about",
     "contact",
+    "social",
     "navigation",
     "general",
   ];

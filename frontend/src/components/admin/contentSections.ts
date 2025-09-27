@@ -52,6 +52,23 @@ export const CONTENT_SECTIONS: ContentSectionConfig[] = [
     defaultExpanded: true,
   },
   {
+    id: "social",
+    title: "Social Links",
+    description:
+      "Social media profiles, professional networks, and external links",
+    categories: ["social"],
+    keywords: [
+      "social",
+      "linkedin",
+      "github",
+      "scholar",
+      "profile",
+      "network",
+      "url",
+    ],
+    defaultExpanded: true,
+  },
+  {
     id: "navigation",
     title: "Navigation & Menus",
     description: "Site navigation, menu labels, and footer content",
