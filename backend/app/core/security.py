@@ -5,13 +5,11 @@ import uuid
 from datetime import datetime, timedelta
 from typing import Any
 
+import bcrypt
 from fastapi import Response
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 
 from app.config import settings
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def create_access_token(
@@ -33,14 +31,20 @@ def create_access_token(
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    return bcrypt.checkpw(
+        bytes(plain_password, encoding="utf-8"),
+        bytes(hashed_password, encoding="utf-8"),
+    )
 
 
 def get_password_hash(password: str) -> str:
     if not password or not password.strip():
         msg = "Password cannot be empty"
         raise ValueError(msg)
-    return pwd_context.hash(password)
+    return bcrypt.hashpw(
+        bytes(password, encoding="utf-8"),
+        bcrypt.gensalt(),
+    ).decode("utf-8")
 
 
 def decode_token(token: str | None) -> dict[str, Any] | None:
