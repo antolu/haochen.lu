@@ -118,8 +118,8 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="min-h-screen w-full m-0 p-0 mobile-safe">
-      {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+      {/* Hero Section - Account for header height to fit perfectly in viewport */}
+      <section className="relative h-[calc(100vh-6rem)] md:h-[calc(100vh-7rem)] flex items-center justify-center overflow-hidden">
         {/* Dynamic Hero Background Image */}
         {heroMemo ? (
           <div
