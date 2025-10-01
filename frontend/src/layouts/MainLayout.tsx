@@ -307,7 +307,7 @@ const MainLayout: React.FC = () => {
                       href={footerContent["contact.cv_url"].content}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-gray-300 hover:text-white transition-colors duration-200 underline"
+                      className="text-gray-300 hover:text-white transition-colors duration-200"
                     >
                       CV
                     </a>
