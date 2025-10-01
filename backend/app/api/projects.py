@@ -103,7 +103,8 @@ async def list_projects(
             if isinstance(photo_like.get("variants"), dict):
                 variants = photo_like.get("variants")  # type: ignore[assignment]
             resp["cover_image_url"] = (
-                variants.get("thumbnail", {}).get("url")
+                variants.get("medium", {}).get("url")
+                or variants.get("large", {}).get("url")
                 or variants.get("small", {}).get("url")
                 or photo_like.get("original_url")
             )
@@ -131,7 +132,8 @@ async def list_featured_projects(db: AsyncSession = _session_dependency):
             if isinstance(photo_like.get("variants"), dict):
                 variants = photo_like.get("variants")  # type: ignore[assignment]
             resp["cover_image_url"] = (
-                variants.get("thumbnail", {}).get("url")
+                variants.get("medium", {}).get("url")
+                or variants.get("large", {}).get("url")
                 or variants.get("small", {}).get("url")
                 or photo_like.get("original_url")
             )
@@ -266,7 +268,8 @@ async def get_project_detail(
         if isinstance(photo_like.get("variants"), dict):
             variants = photo_like.get("variants")  # type: ignore[assignment]
         resp["cover_image_url"] = (
-            variants.get("thumbnail", {}).get("url")
+            variants.get("medium", {}).get("url")
+            or variants.get("large", {}).get("url")
             or variants.get("small", {}).get("url")
             or photo_like.get("original_url")
         )
