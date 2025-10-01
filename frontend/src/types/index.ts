@@ -77,6 +77,7 @@ export interface Project {
   github_url?: string;
   demo_url?: string;
   image_url?: string;
+  cover_image_url?: string;
   technologies?: string;
   featured: boolean;
   status: string;
