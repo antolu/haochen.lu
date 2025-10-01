@@ -176,15 +176,37 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
     grid.style.position = "absolute";
     grid.style.inset = "0";
     grid.style.display = "grid";
-    grid.style.gridTemplateColumns = "1fr 1fr";
-    grid.style.gridTemplateRows = "1fr 1fr";
+    grid.style.overflow = "hidden";
+    grid.style.borderRadius = "9999px";
+    grid.style.gap = "2px";
+    grid.style.background = "#fff";
+
+    // Adjust grid layout based on number of images
+    const numImages = Math.min(4, imageUrls.length);
+    if (numImages === 1) {
+      grid.style.gridTemplateColumns = "1fr";
+      grid.style.gridTemplateRows = "1fr";
+    } else if (numImages === 2) {
+      grid.style.gridTemplateColumns = "1fr 1fr";
+      grid.style.gridTemplateRows = "1fr";
+    } else if (numImages === 3) {
+      grid.style.gridTemplateColumns = "1fr 1fr";
+      grid.style.gridTemplateRows = "1fr 1fr";
+    } else {
+      grid.style.gridTemplateColumns = "1fr 1fr";
+      grid.style.gridTemplateRows = "1fr 1fr";
+    }
     scaleWrap.appendChild(grid);
 
-    for (let i = 0; i < Math.min(4, imageUrls.length); i++) {
+    for (let i = 0; i < numImages; i++) {
       const cell = document.createElement("div");
       cell.style.backgroundImage = `url('${imageUrls[i]}')`;
       cell.style.backgroundSize = "cover";
       cell.style.backgroundPosition = "center";
+      // For 3 images, make the first one span 2 columns
+      if (numImages === 3 && i === 0) {
+        cell.style.gridColumn = "1 / -1";
+      }
       grid.appendChild(cell);
     }
 
