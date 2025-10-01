@@ -184,7 +184,7 @@ const HomePage: React.FC = () => {
         {/* Dark overlay for better text readability */}
         <div className="absolute inset-0 bg-gradient-to-br from-black/50 to-black/30"></div>
 
-        <div className="relative z-10 text-center text-white px-4">
+        <div className="relative z-10 text-center text-white px-4 -mt-8 md:-mt-12">
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -401,7 +401,7 @@ const HomePage: React.FC = () => {
                               src={optimalImage.url}
                               srcSet={optimalImage.srcset}
                               sizes={optimalImage.sizes}
-                              alt={photo.title ?? "Photo"}
+                              alt=""
                               className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
                               loading="lazy"
                             />
@@ -438,7 +438,7 @@ const HomePage: React.FC = () => {
                             src={optimalImage.url}
                             srcSet={optimalImage.srcset}
                             sizes={optimalImage.sizes}
-                            alt={photo.title ?? "Photo"}
+                            alt=""
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             loading="lazy"
                           />
