@@ -505,34 +505,53 @@ const HomePage: React.FC = () => {
                   viewport={{ once: true }}
                   className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
                 >
-                  {project.image_url && (
-                    <div className="h-48 bg-gray-200">
-                      <img
-                        src={project.image_url}
-                        alt={project.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
+                  {project.cover_image_url && (
+                    <Link to={`/projects/${project.slug}`} className="block">
+                      <div className="h-48 bg-gray-200">
+                        <img
+                          src={project.cover_image_url}
+                          alt={project.title}
+                          className="w-full h-full object-cover hover:opacity-90 transition-opacity"
+                        />
+                      </div>
+                    </Link>
                   )}
                   <div className="p-6">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                      {project.title}
-                    </h3>
+                    <Link to={`/projects/${project.slug}`} className="block">
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2 hover:text-primary-600 transition-colors">
+                        {project.title}
+                      </h3>
+                    </Link>
                     <p className="text-gray-600 mb-4 line-clamp-3">
                       {project.short_description ?? project.description}
                     </p>
                     {project.technologies && (
                       <div className="flex flex-wrap gap-2 mb-4">
-                        {(JSON.parse(project.technologies) as string[])
-                          .slice(0, 3)
-                          .map((tech: string) => (
-                            <span
-                              key={tech}
-                              className="px-2 py-1 bg-primary-100 text-primary-700 text-xs rounded-full"
-                            >
-                              {tech}
-                            </span>
-                          ))}
+                        {(() => {
+                          const technologies = JSON.parse(
+                            project.technologies,
+                          ) as string[];
+                          const displayTechnologies = technologies.slice(0, 4);
+                          const remainingCount = technologies.length - 4;
+
+                          return (
+                            <>
+                              {displayTechnologies.map((tech: string) => (
+                                <span
+                                  key={tech}
+                                  className="px-2 py-1 bg-primary-100 text-primary-700 text-xs rounded-full"
+                                >
+                                  {tech}
+                                </span>
+                              ))}
+                              {remainingCount > 0 && (
+                                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                                  +{remainingCount} more
+                                </span>
+                              )}
+                            </>
+                          );
+                        })()}
                       </div>
                     )}
                     <div className="flex space-x-4">
@@ -713,11 +732,11 @@ const HomePage: React.FC = () => {
               <div className="p-6 grid md:grid-cols-2 gap-6">
                 <button
                   type="button"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     void navigate("/photography", {
                       state: { photoId: selectedPhoto.id },
                     });
-                    setSelectedPhoto(null);
                   }}
                   className="block text-left"
                   aria-label="Open in album"
