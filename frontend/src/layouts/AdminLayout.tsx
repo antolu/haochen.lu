@@ -32,6 +32,17 @@ import { CommandPalette } from "../components/command-palette";
 const ThemeToggle = () => {
   const { theme, setTheme } = useTheme();
 
+  const getTooltip = () => {
+    if (theme === "light") return "Switch to dark mode";
+    if (theme === "dark") return "Switch to system preference";
+    return "Switch to light mode";
+  };
+
+  const getDescription = () => {
+    if (theme === "system") return "Matches your system";
+    return theme;
+  };
+
   return (
     <Button
       variant="ghost"
@@ -42,11 +53,12 @@ const ThemeToggle = () => {
         else setTheme("light");
       }}
       className="w-full justify-start"
+      title={getTooltip()}
     >
       {theme === "light" && <Sun className="h-4 w-4 mr-2" />}
       {theme === "dark" && <Moon className="h-4 w-4 mr-2" />}
       {theme === "system" && <Laptop className="h-4 w-4 mr-2" />}
-      <span className="capitalize">{theme}</span>
+      <span className="capitalize">{getDescription()}</span>
     </Button>
   );
 };
@@ -106,7 +118,7 @@ const AdminLayoutContent: React.FC = () => {
       badge: null,
     },
     {
-      name: "Equipment Aliases",
+      name: "Camera & Lens Aliases",
       href: "/admin/equipment-aliases",
       icon: Settings,
       badge: null,

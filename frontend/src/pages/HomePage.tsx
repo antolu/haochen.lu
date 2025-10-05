@@ -532,6 +532,7 @@ const HomePage: React.FC = () => {
                             project.technologies,
                           ) as string[];
                           const displayTechnologies = technologies.slice(0, 4);
+                          const remainingTechnologies = technologies.slice(4);
                           const remainingCount = technologies.length - 4;
 
                           return (
@@ -545,7 +546,10 @@ const HomePage: React.FC = () => {
                                 </span>
                               ))}
                               {remainingCount > 0 && (
-                                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                                <span
+                                  className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full cursor-help"
+                                  title={remainingTechnologies.join(", ")}
+                                >
                                   +{remainingCount} more
                                 </span>
                               )}
