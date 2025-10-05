@@ -6,6 +6,8 @@ import { Toaster } from "react-hot-toast";
 import { useAuthStore } from "./stores/authStore";
 import MainLayout from "./layouts/MainLayout";
 import AdminLayout from "./layouts/AdminLayout";
+import { UploadQueue } from "./components/UploadQueue";
+import { useUploadProcessor } from "./hooks/useUploadProcessor";
 
 // Public pages
 import HomePage from "./pages/HomePage";
@@ -67,193 +69,206 @@ const PageLoadingFallback: React.FC = () => (
   </div>
 );
 
-function App() {
+// Component that uses hooks requiring QueryClient
+const AppContent: React.FC = () => {
   const checkAuth = useAuthStore((state) => state.checkAuth);
+
+  // Initialize upload processor (runs in background)
+  useUploadProcessor();
 
   useEffect(() => {
     void checkAuth();
   }, [checkAuth]);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router>
-        <div className="min-h-screen">
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<MainLayout />}>
-              <Route index element={<HomePage />} />
-              <Route
-                path="projects"
-                element={
-                  <Suspense fallback={<PageLoadingFallback />}>
-                    <ProjectsPage />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="projects/:slug"
-                element={
-                  <Suspense fallback={<PageLoadingFallback />}>
-                    <ProjectDetailPage />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="blog"
-                element={
-                  <Suspense fallback={<PageLoadingFallback />}>
-                    <BlogPage />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="blog/:slug"
-                element={
-                  <Suspense fallback={<PageLoadingFallback />}>
-                    <BlogPostPage />
-                  </Suspense>
-                }
-              />
-            </Route>
-
-            {/* Full-screen album route (no layout) */}
+    <Router>
+      <div className="min-h-screen">
+        <Routes>
+          {/* Public routes */}
+          <Route path="/" element={<MainLayout />}>
+            <Route index element={<HomePage />} />
             <Route
-              path="/photography"
+              path="projects"
               element={
                 <Suspense fallback={<PageLoadingFallback />}>
-                  <PhotographyPage />
+                  <ProjectsPage />
                 </Suspense>
               }
             />
+            <Route
+              path="projects/:slug"
+              element={
+                <Suspense fallback={<PageLoadingFallback />}>
+                  <ProjectDetailPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="blog"
+              element={
+                <Suspense fallback={<PageLoadingFallback />}>
+                  <BlogPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="blog/:slug"
+              element={
+                <Suspense fallback={<PageLoadingFallback />}>
+                  <BlogPostPage />
+                </Suspense>
+              }
+            />
+          </Route>
 
-            {/* Auth routes */}
-            <Route path="/login" element={<LoginPage />} />
-
-            {/* Admin routes */}
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route
-                index
-                element={
-                  <Suspense fallback={<AdminLoadingFallback />}>
-                    <AdminDashboard />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="photos"
-                element={
-                  <Suspense fallback={<AdminLoadingFallback />}>
-                    <AdminPhotos />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="profile-pictures"
-                element={
-                  <Suspense fallback={<AdminLoadingFallback />}>
-                    <AdminProfilePictures />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="hero-images"
-                element={
-                  <Suspense fallback={<AdminLoadingFallback />}>
-                    <AdminHeroImages />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="projects"
-                element={
-                  <Suspense fallback={<AdminLoadingFallback />}>
-                    <AdminProjects />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="blog"
-                element={
-                  <Suspense fallback={<AdminLoadingFallback />}>
-                    <AdminBlog />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="equipment-aliases"
-                element={
-                  <Suspense fallback={<AdminLoadingFallback />}>
-                    <AdminEquipmentAliases />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="settings"
-                element={
-                  <Suspense fallback={<AdminLoadingFallback />}>
-                    <AdminSettings />
-                  </Suspense>
-                }
-              />
-              {/* Backward compatibility redirects */}
-              <Route
-                path="camera-aliases"
-                element={
-                  <Suspense fallback={<AdminLoadingFallback />}>
-                    <AdminEquipmentAliases />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="lens-aliases"
-                element={
-                  <Suspense fallback={<AdminLoadingFallback />}>
-                    <AdminEquipmentAliases />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="subapps"
-                element={
-                  <Suspense fallback={<AdminLoadingFallback />}>
-                    <AdminSubApps />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="subapps/integrate"
-                element={
-                  <Suspense fallback={<AdminLoadingFallback />}>
-                    <AdminSubAppIntegration />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="content"
-                element={
-                  <Suspense fallback={<AdminLoadingFallback />}>
-                    <AdminContent />
-                  </Suspense>
-                }
-              />
-            </Route>
-
-            {/* 404 Catch-all route */}
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: "#363636",
-                color: "#fff",
-              },
-            }}
+          {/* Full-screen album route (no layout) */}
+          <Route
+            path="/photography"
+            element={
+              <Suspense fallback={<PageLoadingFallback />}>
+                <PhotographyPage />
+              </Suspense>
+            }
           />
-        </div>
-      </Router>
+
+          {/* Auth routes */}
+          <Route path="/login" element={<LoginPage />} />
+
+          {/* Admin routes */}
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route
+              index
+              element={
+                <Suspense fallback={<AdminLoadingFallback />}>
+                  <AdminDashboard />
+                </Suspense>
+              }
+            />
+            <Route
+              path="photos"
+              element={
+                <Suspense fallback={<AdminLoadingFallback />}>
+                  <AdminPhotos />
+                </Suspense>
+              }
+            />
+            <Route
+              path="profile-pictures"
+              element={
+                <Suspense fallback={<AdminLoadingFallback />}>
+                  <AdminProfilePictures />
+                </Suspense>
+              }
+            />
+            <Route
+              path="hero-images"
+              element={
+                <Suspense fallback={<AdminLoadingFallback />}>
+                  <AdminHeroImages />
+                </Suspense>
+              }
+            />
+            <Route
+              path="projects"
+              element={
+                <Suspense fallback={<AdminLoadingFallback />}>
+                  <AdminProjects />
+                </Suspense>
+              }
+            />
+            <Route
+              path="blog"
+              element={
+                <Suspense fallback={<AdminLoadingFallback />}>
+                  <AdminBlog />
+                </Suspense>
+              }
+            />
+            <Route
+              path="equipment-aliases"
+              element={
+                <Suspense fallback={<AdminLoadingFallback />}>
+                  <AdminEquipmentAliases />
+                </Suspense>
+              }
+            />
+            <Route
+              path="settings"
+              element={
+                <Suspense fallback={<AdminLoadingFallback />}>
+                  <AdminSettings />
+                </Suspense>
+              }
+            />
+            {/* Backward compatibility redirects */}
+            <Route
+              path="camera-aliases"
+              element={
+                <Suspense fallback={<AdminLoadingFallback />}>
+                  <AdminEquipmentAliases />
+                </Suspense>
+              }
+            />
+            <Route
+              path="lens-aliases"
+              element={
+                <Suspense fallback={<AdminLoadingFallback />}>
+                  <AdminEquipmentAliases />
+                </Suspense>
+              }
+            />
+            <Route
+              path="subapps"
+              element={
+                <Suspense fallback={<AdminLoadingFallback />}>
+                  <AdminSubApps />
+                </Suspense>
+              }
+            />
+            <Route
+              path="subapps/integrate"
+              element={
+                <Suspense fallback={<AdminLoadingFallback />}>
+                  <AdminSubAppIntegration />
+                </Suspense>
+              }
+            />
+            <Route
+              path="content"
+              element={
+                <Suspense fallback={<AdminLoadingFallback />}>
+                  <AdminContent />
+                </Suspense>
+              }
+            />
+          </Route>
+
+          {/* 404 Catch-all route */}
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: "#363636",
+              color: "#fff",
+            },
+          }}
+        />
+
+        {/* Global upload queue */}
+        <UploadQueue />
+      </div>
+    </Router>
+  );
+};
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AppContent />
     </QueryClientProvider>
   );
 }

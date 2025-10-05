@@ -4,6 +4,7 @@ import PhotoDropzone, { type UploadFile } from "./PhotoDropzone";
 import PhotoPreview from "./PhotoPreview";
 import PhotoMetadataForm, { type PhotoMetadata } from "./PhotoMetadataForm";
 import { useUploadPhoto } from "../hooks/usePhotos";
+import { useUploadQueue, type QueuedUpload } from "../stores/uploadQueue";
 import type { AxiosError } from "axios";
 
 interface PhotoUploadProps {
@@ -30,7 +31,9 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
     comments: "",
     featured: false,
   });
+  const [useQueue, setUseQueue] = useState(true); // Enable queue by default
   const uploadMutation = useUploadPhoto();
+  const { addToQueue } = useUploadQueue();
 
   // Watch for upload completion and call onComplete when all files are done
   useEffect(() => {
@@ -117,10 +120,38 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
         },
         onError: (error) => {
           const axiosError = error as AxiosError;
-          const errorMessage =
-            (axiosError.response?.data as { detail?: string })?.detail ??
-            error.message ??
-            "Upload failed";
+          let errorMessage = "Upload failed";
+
+          // Provide specific error messages based on error type
+          if (axiosError.response?.status === 413) {
+            errorMessage = `File too large (max ${Math.round((maxFileSize ?? 0) / 1024 / 1024)}MB)`;
+          } else if (axiosError.response?.status === 415) {
+            errorMessage = "Unsupported file type. Please upload an image.";
+          } else if (axiosError.response?.status === 422) {
+            const detail = (axiosError.response?.data as { detail?: string })
+              ?.detail;
+            errorMessage =
+              detail ?? "Invalid image data. Please try another file.";
+          } else if (axiosError.response?.status === 500) {
+            errorMessage = "Server error during processing. Please try again.";
+          } else if (
+            axiosError.code === "ECONNABORTED" ||
+            axiosError.message.includes("timeout")
+          ) {
+            errorMessage =
+              "Upload timed out. Please check your connection and try again.";
+          } else if (
+            axiosError.code === "ERR_NETWORK" ||
+            !axiosError.response
+          ) {
+            errorMessage = "Network error. Please check your connection.";
+          } else {
+            errorMessage =
+              (axiosError.response?.data as { detail?: string })?.detail ??
+              error.message ??
+              "Upload failed";
+          }
+
           setUploadFiles((prev) =>
             prev.map((f) =>
               f.id === file.id
@@ -164,11 +195,43 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
   const handleMetadataSubmit = (newMetadata: PhotoMetadata) => {
     setMetadata(newMetadata);
 
-    // Upload all pending files
     const pendingFiles = uploadFiles.filter((f) => f.status === "pending");
-    pendingFiles.forEach((file) => {
-      handleUpload(file);
-    });
+
+    if (useQueue) {
+      // Add to persistent queue
+      pendingFiles.forEach((file) => {
+        const queuedUpload: QueuedUpload = {
+          id: file.id,
+          file: file.file,
+          fileName: file.file.name,
+          fileSize: file.file.size,
+          fileType: file.file.type,
+          status: "pending",
+          progress: 0,
+          metadata: {
+            title: newMetadata.title || file.file.name.replace(/\.[^/.]+$/, ""),
+            description: newMetadata.description,
+            category: newMetadata.category,
+            tags: newMetadata.tags,
+            comments: newMetadata.comments,
+            featured: newMetadata.featured,
+          },
+          createdAt: Date.now(),
+        };
+        addToQueue(queuedUpload);
+      });
+
+      // Clear local upload files and call completion
+      setUploadFiles([]);
+      if (onComplete) {
+        onComplete();
+      }
+    } else {
+      // Legacy immediate upload
+      pendingFiles.forEach((file) => {
+        handleUpload(file);
+      });
+    }
   };
 
   const handleCancel = () => {
