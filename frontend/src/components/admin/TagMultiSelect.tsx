@@ -45,23 +45,23 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
 
   return (
     <div className="mt-1">
-      <div className="flex flex-wrap items-center gap-2 border border-gray-300 rounded px-2 py-2">
+      <div className="flex flex-wrap items-center gap-2 border border-input bg-background rounded px-2 py-2">
         {value.map((tag) => (
           <span
             key={tag}
-            className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded"
+            className="inline-flex items-center gap-1 bg-primary/10 text-primary text-xs px-2 py-1 rounded"
           >
             {tag}
             <button
               onClick={() => removeTag(tag)}
-              className="text-blue-600 hover:text-blue-800"
+              className="hover:text-primary/80"
             >
               ✕
             </button>
           </span>
         ))}
         <input
-          className="flex-1 min-w-[120px] outline-none text-sm"
+          className="flex-1 min-w-[120px] outline-none text-sm bg-transparent"
           placeholder={placeholder}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -69,9 +69,9 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
         />
       </div>
       {query && (
-        <div className="mt-2 border border-gray-200 rounded max-h-40 overflow-auto bg-white shadow">
+        <div className="mt-2 border rounded max-h-40 overflow-auto bg-card shadow">
           {filtered.length === 0 && (
-            <div className="px-3 py-2 text-sm text-gray-600">
+            <div className="px-3 py-2 text-sm text-muted-foreground">
               No match. Press Enter to create "{query}".
             </div>
           )}
@@ -79,7 +79,7 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
             <button
               key={opt}
               onClick={() => addTag(opt)}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+              className="w-full text-left px-3 py-2 text-sm hover:bg-accent"
             >
               {opt}
             </button>
