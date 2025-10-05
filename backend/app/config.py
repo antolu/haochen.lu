@@ -89,6 +89,9 @@ class Settings(BaseSettings):
     # Environment detection
     environment: str = os.getenv("ENVIRONMENT", "development")
 
+    # User agent for external API calls
+    user_agent: str = os.getenv("USER_AGENT", "photography-portfolio/1.0")
+
     @property
     def is_production(self) -> bool:
         return self.environment.lower() in ("production", "prod")

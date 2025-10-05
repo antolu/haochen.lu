@@ -11,6 +11,7 @@ from typing import Any
 import httpx
 from geopy.geocoders import Nominatim
 
+from app.config import settings
 from app.core.redis import redis_client
 
 logger = logging.getLogger(__name__)
@@ -20,7 +21,7 @@ class LocationService:
     """Service for geocoding and reverse geocoding using OpenStreetMap Nominatim."""
 
     def __init__(self):
-        self.geolocator = Nominatim(user_agent="photography-portfolio/1.0", timeout=10)
+        self.geolocator = Nominatim(user_agent=settings.user_agent, timeout=10)
         # Cache TTL in seconds (24 hours for geocoding, 1 hour for search)
         self.geocoding_cache_ttl = 24 * 60 * 60
         self.search_cache_ttl = 60 * 60
@@ -263,7 +264,7 @@ class LocationService:
                         "limit": limit,
                         "accept-language": language,
                     },
-                    headers={"User-Agent": "photography-portfolio/1.0"},
+                    headers={"User-Agent": settings.user_agent},
                     timeout=10,
                 )
 
@@ -360,7 +361,7 @@ class LocationService:
                         "extratags": 1,
                         "namedetails": 1,
                     },
-                    headers={"User-Agent": "photography-portfolio/1.0"},
+                    headers={"User-Agent": settings.user_agent},
                     timeout=10,
                 )
 
