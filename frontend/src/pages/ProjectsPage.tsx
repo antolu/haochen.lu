@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { m } from "framer-motion";
 import { useInfiniteProjects, type ProjectFilters } from "../hooks/useProjects";
 import ProjectGrid from "../components/ProjectGrid";
@@ -6,6 +6,16 @@ import ProjectGrid from "../components/ProjectGrid";
 const ProjectsPage: React.FC = () => {
   const [filters, setFilters] = useState<ProjectFilters>({ order_by: "order" });
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const {
     data,
@@ -13,10 +23,11 @@ const ProjectsPage: React.FC = () => {
     hasNextPage,
     isFetchingNextPage,
     isLoading,
+    isFetching,
     error,
   } = useInfiniteProjects({
     ...filters,
-    search: searchQuery.trim() === "" ? undefined : searchQuery,
+    search: debouncedSearch.trim() === "" ? undefined : debouncedSearch,
   });
 
   const projects = data?.pages.flatMap((page) => page.projects) ?? [];
@@ -206,11 +217,34 @@ const ProjectsPage: React.FC = () => {
 
             {/* Results Count */}
             {!isLoading && (
-              <div className="mt-4 text-sm text-gray-500">
-                {searchQuery && (
-                  <span>Search results for "{searchQuery}" • </span>
+              <div className="mt-4 text-sm text-gray-500 flex items-center gap-2">
+                {isFetching && !isLoading && (
+                  <svg
+                    className="animate-spin h-4 w-4 text-blue-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
                 )}
-                Showing {projects.length} of {totalProjects} projects
+                <span>
+                  {debouncedSearch && (
+                    <span>Search results for "{debouncedSearch}" • </span>
+                  )}
+                  Showing {projects.length} of {totalProjects} projects
+                </span>
               </div>
             )}
           </div>
