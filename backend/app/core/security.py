@@ -37,10 +37,45 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     )
 
 
-def get_password_hash(password: str) -> str:
+def validate_password_strength(password: str) -> None:
+    """Validate password meets complexity requirements.
+
+    Requirements:
+    - Minimum 8 characters
+    - At least one uppercase letter
+    - At least one lowercase letter
+    - At least one digit
+    - At least one special character
+    """
     if not password or not password.strip():
         msg = "Password cannot be empty"
         raise ValueError(msg)
+
+    if len(password) < 8:
+        msg = "Password must be at least 8 characters long"
+        raise ValueError(msg)
+
+    if not any(c.isupper() for c in password):
+        msg = "Password must contain at least one uppercase letter"
+        raise ValueError(msg)
+
+    if not any(c.islower() for c in password):
+        msg = "Password must contain at least one lowercase letter"
+        raise ValueError(msg)
+
+    if not any(c.isdigit() for c in password):
+        msg = "Password must contain at least one digit"
+        raise ValueError(msg)
+
+    # Check for special characters
+    special_chars = "!@#$%^&*()_+-=[]{}|;:,.<>?"
+    if not any(c in special_chars for c in password):
+        msg = "Password must contain at least one special character (!@#$%^&*()_+-=[]{}|;:,.<>?)"
+        raise ValueError(msg)
+
+
+def get_password_hash(password: str) -> str:
+    validate_password_strength(password)
     return bcrypt.hashpw(
         bytes(password, encoding="utf-8"),
         bcrypt.gensalt(),
