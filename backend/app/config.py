@@ -114,6 +114,9 @@ class Settings(BaseSettings):
     # User agent for external API calls
     user_agent: str = os.getenv("USER_AGENT", "photography-portfolio/1.0")
 
+    # External API timeouts (in seconds)
+    repository_request_timeout: int = int(os.getenv("REPOSITORY_TIMEOUT", "10"))
+
     @property
     def is_production(self) -> bool:
         return self.environment.lower() in ("production", "prod")

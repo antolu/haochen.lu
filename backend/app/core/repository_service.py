@@ -91,7 +91,9 @@ class RepositoryService:
         # Try different README filenames
         readme_files = ["README.md", "readme.md", "README.rst", "README.txt", "README"]
 
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(
+            timeout=settings.repository_request_timeout
+        ) as client:
             for filename in readme_files:
                 try:
                     # First get file info to get last modified date
@@ -167,7 +169,9 @@ class RepositoryService:
         # Try different README filenames
         readme_files = ["README.md", "readme.md", "README.rst", "README.txt", "README"]
 
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(
+            timeout=settings.repository_request_timeout
+        ) as client:
             for filename in readme_files:
                 try:
                     # Get file content
@@ -234,7 +238,9 @@ class RepositoryService:
 
         url = f"https://api.github.com/repos/{repo_info.owner}/{repo_info.name}"
 
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(
+            timeout=settings.repository_request_timeout
+        ) as client:
             try:
                 response = await client.get(url, headers=headers)
             except httpx.HTTPStatusError:
@@ -263,7 +269,9 @@ class RepositoryService:
         encoded_path = project_path.replace("/", "%2F")
         url = f"{base_url}/projects/{encoded_path}"
 
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(
+            timeout=settings.repository_request_timeout
+        ) as client:
             try:
                 response = await client.get(url, headers=headers)
             except httpx.HTTPStatusError:
