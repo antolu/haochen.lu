@@ -473,11 +473,23 @@ async def upload_photo(
         photo = await create_photo(db, photo_data, **processed_data)
 
         # Auto-create aliases for camera and lens if they don't exist
-        await _create_aliases_for_photo(db, photo)
+        alias_warnings = []
+        try:
+            await _create_aliases_for_photo(db, photo)
+        except Exception as e:
+            # Log error but don't fail upload
+            alias_warnings.append(
+                f"Could not create equipment aliases: {e!s}. "
+                "You can manually create them in Equipment Aliases settings."
+            )
 
         # Add secure URLs to response
         photo_dict = PhotoResponse.model_validate(photo).model_dump()
         photo_dict = populate_photo_urls(photo_dict, str(photo.id))
+
+        # Add warnings if any
+        if alias_warnings:
+            photo_dict["warnings"] = alias_warnings
 
         return PhotoResponse.model_validate(photo_dict)
 

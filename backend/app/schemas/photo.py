@@ -166,6 +166,9 @@ class PhotoResponse(PhotoBase):
     processing_errors: list[str] | None = (
         None  # Non-persistent warnings about missing/failed variants
     )
+    warnings: list[str] | None = (
+        None  # General warnings (e.g., alias creation failures)
+    )
 
     # Responsive image variants
     # Accept both legacy flat variant objects and new multi-format nested variants
