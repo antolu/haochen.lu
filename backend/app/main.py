@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+from datetime import datetime
 
 from fastapi import APIRouter, FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -109,7 +110,7 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "timestamp": "2025-09-09T07:30:00Z"}
+    return {"status": "healthy", "timestamp": datetime.utcnow().isoformat() + "Z"}
 
 
 @app.websocket("/ws/uploads/{upload_id}")
@@ -126,4 +127,8 @@ async def uploads_progress_ws(websocket: WebSocket, upload_id: str):
 
 @app.get("/api/health")
 async def api_health_check():
-    return {"status": "healthy", "api": "ready", "timestamp": "2025-09-09T07:30:00Z"}
+    return {
+        "status": "healthy",
+        "api": "ready",
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+    }
