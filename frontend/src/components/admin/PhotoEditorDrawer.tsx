@@ -88,7 +88,7 @@ const PhotoEditorDrawer: React.FC<PhotoEditorDrawerProps> = ({
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-foreground">
               Title
             </label>
             <input
@@ -101,7 +101,7 @@ const PhotoEditorDrawer: React.FC<PhotoEditorDrawerProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-foreground">
               Description
             </label>
             <textarea
@@ -115,7 +115,7 @@ const PhotoEditorDrawer: React.FC<PhotoEditorDrawerProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-foreground">
               Category
             </label>
             <input
@@ -128,7 +128,7 @@ const PhotoEditorDrawer: React.FC<PhotoEditorDrawerProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-foreground">
               Tags
             </label>
             <TagMultiSelect
