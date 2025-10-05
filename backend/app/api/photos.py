@@ -663,6 +663,8 @@ async def serve_photo_variant(
     # Get photo and file path
     if not (expires and signature):
         photo = await get_photo(db, photo_id)
+
+    fallback_used = False
     try:
         file_path = file_access_controller.get_file_path(photo, file_type)
     except HTTPException as e:
@@ -670,6 +672,7 @@ async def serve_photo_variant(
         if e.status_code == status.HTTP_404_NOT_FOUND:
             file_path = file_access_controller.get_file_path(photo, FileType.ORIGINAL)
             file_type = FileType.ORIGINAL
+            fallback_used = True
         else:
             raise
 
@@ -682,10 +685,14 @@ async def serve_photo_variant(
         else "private, max-age=3600"
     )
 
+    headers = {"Cache-Control": cache_control}
+    if fallback_used:
+        headers["X-Fallback-To-Original"] = "true"
+
     return FileResponse(
         path=str(file_path),
         media_type=content_type,
-        headers={"Cache-Control": cache_control},
+        headers=headers,
     )
 
 
