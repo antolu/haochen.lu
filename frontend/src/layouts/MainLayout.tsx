@@ -214,7 +214,7 @@ const MainLayout: React.FC = () => {
                     to={item.href}
                     className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${
                       isActive(item.href)
-                        ? "text-primary-600 bg-primary-50"
+                        ? "text-primary-600 bg-primary-100 border-l-4 border-primary-600 pl-2"
                         : "text-gray-700 hover:text-primary-600 hover:bg-gray-50"
                     }`}
                     onClick={() => setMobileMenuOpen(false)}
