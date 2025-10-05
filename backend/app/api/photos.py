@@ -21,6 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.core.file_access import file_access_controller
+from app.core.file_validation import file_validator
 from app.core.rate_limiter import FileAccessRateLimiter
 from app.core.vips_processor import VipsImageProcessor
 from app.core.vips_processor import vips_image_processor as image_processor
@@ -428,9 +429,8 @@ async def upload_photo(
 ):
     """Upload a new photo (admin only)."""
 
-    # Validate file type
-    if not file.content_type or not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="File must be an image")
+    # Validate file type using magic number detection
+    await file_validator.validate_image_file(file)
 
     # Validate file size
     if file.size and file.size > 50 * 1024 * 1024:  # 50MB

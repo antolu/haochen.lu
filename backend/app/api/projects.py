@@ -9,6 +9,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.file_access import file_access_controller
+from app.core.file_validation import file_validator
 from app.core.image_processor import image_processor
 from app.core.repository_service import RepositoryInfo, repository_service
 from app.crud.project import (
@@ -342,9 +343,8 @@ async def upload_project_image(
     current_user=_current_admin_user_dependency,
 ):
     """Upload a new image directly to a project (separate from photos)."""
-    # Validate
-    if not file.content_type or not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="File must be an image")
+    # Validate file type using magic number detection
+    await file_validator.validate_image_file(file)
 
     count_res = await db.execute(
         select(func.count())
