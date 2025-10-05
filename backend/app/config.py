@@ -41,10 +41,32 @@ class Settings(BaseSettings):
     @classmethod
     def _normalize_cors(cls, v: str | list[str]):
         if isinstance(v, list):
-            return v
-        if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",") if origin.strip()]
-        return []
+            origins = v
+        elif isinstance(v, str):
+            origins = [origin.strip() for origin in v.split(",") if origin.strip()]
+        else:
+            return []
+
+        # Validate each origin is a valid URL format or *
+        validated = []
+        for origin in origins:
+            origin = origin.strip()
+            if not origin:
+                continue
+            # Allow wildcards
+            if origin == "*":
+                validated.append(origin)
+                continue
+            # Basic URL validation
+            if origin.startswith(("http://", "https://")):
+                # Remove duplicate entries
+                if origin not in validated:
+                    validated.append(origin)
+            else:
+                msg = f"Invalid CORS origin '{origin}': must start with http:// or https://"
+                raise ValueError(msg)
+
+        return validated
 
     @property
     def cors_origins_list(self) -> list[str]:
