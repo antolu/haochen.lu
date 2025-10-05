@@ -6,7 +6,6 @@ import { Switch } from "../../components/ui/switch";
 
 import PhotoUpload from "../../components/PhotoUpload";
 import SortablePhotoGrid from "../../components/SortablePhotoGrid";
-import PhotoEditorDrawer from "../../components/admin/PhotoEditorDrawer";
 import PhotoForm from "../../components/admin/PhotoForm";
 import SortablePhotoList from "../../components/admin/SortablePhotoList";
 import {
@@ -26,6 +25,7 @@ const AdminPhotos: React.FC = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [editingPhoto, setEditingPhoto] = useState<Photo | null>(null);
   const [reorderEnabled, setReorderEnabled] = useState(false);
+  const [showStats, setShowStats] = useState(false);
 
   // Query hooks
   const {
@@ -219,20 +219,27 @@ const AdminPhotos: React.FC = () => {
                   List
                 </button>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-muted-foreground">
-                  Reorder
-                </span>
-                <Switch
-                  checked={reorderEnabled}
-                  onCheckedChange={(checked) => {
-                    if (!photos.length && checked) {
-                      toast.error("Add some photos before reordering.");
-                      return;
-                    }
-                    setReorderEnabled(checked);
-                  }}
-                />
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Reorder Mode
+                  </span>
+                  <Switch
+                    checked={reorderEnabled}
+                    onCheckedChange={(checked) => {
+                      if (!photos.length && checked) {
+                        toast.error("Add some photos before reordering.");
+                        return;
+                      }
+                      setReorderEnabled(checked);
+                    }}
+                  />
+                </div>
+                {!reorderEnabled && (
+                  <span className="text-xs text-muted-foreground">
+                    Current order: Custom / Manual
+                  </span>
+                )}
               </div>
               <AnimatePresence>
                 {reorderEnabled && (
@@ -279,124 +286,158 @@ const AdminPhotos: React.FC = () => {
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats Cards - Collapsible */}
         {!isLoadingStats && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-            <div className="bg-card rounded-lg border p-4">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="h-8 w-8 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
-                    <svg
-                      className="h-4 w-4 text-blue-600 dark:text-blue-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
+          <div className="mt-6">
+            <button
+              onClick={() => setShowStats(!showStats)}
+              className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2 mb-3"
+            >
+              <svg
+                className={cn(
+                  "h-4 w-4 transition-transform",
+                  showStats && "rotate-90",
+                )}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+              {showStats ? "Hide" : "Show"} detailed stats
+            </button>
+            {showStats && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="grid grid-cols-1 md:grid-cols-4 gap-4"
+              >
+                <div className="bg-card rounded-lg border p-4">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <div className="h-8 w-8 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
+                        <svg
+                          className="h-4 w-4 text-blue-600 dark:text-blue-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium">Total Photos</p>
+                      <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        {stats.total_photos || photos.length}
+                      </p>
+                    </div>
                   </div>
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium">Total Photos</p>
-                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                    {stats.total_photos || photos.length}
-                  </p>
-                </div>
-              </div>
-            </div>
 
-            <div className="bg-card rounded-lg border p-4">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="h-8 w-8 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg flex items-center justify-center">
-                    <svg
-                      className="h-4 w-4 text-yellow-600 dark:text-yellow-400"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
+                <div className="bg-card rounded-lg border p-4">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <div className="h-8 w-8 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg flex items-center justify-center">
+                        <svg
+                          className="h-4 w-4 text-yellow-600 dark:text-yellow-400"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium">Featured</p>
+                      <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                        {stats.featured_photos ||
+                          photos.filter((p) => p.featured).length}
+                      </p>
+                    </div>
                   </div>
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium">Featured</p>
-                  <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                    {stats.featured_photos ||
-                      photos.filter((p) => p.featured).length}
-                  </p>
-                </div>
-              </div>
-            </div>
 
-            <div className="bg-card rounded-lg border p-4">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="h-8 w-8 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
-                    <svg
-                      className="h-4 w-4 text-green-600 dark:text-green-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2h4a1 1 0 010 2h-1v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6H3a1 1 0 010-2h4zM6 6v12h12V6H6zm3-2V3h6v1H9z"
-                      />
-                    </svg>
+                <div className="bg-card rounded-lg border p-4">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <div className="h-8 w-8 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
+                        <svg
+                          className="h-4 w-4 text-green-600 dark:text-green-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2h4a1 1 0 010 2h-1v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6H3a1 1 0 010-2h4zM6 6v12h12V6H6zm3-2V3h6v1H9z"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium">Storage Used</p>
+                      <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                        {formatFileSize(
+                          stats.total_size ||
+                            photos.reduce(
+                              (sum, p) => sum + (p.file_size || 0),
+                              0,
+                            ),
+                        )}
+                      </p>
+                    </div>
                   </div>
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium">Storage Used</p>
-                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                    {formatFileSize(
-                      stats.total_size ||
-                        photos.reduce((sum, p) => sum + (p.file_size || 0), 0),
-                    )}
-                  </p>
-                </div>
-              </div>
-            </div>
 
-            <div className="bg-card rounded-lg border p-4">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="h-8 w-8 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">
-                    <svg
-                      className="h-4 w-4 text-purple-600 dark:text-purple-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                      />
-                    </svg>
+                <div className="bg-card rounded-lg border p-4">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <div className="h-8 w-8 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">
+                        <svg
+                          className="h-4 w-4 text-purple-600 dark:text-purple-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium">Selected</p>
+                      <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                        {selectedPhotos.size}
+                      </p>
+                    </div>
                   </div>
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium">Selected</p>
-                  <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                    {selectedPhotos.size}
-                  </p>
-                </div>
-              </div>
-            </div>
+              </motion.div>
+            )}
           </div>
         )}
       </div>
@@ -535,6 +576,12 @@ const AdminPhotos: React.FC = () => {
               />
             </div>
           )
+        ) : editingPhoto ? (
+          <PhotoForm
+            photo={editingPhoto}
+            onCancel={() => setEditingPhoto(null)}
+            onSuccess={() => setEditingPhoto(null)}
+          />
         ) : (
           <SortablePhotoList
             photos={photos}
@@ -562,15 +609,6 @@ const AdminPhotos: React.FC = () => {
           />
         )}
       </div>
-      {/* Drawer for list view edits */}
-      <AnimatePresence>
-        {viewMode === "list" && editingPhoto && (
-          <PhotoEditorDrawer
-            photo={editingPhoto}
-            onClose={() => setEditingPhoto(null)}
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 };
