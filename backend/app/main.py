@@ -28,6 +28,7 @@ from app.config import settings
 from app.core.progress import progress_manager
 from app.core.rate_limiter import RateLimitMiddleware
 from app.core.redis import close_redis, init_redis
+from app.core.security import decode_token
 
 
 class NoCacheMiddleware(BaseHTTPMiddleware):
@@ -116,6 +117,24 @@ async def health_check():
 @app.websocket("/ws/uploads/{upload_id}")
 async def uploads_progress_ws(websocket: WebSocket, upload_id: str):
     """WebSocket channel for real-time upload/compression progress."""
+    # Accept connection first
+    await websocket.accept()
+
+    # Validate token from query parameter
+    token = websocket.query_params.get("token")
+    if not token:
+        await websocket.send_json({"error": "Authentication required"})
+        await websocket.close(code=1008)  # Policy violation
+        return
+
+    # Verify token
+    payload = decode_token(token)
+    if not payload:
+        await websocket.send_json({"error": "Invalid or expired token"})
+        await websocket.close(code=1008)
+        return
+
+    # Connect to progress manager
     await progress_manager.connect(upload_id, websocket)
     try:
         while True:
