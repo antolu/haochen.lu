@@ -631,7 +631,31 @@ async def serve_photo_original(
     )
 
 
-@router.get("/{photo_id}/file/{variant}")
+@router.get(
+    "/{photo_id}/file/{variant}",
+    description="""
+    Serve photo variant with content negotiation support.
+
+    **Content Negotiation via Accept Header:**
+    - `Accept: image/webp` - Prefer WebP format
+    - `Accept: image/avif` - Prefer AVIF format
+    - `Accept: image/jpeg` - Prefer JPEG format
+    - `Accept: image/*` - Accept any image format
+
+    Falls back to best available format if requested format unavailable.
+    Returns `X-Fallback-To-Original` header if serving original instead of variant.
+
+    **Variants:**
+    - thumbnail (400px)
+    - small (800px)
+    - medium (1200px)
+    - large (1600px)
+    - xlarge (2400px)
+
+    **Query Parameters:**
+    - format: Explicit format override (webp, avif, jpeg)
+    """,
+)
 async def serve_photo_variant(
     photo_id: UUID,
     variant: str,
