@@ -181,7 +181,7 @@ async def get_nearby_locations(
 @router.get("/cache/stats")
 async def get_cache_stats(
     current_user=_current_admin_user_dependency,
-) -> dict[str, int]:
+) -> dict[str, int | bool]:
     """Get location cache statistics (admin only)."""
     return await location_service.get_cache_stats()
 

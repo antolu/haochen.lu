@@ -447,31 +447,25 @@ class LocationService:
         else:
             return deleted
 
-    async def get_cache_stats(self) -> dict[str, int]:
-        """Get location cache statistics."""
+    async def get_cache_stats(self) -> dict[str, int | bool]:
+        """Get location cache statistics with consistent schema."""
+        stats: dict[str, int | bool] = {
+            "total_keys": 0,
+            "cache_enabled": False,
+            "geocoding_ttl": self.geocoding_cache_ttl,
+            "search_ttl": self.search_cache_ttl,
+        }
+
         try:
-            if not await redis_client.is_connected():
-                return {
-                    "total_keys": 0,
-                    "reverse_keys": 0,
-                    "forward_keys": 0,
-                    "search_keys": 0,
-                }
-
-            all_keys = await redis_client.keys("location:*")
-
-            # Count different operation types (approximation based on hash)
-            total = len(all_keys)
+            if await redis_client.is_connected():
+                stats["cache_enabled"] = True
+                all_keys = await redis_client.keys("location:*")
+                stats["total_keys"] = len(all_keys)
         except Exception:
             logger.exception("Error getting cache stats")
-            return {"total_keys": 0, "cache_enabled": False}
-        else:
-            return {
-                "total_keys": total,
-                "cache_enabled": True,
-                "geocoding_ttl": self.geocoding_cache_ttl,
-                "search_ttl": self.search_cache_ttl,
-            }
+            # Return default stats on error (cache disabled)
+
+        return stats
 
 
 # Global instance
