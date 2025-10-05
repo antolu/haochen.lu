@@ -64,6 +64,10 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
   const srcSet = optimalImage.srcset;
   const sizes = optimalImage.sizes;
 
+  // Calculate aspect ratio for skeleton to prevent content shift
+  const aspectRatio =
+    photo.width && photo.height ? (photo.height / photo.width) * 100 : 100; // Default to square
+
   return (
     <div
       ref={ref}
@@ -78,6 +82,8 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
       style={{
         zIndex: isHighlighted ? 50 : 1,
         animationDelay: `${index * 20}ms`,
+        paddingBottom: `${aspectRatio}%`,
+        position: "relative",
       }}
       onMouseEnter={(e) => {
         // Ensure hovered element is always on top
@@ -108,7 +114,7 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
             sizes={sizes}
             alt={photo.title || "Photo"}
             className={`
-              w-full h-full object-cover transition-opacity duration-300
+              absolute inset-0 w-full h-full object-cover transition-opacity duration-300
               ${isLoaded ? "opacity-100" : "opacity-0"}
             `}
             onLoad={handleImageLoad}
