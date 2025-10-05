@@ -291,8 +291,13 @@ async def reorder_projects(
 
 # Project images endpoints
 @router.get("/{project_id}/images", response_model=list[ProjectImageResponse])
-async def get_project_images(project_id: UUID, db: AsyncSession = _session_dependency):
-    images = await list_project_images(db, project_id)
+async def get_project_images(
+    project_id: UUID,
+    skip: int = Query(0, ge=0, description="Number of images to skip"),
+    limit: int = Query(10, ge=1, le=50, description="Maximum images to return"),
+    db: AsyncSession = _session_dependency,
+):
+    images = await list_project_images(db, project_id, skip=skip, limit=limit)
     payload: list[ProjectImageResponse] = []
     for img in images:
         base = ProjectImageResponse.model_validate(img).model_dump()

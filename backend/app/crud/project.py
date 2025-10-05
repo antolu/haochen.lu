@@ -216,11 +216,15 @@ async def update_project_readme(
 
 
 # Project images helpers
-async def list_project_images(db: AsyncSession, project_id: UUID) -> list[ProjectImage]:
+async def list_project_images(
+    db: AsyncSession, project_id: UUID, skip: int = 0, limit: int = 10
+) -> list[ProjectImage]:
     result = await db.execute(
         select(ProjectImage)
         .where(ProjectImage.project_id == project_id)
         .order_by(asc(ProjectImage.order), asc(ProjectImage.created_at))
+        .offset(skip)
+        .limit(limit)
     )
     return list(result.scalars().all())
 
