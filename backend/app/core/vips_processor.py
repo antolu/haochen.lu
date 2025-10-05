@@ -46,6 +46,10 @@ class VipsImageProcessor:
         if self.progress_callback:
             self.progress_callback(stage, progress)
         if self.upload_id:
+            # Cancel previous task if still running to avoid buildup
+            if self._progress_task and not self._progress_task.done():
+                self._progress_task.cancel()
+
             try:
                 loop = asyncio.get_running_loop()
                 # We are in an active event loop (main thread). Schedule task.
