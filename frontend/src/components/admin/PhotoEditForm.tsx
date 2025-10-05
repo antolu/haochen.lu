@@ -236,16 +236,16 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
               type="checkbox"
               checked={Boolean(field.value)}
               onChange={(e) => updateCustomField(index, e.target.checked)}
-              className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+              className="rounded border-input shadow-sm focus:ring-2 focus:ring-primary"
             />
-            <span className="ml-2 text-sm text-gray-700">{field.label}</span>
+            <span className="ml-2 text-sm">{field.label}</span>
           </label>
         );
 
       case "number":
         return (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium mb-1">
               {field.label}
             </label>
             <input
@@ -254,7 +254,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
               onChange={(e) =>
                 updateCustomField(index, parseFloat(e.target.value) || 0)
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg focus:ring-2 focus:ring-primary"
             />
           </div>
         );
@@ -262,14 +262,14 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
       case "textarea":
         return (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium mb-1">
               {field.label}
             </label>
             <textarea
               value={toSafeString(field.value)}
               onChange={(e) => updateCustomField(index, e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg focus:ring-2 focus:ring-primary"
             />
           </div>
         );
@@ -277,14 +277,14 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
       case "date":
         return (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium mb-1">
               {field.label}
             </label>
             <input
               type="date"
               value={toSafeString(field.value)}
               onChange={(e) => updateCustomField(index, e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg focus:ring-2 focus:ring-primary"
             />
           </div>
         );
@@ -292,14 +292,14 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
       default: // text
         return (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium mb-1">
               {field.label}
             </label>
             <input
               type="text"
               value={toSafeString(field.value)}
               onChange={(e) => updateCustomField(index, e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg focus:ring-2 focus:ring-primary"
             />
           </div>
         );
@@ -314,16 +314,16 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
   ] as const;
 
   return (
-    <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
+    <div className="max-w-4xl mx-auto bg-card rounded-lg shadow-lg overflow-hidden border">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200">
+      <div className="px-6 py-4 border-b">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-gray-900">Edit Photo</h2>
+          <h2 className="text-xl font-semibold">Edit Photo</h2>
           <div className="flex items-center space-x-3">
             <button
               type="button"
               onClick={onCancel}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-2 text-sm font-medium border rounded-lg hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary"
             >
               Cancel
             </button>
@@ -331,7 +331,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
               type="submit"
               form="photo-edit-form"
               disabled={isLoading}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+              className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
             >
               {isLoading ? "Saving..." : "Save Changes"}
             </button>
@@ -340,9 +340,9 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
       </div>
 
       {/* Photo Preview */}
-      <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+      <div className="px-6 py-4 border-b bg-muted/50">
         <div className="flex items-center space-x-4">
-          <div className="w-20 h-20 rounded-lg overflow-hidden bg-gray-200">
+          <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted">
             {(() => {
               const optimalImage = selectOptimalImage(
                 photo,
@@ -358,14 +358,12 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
             })()}
           </div>
           <div>
-            <h3 className="font-medium text-gray-900">
-              {photo.title || "Untitled"}
-            </h3>
-            <p className="text-sm text-gray-500">
+            <h3 className="font-medium">{photo.title || "Untitled"}</h3>
+            <p className="text-sm text-muted-foreground">
               {photo.width} × {photo.height} •{" "}
               {(photo.file_size / 1024 / 1024).toFixed(1)} MB
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               Uploaded {formatDateSimple(photo.created_at)}
             </p>
           </div>
@@ -373,7 +371,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
+      <div className="border-b">
         <nav className="flex space-x-8 px-6">
           {tabs.map((tab) => (
             <button
@@ -381,8 +379,8 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
               onClick={() => setActiveTab(tab.key)}
               className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                 activeTab === tab.key
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
               }`}
             >
               <span className="mr-2">{tab.icon}</span>
@@ -412,66 +410,64 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium mb-1">
                     Title *
                   </label>
                   <input
                     type="text"
                     {...register("title", { required: "Title is required" })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg focus:ring-2 focus:ring-primary"
                   />
                   {errors.title && (
-                    <p className="mt-1 text-sm text-red-600">
+                    <p className="mt-1 text-sm text-destructive">
                       {errors.title.message}
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium mb-1">
                     Category
                   </label>
                   <input
                     type="text"
                     {...register("category")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg focus:ring-2 focus:ring-primary"
                     placeholder="e.g., Nature, Portrait, Architecture"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium mb-1">
                   Description
                 </label>
                 <textarea
                   {...register("description")}
                   rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg focus:ring-2 focus:ring-primary"
                   placeholder="Describe this photo..."
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tags
-                </label>
+                <label className="block text-sm font-medium mb-1">Tags</label>
                 <input
                   type="text"
                   {...register("tags")}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg focus:ring-2 focus:ring-primary"
                   placeholder="landscape, sunset, mountain (comma-separated)"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium mb-1">
                   Comments
                 </label>
                 <textarea
                   {...register("comments")}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg focus:ring-2 focus:ring-primary"
                   placeholder="Internal comments or notes..."
                 />
               </div>
@@ -480,11 +476,9 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
                 <input
                   type="checkbox"
                   {...register("featured")}
-                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                  className="rounded border-input shadow-sm focus:ring-2 focus:ring-primary"
                 />
-                <label className="ml-2 text-sm text-gray-700">
-                  Featured Photo
-                </label>
+                <label className="ml-2 text-sm">Featured Photo</label>
               </div>
             </div>
           )}
@@ -501,26 +495,26 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium mb-1">
                     Full Address
                   </label>
                   <textarea
                     {...register("location_address")}
                     rows={2}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg focus:ring-2 focus:ring-primary"
                     placeholder="Complete geocoded address"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium mb-1">
                     Altitude (meters)
                   </label>
                   <input
                     type="number"
                     step="0.1"
                     {...register("altitude")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg focus:ring-2 focus:ring-primary"
                   />
                 </div>
               </div>
@@ -532,103 +526,99 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium mb-1">
                     Camera Make
                   </label>
                   <input
                     type="text"
                     {...register("camera_make")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg focus:ring-2 focus:ring-primary"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium mb-1">
                     Camera Model
                   </label>
                   <input
                     type="text"
                     {...register("camera_model")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg focus:ring-2 focus:ring-primary"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Lens
-                  </label>
+                  <label className="block text-sm font-medium mb-1">Lens</label>
                   <input
                     type="text"
                     {...register("lens")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg focus:ring-2 focus:ring-primary"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    ISO
-                  </label>
+                  <label className="block text-sm font-medium mb-1">ISO</label>
                   <input
                     type="number"
                     {...register("iso")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg focus:ring-2 focus:ring-primary"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium mb-1">
                     Aperture (f-stop)
                   </label>
                   <input
                     type="number"
                     step="0.1"
                     {...register("aperture")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg focus:ring-2 focus:ring-primary"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium mb-1">
                     Shutter Speed
                   </label>
                   <input
                     type="text"
                     {...register("shutter_speed")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg focus:ring-2 focus:ring-primary"
                     placeholder="1/60, 2s, etc."
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium mb-1">
                     Focal Length (mm)
                   </label>
                   <input
                     type="number"
                     {...register("focal_length")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg focus:ring-2 focus:ring-primary"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium mb-1">
                     Date Taken
                   </label>
                   <input
                     type="datetime-local"
                     {...register("date_taken")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg focus:ring-2 focus:ring-primary"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium mb-1">
                     Timezone
                   </label>
                   <input
                     type="text"
                     {...register("timezone")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg focus:ring-2 focus:ring-primary"
                     placeholder="+02:00, PST, etc."
                   />
                 </div>
@@ -642,23 +632,19 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
               {/* Existing Custom Fields */}
               {customFields.length > 0 && (
                 <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">
-                    Custom Fields
-                  </h3>
+                  <h3 className="text-lg font-medium mb-4">Custom Fields</h3>
                   <div className="space-y-4">
                     {customFields.map((field, index) => (
                       <div
                         key={field.key}
-                        className="border border-gray-200 rounded-lg p-4"
+                        className="border rounded-lg p-4 bg-card"
                       >
                         <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-medium text-gray-900">
-                            {field.label}
-                          </h4>
+                          <h4 className="font-medium">{field.label}</h4>
                           <button
                             type="button"
                             onClick={() => removeCustomField(index)}
-                            className="text-red-600 hover:text-red-800"
+                            className="text-destructive hover:text-destructive/80"
                           >
                             <svg
                               className="h-5 w-5"
@@ -683,13 +669,11 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
               )}
 
               {/* Add New Custom Field */}
-              <div className="border-t border-gray-200 pt-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Add Custom Field
-                </h3>
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-medium mb-4">Add Custom Field</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium mb-1">
                       Field Key
                     </label>
                     <input
@@ -701,12 +685,12 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
                         )
                       }
                       placeholder="field_name"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg focus:ring-2 focus:ring-primary"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium mb-1">
                       Field Label
                     </label>
                     <input
@@ -714,18 +698,18 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
                       value={newFieldLabel}
                       onChange={(e) => setNewFieldLabel(e.target.value)}
                       placeholder="Display Name"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg focus:ring-2 focus:ring-primary"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium mb-1">
                       Field Type
                     </label>
                     <select
                       value={newFieldType}
                       onChange={(e) => setNewFieldType(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-input bg-background text-foreground rounded-lg focus:ring-2 focus:ring-primary"
                     >
                       {FIELD_TYPES.map((type) => (
                         <option key={type.value} value={type.value}>
@@ -739,7 +723,7 @@ const PhotoEditForm: React.FC<PhotoEditFormProps> = ({
                 <button
                   type="button"
                   onClick={addCustomField}
-                  className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <svg
                     className="h-4 w-4 mr-2"
