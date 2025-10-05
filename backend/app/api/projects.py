@@ -8,6 +8,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.core.file_access import file_access_controller
 from app.core.file_validation import file_validator
 from app.core.image_processor import image_processor
@@ -48,7 +49,6 @@ from app.schemas.project import (
 from app.types.access_control import FileType
 
 router = APIRouter()
-MAX_PROJECT_IMAGES = 10
 
 
 def _populate_project_image_urls(project_image_id: str, photo_like: dict) -> dict:
@@ -314,16 +314,16 @@ async def add_project_image(
     db: AsyncSession = _session_dependency,
     current_user=_current_admin_user_dependency,
 ):
-    # Enforce hard limit of 10 images per project
+    # Enforce hard limit of images per project
     count_res = await db.execute(
         select(func.count())
         .select_from(ProjectImage)
         .where(ProjectImage.project_id == project_id)
     )
-    if (count_res.scalar() or 0) >= MAX_PROJECT_IMAGES:
+    if (count_res.scalar() or 0) >= settings.max_project_images:
         raise HTTPException(
             status_code=400,
-            detail=f"Maximum images per project is {MAX_PROJECT_IMAGES}",
+            detail=f"Maximum images per project is {settings.max_project_images}",
         )
 
     # Deprecated path: attaching existing photos is no longer supported.
@@ -351,10 +351,10 @@ async def upload_project_image(
         .select_from(ProjectImage)
         .where(ProjectImage.project_id == project_id)
     )
-    if (count_res.scalar() or 0) >= MAX_PROJECT_IMAGES:
+    if (count_res.scalar() or 0) >= settings.max_project_images:
         raise HTTPException(
             status_code=400,
-            detail=f"Maximum images per project is {MAX_PROJECT_IMAGES}",
+            detail=f"Maximum images per project is {settings.max_project_images}",
         )
 
     # Process image via shared processor

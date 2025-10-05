@@ -433,9 +433,10 @@ async def upload_photo(
     await file_validator.validate_image_file(file)
 
     # Validate file size
-    if file.size and file.size > 50 * 1024 * 1024:  # 50MB
+    if file.size and file.size > settings.max_file_size:
+        max_mb = settings.max_file_size / (1024 * 1024)
         raise HTTPException(
-            status_code=400, detail="File too large. Maximum size is 50MB"
+            status_code=400, detail=f"File too large. Maximum size is {max_mb:.0f}MB"
         )
 
     try:

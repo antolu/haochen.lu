@@ -56,6 +56,7 @@ class Settings(BaseSettings):
     max_file_size: int = int(
         os.getenv("MAX_FILE_SIZE", str(50 * 1024 * 1024))
     )  # 50MB default
+    max_project_images: int = int(os.getenv("MAX_PROJECT_IMAGES", "10"))
 
     # Image processing
     webp_quality: int = int(os.getenv("WEBP_QUALITY", "85"))
