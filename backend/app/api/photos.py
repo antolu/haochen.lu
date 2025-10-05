@@ -416,11 +416,11 @@ async def get_photo_detail(
 @router.post("", response_model=PhotoResponse)
 async def upload_photo(
     file: UploadFile = _image_file_dependency,
-    title: Annotated[str, Form()] = "",
-    description: Annotated[str, Form()] = "",
-    category: Annotated[str, Form()] = "",
-    tags: Annotated[str, Form()] = "",
-    comments: Annotated[str, Form()] = "",
+    title: Annotated[str, Form(max_length=200)] = "",
+    description: Annotated[str, Form(max_length=2000)] = "",
+    category: Annotated[str, Form(max_length=100)] = "",
+    tags: Annotated[str, Form(max_length=500)] = "",
+    comments: Annotated[str, Form(max_length=2000)] = "",
     *,
     featured: Annotated[bool, Form()] = False,
     db: AsyncSession = _session_dependency,
