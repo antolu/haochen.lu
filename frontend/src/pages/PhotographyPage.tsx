@@ -79,12 +79,13 @@ const PhotographyPage: React.FC = () => {
         // Highlight the photo in the grid
         setHighlightedPhotoId(photo.id);
 
-        // Scroll to the photo in the grid
+        // Scroll to the photo in the grid using refs instead of testids
         if (photoGridRef.current) {
-          // Find the photo element and scroll to it
-          const photoElement = photoGridRef.current.querySelector(
-            `[data-testid="photo-card-${index + 1}"]`,
-          );
+          // Find all photo card elements - they use the photo-card class
+          const photoCards =
+            photoGridRef.current.querySelectorAll(".photo-card");
+          const photoElement = photoCards[index];
+
           if (photoElement) {
             photoElement.scrollIntoView({
               behavior: "smooth",
