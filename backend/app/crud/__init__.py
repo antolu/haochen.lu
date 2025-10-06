@@ -94,8 +94,13 @@ from app.crud.subapp import (
 
 # User CRUD
 from app.crud.user import (
-    create_admin_user,
-    get_user_by_username,
+    get_user_by_email as get_user_by_email,
+)
+from app.crud.user import (
+    get_user_by_id as get_user_by_id,
+)
+from app.crud.user import (
+    get_user_by_username as get_user_by_username,
 )
 
 # Legacy aliases for backward compatibility
@@ -108,9 +113,6 @@ update_post = update_blog_post
 
 get_content = get_content_by_id
 get_contents = get_content_list
-
-create_user = create_admin_user
-get_user_by_email = get_user_by_username
 
 # Note: increment_view_count is imported with aliases due to name conflicts
 # between blog and photo modules. Use increment_blog_view_count or

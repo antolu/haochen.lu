@@ -9,10 +9,10 @@ import uuid
 from typing import Any
 
 import factory
+from bcrypt import gensalt, hashpw
 from factory import Faker, LazyAttribute, LazyFunction
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import get_password_hash
 from app.models import BlogPost, Photo, Project, SubApp, User
 
 
@@ -52,9 +52,13 @@ class UserFactory(AsyncSQLAlchemyModelFactory):
     id = factory.LazyFunction(uuid.uuid4)
     username = Faker("user_name")
     email = Faker("email")
-    hashed_password = LazyAttribute(lambda obj: get_password_hash("testpassword123"))
+    hashed_password = LazyAttribute(
+        lambda obj: hashpw(b"TestPassword123!", gensalt()).decode("utf-8")
+    )
     is_active = True
+    is_verified = True  # Required by fastapi-users
     is_admin = False
+    is_superuser = False  # Alias for is_admin in fastapi-users
     created_at = Faker("date_time_this_year")
     updated_at = LazyAttribute(lambda obj: obj.created_at)
 
@@ -248,7 +252,10 @@ class AdminUserFactory(UserFactory):
     """Factory for admin users."""
 
     username = "admin"
+    email = "admin@example.com"
     is_admin = True
+    is_superuser = True
+    is_verified = True
 
 
 class FeaturedPhotoFactory(PhotoFactory):
