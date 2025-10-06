@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.api import (
+    auth,
     blog,
     camera_aliases,
     content,
@@ -75,6 +76,9 @@ app.add_middleware(
 
 # Routes without /api prefix (nginx handles the prefix)
 api_router = APIRouter()
+
+# Custom auth routes (must come before fastapi-users routes)
+api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 
 # FastAPI Users auth routes
 api_router.include_router(

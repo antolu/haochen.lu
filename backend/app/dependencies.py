@@ -5,6 +5,7 @@ from fastapi import Depends, File, Form, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
+from app.core.email_utils import is_email
 from app.crud.user import get_user_by_username
 from app.database import get_session
 from app.models.user import User
@@ -42,7 +43,7 @@ async def get_current_user_optional(
             return None
 
         # Try to get user by email (fastapi-users default) or username
-        if "@" in user_id_or_email:
+        if is_email(user_id_or_email):
             return await get_user_by_username(db, username=user_id_or_email)
         return await get_user_by_username(db, username=user_id_or_email)
     except Exception:

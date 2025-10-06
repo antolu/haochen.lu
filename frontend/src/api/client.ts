@@ -92,7 +92,7 @@ apiClient.interceptors.response.use(
     };
 
     // Don't intercept 401s from login requests - let them pass through normally
-    const isLoginRequest = originalRequest.url?.includes("/auth/jwt/login");
+    const isLoginRequest = originalRequest.url?.includes("/auth/login");
 
     if (
       error.response?.status === 401 &&
@@ -183,18 +183,12 @@ export const auth = {
   login: async (
     credentials: LoginRequest & { remember_me?: boolean },
   ): Promise<TokenResponse> => {
-    // fastapi-users expects form data with username/password fields
-    // If username doesn't contain @, assume it's the username and append @example.com
-    const username = credentials.username.includes("@")
-      ? credentials.username
-      : `${credentials.username}@example.com`;
-
     const formData = new URLSearchParams();
-    formData.append("username", username);
+    formData.append("username", credentials.username);
     formData.append("password", credentials.password);
 
     const response = await apiClient.post<TokenResponse>(
-      "/auth/jwt/login",
+      "/auth/login",
       formData,
       {
         headers: {
