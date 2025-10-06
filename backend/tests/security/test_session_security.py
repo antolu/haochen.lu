@@ -9,10 +9,10 @@ from __future__ import annotations
 import time
 from unittest.mock import patch
 
+import jwt
 import pytest
 from fastapi import status
 from httpx import AsyncClient
-from jose import jwt
 
 from app.config import settings
 from app.models import User

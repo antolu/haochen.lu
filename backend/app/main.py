@@ -3,9 +3,9 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from datetime import datetime
 
+import jwt
 from fastapi import APIRouter, FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from jose import jwt
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.api import (

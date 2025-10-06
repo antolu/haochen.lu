@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+import jwt
 from fastapi import Depends, File, Form, Request
-from jose import jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings

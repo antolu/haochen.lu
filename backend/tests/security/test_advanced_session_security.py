@@ -11,9 +11,9 @@ import time
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
+import jwt
 import pytest
 from httpx import AsyncClient
-from jose import jwt
 
 from app.config import settings
 

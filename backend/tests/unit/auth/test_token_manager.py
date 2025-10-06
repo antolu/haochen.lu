@@ -8,11 +8,11 @@ from __future__ import annotations
 
 from unittest.mock import Mock, patch
 
+import jwt
 import pytest
 from app.core.security import TokenManager
 from fastapi import HTTPException, Response
 from freezegun import freeze_time
-from jose import jwt
 
 
 @pytest.fixture

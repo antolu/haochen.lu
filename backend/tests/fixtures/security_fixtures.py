@@ -12,10 +12,10 @@ from datetime import datetime, timedelta
 from typing import Any
 from unittest.mock import Mock
 
+import jwt
 import pytest
 from fastapi import Response
 from httpx import AsyncClient
-from jose import jwt
 
 # from app.core.security import TokenManager as SecurityTokenManager
 from app.models import User

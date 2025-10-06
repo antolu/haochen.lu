@@ -12,16 +12,16 @@ import time
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
+import jwt
 import pytest
-from jose import jwt
-
-from app.config import settings
 from app.core.security import (
     create_access_token,
     decode_token,
     get_password_hash,
     verify_password,
 )
+
+from app.config import settings
 
 
 class TestPasswordHashing:
