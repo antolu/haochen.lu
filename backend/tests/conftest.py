@@ -4,12 +4,13 @@ Test configuration and fixtures for the portfolio backend.
 
 from __future__ import annotations
 
-import asyncio
+import calendar
 import io
 import os
 import socket
 import tempfile
 from collections.abc import AsyncGenerator, Generator
+from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 from urllib.parse import urlparse
@@ -30,6 +31,7 @@ import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
 from httpx import ASGITransport, AsyncClient
+from jose import jwt
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
@@ -38,7 +40,6 @@ import app.core.image_processor as ip_mod
 from app import config as app_config
 from app.config import Settings
 from app.core.redis import redis_client
-from app.core.security import create_access_token, decode_token
 from app.database import Base, get_session
 from app.main import app
 from app.models import BlogPost, Photo, Project, User
@@ -89,6 +90,12 @@ async def test_session(test_engine) -> AsyncGenerator[AsyncSession, None]:
 
     async with async_session_maker() as session:
         yield session
+
+
+@pytest_asyncio.fixture
+async def db_session(test_session: AsyncSession) -> AsyncSession:  # noqa: RUF029
+    """Alias for test_session for backward compatibility."""
+    return test_session
 
 
 @pytest.fixture
@@ -173,16 +180,39 @@ async def regular_user(test_session: AsyncSession) -> User:
     )
 
 
+def create_access_token_for_user(user: User, settings: Settings) -> str:
+    """Create JWT access token for a user - replacement for old security function."""
+    to_encode = {"sub": user.email}  # fastapi-users uses email
+    now = datetime.utcnow()
+    expire = now + timedelta(minutes=settings.access_token_expire_minutes)
+
+    to_encode.update({
+        "exp": calendar.timegm(expire.utctimetuple()),
+        "iat": calendar.timegm(now.utctimetuple()),
+        "type": "access",
+    })
+    return jwt.encode(to_encode, settings.secret_key, algorithm="HS256")
+
+
 @pytest.fixture
-def admin_token(admin_user: User) -> str:
+def admin_token(admin_user: User, test_settings: Settings) -> str:
     """Generate a JWT token for admin user."""
-    return create_access_token({"sub": admin_user.username})
+    return create_access_token_for_user(admin_user, test_settings)
 
 
 @pytest.fixture
 def admin_headers(admin_token: str) -> dict[str, str]:
     """Create headers with admin authorization."""
     return {"Authorization": f"Bearer {admin_token}"}
+
+
+@pytest_asyncio.fixture
+async def authenticated_client(  # noqa: RUF029
+    async_client: AsyncClient, admin_headers: dict[str, str]
+) -> AsyncClient:
+    """Create an authenticated async client with admin headers pre-configured."""
+    async_client.headers.update(admin_headers)
+    return async_client
 
 
 # File system fixtures
@@ -370,15 +400,6 @@ def large_dataset_photos(test_session: AsyncSession):
     return _create_photos
 
 
-# Event loop fixture for async tests
-@pytest.fixture(scope="session")
-def event_loop():
-    """Create an instance of the default event loop for the test session."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
-
-
 # Cleanup fixtures
 @pytest.fixture(autouse=True)
 def cleanup_files(temp_upload_dir, temp_compressed_dir):
@@ -404,10 +425,15 @@ class CustomAssertions:
     @staticmethod
     def assert_valid_jwt_token(token: str) -> None:
         """Assert that a JWT token is valid."""
-        payload = decode_token(token)
-        assert payload is not None
-        assert "sub" in payload
-        assert "exp" in payload
+        try:
+            from app.config import settings  # noqa: PLC0415
+
+            payload = jwt.decode(token, settings.secret_key, algorithms=["HS256"])
+            assert payload is not None
+            assert "sub" in payload
+            assert "exp" in payload
+        except Exception:
+            pytest.fail("Invalid JWT token")
 
     @staticmethod
     def assert_image_processed_correctly(metadata: dict) -> None:

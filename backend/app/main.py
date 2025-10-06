@@ -5,10 +5,10 @@ from datetime import datetime
 
 from fastapi import APIRouter, FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from jose import jwt
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.api import (
-    auth,
     blog,
     camera_aliases,
     content,
@@ -28,7 +28,8 @@ from app.config import settings
 from app.core.progress import progress_manager
 from app.core.rate_limiter import RateLimitMiddleware
 from app.core.redis import close_redis, init_redis
-from app.core.security import decode_token
+from app.schemas.user import UserCreate, UserRead, UserUpdate
+from app.users import auth_backend, fastapi_users
 
 
 class NoCacheMiddleware(BaseHTTPMiddleware):
@@ -74,7 +75,34 @@ app.add_middleware(
 
 # Routes without /api prefix (nginx handles the prefix)
 api_router = APIRouter()
-api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
+
+# FastAPI Users auth routes
+api_router.include_router(
+    fastapi_users.get_auth_router(auth_backend),
+    prefix="/auth/jwt",
+    tags=["auth"],
+)
+api_router.include_router(
+    fastapi_users.get_register_router(UserRead, UserCreate),
+    prefix="/auth",
+    tags=["auth"],
+)
+api_router.include_router(
+    fastapi_users.get_reset_password_router(),
+    prefix="/auth",
+    tags=["auth"],
+)
+api_router.include_router(
+    fastapi_users.get_verify_router(UserRead),
+    prefix="/auth",
+    tags=["auth"],
+)
+api_router.include_router(
+    fastapi_users.get_users_router(UserRead, UserUpdate),
+    prefix="/users",
+    tags=["users"],
+)
+
 api_router.include_router(photos.router, prefix="/photos", tags=["photos"])
 api_router.include_router(settings_api.router, prefix="/settings", tags=["settings"])
 api_router.include_router(
@@ -127,9 +155,10 @@ async def uploads_progress_ws(websocket: WebSocket, upload_id: str):
         await websocket.close(code=1008)  # Policy violation
         return
 
-    # Verify token
-    payload = decode_token(token)
-    if not payload:
+    # Verify token using fastapi-users JWT strategy
+    try:
+        jwt.decode(token, settings.secret_key, algorithms=["HS256"])
+    except Exception:
         await websocket.send_json({"error": "Invalid or expired token"})
         await websocket.close(code=1008)
         return

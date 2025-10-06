@@ -9,11 +9,10 @@ from __future__ import annotations
 from unittest.mock import Mock, patch
 
 import pytest
+from app.core.security import TokenManager
 from fastapi import HTTPException, Response
 from freezegun import freeze_time
 from jose import jwt
-
-from app.core.security import TokenManager
 
 
 @pytest.fixture
@@ -26,16 +25,17 @@ def mock_response():
 def mock_settings():
     """Mock settings for testing."""
     with patch("app.core.security.settings") as mock:
-        mock.ACCESS_TOKEN_EXPIRE_MINUTES = 15
-        mock.REFRESH_TOKEN_EXPIRE_DAYS = 30
-        mock.REFRESH_TOKEN_EXPIRE_MINUTES = 60
-        mock.SECRET_KEY = "test-secret-key"
-        mock.SESSION_SECRET_KEY = "test-session-secret"
-        mock.REFRESH_COOKIE_NAME = "refresh_token"
-        mock.COOKIE_SECURE = True
-        mock.COOKIE_HTTPONLY = True
-        mock.COOKIE_SAMESITE = "lax"
-        mock.COOKIE_DOMAIN = None
+        mock.access_token_expire_minutes = 15
+        mock.refresh_token_expire_days = 30
+        mock.refresh_token_expire_minutes = 60
+        mock.secret_key = "test-secret-key"
+        mock.session_secret_key = "test-session-secret"
+        mock.algorithm = "HS256"
+        mock.refresh_cookie_name = "refresh_token"
+        mock.cookie_secure = True
+        mock.cookie_httponly = True
+        mock.cookie_samesite = "lax"
+        mock.cookie_domain = None
         yield mock
 
 
@@ -52,7 +52,7 @@ class TestTokenCreation:
         assert isinstance(token, str)
 
         # Decode and verify
-        payload = jwt.decode(token, mock_settings.SECRET_KEY, algorithms=["HS256"])
+        payload = jwt.decode(token, mock_settings.secret_key, algorithms=["HS256"])
         assert payload["sub"] == "testuser"
         assert payload["user_id"] == "123"
         assert payload["type"] == "access"
@@ -65,7 +65,7 @@ class TestTokenCreation:
         with freeze_time("2024-01-01 12:00:00") as frozen_time:
             token = TokenManager.create_access_token(data)
 
-            payload = jwt.decode(token, mock_settings.SECRET_KEY, algorithms=["HS256"])
+            payload = jwt.decode(token, mock_settings.secret_key, algorithms=["HS256"])
             expected_exp = frozen_time().timestamp() + (15 * 60)  # 15 minutes
 
             assert abs(payload["exp"] - expected_exp) < 1  # Allow 1 second tolerance
@@ -78,7 +78,7 @@ class TestTokenCreation:
 
         assert token is not None
         payload = jwt.decode(
-            token, mock_settings.SESSION_SECRET_KEY, algorithms=["HS256"]
+            token, mock_settings.session_secret_key, algorithms=["HS256"]
         )
 
         assert payload["sub"] == "testuser"
@@ -94,7 +94,7 @@ class TestTokenCreation:
         token = TokenManager.create_refresh_token(data, remember_me=False)
 
         payload = jwt.decode(
-            token, mock_settings.SESSION_SECRET_KEY, algorithms=["HS256"]
+            token, mock_settings.session_secret_key, algorithms=["HS256"]
         )
         assert payload["remember_me"] is False
 
@@ -106,7 +106,7 @@ class TestTokenCreation:
             token = TokenManager.create_refresh_token(data, remember_me=True)
 
             payload = jwt.decode(
-                token, mock_settings.SESSION_SECRET_KEY, algorithms=["HS256"]
+                token, mock_settings.session_secret_key, algorithms=["HS256"]
             )
             expected_exp = frozen_time().timestamp() + (30 * 24 * 60 * 60)  # 30 days
 
@@ -120,7 +120,7 @@ class TestTokenCreation:
             token = TokenManager.create_refresh_token(data, remember_me=False)
 
             payload = jwt.decode(
-                token, mock_settings.SESSION_SECRET_KEY, algorithms=["HS256"]
+                token, mock_settings.session_secret_key, algorithms=["HS256"]
             )
             expected_exp = frozen_time().timestamp() + (60 * 60)  # 60 minutes
 
@@ -134,10 +134,10 @@ class TestTokenCreation:
         token2 = TokenManager.create_refresh_token(data)
 
         payload1 = jwt.decode(
-            token1, mock_settings.SESSION_SECRET_KEY, algorithms=["HS256"]
+            token1, mock_settings.session_secret_key, algorithms=["HS256"]
         )
         payload2 = jwt.decode(
-            token2, mock_settings.SESSION_SECRET_KEY, algorithms=["HS256"]
+            token2, mock_settings.session_secret_key, algorithms=["HS256"]
         )
 
         assert payload1["jti"] != payload2["jti"]
@@ -217,14 +217,14 @@ class TestCookieManagement:
         call_args = mock_response.set_cookie.call_args
 
         # Check positional arguments
-        assert call_args[1]["key"] == mock_settings.REFRESH_COOKIE_NAME
+        assert call_args[1]["key"] == mock_settings.refresh_cookie_name
         assert call_args[1]["value"] == token
 
         # Check cookie security settings
-        assert call_args[1]["secure"] == mock_settings.COOKIE_SECURE
-        assert call_args[1]["httponly"] == mock_settings.COOKIE_HTTPONLY
-        assert call_args[1]["samesite"] == mock_settings.COOKIE_SAMESITE
-        assert call_args[1]["domain"] == mock_settings.COOKIE_DOMAIN
+        assert call_args[1]["secure"] == mock_settings.cookie_secure
+        assert call_args[1]["httponly"] == mock_settings.cookie_httponly
+        assert call_args[1]["samesite"] == mock_settings.cookie_samesite
+        assert call_args[1]["domain"] == mock_settings.cookie_domain
 
         # Check max_age for remember me (30 days in seconds)
         expected_max_age = 30 * 24 * 60 * 60
@@ -248,11 +248,11 @@ class TestCookieManagement:
         mock_response.delete_cookie.assert_called_once()
         call_args = mock_response.delete_cookie.call_args
 
-        assert call_args[1]["key"] == mock_settings.REFRESH_COOKIE_NAME
-        assert call_args[1]["secure"] == mock_settings.COOKIE_SECURE
-        assert call_args[1]["httponly"] == mock_settings.COOKIE_HTTPONLY
-        assert call_args[1]["samesite"] == mock_settings.COOKIE_SAMESITE
-        assert call_args[1]["domain"] == mock_settings.COOKIE_DOMAIN
+        assert call_args[1]["key"] == mock_settings.refresh_cookie_name
+        assert call_args[1]["secure"] == mock_settings.cookie_secure
+        assert call_args[1]["httponly"] == mock_settings.cookie_httponly
+        assert call_args[1]["samesite"] == mock_settings.cookie_samesite
+        assert call_args[1]["domain"] == mock_settings.cookie_domain
 
 
 class TestTokenSecurity:
@@ -273,14 +273,14 @@ class TestTokenSecurity:
 
         # Refresh token should decode with SESSION_SECRET_KEY
         refresh_payload = jwt.decode(
-            refresh_token, mock_settings.SESSION_SECRET_KEY, algorithms=["HS256"]
+            refresh_token, mock_settings.session_secret_key, algorithms=["HS256"]
         )
         assert refresh_payload["sub"] == "testuser"
 
         # They should not be interchangeable
         with pytest.raises((jwt.JWTError, ValueError)):
             jwt.decode(
-                access_token, mock_settings.SESSION_SECRET_KEY, algorithms=["HS256"]
+                access_token, mock_settings.session_secret_key, algorithms=["HS256"]
             )
 
         with pytest.raises((jwt.JWTError, ValueError)):
@@ -295,7 +295,7 @@ class TestTokenSecurity:
         for _ in range(10):
             token = TokenManager.create_refresh_token(data)
             payload = jwt.decode(
-                token, mock_settings.SESSION_SECRET_KEY, algorithms=["HS256"]
+                token, mock_settings.session_secret_key, algorithms=["HS256"]
             )
             jtis.append(payload["jti"])
 
@@ -319,7 +319,7 @@ class TestTokenSecurity:
             access_token, mock_settings.SECRET_KEY, algorithms=["HS256"]
         )
         refresh_payload = jwt.decode(
-            refresh_token, mock_settings.SESSION_SECRET_KEY, algorithms=["HS256"]
+            refresh_token, mock_settings.session_secret_key, algorithms=["HS256"]
         )
 
         assert access_payload["type"] == "access"
@@ -348,7 +348,7 @@ class TestTokenSecurity:
             )
             refresh_payload_long = jwt.decode(
                 refresh_token_long,
-                mock_settings.SESSION_SECRET_KEY,
+                mock_settings.session_secret_key,
                 algorithms=["HS256"],
             )
             refresh_expiry_long = refresh_payload_long["exp"] - current_time
@@ -363,7 +363,7 @@ class TestTokenSecurity:
             )
             refresh_payload_short = jwt.decode(
                 refresh_token_short,
-                mock_settings.SESSION_SECRET_KEY,
+                mock_settings.session_secret_key,
                 algorithms=["HS256"],
             )
             refresh_expiry_short = refresh_payload_short["exp"] - current_time
@@ -392,7 +392,7 @@ class TestEdgeCases:
             access_token, mock_settings.SECRET_KEY, algorithms=["HS256"]
         )
         refresh_payload = jwt.decode(
-            refresh_token, mock_settings.SESSION_SECRET_KEY, algorithms=["HS256"]
+            refresh_token, mock_settings.session_secret_key, algorithms=["HS256"]
         )
 
         assert access_payload["type"] == "access"
@@ -420,7 +420,7 @@ class TestEdgeCases:
             access_token, mock_settings.SECRET_KEY, algorithms=["HS256"]
         )
         refresh_payload = jwt.decode(
-            refresh_token, mock_settings.SESSION_SECRET_KEY, algorithms=["HS256"]
+            refresh_token, mock_settings.session_secret_key, algorithms=["HS256"]
         )
 
         assert access_payload["sub"] == "testuser"
@@ -442,7 +442,7 @@ class TestEdgeCases:
             access_token, mock_settings.SECRET_KEY, algorithms=["HS256"]
         )
         refresh_payload = jwt.decode(
-            refresh_token, mock_settings.SESSION_SECRET_KEY, algorithms=["HS256"]
+            refresh_token, mock_settings.session_secret_key, algorithms=["HS256"]
         )
 
         assert access_payload["sub"] == "test@user.com"
@@ -474,33 +474,35 @@ class TestEdgeCases:
     def test_cookie_settings_edge_cases(self, mock_response, mock_settings):
         """Test cookie settings with edge case configurations."""
         # Test with None domain
-        mock_settings.COOKIE_DOMAIN = None
+        mock_settings.cookie_domain = None
         TokenManager.set_refresh_cookie(mock_response, "token")
 
         call_args = mock_response.set_cookie.call_args
         assert call_args[1]["domain"] is None
 
         # Test with empty string domain
-        mock_settings.COOKIE_DOMAIN = ""
+        mock_settings.cookie_domain = ""
         TokenManager.set_refresh_cookie(mock_response, "token")
 
         call_args = mock_response.set_cookie.call_args
         assert not call_args[1]["domain"]
 
-    @patch("app.core.security.secrets.token_urlsafe")
-    def test_jti_generation_fallback(self, mock_token_urlsafe, mock_settings):
-        """Test JTI generation with mocked secrets module."""
-        mock_token_urlsafe.return_value = "mocked-jti-value"
+    @patch("app.core.security.uuid.uuid4")
+    def test_jti_generation_uses_uuid(self, mock_uuid4, mock_settings):
+        """Test JTI generation uses uuid.uuid4."""
+        from uuid import UUID  # noqa: PLC0415
+
+        mock_uuid4.return_value = UUID("12345678-1234-5678-1234-567812345678")
 
         data = {"sub": "testuser"}
         token = TokenManager.create_refresh_token(data)
 
         payload = jwt.decode(
-            token, mock_settings.SESSION_SECRET_KEY, algorithms=["HS256"]
+            token, mock_settings.session_secret_key, algorithms=["HS256"]
         )
-        assert payload["jti"] == "mocked-jti-value"
+        assert payload["jti"] == "12345678-1234-5678-1234-567812345678"
 
-        mock_token_urlsafe.assert_called_once_with(32)
+        mock_uuid4.assert_called_once()
 
 
 class TestIntegration:
