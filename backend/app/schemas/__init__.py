@@ -1,14 +1,4 @@
-# Auth schemas
-from app.schemas.auth import (
-    LoginRequest as LoginRequest,
-)
-from app.schemas.auth import (
-    TokenResponse as TokenResponse,
-)
-from app.schemas.auth import (
-    UserResponse,
-)
-
+# User schemas (fastapi-users)
 # Blog schemas
 from app.schemas.blog import (
     BlogPostCreate as BlogPostCreate,
@@ -108,9 +98,19 @@ from app.schemas.subapp import (
 from app.schemas.subapp import (
     SubAppUpdate as SubAppUpdate,
 )
+from app.schemas.user import (
+    UserCreate as UserCreate,
+)
+from app.schemas.user import (
+    UserRead as UserRead,
+)
+from app.schemas.user import (
+    UserUpdate as UserUpdate,
+)
 
 # Legacy aliases for backward compatibility
-User = UserResponse
+User = UserRead  # Changed from UserResponse
+UserResponse = UserRead  # Alias for backward compatibility
 Content = ContentResponse
 ContentKeyValue = ContentKeyValueResponse
 SubApp = SubAppResponse
