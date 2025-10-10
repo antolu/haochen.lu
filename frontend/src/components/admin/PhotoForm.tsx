@@ -138,40 +138,52 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
 
   return (
     <motion.div
-      className="max-w-5xl mx-auto"
+      className="max-w-6xl mx-auto"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2 }}
+      transition={{ duration: 0.3 }}
     >
       <form
         onSubmit={(e) => {
           void handleSubmit(e);
         }}
-        className="space-y-6"
+        className="space-y-8"
       >
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold">Edit Photo</h2>
-            <p className="text-sm text-muted-foreground mt-1">
+            <h2 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              Edit Photo
+            </h2>
+            <p className="text-base text-muted-foreground mt-2">
               Update photo information and tags
             </p>
           </div>
           <div className="flex gap-3">
             {onCancel && (
-              <Button type="button" variant="outline" onClick={onCancel}>
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                onClick={onCancel}
+              >
                 Cancel
               </Button>
             )}
-            <Button type="submit" disabled={isSaving}>
+            <Button
+              type="submit"
+              variant="gradient"
+              size="lg"
+              disabled={isSaving}
+            >
               {isSaving ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Preview Panel */}
           <div className="md:col-span-1">
-            <div className="bg-card p-3 rounded-lg border sticky top-6">
+            <div className="bg-card p-4 rounded-xl border-border/40 shadow-lg sticky top-6">
               <div className="aspect-square w-full overflow-hidden rounded-md bg-muted group cursor-zoom-in relative">
                 {/* Prefer a medium/large variant, fallback to original */}
                 {(() => {
@@ -221,11 +233,13 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
 
           {/* Form Fields */}
           <div className="md:col-span-2">
-            <div className="bg-card p-6 rounded-lg border space-y-6">
+            <div className="bg-card p-8 rounded-xl border-border/40 shadow-lg space-y-8">
               <div>
-                <label className="block text-sm font-medium">Title</label>
+                <label className="block text-sm font-semibold mb-2">
+                  Title
+                </label>
                 <input
-                  className="mt-1 w-full border border-input bg-background text-foreground rounded px-3 py-2"
+                  className="mt-1 w-full border-2 border-border/50 bg-background text-foreground rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                   value={form.title}
                   onChange={(e) =>
                     setForm((f) => ({ ...f, title: e.target.value }))
@@ -234,9 +248,11 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium">Description</label>
+                <label className="block text-sm font-semibold mb-2">
+                  Description
+                </label>
                 <textarea
-                  className="mt-1 w-full border border-input bg-background text-foreground rounded px-3 py-2"
+                  className="mt-1 w-full border-2 border-border/50 bg-background text-foreground rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-y"
                   rows={6}
                   value={form.description}
                   onChange={(e) =>

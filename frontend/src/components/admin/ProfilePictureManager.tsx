@@ -97,9 +97,11 @@ const ProfilePictureManager: React.FC = () => {
       {/* Header */}
       <div className="mb-8">
         <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-bold">Profile Pictures</h1>
-            <p className="mt-2 text-muted-foreground">
+          <div className="space-y-2">
+            <h1 className="text-4xl font-bold tracking-tight">
+              Profile Pictures
+            </h1>
+            <p className="text-muted-foreground text-lg">
               Manage your profile pictures. Only one can be active at a time.
             </p>
           </div>
@@ -114,7 +116,7 @@ const ProfilePictureManager: React.FC = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-card p-6 rounded-lg border">
+        <div className="bg-gradient-to-br from-primary/20 to-primary/30 p-6 rounded-xl hover:shadow-lg transition-all duration-200">
           <div className="flex items-center">
             <div className="p-2 bg-primary/10 rounded-lg">
               <svg
@@ -135,12 +137,14 @@ const ProfilePictureManager: React.FC = () => {
               <p className="text-sm font-medium text-muted-foreground">
                 Total Pictures
               </p>
-              <p className="text-2xl font-bold">{profilePictures.length}</p>
+              <p className="text-3xl font-bold tracking-tight mt-2">
+                {profilePictures.length}
+              </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-card p-6 rounded-lg border">
+        <div className="bg-gradient-to-br from-green-500/20 to-green-600/20 p-6 rounded-xl hover:shadow-lg transition-all duration-200">
           <div className="flex items-center">
             <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
               <svg
@@ -161,14 +165,14 @@ const ProfilePictureManager: React.FC = () => {
               <p className="text-sm font-medium text-muted-foreground">
                 Active Picture
               </p>
-              <p className="text-2xl font-bold">
+              <p className="text-3xl font-bold tracking-tight mt-2">
                 {activeProfilePicture ? "1" : "0"}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-card p-6 rounded-lg border">
+        <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/20 p-6 rounded-xl hover:shadow-lg transition-all duration-200">
           <div className="flex items-center">
             <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
               <svg
@@ -189,7 +193,7 @@ const ProfilePictureManager: React.FC = () => {
               <p className="text-sm font-medium text-muted-foreground">
                 Total Size
               </p>
-              <p className="text-2xl font-bold">
+              <p className="text-3xl font-bold tracking-tight mt-2">
                 {formatFileSize(
                   profilePictures.reduce(
                     (total, pic) => total + (pic.file_size ?? 0),
@@ -228,7 +232,7 @@ const ProfilePictureManager: React.FC = () => {
       </AnimatePresence>
 
       {/* Profile Pictures Grid */}
-      <div className="bg-card rounded-lg border">
+      <div className="bg-card rounded-xl shadow-sm">
         <div className="p-6">
           <h2 className="text-lg font-medium mb-4">All Profile Pictures</h2>
 
@@ -280,10 +284,8 @@ const ProfilePictureManager: React.FC = () => {
                 return (
                   <div
                     key={profilePicture.id}
-                    className={`relative bg-card rounded-lg border-2 overflow-hidden transition-colors ${
-                      isActive
-                        ? "border-green-500"
-                        : "border-border hover:border-muted-foreground"
+                    className={`relative bg-card rounded-xl overflow-hidden transition-all ${
+                      isActive ? "ring-2 ring-green-500" : "hover:shadow-md"
                     }`}
                   >
                     {/* Active Badge */}

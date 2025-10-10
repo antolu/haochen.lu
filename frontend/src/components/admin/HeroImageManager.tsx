@@ -133,9 +133,9 @@ const HeroImageManager: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Hero Images</h2>
-          <p className="text-gray-600">
+        <div className="space-y-2">
+          <h2 className="text-4xl font-bold tracking-tight">Hero Images</h2>
+          <p className="text-muted-foreground text-lg">
             Manage homepage hero images and focal points
           </p>
         </div>
@@ -148,7 +148,7 @@ const HeroImageManager: React.FC = () => {
       </div>
 
       {/* Active Hero Indicator */}
-      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+      <div className="bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-xl p-6">
         <h3 className="font-semibold text-green-800 mb-2">Active Hero Image</h3>
         {(() => {
           const activeHero = heroImagesList?.find((h) => h.is_active);
@@ -208,10 +208,10 @@ const HeroImageManager: React.FC = () => {
               key={heroImage.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`bg-white rounded-lg shadow-md overflow-hidden border-2 transition-all ${
+              className={`bg-card rounded-xl shadow-sm overflow-hidden transition-all ${
                 heroImage.is_active
-                  ? "border-green-500 ring-2 ring-green-200"
-                  : "border-gray-200 hover:border-gray-300"
+                  ? "ring-2 ring-green-500/50"
+                  : "hover:shadow-md"
               }`}
             >
               {/* Image Preview */}
@@ -377,7 +377,7 @@ const HeroImageManager: React.FC = () => {
                         </button>
                       </div>
 
-                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                      <div className="bg-muted/30 rounded-xl p-4">
                         <div className="flex items-center space-x-4">
                           <img
                             src="/images/hero-lg.jpg"
@@ -435,10 +435,10 @@ const HeroImageManager: React.FC = () => {
                               <button
                                 key={photo.id}
                                 onClick={() => setSelectedPhoto(photo)}
-                                className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                                className={`relative aspect-square rounded-xl overflow-hidden transition-all ${
                                   selectedPhoto?.id === photo.id
-                                    ? "border-blue-500 ring-2 ring-blue-200"
-                                    : "border-gray-200 hover:border-gray-300"
+                                    ? "ring-2 ring-blue-500"
+                                    : "hover:ring-2 hover:ring-muted"
                                 }`}
                               >
                                 <img
@@ -459,7 +459,7 @@ const HeroImageManager: React.FC = () => {
                         </div>
 
                         {selectedPhoto && (
-                          <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                          <div className="bg-muted/30 rounded-xl p-4 mb-6">
                             <h4 className="font-medium text-gray-900 mb-2">
                               Selected Photo
                             </h4>
@@ -495,7 +495,7 @@ const HeroImageManager: React.FC = () => {
                               setSelectedPhoto(null);
                               setActiveTab("upload");
                             }}
-                            className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                            className="flex-1 text-muted-foreground px-4 py-2 rounded-lg hover:bg-muted/50 transition-colors"
                           >
                             Cancel
                           </button>
