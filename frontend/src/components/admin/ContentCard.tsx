@@ -11,8 +11,6 @@ import { Pencil } from "lucide-react";
 interface ContentCardProps {
   item: Content;
   onEdit: (item: Content) => void;
-  onToggleActive: (id: string, isActive: boolean) => void;
-  isToggling?: boolean;
   variant?: "default" | "compact";
 }
 
@@ -41,8 +39,6 @@ const getSmartPreview = (text: string, maxLength: number = 140): string => {
 export const ContentCard: React.FC<ContentCardProps> = ({
   item,
   onEdit,
-  onToggleActive,
-  isToggling = false,
   variant = "default",
 }) => {
   const preview = getSmartPreview(
@@ -80,38 +76,15 @@ export const ContentCard: React.FC<ContentCardProps> = ({
                 {preview}
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5">
-                <span
-                  className={cn(
-                    "text-[10px] font-medium",
-                    item.is_active
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-muted-foreground",
-                  )}
-                >
-                  {item.is_active ? "Active" : "Inactive"}
-                </span>
-                <Switch
-                  checked={item.is_active}
-                  onCheckedChange={(checked) =>
-                    onToggleActive(item.id, checked)
-                  }
-                  disabled={isToggling}
-                  aria-label={`Toggle active for ${item.title}`}
-                  className="scale-75"
-                />
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                onClick={() => onEdit(item)}
-                aria-label="Edit content"
-              >
-                <Pencil className="h-3 w-3" />
-              </Button>
-            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => onEdit(item)}
+              aria-label="Edit content"
+            >
+              <Pencil className="h-3 w-3" />
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -156,24 +129,6 @@ export const ContentCard: React.FC<ContentCardProps> = ({
       </CardHeader>
       <CardContent className="flex-1 flex flex-col gap-3">
         <p className="text-sm text-foreground line-clamp-4">{preview}</p>
-        <div className="mt-auto flex items-center justify-between">
-          <span
-            className={cn(
-              "text-xs font-medium",
-              item.is_active
-                ? "text-emerald-600 dark:text-emerald-400"
-                : "text-muted-foreground",
-            )}
-          >
-            {item.is_active ? "Active" : "Inactive"}
-          </span>
-          <Switch
-            checked={item.is_active}
-            onCheckedChange={(checked) => onToggleActive(item.id, checked)}
-            disabled={isToggling}
-            aria-label={`Toggle active for ${item.title}`}
-          />
-        </div>
       </CardContent>
     </Card>
   );

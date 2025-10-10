@@ -20,15 +20,11 @@ import ContentSection from "./ContentSection";
 import CategoryTabs, { type ContentCategory } from "./CategoryTabs";
 import { groupContentBySections, CONTENT_SECTIONS } from "./contentSections";
 
-type StatusFilter = "active" | "inactive" | "all";
-
 const ContentManager: React.FC = () => {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingContent, setEditingContent] = useState<Content | null>(null);
   const [search, setSearch] = useState<string>("");
   const [category, setCategory] = useState<ContentCategory>("all");
-  const [status, setStatus] = useState<StatusFilter>("active");
-  const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set());
   const [viewMode] = useState<"grouped" | "grid">("grouped");
 
   const queryClient = useQueryClient();
@@ -39,12 +35,11 @@ const ContentManager: React.FC = () => {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["admin-content", { category, search, status }],
+    queryKey: ["admin-content", { category, search }],
     queryFn: () =>
       content.list({
         category: category === "all" ? undefined : category,
         search: search || undefined,
-        is_active: status === "all" ? undefined : status === "active",
         per_page: 100,
       }),
   });
@@ -71,22 +66,6 @@ const ContentManager: React.FC = () => {
   const handleEdit = (item: Content) => {
     setEditingContent(item);
     setEditorOpen(true);
-  };
-
-  const handleToggleActive = (id: string, isActive: boolean) => {
-    setTogglingIds((prev) => new Set(prev).add(id));
-    updateMutation.mutate(
-      { id, data: { is_active: isActive } },
-      {
-        onSettled: () => {
-          setTogglingIds((prev) => {
-            const newSet = new Set(prev);
-            newSet.delete(id);
-            return newSet;
-          });
-        },
-      },
-    );
   };
 
   const counts = useMemo(() => {
@@ -134,27 +113,12 @@ const ContentManager: React.FC = () => {
     <div className="space-y-4">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <h2 className="text-2xl font-semibold">Content Management</h2>
-        <div className="flex gap-2">
-          <Input
-            placeholder="Search by title, key, or content..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full md:w-80"
-          />
-          <Select
-            value={status}
-            onValueChange={(v) => setStatus(v as StatusFilter)}
-          >
-            <SelectTrigger className="w-36">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-              <SelectItem value="all">All</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <Input
+          placeholder="Search by title, key, or content..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full md:w-80"
+        />
       </div>
 
       <CategoryTabs
@@ -183,8 +147,6 @@ const ContentManager: React.FC = () => {
                     item={item}
                     variant="compact"
                     onEdit={handleEdit}
-                    onToggleActive={handleToggleActive}
-                    isToggling={togglingIds.has(item.id)}
                   />
                 ))}
               </ContentSection>
@@ -194,13 +156,7 @@ const ContentManager: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {contentList?.content.map((item) => (
-            <ContentCard
-              key={item.id}
-              item={item}
-              onEdit={handleEdit}
-              onToggleActive={handleToggleActive}
-              isToggling={togglingIds.has(item.id)}
-            />
+            <ContentCard key={item.id} item={item} onEdit={handleEdit} />
           ))}
         </div>
       )}
