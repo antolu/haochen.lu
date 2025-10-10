@@ -154,13 +154,15 @@ const AdminLayoutContent: React.FC = () => {
   const SidebarContent = ({ mobile = false }: { mobile?: boolean }) => (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-            <Layers className="h-4 w-4 text-white" />
+      <div className="flex items-center justify-between p-6">
+        <Link to="/" className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center shadow-glow-sm">
+            <Layers className="h-5 w-5 text-white" />
           </div>
           {(!sidebarCollapsed || mobile) && (
-            <span className="text-lg font-semibold">Admin</span>
+            <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              Admin
+            </span>
           )}
         </Link>
         {!mobile && (
@@ -189,8 +191,8 @@ const AdminLayoutContent: React.FC = () => {
       </div>
 
       {/* Navigation */}
-      <ScrollArea className="flex-1 px-4 py-4">
-        <nav className="space-y-1">
+      <ScrollArea className="flex-1 px-3 py-6">
+        <nav className="space-y-2">
           {navigation.map((item) => {
             const Icon = item.icon;
             const isActive =
@@ -204,18 +206,20 @@ const AdminLayoutContent: React.FC = () => {
                 to={item.href}
                 onClick={() => mobile && setMobileMenuOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-accent hover:text-accent-foreground",
-                  isActive && "bg-primary text-primary-foreground shadow-sm",
+                  "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all",
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-glow-sm"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
                 )}
               >
-                <Icon className="h-4 w-4 flex-shrink-0" />
+                <Icon className="h-5 w-5 flex-shrink-0" />
                 {(!sidebarCollapsed || mobile) && (
                   <>
                     <span className="flex-1">{item.name}</span>
                     {item.badge && (
                       <Badge
                         variant="secondary"
-                        className="ml-auto px-1.5 py-0.5 text-xs"
+                        className="ml-auto px-2 py-0.5 text-xs"
                       >
                         {item.badge}
                       </Badge>
@@ -230,28 +234,30 @@ const AdminLayoutContent: React.FC = () => {
 
       <Separator />
 
-      {/* Theme Toggle */}
-      <div className="p-4 space-y-2">
+      {/* Theme Toggle & User */}
+      <div className="p-4 space-y-3">
         {(!sidebarCollapsed || mobile) && <ThemeToggle />}
 
         {/* User info */}
-        <div className="flex items-center gap-3 p-2 rounded-lg bg-secondary/50">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-            <span className="text-xs font-medium text-white">
+        <div className="flex items-center gap-3 p-3 rounded-xl glass">
+          <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow-sm">
+            <span className="text-sm font-semibold text-white">
               {user.username.charAt(0).toUpperCase()}
             </span>
           </div>
           {(!sidebarCollapsed || mobile) && (
             <>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{user.username}</p>
+                <p className="text-sm font-semibold truncate">
+                  {user.username}
+                </p>
                 <p className="text-xs text-muted-foreground">Administrator</p>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleLogout}
-                className="h-8 w-8 p-0"
+                className="h-9 w-9 p-0 hover:bg-destructive/10 hover:text-destructive"
               >
                 <LogOut className="h-4 w-4" />
               </Button>
@@ -268,8 +274,8 @@ const AdminLayoutContent: React.FC = () => {
         {/* Desktop Sidebar */}
         <aside
           className={cn(
-            "hidden md:flex flex-col bg-card/50 backdrop-blur-sm border-r transition-all duration-300",
-            sidebarCollapsed ? "w-16" : "w-64",
+            "hidden md:flex flex-col h-screen sticky top-0 bg-card/95 backdrop-blur-md border-r border-border/50 z-10 transition-all duration-300",
+            sidebarCollapsed ? "w-20" : "w-72",
           )}
         >
           <SidebarContent />
@@ -293,7 +299,7 @@ const AdminLayoutContent: React.FC = () => {
                 animate={{ x: 0 }}
                 exit={{ x: "-100%" }}
                 transition={{ type: "spring", damping: 20, stiffness: 100 }}
-                className="absolute left-0 top-0 h-full w-64 bg-card/95 backdrop-blur-sm"
+                className="absolute left-0 top-0 h-full w-64 bg-card shadow-2xl"
               >
                 <SidebarContent mobile />
               </motion.aside>
@@ -304,7 +310,7 @@ const AdminLayoutContent: React.FC = () => {
         {/* Main Content */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Mobile Header */}
-          <header className="md:hidden flex items-center justify-between p-4 border-b bg-card/50 backdrop-blur-sm">
+          <header className="md:hidden flex items-center justify-between p-4 bg-card">
             <Button
               variant="ghost"
               size="sm"
@@ -317,11 +323,11 @@ const AdminLayoutContent: React.FC = () => {
           </header>
 
           {/* Main Content Area */}
-          <main className="flex-1 p-4 md:p-6 overflow-auto bg-card/30 backdrop-blur-sm">
+          <main className="flex-1 p-6 md:p-10 overflow-auto bg-background">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
             >
               <Outlet />
             </motion.div>
