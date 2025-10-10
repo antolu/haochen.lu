@@ -141,11 +141,11 @@ const AdminSubApps: React.FC = () => {
       {/* Header */}
       <div className="mb-8">
         <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">
+          <div className="space-y-2">
+            <h1 className="text-4xl font-bold tracking-tight">
               Sub-Applications
             </h1>
-            <p className="mt-2 text-muted-foreground">
+            <p className="text-muted-foreground text-lg">
               Manage external and internal sub-applications
             </p>
           </div>
@@ -199,90 +199,86 @@ const AdminSubApps: React.FC = () => {
         {/* Stats Cards */}
         {!isLoadingStats && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-            <div className="bg-card rounded-lg border border-border p-4">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="h-8 w-8 bg-blue-100 dark:bg-blue-950 rounded-lg flex items-center justify-center">
-                    <svg
-                      className="h-4 w-4 text-blue-600 dark:text-blue-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 11H5m14-7H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2z"
-                      />
-                    </svg>
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-foreground">
+            <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 p-6 rounded-xl hover:shadow-lg transition-all duration-200">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
                     Total Sub-Apps
                   </p>
-                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  <p className="text-3xl font-bold tracking-tight mt-2">
                     {stats.total_subapps}
                   </p>
                 </div>
+                <div className="p-3 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl">
+                  <svg
+                    className="w-5 h-5 text-blue-600 dark:text-blue-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 11H5m14-7H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2z"
+                    />
+                  </svg>
+                </div>
               </div>
             </div>
 
-            <div className="bg-card rounded-lg border border-border p-4">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="h-8 w-8 bg-green-100 dark:bg-green-950 rounded-lg flex items-center justify-center">
-                    <svg
-                      className="h-4 w-4 text-green-600 dark:text-green-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-foreground">Enabled</p>
-                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+            <div className="bg-gradient-to-br from-green-500/20 to-green-600/20 p-6 rounded-xl hover:shadow-lg transition-all duration-200">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Enabled
+                  </p>
+                  <p className="text-3xl font-bold tracking-tight mt-2">
                     {stats.enabled_subapps}
                   </p>
                 </div>
+                <div className="p-3 bg-green-50/50 dark:bg-green-950/20 rounded-xl">
+                  <svg
+                    className="w-5 h-5 text-green-600 dark:text-green-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </div>
               </div>
             </div>
 
-            <div className="bg-card rounded-lg border border-border p-4">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="h-8 w-8 bg-orange-100 dark:bg-orange-950 rounded-lg flex items-center justify-center">
-                    <svg
-                      className="h-4 w-4 text-orange-600 dark:text-orange-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L5.636 5.636"
-                      />
-                    </svg>
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-foreground">
+            <div className="bg-gradient-to-br from-orange-500/20 to-orange-600/20 p-6 rounded-xl hover:shadow-lg transition-all duration-200">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
                     Disabled
                   </p>
-                  <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                  <p className="text-3xl font-bold tracking-tight mt-2">
                     {stats.disabled_subapps}
                   </p>
+                </div>
+                <div className="p-3 bg-orange-50/50 dark:bg-orange-950/20 rounded-xl">
+                  <svg
+                    className="w-5 h-5 text-orange-600 dark:text-orange-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L5.636 5.636"
+                    />
+                  </svg>
                 </div>
               </div>
             </div>
@@ -353,7 +349,7 @@ const AdminSubApps: React.FC = () => {
       </AnimatePresence>
 
       {/* Sub-Apps List */}
-      <div className="bg-card rounded-lg border border-border p-6">
+      <div className="bg-card rounded-xl shadow-sm p-6">
         <h2 className="text-lg font-medium text-foreground mb-4">
           All Sub-Applications ({subapps.length})
         </h2>

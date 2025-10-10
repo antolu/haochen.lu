@@ -143,9 +143,9 @@ const AdminSubAppIntegration: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold">Integrate Subapp</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+      <div className="space-y-2">
+        <h1 className="text-4xl font-bold tracking-tight">Integrate Subapp</h1>
+        <p className="text-muted-foreground text-lg">
           Add a new subapp by pasting its YAML configuration below. The
           configuration will be validated in real-time.
         </p>
@@ -174,7 +174,7 @@ const AdminSubAppIntegration: React.FC = () => {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}
-          className="bg-muted/50 border rounded-lg p-4"
+          className="bg-muted/30 rounded-xl p-4"
         >
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-medium">Example Configuration</h3>
@@ -204,7 +204,7 @@ const AdminSubAppIntegration: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-card border rounded-lg p-6"
+          className="bg-card rounded-xl shadow-sm p-6"
         >
           <h3 className="text-lg font-medium mb-4">Ready to Integrate</h3>
 
@@ -319,11 +319,11 @@ const AdminSubAppIntegration: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className={`
-            border rounded-lg p-6
+            rounded-xl p-6
             ${
               integrationResult.success
-                ? "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-700"
-                : "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-700"
+                ? "bg-gradient-to-br from-green-500/20 to-green-600/20"
+                : "bg-gradient-to-br from-red-500/20 to-red-600/20"
             }
           `}
         >

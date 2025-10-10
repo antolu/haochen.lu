@@ -8,6 +8,16 @@ import {
 } from "../../hooks/useProjects";
 import SortableProjectList from "../../components/admin/SortableProjectList";
 import ProjectForm from "../../components/ProjectForm";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Plus, Briefcase, Star, TrendingUp } from "lucide-react";
 
 type ViewMode = "list" | "create" | "edit";
 
@@ -25,7 +35,12 @@ const AdminProjects: React.FC = () => {
   } = useProjects({
     search: searchQuery.trim() === "" ? undefined : searchQuery,
     status: ((): "active" | "archived" | "in_progress" | undefined => {
-      if (statusFilter === "" || statusFilter === undefined) return undefined;
+      if (
+        statusFilter === "" ||
+        statusFilter === undefined ||
+        statusFilter === "all"
+      )
+        return undefined;
       if (
         statusFilter === "active" ||
         statusFilter === "archived" ||
@@ -100,124 +115,69 @@ const AdminProjects: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-10">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Project Management</h1>
-            <p className="mt-2 text-muted-foreground">
+          <div className="space-y-3">
+            <h1 className="text-5xl font-bold tracking-tight bg-gradient-primary bg-clip-text text-transparent">
+              Project Management
+            </h1>
+            <p className="text-muted-foreground text-xl">
               Create and manage your project portfolio
             </p>
           </div>
-          <button
-            onClick={handleCreateProject}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
-            <svg
-              className="w-4 h-4 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
+          <Button variant="gradient" size="lg" onClick={handleCreateProject}>
+            <Plus className="w-5 h-5 mr-2" />
             New Project
-          </button>
+          </Button>
         </div>
 
         {/* Stats */}
         {stats && (
           <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-card p-4 rounded-lg border">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                    <svg
-                      className="w-4 h-4 text-primary"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                      />
-                    </svg>
-                  </div>
-                </div>
-                <div className="ml-3">
+            <div className="bg-gradient-to-br from-primary/10 to-primary/20 p-6 rounded-xl hover:shadow-lg transition-all duration-200">
+              <div className="flex items-start justify-between">
+                <div>
                   <p className="text-sm font-medium text-muted-foreground">
                     Total Projects
                   </p>
-                  <p className="text-2xl font-semibold">
+                  <p className="text-3xl font-bold tracking-tight mt-2">
                     {stats.total_projects}
                   </p>
                 </div>
+                <div className="p-3 bg-primary/10 dark:bg-primary/20 rounded-xl">
+                  <Briefcase className="w-5 h-5 text-primary" />
+                </div>
               </div>
             </div>
 
-            <div className="bg-card p-4 rounded-lg border">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg flex items-center justify-center">
-                    <svg
-                      className="w-4 h-4 text-yellow-600 dark:text-yellow-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-                      />
-                    </svg>
-                  </div>
-                </div>
-                <div className="ml-3">
+            <div className="bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 p-6 rounded-xl hover:shadow-lg transition-all duration-200">
+              <div className="flex items-start justify-between">
+                <div>
                   <p className="text-sm font-medium text-muted-foreground">
                     Featured
                   </p>
-                  <p className="text-2xl font-semibold">
+                  <p className="text-3xl font-bold tracking-tight mt-2">
                     {stats.featured_projects}
                   </p>
+                </div>
+                <div className="p-3 bg-yellow-50/50 dark:bg-yellow-950/20 rounded-xl">
+                  <Star className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
                 </div>
               </div>
             </div>
 
-            <div className="bg-card p-4 rounded-lg border">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
-                    <svg
-                      className="w-4 h-4 text-green-600 dark:text-green-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                      />
-                    </svg>
-                  </div>
-                </div>
-                <div className="ml-3">
+            <div className="bg-gradient-to-br from-green-500/20 to-green-600/20 p-6 rounded-xl hover:shadow-lg transition-all duration-200">
+              <div className="flex items-start justify-between">
+                <div>
                   <p className="text-sm font-medium text-muted-foreground">
                     Active
                   </p>
-                  <p className="text-2xl font-semibold">
+                  <p className="text-3xl font-bold tracking-tight mt-2">
                     {projects.filter((p) => p.status === "active").length}
                   </p>
+                </div>
+                <div className="p-3 bg-green-50/50 dark:bg-green-950/20 rounded-xl">
+                  <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
                 </div>
               </div>
             </div>
@@ -226,36 +186,40 @@ const AdminProjects: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="mb-6 bg-card p-4 rounded-lg border">
+      <div className="mb-6 bg-muted/30 p-6 rounded-xl">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           {/* Search */}
           <div className="flex-1">
-            <input
+            <Input
               type="text"
               placeholder="Search projects..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
           {/* Status Filter & Reorder toggle */}
           <div className="flex items-center gap-3">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+            <Select
+              value={statusFilter || undefined}
+              onValueChange={(value) => setStatusFilter(value || "")}
             >
-              <option value="">All Statuses</option>
-              <option value="active">Active</option>
-              <option value="in_progress">In Progress</option>
-              <option value="archived">Archived</option>
-            </select>
-            <label className="text-sm text-muted-foreground flex items-center gap-2">
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="All Statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="in_progress">In Progress</SelectItem>
+                <SelectItem value="archived">Archived</SelectItem>
+              </SelectContent>
+            </Select>
+            <label className="text-sm text-muted-foreground flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={reorderEnabled}
                 onChange={(e) => setReorderEnabled(e.target.checked)}
+                className="cursor-pointer"
               />
               Reorder
             </label>
@@ -264,7 +228,7 @@ const AdminProjects: React.FC = () => {
       </div>
 
       {/* Projects List */}
-      <div className="bg-card rounded-lg border overflow-hidden">
+      <div className="bg-card rounded-xl shadow-lg border-border/40 overflow-hidden">
         {isLoading ? (
           <ProjectListSkeleton />
         ) : error ? (
@@ -315,12 +279,10 @@ const AdminProjects: React.FC = () => {
                 : "Get started by creating your first project."}
             </p>
             {!searchQuery && !statusFilter && (
-              <button
-                onClick={handleCreateProject}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-              >
+              <Button onClick={handleCreateProject}>
+                <Plus className="w-4 h-4 mr-2" />
                 Create Your First Project
-              </button>
+              </Button>
             )}
           </div>
         ) : (

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { RefreshCcw } from "lucide-react";
 import { Switch } from "../../components/ui/switch";
+import { Button } from "../../components/ui/button";
 // photoswipe not used in admin (editor replaces lightbox)
 
 import PhotoUpload from "../../components/PhotoUpload";
@@ -185,11 +186,13 @@ const AdminPhotos: React.FC = () => {
   return (
     <div>
       {/* Header */}
-      <div className="mb-8 space-y-6">
+      <div className="mb-10 space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Photos</h1>
-            <p className="mt-2 text-muted-foreground">
+          <div className="space-y-3">
+            <h1 className="text-5xl font-bold tracking-tight bg-gradient-primary bg-clip-text text-transparent">
+              Photos
+            </h1>
+            <p className="text-muted-foreground text-xl">
               Manage your photo collection
             </p>
           </div>
@@ -252,7 +255,7 @@ const AdminPhotos: React.FC = () => {
                     onClick={() => {
                       void handleResetOrder();
                     }}
-                    className="inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1 text-sm text-muted-foreground transition hover:border-primary hover:text-primary"
+                    className="inline-flex items-center gap-2 rounded-full bg-muted/30 px-3 py-1 text-sm text-muted-foreground transition hover:bg-muted/50 hover:text-primary"
                   >
                     <RefreshCcw className="h-4 w-4" /> Reset to Upload Order
                   </motion.button>
@@ -261,28 +264,27 @@ const AdminPhotos: React.FC = () => {
             </div>
 
             {/* Upload Button */}
-            <button
+            <Button
+              variant="gradient"
+              size="lg"
               onClick={() => setShowUpload(true)}
               disabled={showUpload || reorderEnabled || isReordering}
-              className="px-4 py-2 text-sm font-medium bg-blue-500 hover:bg-blue-600 text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors shadow-sm"
             >
-              <span className="flex items-center">
-                <svg
-                  className="h-4 w-4 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                Upload Photos
-              </span>
-            </button>
+              <svg
+                className="h-5 w-5 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              Upload Photos
+            </Button>
           </div>
         </div>
 
@@ -318,79 +320,64 @@ const AdminPhotos: React.FC = () => {
                 exit={{ opacity: 0, height: 0 }}
                 className="grid grid-cols-1 md:grid-cols-4 gap-4"
               >
-                <div className="bg-card rounded-lg border p-4">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <div className="h-8 w-8 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
-                        <svg
-                          className="h-4 w-4 text-blue-600 dark:text-blue-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium">Total Photos</p>
-                      <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 p-6 rounded-xl hover:shadow-lg transition-all duration-200">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Total Photos
+                      </p>
+                      <p className="text-3xl font-bold tracking-tight mt-2">
                         {stats.total_photos || photos.length}
                       </p>
+                    </div>
+                    <div className="p-3 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl">
+                      <svg
+                        className="w-5 h-5 text-blue-600 dark:text-blue-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-card rounded-lg border p-4">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <div className="h-8 w-8 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg flex items-center justify-center">
-                        <svg
-                          className="h-4 w-4 text-yellow-600 dark:text-yellow-400"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                      </div>
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium">Featured</p>
-                      <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                <div className="bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 p-6 rounded-xl hover:shadow-lg transition-all duration-200">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Featured
+                      </p>
+                      <p className="text-3xl font-bold tracking-tight mt-2">
                         {stats.featured_photos ||
                           photos.filter((p) => p.featured).length}
                       </p>
                     </div>
+                    <div className="p-3 bg-yellow-50/50 dark:bg-yellow-950/20 rounded-xl">
+                      <svg
+                        className="w-5 h-5 text-yellow-600 dark:text-yellow-400"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    </div>
                   </div>
                 </div>
 
-                <div className="bg-card rounded-lg border p-4">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <div className="h-8 w-8 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
-                        <svg
-                          className="h-4 w-4 text-green-600 dark:text-green-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2h4a1 1 0 010 2h-1v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6H3a1 1 0 010-2h4zM6 6v12h12V6H6zm3-2V3h6v1H9z"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium">Storage Used</p>
-                      <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                <div className="bg-gradient-to-br from-green-500/20 to-green-600/20 p-6 rounded-xl hover:shadow-lg transition-all duration-200">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Storage Used
+                      </p>
+                      <p className="text-3xl font-bold tracking-tight mt-2">
                         {formatFileSize(
                           stats.total_size ||
                             photos.reduce(
@@ -400,39 +387,54 @@ const AdminPhotos: React.FC = () => {
                         )}
                       </p>
                     </div>
+                    <div className="p-3 bg-green-50/50 dark:bg-green-950/20 rounded-xl">
+                      <svg
+                        className="w-5 h-5 text-green-600 dark:text-green-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2h4a1 1 0 010 2h-1v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6H3a1 1 0 010-2h4zM6 6v12h12V6H6zm3-2V3h6v1H9z"
+                        />
+                      </svg>
+                    </div>
                   </div>
                 </div>
 
-                <div className="bg-card rounded-lg border p-4">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <div className="h-8 w-8 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">
-                        <svg
-                          className="h-4 w-4 text-purple-600 dark:text-purple-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium">Selected</p>
-                      <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/20 p-6 rounded-xl hover:shadow-lg transition-all duration-200">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Selected
+                      </p>
+                      <p className="text-3xl font-bold tracking-tight mt-2">
                         {selectedPhotos.size}
                       </p>
+                    </div>
+                    <div className="p-3 bg-purple-50/50 dark:bg-purple-950/20 rounded-xl">
+                      <svg
+                        className="w-5 h-5 text-purple-600 dark:text-purple-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        />
+                      </svg>
                     </div>
                   </div>
                 </div>
@@ -444,7 +446,7 @@ const AdminPhotos: React.FC = () => {
 
       {/* Bulk Actions */}
       {selectedPhotos.size > 0 && (
-        <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg">
+        <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/10 rounded-xl">
           <div className="flex items-center justify-between">
             <div className="text-sm text-blue-700 dark:text-blue-400">
               {selectedPhotos.size} photo{selectedPhotos.size > 1 ? "s" : ""}{" "}
@@ -455,7 +457,7 @@ const AdminPhotos: React.FC = () => {
                 onClick={() => {
                   void handleBulkToggleFeatured(true);
                 }}
-                className="px-3 py-1 text-xs font-medium text-yellow-700 bg-yellow-100 hover:bg-yellow-200 dark:text-yellow-300 dark:bg-yellow-900/30 dark:hover:bg-yellow-900/40 rounded border border-yellow-300 dark:border-yellow-600 transition-colors shadow-sm"
+                className="px-3 py-1 text-xs font-medium text-yellow-700 bg-yellow-100 hover:bg-yellow-200 dark:text-yellow-300 dark:bg-yellow-900/30 dark:hover:bg-yellow-900/40 rounded transition-colors shadow-sm"
               >
                 ⭐ Feature
               </button>
@@ -463,7 +465,7 @@ const AdminPhotos: React.FC = () => {
                 onClick={() => {
                   void handleBulkToggleFeatured(false);
                 }}
-                className="px-3 py-1 text-xs font-medium text-muted-foreground bg-muted hover:bg-muted/80 rounded border transition-colors"
+                className="px-3 py-1 text-xs font-medium text-muted-foreground bg-muted hover:bg-muted/80 rounded transition-colors"
               >
                 Remove Feature
               </button>
@@ -471,13 +473,13 @@ const AdminPhotos: React.FC = () => {
                 onClick={() => {
                   void handleBulkDelete();
                 }}
-                className="px-3 py-1 text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 dark:text-red-300 dark:bg-red-900/30 dark:hover:bg-red-900/40 rounded border border-red-300 dark:border-red-600 transition-colors shadow-sm"
+                className="px-3 py-1 text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 dark:text-red-300 dark:bg-red-900/30 dark:hover:bg-red-900/40 rounded transition-colors shadow-sm"
               >
                 🗑 Delete
               </button>
               <button
                 onClick={() => setSelectedPhotos(new Set())}
-                className="px-3 py-1 text-xs font-medium text-muted-foreground bg-muted hover:bg-muted/80 rounded border transition-colors"
+                className="px-3 py-1 text-xs font-medium text-muted-foreground bg-muted hover:bg-muted/80 rounded transition-colors"
               >
                 Clear
               </button>
@@ -504,7 +506,7 @@ const AdminPhotos: React.FC = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-background border rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+              className="bg-background rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-6">
@@ -542,9 +544,11 @@ const AdminPhotos: React.FC = () => {
       </AnimatePresence>
 
       {/* Photos Display */}
-      <div className="bg-card rounded-lg border p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-medium">All Photos ({photos.length})</h2>
+      <div className="bg-card rounded-xl shadow-lg border-border/40 p-8">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-semibold">
+            All Photos ({photos.length})
+          </h2>
 
           {photos.length > 0 && !editingPhoto && (
             <button

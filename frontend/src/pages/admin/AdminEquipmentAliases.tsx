@@ -12,12 +12,6 @@ import {
   type LensAlias,
   type LensAliasFilters,
 } from "../../hooks/useLensAliases";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
@@ -27,6 +21,13 @@ import {
   TabsTrigger,
   TabsContent,
 } from "../../components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
 import {
   Table,
   TableBody,
@@ -213,23 +214,27 @@ const AdminEquipmentAliases: React.FC = () => {
               value={cameraBrandFilter}
               onChange={(e) => setCameraBrandFilter(e.target.value)}
             />
-            <select
+            <Select
               value={
                 cameraActiveFilter === undefined
-                  ? ""
+                  ? "all"
                   : cameraActiveFilter.toString()
               }
-              onChange={(e) =>
+              onValueChange={(value) =>
                 setCameraActiveFilter(
-                  e.target.value === "" ? undefined : e.target.value === "true",
+                  value === "all" ? undefined : value === "true",
                 )
               }
-              className="px-3 py-2 border border-input rounded-md text-sm"
             >
-              <option value="">All Status</option>
-              <option value="true">Active</option>
-              <option value="false">Inactive</option>
-            </select>
+              <SelectTrigger>
+                <SelectValue placeholder="All Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="true">Active</SelectItem>
+                <SelectItem value="false">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
             <Button variant="outline" onClick={clearCameraFilters}>
               Clear Filters
             </Button>
@@ -315,23 +320,27 @@ const AdminEquipmentAliases: React.FC = () => {
               value={lensMountFilter}
               onChange={(e) => setLensMountFilter(e.target.value)}
             />
-            <select
+            <Select
               value={
                 lensActiveFilter === undefined
-                  ? ""
+                  ? "all"
                   : lensActiveFilter.toString()
               }
-              onChange={(e) =>
+              onValueChange={(value) =>
                 setLensActiveFilter(
-                  e.target.value === "" ? undefined : e.target.value === "true",
+                  value === "all" ? undefined : value === "true",
                 )
               }
-              className="px-3 py-2 border border-input rounded-md text-sm"
             >
-              <option value="">All Status</option>
-              <option value="true">Active</option>
-              <option value="false">Inactive</option>
-            </select>
+              <SelectTrigger>
+                <SelectValue placeholder="All Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="true">Active</SelectItem>
+                <SelectItem value="false">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
             <Button variant="outline" onClick={clearLensFilters}>
               Clear Filters
             </Button>
@@ -362,11 +371,11 @@ const AdminEquipmentAliases: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-bold tracking-tight">
             Equipment Aliases
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-lg">
             Manage display names for cameras and lenses found in photo metadata
           </p>
         </div>
@@ -391,14 +400,14 @@ const AdminEquipmentAliases: React.FC = () => {
         {/* Tab Content */}
         <TabsContent value={activeTab} className="space-y-6">
           {/* Filters */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
+          <div className="bg-muted/30 p-6 rounded-xl">
+            <div className="mb-4">
+              <h3 className="text-lg font-medium flex items-center gap-2">
                 <Search className="h-5 w-5" />
                 Search & Filter
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              </h3>
+            </div>
+            <div className="space-y-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -409,117 +418,117 @@ const AdminEquipmentAliases: React.FC = () => {
                 />
               </div>
               {currentConfig.filters.additionalFilters}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Content */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+          <div className="bg-card rounded-xl shadow-sm">
+            <div className="p-6">
+              <div className="flex items-center gap-2 mb-6">
                 <Icon className="h-5 w-5" />
-                {currentConfig.title}
+                <h3 className="text-lg font-medium">{currentConfig.title}</h3>
                 {currentData && (
                   <Badge variant="secondary" className="ml-auto">
                     {currentData.total} total
                   </Badge>
                 )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="flex justify-center items-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-                </div>
-              ) : error ? (
-                <div className="text-center py-12 text-destructive">
-                  <p>Error loading {activeTab} aliases. Please try again.</p>
-                </div>
-              ) : (
-                <>
-                  {aliases.length === 0 ? (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <Icon className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>No {activeTab} aliases found.</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            {currentConfig.columns.map((column) => (
-                              <TableHead key={column.key}>
-                                {column.title}
-                              </TableHead>
-                            ))}
-                            <TableHead className="w-24">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          <AnimatePresence>
-                            {aliases.map((alias) => (
-                              <TableRow
-                                key={alias.id}
-                                className="group cursor-pointer hover:bg-muted/50"
-                              >
-                                {currentConfig.columns.map((column) => (
-                                  <TableCell key={column.key}>
-                                    {column.render(alias)}
+              </div>
+              <div>
+                {isLoading ? (
+                  <div className="flex justify-center items-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+                  </div>
+                ) : error ? (
+                  <div className="text-center py-12 text-destructive">
+                    <p>Error loading {activeTab} aliases. Please try again.</p>
+                  </div>
+                ) : (
+                  <>
+                    {aliases.length === 0 ? (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <Icon className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>No {activeTab} aliases found.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              {currentConfig.columns.map((column) => (
+                                <TableHead key={column.key}>
+                                  {column.title}
+                                </TableHead>
+                              ))}
+                              <TableHead className="w-24">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            <AnimatePresence>
+                              {aliases.map((alias) => (
+                                <TableRow
+                                  key={alias.id}
+                                  className="group cursor-pointer hover:bg-muted/50"
+                                >
+                                  {currentConfig.columns.map((column) => (
+                                    <TableCell key={column.key}>
+                                      {column.render(alias)}
+                                    </TableCell>
+                                  ))}
+                                  <TableCell>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleEditAlias(alias)}
+                                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                      Edit
+                                    </Button>
                                   </TableCell>
-                                ))}
-                                <TableCell>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleEditAlias(alias)}
-                                    className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                  >
-                                    Edit
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </AnimatePresence>
-                        </TableBody>
-                      </Table>
+                                </TableRow>
+                              ))}
+                            </AnimatePresence>
+                          </TableBody>
+                        </Table>
 
-                      {/* Pagination */}
-                      {totalPages > 1 && (
-                        <div className="flex items-center justify-between pt-4">
-                          <p className="text-sm text-muted-foreground">
-                            Page {currentPage} of {totalPages}
-                          </p>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                setCurrentPage(Math.max(1, currentPage - 1))
-                              }
-                              disabled={currentPage === 1}
-                            >
-                              Previous
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                setCurrentPage(
-                                  Math.min(totalPages, currentPage + 1),
-                                )
-                              }
-                              disabled={currentPage === totalPages}
-                            >
-                              Next
-                            </Button>
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                          <div className="flex items-center justify-between pt-4">
+                            <p className="text-sm text-muted-foreground">
+                              Page {currentPage} of {totalPages}
+                            </p>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  setCurrentPage(Math.max(1, currentPage - 1))
+                                }
+                                disabled={currentPage === 1}
+                              >
+                                Previous
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  setCurrentPage(
+                                    Math.min(totalPages, currentPage + 1),
+                                  )
+                                }
+                                disabled={currentPage === totalPages}
+                              >
+                                Next
+                              </Button>
+                            </div>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
-            </CardContent>
-          </Card>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
 
@@ -530,21 +539,19 @@ const AdminEquipmentAliases: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
         >
-          <Card>
-            <CardHeader>
-              <CardTitle>
+          <div className="bg-card rounded-xl shadow-sm">
+            <div className="p-6">
+              <h3 className="text-lg font-medium mb-6">
                 Edit {activeTab === "cameras" ? "Camera" : "Lens"} Alias
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+              </h3>
               <EquipmentAliasForm
                 alias={editingAlias}
                 type={activeTab}
                 onSuccess={handleFormSuccess}
                 onCancel={handleFormCancel}
               />
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </motion.div>
       )}
     </div>
