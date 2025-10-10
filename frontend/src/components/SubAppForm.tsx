@@ -91,7 +91,7 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
           <div className="md:col-span-2">
             <label
               htmlFor="name"
-              className="block text-sm font-medium text-gray-700 mb-2"
+              className="block text-sm font-medium text-foreground mb-2"
             >
               App Name *
             </label>
@@ -119,7 +119,7 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
           <div className="md:col-span-2">
             <label
               htmlFor="url"
-              className="block text-sm font-medium text-gray-700 mb-2"
+              className="block text-sm font-medium text-foreground mb-2"
             >
               URL *
             </label>
@@ -157,7 +157,7 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
           <div className="md:col-span-2">
             <label
               htmlFor="description"
-              className="block text-sm font-medium text-gray-700 mb-2"
+              className="block text-sm font-medium text-foreground mb-2"
             >
               Description
             </label>
@@ -174,7 +174,7 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
           <div>
             <label
               htmlFor="icon"
-              className="block text-sm font-medium text-gray-700 mb-2"
+              className="block text-sm font-medium text-foreground mb-2"
             >
               Icon (URL or emoji)
             </label>
@@ -191,7 +191,7 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
           <div>
             <label
               htmlFor="color"
-              className="block text-sm font-medium text-gray-700 mb-2"
+              className="block text-sm font-medium text-foreground mb-2"
             >
               Theme Color
             </label>
@@ -214,7 +214,7 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
           <div>
             <label
               htmlFor="order"
-              className="block text-sm font-medium text-gray-700 mb-2"
+              className="block text-sm font-medium text-foreground mb-2"
             >
               Display Order
             </label>

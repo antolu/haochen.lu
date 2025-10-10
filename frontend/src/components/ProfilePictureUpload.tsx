@@ -228,7 +228,7 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
   return (
     <div className="bg-white rounded-lg shadow-lg p-3 max-w-md mx-auto max-h-[85vh] overflow-y-auto">
       <div className="mb-4">
-        <p className="text-gray-700 text-sm">
+        <p className="text-foreground text-sm">
           Select an image and crop it to a square.
         </p>
       </div>
@@ -254,7 +254,7 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
             <button
               type="button"
               onClick={onCancel}
-              className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 text-foreground border border-input rounded-lg hover:bg-gray-50 transition-colors"
             >
               Cancel
             </button>
@@ -265,7 +265,7 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
           {/* Title removed per request */}
 
           {/* Crop Area */}
-          <div className="border border-gray-300 rounded-lg overflow-hidden max-h-[40vh]">
+          <div className="border border-input rounded-lg overflow-hidden max-h-[40vh]">
             <ReactCrop
               crop={crop}
               onChange={(newCrop) => setCrop(newCrop)}
@@ -289,8 +289,8 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
           {/* Preview */}
           {completedCrop && (
             <div className="text-center">
-              <p className="text-xs text-gray-600 mb-1">Preview:</p>
-              <div className="inline-block border-2 border-gray-300 rounded-full overflow-hidden">
+              <p className="text-xs text-muted-foreground mb-1">Preview:</p>
+              <div className="inline-block border-2 border-input rounded-full overflow-hidden">
                 <canvas
                   ref={(canvas) => {
                     if (canvas && imgRef.current && completedCrop) {
@@ -331,7 +331,7 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
               type="button"
               onClick={handleCancel}
               disabled={isUploading}
-              className="px-3 py-1.5 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className="px-3 py-1.5 text-sm text-foreground border border-input rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
             >
               Cancel
             </button>

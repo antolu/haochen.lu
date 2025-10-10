@@ -1,5 +1,16 @@
 import React from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
+import { Input } from "./ui/input";
+import { Textarea } from "./ui/textarea";
+import { Button } from "./ui/button";
+import { Label } from "./ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 export interface PhotoMetadata {
   title: string;
@@ -51,6 +62,7 @@ const PhotoMetadataForm: React.FC<PhotoMetadataFormProps> = ({
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<PhotoMetadata>({
     defaultValues,
@@ -64,35 +76,33 @@ const PhotoMetadataForm: React.FC<PhotoMetadataFormProps> = ({
     >
       {/* Title Field */}
       {fields.showTitle && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Title <span className="text-red-500">*</span>
-          </label>
-          <input
+        <div className="space-y-2">
+          <Label htmlFor="title">
+            Title <span className="text-destructive">*</span>
+          </Label>
+          <Input
+            id="title"
             type="text"
             {...register("title", {
               required: "Title is required",
               minLength: { value: 1, message: "Title cannot be empty" },
             })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Enter photo title..."
           />
           {errors.title && (
-            <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
+            <p className="text-destructive text-sm">{errors.title.message}</p>
           )}
         </div>
       )}
 
       {/* Description Field */}
       {fields.showDescription && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Description
-          </label>
-          <textarea
+        <div className="space-y-2">
+          <Label htmlFor="description">Description</Label>
+          <Textarea
+            id="description"
             {...register("description")}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-vertical"
             placeholder="Describe your photo..."
           />
         </div>
@@ -100,41 +110,44 @@ const PhotoMetadataForm: React.FC<PhotoMetadataFormProps> = ({
 
       {/* Category Field */}
       {fields.showCategory && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Category
-          </label>
-          <select
-            {...register("category")}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="">Select category...</option>
-            <option value="landscape">Landscape</option>
-            <option value="portrait">Portrait</option>
-            <option value="street">Street</option>
-            <option value="nature">Nature</option>
-            <option value="architecture">Architecture</option>
-            <option value="travel">Travel</option>
-            <option value="macro">Macro</option>
-            <option value="event">Event</option>
-            <option value="other">Other</option>
-          </select>
+        <div className="space-y-2">
+          <Label htmlFor="category">Category</Label>
+          <Controller
+            name="category"
+            control={control}
+            render={({ field }) => (
+              <Select value={field.value || undefined} onValueChange={field.onChange}>
+                <SelectTrigger id="category">
+                  <SelectValue placeholder="Select category..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="landscape">Landscape</SelectItem>
+                  <SelectItem value="portrait">Portrait</SelectItem>
+                  <SelectItem value="street">Street</SelectItem>
+                  <SelectItem value="nature">Nature</SelectItem>
+                  <SelectItem value="architecture">Architecture</SelectItem>
+                  <SelectItem value="travel">Travel</SelectItem>
+                  <SelectItem value="macro">Macro</SelectItem>
+                  <SelectItem value="event">Event</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
         </div>
       )}
 
       {/* Tags Field */}
       {fields.showTags && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Tags
-          </label>
-          <input
+        <div className="space-y-2">
+          <Label htmlFor="tags">Tags</Label>
+          <Input
+            id="tags"
             type="text"
             {...register("tags")}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="landscape, sunset, mountain (comma-separated)"
           />
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-muted-foreground">
             Separate tags with commas
           </p>
         </div>
@@ -142,14 +155,12 @@ const PhotoMetadataForm: React.FC<PhotoMetadataFormProps> = ({
 
       {/* Comments Field */}
       {fields.showComments && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Comments
-          </label>
-          <textarea
+        <div className="space-y-2">
+          <Label htmlFor="comments">Comments</Label>
+          <Textarea
+            id="comments"
             {...register("comments")}
             rows={2}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-vertical"
             placeholder="Additional comments or notes..."
           />
         </div>
@@ -162,11 +173,11 @@ const PhotoMetadataForm: React.FC<PhotoMetadataFormProps> = ({
             type="checkbox"
             id="featured"
             {...register("featured")}
-            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+            className="w-4 h-4 text-blue-600 bg-muted border-input rounded focus:ring-ring focus:ring-2"
           />
           <label
             htmlFor="featured"
-            className="text-sm font-medium text-gray-700"
+            className="text-sm font-medium text-foreground"
           >
             Mark as featured photo
           </label>
@@ -174,23 +185,15 @@ const PhotoMetadataForm: React.FC<PhotoMetadataFormProps> = ({
       )}
 
       {/* Action Buttons */}
-      <div className="flex justify-end space-x-4 pt-4">
+      <div className="flex justify-end gap-4 pt-4">
         {onCancel && (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-          >
+          <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
-          </button>
+          </Button>
         )}
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-        >
+        <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? "Saving..." : submitLabel}
-        </button>
+        </Button>
       </div>
     </form>
   );

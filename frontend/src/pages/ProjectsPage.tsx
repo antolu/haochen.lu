@@ -81,7 +81,7 @@ const ProjectsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted">
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-blue-50 to-indigo-100 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -107,7 +107,7 @@ const ProjectsPage: React.FC = () => {
 
             {/* Stats */}
             <m.div
-              className="flex justify-center gap-8 text-sm text-gray-500"
+              className="flex justify-center gap-8 text-sm text-muted-foreground"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
@@ -136,11 +136,11 @@ const ProjectsPage: React.FC = () => {
                     placeholder="Search projects..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent"
                   />
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg
-                      className="h-5 w-5 text-gray-400"
+                      className="h-5 w-5 text-muted-foreground"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -176,7 +176,7 @@ const ProjectsPage: React.FC = () => {
                         | "updated_at",
                     }))
                   }
-                  className="px-3 py-2 border rounded-lg bg-white text-gray-700"
+                  className="px-3 py-2 border rounded-lg bg-white text-foreground"
                 >
                   <option value="order">Default</option>
                   <option value="created_at">Created Date</option>
@@ -217,7 +217,7 @@ const ProjectsPage: React.FC = () => {
 
             {/* Results Count */}
             {!isLoading && (
-              <div className="mt-4 text-sm text-gray-500 flex items-center gap-2">
+              <div className="mt-4 text-sm text-muted-foreground flex items-center gap-2">
                 {isFetching && !isLoading && (
                   <svg
                     className="animate-spin h-4 w-4 text-blue-600"
@@ -283,7 +283,7 @@ const FilterButton: React.FC<FilterButtonProps> = ({
       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
         active
           ? "bg-blue-600 text-white"
-          : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+          : "bg-white text-foreground border border-input hover:bg-gray-50"
       }`}
     >
       {children}

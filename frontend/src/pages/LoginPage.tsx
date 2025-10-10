@@ -89,7 +89,7 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-muted py-12 px-4 sm:px-6 lg:px-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -97,10 +97,10 @@ const LoginPage: React.FC = () => {
         className="max-w-md w-full space-y-8"
       >
         <div>
-          <h2 className="mt-6 text-center text-3xl font-serif font-bold text-gray-900">
+          <h2 className="mt-6 text-center text-3xl font-serif font-bold text-foreground">
             Sign in to Admin Panel
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-muted-foreground">
             Access the content management system
           </p>
         </div>
@@ -111,11 +111,11 @@ const LoginPage: React.FC = () => {
             void handleSubmit((d) => onSubmit(d))(e);
           }}
         >
-          <div className="rounded-md shadow-sm space-y-4">
+          <div className="space-y-4">
             <div>
               <label
                 htmlFor="username"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-foreground mb-1"
               >
                 Username
               </label>
@@ -123,14 +123,14 @@ const LoginPage: React.FC = () => {
                 id="username"
                 type="text"
                 autoComplete="username"
-                className={`relative block w-full px-3 py-2 border rounded-md placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm ${
-                  errors.username ? "border-red-300" : "border-gray-300"
+                className={`relative block w-full px-3 py-2 border rounded-md bg-white dark:bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring sm:text-sm ${
+                  errors.username ? "border-destructive" : "border-border/40"
                 }`}
                 placeholder="Enter your username"
                 {...register("username", { required: "Username is required" })}
               />
               {errors.username && (
-                <p className="mt-1 text-sm text-red-600">
+                <p className="mt-1 text-sm text-destructive">
                   {errors.username.message}
                 </p>
               )}
@@ -139,7 +139,7 @@ const LoginPage: React.FC = () => {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-foreground mb-1"
               >
                 Password
               </label>
@@ -147,14 +147,14 @@ const LoginPage: React.FC = () => {
                 id="password"
                 type="password"
                 autoComplete="current-password"
-                className={`relative block w-full px-3 py-2 border rounded-md placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm ${
-                  errors.password ? "border-red-300" : "border-gray-300"
+                className={`relative block w-full px-3 py-2 border rounded-md bg-white dark:bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring sm:text-sm ${
+                  errors.password ? "border-destructive" : "border-border/40"
                 }`}
                 placeholder="Enter your password"
                 {...register("password", { required: "Password is required" })}
               />
               {errors.password && (
-                <p className="mt-1 text-sm text-red-600">
+                <p className="mt-1 text-sm text-destructive">
                   {errors.password.message}
                 </p>
               )}
@@ -165,20 +165,20 @@ const LoginPage: React.FC = () => {
             <input
               id="rememberMe"
               type="checkbox"
-              className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+              className="h-4 w-4 text-primary focus:ring-ring border-border/40 rounded bg-white dark:bg-background"
               {...register("rememberMe")}
             />
             <label
               htmlFor="rememberMe"
-              className="ml-2 block text-sm text-gray-700"
+              className="ml-2 block text-sm text-foreground"
             >
               Keep me logged in for 30 days
             </label>
           </div>
 
           {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-700">{error}</div>
+            <div className="rounded-md bg-destructive/10 p-4 border border-destructive/20">
+              <div className="text-sm text-destructive">{error}</div>
             </div>
           )}
 
@@ -186,7 +186,7 @@ const LoginPage: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <div className="flex items-center">
@@ -202,7 +202,7 @@ const LoginPage: React.FC = () => {
           <div className="text-center">
             <a
               href="/"
-              className="text-primary-600 hover:text-primary-500 text-sm font-medium"
+              className="text-primary hover:text-primary/80 text-sm font-medium"
             >
               ← Back to home
             </a>

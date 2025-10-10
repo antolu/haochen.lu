@@ -94,10 +94,10 @@ const LocationSearch: React.FC<{
           onChange={handleInputChange}
           onFocus={() => setIsOpen(true)}
           placeholder="Search for a location..."
-          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full pl-10 pr-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent"
         />
         <svg
-          className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+          className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -112,9 +112,9 @@ const LocationSearch: React.FC<{
       </div>
 
       {isOpen && (results.length > 0 || isLoading) && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+        <div className="absolute z-50 w-full mt-1 bg-white border border rounded-lg shadow-lg max-h-64 overflow-y-auto">
           {isLoading ? (
-            <div className="px-3 py-2 text-gray-500">Searching...</div>
+            <div className="px-3 py-2 text-muted-foreground">Searching...</div>
           ) : (
             results.map((result, index) => (
               <button
@@ -125,7 +125,7 @@ const LocationSearch: React.FC<{
                 <div className="font-medium text-gray-900">
                   {result.location_name}
                 </div>
-                <div className="text-sm text-gray-500 truncate">
+                <div className="text-sm text-muted-foreground truncate">
                   {result.location_address}
                 </div>
               </button>
@@ -280,7 +280,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
       </div>
 
       {!disabled && (
-        <div className="mt-2 text-sm text-gray-500">
+        <div className="mt-2 text-sm text-muted-foreground">
           Click on the map to select a location • Coordinates:{" "}
           {currentLat.toFixed(6)}, {currentLng.toFixed(6)}
         </div>

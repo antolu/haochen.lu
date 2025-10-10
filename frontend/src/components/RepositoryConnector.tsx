@@ -122,10 +122,10 @@ const RepositoryConnector: React.FC<RepositoryConnectorProps> = ({
     <div className={className}>
       <label
         htmlFor="repo-url-input"
-        className="block text-sm font-medium text-gray-700 mb-2"
+        className="block text-sm font-medium text-foreground mb-2"
       >
         Repository URL
-        <span className="text-gray-500 ml-1">(optional)</span>
+        <span className="text-muted-foreground ml-1">(optional)</span>
       </label>
 
       <div className="flex gap-2">
@@ -136,7 +136,7 @@ const RepositoryConnector: React.FC<RepositoryConnectorProps> = ({
             onChange={(e) => handleUrlChange(e.target.value)}
             disabled={disabled}
             placeholder="https://github.com/username/repository or https://gitlab.com/username/repository"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+            className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent disabled:bg-gray-100"
             id="repo-url-input"
           />
         </div>
@@ -234,7 +234,7 @@ const RepositoryConnector: React.FC<RepositoryConnectorProps> = ({
         </div>
       )}
 
-      <p className="mt-2 text-sm text-gray-500">
+      <p className="mt-2 text-sm text-muted-foreground">
         Connect your GitHub or GitLab repository to automatically sync README
         content. Private repositories require authentication tokens configured
         on the server.
