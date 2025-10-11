@@ -226,7 +226,7 @@ const HomePage: React.FC = () => {
                   .querySelector("#contact-section")
                   ?.scrollIntoView({ behavior: "smooth" });
               }}
-              className="border-2 border-white text-white hover:bg-white hover:text-gray-900 px-6 sm:px-8 py-3 sm:py-4 rounded-lg transition-colors font-medium w-full sm:min-w-[200px] text-center"
+              className="border-2 border-white text-white hover:bg-white hover:text-gray-900 px-6 sm:px-8 py-3 sm:py-4 rounded-lg transition-colors font-medium w-full sm:min-w-[200px] text-center cursor-pointer"
             >
               Get In Touch
             </button>
