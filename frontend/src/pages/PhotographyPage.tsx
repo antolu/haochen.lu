@@ -207,7 +207,7 @@ const PhotographyPage: React.FC = () => {
             <button
               onClick={handleLoadMore}
               disabled={isLoadingMore}
-              className="inline-flex items-center px-8 py-4 bg-primary-600 text-white text-lg font-medium rounded-lg hover:bg-primary-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center px-8 py-4 bg-primary text-primary-foreground text-lg font-medium rounded-lg hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoadingMore ? (
                 <>

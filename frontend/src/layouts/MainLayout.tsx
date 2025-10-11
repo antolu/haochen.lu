@@ -74,7 +74,7 @@ const MainLayout: React.FC = () => {
       <header
         className={`fixed top-0 w-full z-50 transition-all duration-500 ease-out ${
           isScrolled
-            ? "bg-white/95 backdrop-blur-md shadow-sm border-b border"
+            ? "bg-white/95 backdrop-blur-md shadow-sm border-b border-border"
             : "bg-white/80 backdrop-blur-sm"
         }`}
       >
@@ -101,8 +101,8 @@ const MainLayout: React.FC = () => {
                   to={item.href}
                   className={`nav-link px-3 transition-all duration-300 ease-out ${navPadding} ${navClasses} ${
                     isActive(item.href)
-                      ? "text-primary-600 active"
-                      : "text-foreground hover:text-primary-600"
+                      ? "text-primary active"
+                      : "text-foreground hover:text-primary"
                   }`}
                 >
                   {item.name}
@@ -113,7 +113,7 @@ const MainLayout: React.FC = () => {
               {subAppsData?.subapps && subAppsData.subapps.length > 0 && (
                 <div className="relative group">
                   <button
-                    className={`px-3 text-foreground hover:text-primary-600 transition-all duration-300 ease-out ${navPadding} ${navClasses}`}
+                    className={`px-3 text-foreground hover:text-primary transition-all duration-300 ease-out ${navPadding} ${navClasses}`}
                   >
                     Apps
                   </button>
@@ -127,7 +127,7 @@ const MainLayout: React.FC = () => {
                           rel={
                             app.is_external ? "noopener noreferrer" : undefined
                           }
-                          className="flex items-center px-4 py-2 text-sm text-foreground hover:bg-gray-50 hover:text-primary-600 transition-colors duration-200"
+                          className="flex items-center px-4 py-2 text-sm text-foreground hover:bg-gray-50 hover:text-primary transition-colors duration-200"
                         >
                           {app.icon && (
                             <span
@@ -205,7 +205,7 @@ const MainLayout: React.FC = () => {
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.2 }}
-              className="md:hidden border-t border bg-white"
+              className="md:hidden border-t border-border bg-white"
             >
               <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
                 {navigation.map((item) => (
@@ -214,8 +214,8 @@ const MainLayout: React.FC = () => {
                     to={item.href}
                     className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${
                       isActive(item.href)
-                        ? "text-primary-600 bg-primary-100 border-l-4 border-primary-600 pl-2"
-                        : "text-foreground hover:text-primary-600 hover:bg-gray-50"
+                        ? "text-primary bg-primary/10 border-l-4 border-primary pl-2"
+                        : "text-foreground hover:text-primary hover:bg-gray-50"
                     }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
@@ -225,7 +225,7 @@ const MainLayout: React.FC = () => {
 
                 {/* Mobile sub-apps */}
                 {subAppsData?.subapps && subAppsData.subapps.length > 0 && (
-                  <div className="border-t border pt-3 mt-3">
+                  <div className="border-t border-border pt-3 mt-3">
                     <div className="px-3 py-2 text-sm font-medium text-muted-foreground uppercase tracking-wider">
                       Applications
                     </div>
@@ -237,7 +237,7 @@ const MainLayout: React.FC = () => {
                         rel={
                           app.is_external ? "noopener noreferrer" : undefined
                         }
-                        className="flex items-center px-3 py-2 rounded-md text-base font-medium text-foreground hover:text-primary-600 hover:bg-gray-50 transition-colors duration-200"
+                        className="flex items-center px-3 py-2 rounded-md text-base font-medium text-foreground hover:text-primary hover:bg-gray-50 transition-colors duration-200"
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         {app.icon && (

@@ -52,7 +52,7 @@ const OrderBySelector: React.FC<OrderBySelectorProps> = ({
           onChange={(event) => {
             onChange(event.target.value as OrderByOption);
           }}
-          className="appearance-none rounded-lg border border bg-white px-4 py-2 pr-16 text-sm font-medium text-foreground shadow-sm transition focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200 min-w-[150px]"
+          className="appearance-none rounded-lg border border bg-white px-4 py-2 pr-16 text-sm font-medium text-foreground shadow-sm transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 min-w-[150px]"
         >
           {OPTIONS.map((option) => (
             <option value={option.value} key={option.value}>

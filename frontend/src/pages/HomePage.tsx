@@ -216,7 +216,7 @@ const HomePage: React.FC = () => {
           >
             <Link
               to="/photography"
-              className="bg-primary-600 hover:bg-primary-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg transition-colors font-medium w-full sm:min-w-[200px] text-center"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 py-3 sm:py-4 rounded-lg transition-colors font-medium w-full sm:min-w-[200px] text-center"
             >
               Discover My Work
             </Link>
@@ -454,7 +454,7 @@ const HomePage: React.FC = () => {
           <div className="text-center">
             <Link
               to="/photography"
-              className="inline-flex items-center px-8 py-4 bg-primary-600 text-white text-lg font-medium rounded-lg hover:bg-primary-700 transition-colors duration-200"
+              className="inline-flex items-center px-8 py-4 bg-primary text-primary-foreground text-lg font-medium rounded-lg hover:bg-primary/90 transition-colors duration-200"
             >
               View Photography
               <svg
@@ -518,7 +518,7 @@ const HomePage: React.FC = () => {
                   )}
                   <div className="p-6">
                     <Link to={`/projects/${project.slug}`} className="block">
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2 hover:text-primary-600 transition-colors">
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2 hover:text-primary transition-colors">
                         {project.title}
                       </h3>
                     </Link>
@@ -540,7 +540,7 @@ const HomePage: React.FC = () => {
                               {displayTechnologies.map((tech: string) => (
                                 <span
                                   key={tech}
-                                  className="px-2 py-1 bg-primary-100 text-primary-700 text-xs rounded-full"
+                                  className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full"
                                 >
                                   {tech}
                                 </span>
@@ -564,7 +564,7 @@ const HomePage: React.FC = () => {
                           href={project.github_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-primary-600 hover:text-primary-700 text-sm font-medium"
+                          className="text-primary hover:text-primary/90 text-sm font-medium"
                         >
                           View Code
                         </a>
@@ -574,7 +574,7 @@ const HomePage: React.FC = () => {
                           href={project.demo_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-primary-600 hover:text-primary-700 text-sm font-medium"
+                          className="text-primary hover:text-primary/90 text-sm font-medium"
                         >
                           Live Demo
                         </a>
@@ -589,7 +589,7 @@ const HomePage: React.FC = () => {
           <div className="text-center">
             <Link
               to="/projects"
-              className="inline-flex items-center px-6 py-3 border border-primary-600 text-base font-medium rounded-md text-primary-600 hover:bg-primary-600 hover:text-white transition-colors duration-200"
+              className="inline-flex items-center px-6 py-3 border border-primary text-base font-medium rounded-md text-primary hover:bg-primary hover:text-primary-foreground transition-colors duration-200"
             >
               View All Projects
             </Link>
@@ -622,7 +622,7 @@ const HomePage: React.FC = () => {
                 <div className="flex justify-center space-x-8">
                   <a
                     href="mailto:anton@haochen.lu"
-                    className="flex items-center space-x-2 text-gray-700 hover:text-primary-600 transition-colors"
+                    className="flex items-center space-x-2 text-gray-700 hover:text-primary transition-colors"
                   >
                     <svg
                       className="w-5 h-5"
@@ -642,7 +642,7 @@ const HomePage: React.FC = () => {
                       href={homeContent["social.linkedin_url"].content}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-gray-400 hover:text-primary-600 transition-colors"
+                      className="text-gray-400 hover:text-primary transition-colors"
                     >
                       <svg
                         className="w-6 h-6"
@@ -658,7 +658,7 @@ const HomePage: React.FC = () => {
                       href={homeContent["social.google_scholar_url"].content}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-gray-400 hover:text-primary-600 transition-colors"
+                      className="text-gray-400 hover:text-primary transition-colors"
                     >
                       <svg
                         className="w-6 h-6"
@@ -674,7 +674,7 @@ const HomePage: React.FC = () => {
                       href={githubUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-gray-400 hover:text-primary-600 transition-colors"
+                      className="text-gray-400 hover:text-primary transition-colors"
                     >
                       <svg
                         className="w-6 h-6"

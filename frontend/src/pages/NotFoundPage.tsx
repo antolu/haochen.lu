@@ -12,7 +12,7 @@ const NotFoundPage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <div className="text-9xl font-bold text-primary-600 mb-4">404</div>
+          <div className="text-9xl font-bold text-primary mb-4">404</div>
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
             Page Not Found
           </h1>
