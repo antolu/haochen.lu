@@ -216,7 +216,7 @@ const HomePage: React.FC = () => {
           >
             <Link
               to="/photography"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 py-3 sm:py-4 rounded-lg transition-colors font-medium w-full sm:min-w-[200px] text-center"
+              className="bg-primary border-2 border-primary hover:bg-transparent hover:text-primary text-primary-foreground px-6 sm:px-8 py-3 sm:py-4 rounded-lg transition-all duration-200 font-medium w-full sm:min-w-[200px] text-center"
             >
               Discover My Work
             </Link>
@@ -454,7 +454,7 @@ const HomePage: React.FC = () => {
           <div className="text-center">
             <Link
               to="/photography"
-              className="inline-flex items-center px-8 py-4 bg-primary text-primary-foreground text-lg font-medium rounded-lg hover:bg-primary/90 transition-colors duration-200"
+              className="inline-flex items-center px-8 py-4 bg-primary border-2 border-primary hover:bg-transparent hover:text-primary text-primary-foreground text-lg font-medium rounded-lg transition-all duration-200"
             >
               View Photography
               <svg
