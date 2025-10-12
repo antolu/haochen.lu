@@ -2,6 +2,13 @@ import React, { useState, useEffect, useCallback } from "react";
 import { m } from "framer-motion";
 import { useInfiniteProjects, type ProjectFilters } from "../hooks/useProjects";
 import ProjectGrid from "../components/ProjectGrid";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
 
 const ProjectsPage: React.FC = () => {
   const [filters, setFilters] = useState<ProjectFilters>({ order_by: "order" });
@@ -165,23 +172,30 @@ const ProjectsPage: React.FC = () => {
                   All
                 </FilterButton>
                 {/* Order selector */}
-                <select
+                <Select
                   value={filters.order_by ?? "order"}
-                  onChange={(e) =>
+                  onValueChange={(value) =>
                     setFilters((prev) => ({
                       ...prev,
-                      order_by: e.target.value as
-                        | "order"
-                        | "created_at"
-                        | "updated_at",
+                      order_by: value as "order" | "created_at" | "updated_at",
                     }))
                   }
-                  className="px-3 py-2 border rounded-lg bg-white text-foreground"
                 >
-                  <option value="order">Default</option>
-                  <option value="created_at">Created Date</option>
-                  <option value="updated_at">Last Updated</option>
-                </select>
+                  <SelectTrigger className="w-[180px] border-border/40">
+                    <SelectValue>
+                      {filters.order_by === "created_at"
+                        ? "Created Date"
+                        : filters.order_by === "updated_at"
+                          ? "Last Updated"
+                          : "Default"}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="order">Default</SelectItem>
+                    <SelectItem value="created_at">Created Date</SelectItem>
+                    <SelectItem value="updated_at">Last Updated</SelectItem>
+                  </SelectContent>
+                </Select>
                 <FilterButton
                   active={filters.featured === true}
                   onClick={() =>

@@ -109,7 +109,7 @@ const PhotographyPage: React.FC = () => {
     setSearchParams(
       (params) => {
         const next = new URLSearchParams(params);
-        if (value === "created_at") {
+        if (value === "order") {
           next.delete("order_by");
         } else {
           next.set("order_by", value);

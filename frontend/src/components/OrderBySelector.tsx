@@ -1,4 +1,11 @@
 import React from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 export type OrderByOption = "created_at" | "date_taken" | "order";
 
@@ -39,41 +46,23 @@ const OrderBySelector: React.FC<OrderBySelectorProps> = ({
     <div
       className={`flex flex-col items-start sm:items-end gap-2 ${className}`}
     >
-      <label
-        className="text-sm font-medium text-muted-foreground"
-        htmlFor="order-by-select"
-      >
+      <label className="text-sm font-medium text-muted-foreground">
         Display Order
       </label>
-      <div className="relative inline-flex items-center">
-        <select
-          id="order-by-select"
-          value={value}
-          onChange={(event) => {
-            onChange(event.target.value as OrderByOption);
-          }}
-          className="appearance-none rounded-lg border border bg-white px-4 py-2 pr-16 text-sm font-medium text-foreground shadow-sm transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 min-w-[150px]"
-        >
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger className="min-w-[150px] border-border/40">
+          <SelectValue>
+            {OPTIONS.find((opt) => opt.value === value)?.label}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent>
           {OPTIONS.map((option) => (
-            <option value={option.value} key={option.value}>
+            <SelectItem key={option.value} value={option.value}>
               {option.label}
-            </option>
+            </SelectItem>
           ))}
-        </select>
-        <svg
-          className="pointer-events-none absolute right-3 h-4 w-4 text-muted-foreground"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
-      </div>
+        </SelectContent>
+      </Select>
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         {value === "order" && (
           <span
