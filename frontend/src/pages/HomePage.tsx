@@ -216,7 +216,7 @@ const HomePage: React.FC = () => {
           >
             <Link
               to="/photography"
-              className="bg-primary border-2 border-primary hover:bg-transparent hover:text-primary text-primary-foreground px-6 sm:px-8 py-3 sm:py-4 rounded-lg transition-all duration-200 font-medium w-full sm:min-w-[200px] text-center"
+              className="bg-primary border-2 border-primary hover:bg-black/40 hover:text-primary text-primary-foreground px-6 sm:px-8 py-3 sm:py-4 rounded-lg transition-all duration-200 font-medium w-full sm:min-w-[200px] text-center"
             >
               Discover My Work
             </Link>
