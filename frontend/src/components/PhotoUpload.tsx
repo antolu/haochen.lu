@@ -31,7 +31,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
     comments: "",
     featured: false,
   });
-  const [useQueue, setUseQueue] = useState(true); // Enable queue by default
+  const [useQueue] = useState(true); // Enable queue by default
   const uploadMutation = useUploadPhoto();
   const { addToQueue } = useUploadQueue();
 
@@ -210,10 +210,10 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
           progress: 0,
           metadata: {
             title: newMetadata.title || file.file.name.replace(/\.[^/.]+$/, ""),
-            description: newMetadata.description,
-            category: newMetadata.category,
-            tags: newMetadata.tags,
-            comments: newMetadata.comments,
+            description: newMetadata.description || "",
+            category: newMetadata.category || "",
+            tags: newMetadata.tags || "",
+            comments: newMetadata.comments || "",
             featured: newMetadata.featured,
           },
           createdAt: Date.now(),

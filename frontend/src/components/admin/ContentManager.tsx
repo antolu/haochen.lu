@@ -5,13 +5,6 @@ import { toast } from "react-hot-toast";
 import { content } from "../../api/client";
 import type { Content, ContentUpdate } from "../../types";
 import { Input } from "../ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
 import { Alert } from "../ui/alert";
 import { Skeleton } from "../ui/skeleton";
 import ContentCard from "./ContentCard";

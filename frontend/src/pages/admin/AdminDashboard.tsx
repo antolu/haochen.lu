@@ -23,7 +23,6 @@ import {
   CardTitle,
   CardDescription,
 } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
 import { formatNumber } from "../../lib/utils";
 
 const AdminDashboard: React.FC = () => {
