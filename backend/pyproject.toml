@@ -1,0 +1,289 @@
+[build-system]
+requires = ["setuptools >= 61", "setuptools-scm[toml] ~= 6.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "photography-portfolio"
+dynamic = ["version", "readme"]
+description = "Modern photography portfolio with FastAPI backend"
+requires-python = ">=3.11"
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Natural Language :: English",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+  "fastapi~=0.117.1",
+  "uvicorn[standard]~=0.37.0",
+  "sqlalchemy~=2.0.43",
+  "alembic~=1.16",
+  "asyncpg~=0.29.0",
+  "redis~=6.4",
+  "celery~=5.5",
+  "pillow~=11.3",
+  "pyvips~=2.2.3",
+  "python-multipart==0.0.9",
+  "bcrypt==4.1.2",
+  "fastapi-users[sqlalchemy]==13.0.0",
+  "fastapi-users-db-sqlalchemy==6.0.1",
+  "exifread~=3.5",
+  "piexif~=1.1.3",
+  "geopy~=2.4.1",
+  "pytz~=2025.2",
+  "pydantic~=2.11",
+  "pydantic-settings~=2.10",
+  "httpx~=0.28.1",
+  "python-socketio~=5.11.0",
+  "filetype~=1.2.0",
+]
+
+[[project.authors]]
+name = "Anton Lu"
+email = "anton@haochen.lu"
+
+[project.optional-dependencies]
+test = [
+  "pytest~=7.4.3",
+  "pytest-asyncio~=0.21.1",
+  "pytest-cov~=4.1.0",
+  "pytest-mock~=3.12.0",
+  "pytest-benchmark~=4.0.0",
+  "pytest-xdist~=3.5.0",
+  "fakeredis~=2.20.1",
+  "factory-boy~=3.3.0",
+  "freezegun~=1.2.2",
+  "responses~=0.24.1",
+  "aiofiles~=23.2.1",
+  "aiosqlite~=0.19.0",
+  "sqlalchemy-utils~=0.41.1",
+  "pytest-clarity~=1.0.1",
+]
+security = ["bandit~=1.7.5", "safety~=2.3.5"]
+dev = ["black~=23.11.0", "ruff~=0.1.6", "mypy~=1.7.1"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+  "-v",
+  "--strict-markers",
+  "--strict-config",
+  "--cov=app",
+  "--cov-report=html",
+  "--cov-report=term-missing",
+  "--cov-fail-under=40",
+  "--tb=short",
+]
+markers = [
+  "unit: Unit tests",
+  "integration: Integration tests",
+  "security: Security tests",
+  "performance: Performance tests",
+  "slow: Slow running tests",
+  "auth: Authentication related tests",
+  "upload: File upload related tests",
+  "database: Database related tests",
+  "api: API tests",
+  "image: Image-related tests",
+  "benchmark: Benchmark tests",
+]
+filterwarnings = ["error", "ignore::UserWarning", "ignore::DeprecationWarning"]
+asyncio_mode = "auto"
+norecursedirs = ["tests/unit/services"]
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["*/tests/*", "*/venv/*", "*/__pycache__/*", "*/migrations/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "def __repr__",
+  "raise AssertionError",
+  "raise NotImplementedError",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.ruff]
+
+exclude = [
+  ".bzr",
+  ".direnv",
+  ".eggs",
+  ".git",
+  ".hg",
+  ".mypy_cache",
+  ".nox",
+  ".pants.d",
+  ".pytype",
+  ".ruff_cache",
+  ".svn",
+  ".tox",
+  ".venv",
+  "__pypackages__",
+  "_build",
+  "buck-out",
+  "build",
+  "dist",
+  "node_modules",
+  "venv",
+  ".venv",
+]
+
+line-length = 88
+target-version = "py311"
+
+preview = true
+unsafe-fixes = true
+
+[tool.ruff.lint]
+# All rules can be found here: https://docs.astral.sh/ruff/rules/
+select = [
+  "F",   # pyflakes
+  "E",   # error  (pycodestyle)
+  "W",   # warning (pycodestyle)
+  "I",   # isort
+  "N",   # naming  (pep8)
+  "UP",  # pyupgrade
+  "PLC", # convention  (pylint)
+  "PLE", # error  (pylint)
+  "PLW", # warning  (pylint)
+  # "D",  # docstring (pydocstyle),  # not enabled by default
+  "PD",   # pandas
+  "TRY",  # tryceratops
+  "NPY",  # numpy
+  "PERF", # perflint
+  "RUF",  # ruff
+  # v flake8 v
+  "B",
+  "C4",
+  "FBT",
+  "A",
+  "EM",
+  "ISC",
+  "FA",
+  "G",
+  "PIE",
+  "PYI",
+  "PT",
+  "Q",
+  "RSE",
+  "RET",
+  "SLF",
+  "SIM",
+]
+fixable = ["ALL"]
+ignore = [
+  "E501",
+  "W505",
+  "ISC001",
+  "PD901",
+  "PLW2901",
+  "N812",
+  "N806",
+  "G004",
+  "RUF002",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+  "SLF001",  # Private member accessed (common in tests)
+  "PLC2701", # Private name import (common in tests)
+]
+"docs/**" = [
+  "SLF001", # Private member accessed (needed for docs)
+]
+"app/core/image_processor.py" = [
+  "SLF001", # Private member accessed (_getexif is the correct PIL API)
+]
+"test_simple.py" = [
+  "PLC0415", # Import at function level (demo script)
+]
+
+[tool.ruff.format]
+preview = true
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "alembic.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "app.crud.*"
+warn_return_any = false
+
+[[tool.mypy.overrides]]
+module = [
+  "pyvips",
+  "piexif",
+]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "app.core.vips_processor"
+ignore_errors = true
+
+[tool.bandit]
+exclude_dirs = ["tests", "migrations", "test_simple.py"]
+skips = [
+  "B101",
+  "B601",
+  "B105",
+] # B105: hardcoded password string (common in tests)
+
+# keep this for dynamic versioning
+[tool.setuptools_scm]
+write_to = "app/_version.py"
+local_scheme = "no-local-version"
+
+[tool.setuptools.dynamic]
+readme = { file = ["README.md"], content-type = "text/markdown" }
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+namespaces = false
+exclude = ["tests", "tests.*", "build"]

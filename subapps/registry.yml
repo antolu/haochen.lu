@@ -1,0 +1,19 @@
+# Subapp Registry
+# This file tracks all integrated subapps and their configurations
+
+version: "1.0"
+registry:
+  # Subapps are added here by the add_subapp.sh script
+  # Format:
+  # subapp_slug:
+  #   source_path: "../path/to/subapp"
+  #   config_path: "../path/to/subapp/subapp.config.yml"
+  #   integrated_at: "2025-09-19T00:00:00Z"
+  #   enabled: true
+
+# Example:
+# cookbook:
+#   source_path: "../cookbook"
+#   config_path: "../cookbook/subapp.config.yml"
+#   integrated_at: "2025-09-19T00:48:00Z"
+#   enabled: true

@@ -1,0 +1,170 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  darkMode: ["class"],
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  safelist: [
+    // Common background colors
+    "bg-gray-50",
+    "bg-gray-100",
+    "bg-gray-200",
+    "bg-gray-300",
+    "bg-gray-400",
+    "bg-gray-500",
+    "bg-gray-600",
+    "bg-gray-700",
+    "bg-gray-800",
+    "bg-gray-900",
+    "bg-white",
+    "bg-black",
+    // Primary colors
+    "bg-primary-50",
+    "bg-primary-100",
+    "bg-primary-200",
+    "bg-primary-300",
+    "bg-primary-400",
+    "bg-primary-500",
+    "bg-primary-600",
+    "bg-primary-700",
+    "bg-primary-800",
+    "bg-primary-900",
+    // Text colors
+    "text-gray-50",
+    "text-gray-100",
+    "text-gray-200",
+    "text-gray-300",
+    "text-gray-400",
+    "text-gray-500",
+    "text-gray-600",
+    "text-gray-700",
+    "text-gray-800",
+    "text-gray-900",
+    "text-white",
+    "text-black",
+    "text-primary-50",
+    "text-primary-100",
+    "text-primary-200",
+    "text-primary-300",
+    "text-primary-400",
+    "text-primary-500",
+    "text-primary-600",
+    "text-primary-700",
+    "text-primary-800",
+    "text-primary-900",
+    // Gradients
+    "bg-gradient-to-r",
+    "from-gray-900",
+    "to-gray-700",
+    "from-primary-600",
+    "to-primary-800",
+    "from-blue-50",
+    "to-indigo-50",
+    "from-blue-900/10",
+    "to-indigo-900/10",
+    "text-blue-900",
+    "text-blue-100",
+    "text-blue-600",
+    "text-blue-400",
+    // Borders
+    "border-gray-200",
+    "border-gray-300",
+    "border-white",
+    "border-primary-600",
+    // Common utility classes
+    "hover:bg-primary-700",
+    "hover:bg-gray-100",
+    "hover:text-gray-900",
+    // Spacing and layout classes
+    "py-32",
+    "mb-24",
+    "gap-6",
+    "gap-8",
+    "gap-10",
+    "gap-12",
+    "mb-16",
+    "px-8",
+    "py-4",
+    "min-w-[200px]",
+    "text-center",
+  ],
+  theme: {
+    screens: {
+      xs: "480px", // Large phones
+      sm: "768px", // Tablets
+      md: "1024px", // Small laptops
+      lg: "1440px", // MacBook Pro 14" & 16", large laptops
+      xl: "1680px", // Large desktops
+      "2xl": "1920px", // Very large screens
+    },
+    extend: {
+      fontFamily: {
+        sans: ["Inter", "system-ui", "sans-serif"],
+        serif: ["Playfair Display", "Georgia", "serif"],
+      },
+      colors: {
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+          50: "#f0f9ff",
+          100: "#e0f2fe",
+          200: "#bae6fd",
+          300: "#7dd3fc",
+          400: "#38bdf8",
+          500: "#0ea5e9",
+          600: "#0284c7",
+          700: "#0369a1",
+          800: "#075985",
+          900: "#0c4a6e",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+      },
+      animation: {
+        "fade-in": "fadeIn 0.5s ease-in-out",
+        "slide-in": "slideIn 0.3s ease-out",
+        "zoom-in": "zoomIn 0.2s ease-out",
+      },
+      keyframes: {
+        fadeIn: {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        slideIn: {
+          "0%": { transform: "translateY(10px)", opacity: "0" },
+          "100%": { transform: "translateY(0)", opacity: "1" },
+        },
+        zoomIn: {
+          "0%": { transform: "scale(0.95)", opacity: "0" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
+      },
+    },
+  },
+  plugins: [],
+};

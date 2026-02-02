@@ -1,0 +1,69 @@
+name: Build and Push Multi-Platform Images
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on version tags like v1.0.0
+
+env:
+  REGISTRY: docker.io
+  IMAGE_FRONTEND: antonlu/arcadia-frontend
+  IMAGE_BACKEND: antonlu/arcadia-backend
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+
+      - name: Build images with docker compose
+        run: |
+          # Extract tag from ref
+          TAG=${GITHUB_REF#refs/tags/}
+
+          # Build images using docker compose
+          docker compose -f docker-compose.build.yml build
+
+          # Tag images with the release tag
+          docker tag antonlu/arcadia-backend:latest antonlu/arcadia-backend:$TAG
+          docker tag antonlu/arcadia-frontend:latest antonlu/arcadia-frontend:$TAG
+
+      - name: Push images to registry
+        run: |
+          # Extract tag from ref
+          TAG=${GITHUB_REF#refs/tags/}
+
+          # Push both latest and tagged versions
+          docker push antonlu/arcadia-backend:latest
+          docker push antonlu/arcadia-backend:$TAG
+          docker push antonlu/arcadia-frontend:latest
+          docker push antonlu/arcadia-frontend:$TAG
+
+      - name: Summary
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          echo "## Images Built and Pushed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Images" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "antonlu/arcadia-frontend:latest" >> $GITHUB_STEP_SUMMARY
+          echo "antonlu/arcadia-frontend:$TAG" >> $GITHUB_STEP_SUMMARY
+          echo "antonlu/arcadia-backend:latest" >> $GITHUB_STEP_SUMMARY
+          echo "antonlu/arcadia-backend:$TAG" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

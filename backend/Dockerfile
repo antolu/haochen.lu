@@ -1,55 +1,91 @@
-# Use Node.js 18 LTS Alpine for smaller image size
-FROM node:18-alpine
+# Multi-stage Dockerfile for both development and production builds
+# syntax=docker/dockerfile:1.4
+# hadolint ignore=DL3008
+ARG BUILD_TYPE=production
+
+# Base stage with common dependencies
+FROM python:3.11-slim AS base
 
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies for Sharp (image processing)
-RUN apk add --no-cache \
-    libc6-compat \
-    vips-dev \
-    && rm -rf /var/cache/apk/*
+# Install base system dependencies including libvips and AVIF support
+# hadolint ignore=DL3008
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    g++ \
+    libpq-dev \
+    curl \
+    libvips-dev \
+    libheif-dev \
+    libde265-dev \
+    libx265-dev \
+    libaom-dev \
+    libdav1d-dev \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy package files first for better Docker layer caching
-COPY package*.json ./
+# Development stage
+FROM base AS development
+# Install additional dev packages
+# hadolint ignore=DL3008
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install npm dependencies
-RUN npm ci --only=production && \
-    npm cache clean --force
+# Install dev tools first (stable cache)
+RUN pip install --no-cache-dir watchfiles==0.24.0
 
-# Create necessary directories
-RUN mkdir -p /app/data \
-    /app/assets/images/portfolio \
-    /app/assets/images/projects \
-    /app/uploads/temp
+# Production stage
+FROM base AS production
+# Install additional production packages including git for setuptools-scm
+# hadolint ignore=DL3008
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    ca-certificates \
+    libwebp-dev \
+    libjpeg62-turbo-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy server code and entrypoint script
-COPY server/ ./server/
-COPY docker-entrypoint.sh /usr/local/bin/
+# Final stage selection based on build type
+FROM ${BUILD_TYPE} AS final
 
-# Make entrypoint script executable
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+# Copy pyproject first to leverage Docker layer cache for dependencies
+# hadolint ignore=DL3045
+COPY backend/pyproject.toml ./
 
-# Create non-root user for security
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S photography -u 1001 -G nodejs
+# Install dependencies only (not the package itself) to avoid setuptools-scm issues
+# hadolint ignore=DL3013,SC2046
+RUN pip install --no-cache-dir $(python -c "import tomllib; print(' '.join(tomllib.load(open('pyproject.toml', 'rb'))['project']['dependencies']))")
 
-# Set proper permissions
-RUN chown -R photography:nodejs /app && \
-    chmod -R 755 /app
+# Copy application code after dependencies are cached
+# hadolint ignore=DL3045
+COPY backend/ .
 
-# Switch to non-root user
-USER photography
+# Install the package itself with git context for proper setuptools-scm versioning
+RUN --mount=type=bind,source=.git,target=/app/.git \
+    pip install --no-cache-dir --no-deps .
 
-# Set entrypoint
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+# Create directories for uploads and compressed images
+RUN mkdir -p uploads compressed
 
-# Expose port 3000 (internal only)
-EXPOSE 3000
+# Expose port
+EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+# Set up entrypoint for production (always copy the entrypoint script)
+RUN cp docker-entrypoint.sh /docker-entrypoint.sh && \
+    chmod +x /docker-entrypoint.sh
 
-# Start the application
-CMD ["node", "server/app.js"]
+# Set command based on build type
+ARG BUILD_TYPE=production
+RUN if [ "$BUILD_TYPE" = "development" ]; then \
+        printf '#!/bin/bash\nexec uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload\n' > /start.sh && \
+        chmod +x /start.sh; \
+    else \
+        printf '#!/bin/bash\nexec /docker-entrypoint.sh\n' > /start.sh && \
+        chmod +x /start.sh; \
+    fi
+
+# Use the dynamically created start script
+ENTRYPOINT ["/start.sh"]

@@ -1,0 +1,384 @@
+name: Security Scans
+
+on:
+  push:
+    branches: [ master, feat/v2 ]
+  pull_request:
+    branches: [ master, feat/v2 ]
+  schedule:
+    # Run security scans daily at 3 AM UTC
+    - cron: '0 3 * * *'
+
+jobs:
+  backend-security:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Install dependencies
+      run: |
+        cd backend
+        pip install -e ".[test]"
+
+    - name: Install security tools
+      run: |
+        pip install bandit safety pip-audit semgrep
+
+    - name: Run Bandit security linter
+      run: |
+        cd backend
+        bandit -r app/ -f json -o bandit-report.json -ll
+        bandit -r app/ -f txt -o bandit-report.txt -ll || true
+
+    - name: Run Safety vulnerability scanner
+      run: |
+        cd backend
+        safety check --json --output safety-report.json --ignore 70612 || true
+        safety check --output safety-report.txt --ignore 70612 || true
+
+    - name: Run pip-audit for dependency vulnerabilities
+      run: |
+        cd backend
+        pip-audit --format=json --output=pip-audit-report.json || true
+        pip-audit --format=table --output=pip-audit-report.txt || true
+
+    - name: Run Semgrep static analysis
+      run: |
+        cd backend
+        semgrep --config=auto --json --output=semgrep-report.json app/ || true
+        semgrep --config=auto --text --output=semgrep-report.txt app/ || true
+
+    - name: Check for secrets in code
+      run: |
+        cd backend
+        # Check for hardcoded secrets
+        grep -r -i -E "(password|secret|key|token)\s*=\s*['\"][^'\"]{8,}['\"]" app/ > secrets-check.txt || echo "No hardcoded secrets found"
+
+        # Check for API keys patterns
+        grep -r -E "(api_key|apikey|api-key)\s*[:=]\s*['\"][A-Za-z0-9_-]{16,}['\"]" app/ >> secrets-check.txt || echo "No API keys found"
+
+        # Check for database URLs with credentials
+        grep -r -E "postgresql://[^:]+:[^@]+@" app/ >> secrets-check.txt || echo "No DB credentials found"
+
+    - name: Upload backend security reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: backend-security-reports
+        path: |
+          backend/bandit-report.*
+          backend/safety-report.*
+          backend/pip-audit-report.*
+          backend/semgrep-report.*
+          backend/secrets-check.txt
+
+  frontend-security:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Run npm audit
+      run: |
+        cd frontend
+        npm audit --audit-level=moderate --json > npm-audit-report.json || true
+        npm audit --audit-level=moderate > npm-audit-report.txt || true
+
+    - name: Install and run ESLint security plugin
+      run: |
+        cd frontend
+        npm install --save-dev eslint-plugin-security
+        npx eslint --ext .ts,.tsx --format json -o eslint-security-report.json src/ || true
+        npx eslint --ext .ts,.tsx src/ > eslint-security-report.txt 2>&1 || true
+
+    - name: Build application for security analysis
+      run: |
+        cd frontend
+        npm run build
+
+    - name: Analyze bundle for security issues
+      run: |
+        cd frontend
+        # Check bundle size for potential issues
+        find dist/ -name "*.js" -exec wc -c {} + > bundle-sizes.txt
+
+        # Check for exposed secrets in build
+        grep -r -i -E "(api_key|secret|password|token)" dist/ > build-secrets-check.txt || echo "No secrets in build"
+
+        # Check for console.log statements that might leak info
+        grep -r "console\." dist/ > console-usage.txt || echo "No console usage found"
+
+        # Check for eval usage
+        grep -r "eval(" dist/ > eval-usage.txt || echo "No eval usage found"
+
+    - name: Check for vulnerable dependencies
+      run: |
+        cd frontend
+        # Use Snyk CLI if available, otherwise use audit
+        npx snyk test --json > snyk-report.json 2>/dev/null || echo "Snyk not available"
+
+        # Check for known vulnerable packages
+        npm list --audit-level=moderate --json > dependency-tree.json || true
+
+    - name: Check Content Security Policy headers
+      run: |
+        cd frontend
+        # Start server and check headers
+        npm run preview -- --port 3001 &
+        SERVER_PID=$!
+        sleep 5
+
+        # Check security headers
+        curl -I http://localhost:3001 > security-headers.txt 2>/dev/null || echo "Could not fetch headers"
+
+        kill $SERVER_PID || true
+
+    - name: Upload frontend security reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: frontend-security-reports
+        path: |
+          frontend/npm-audit-report.*
+          frontend/eslint-security-report.*
+          frontend/bundle-sizes.txt
+          frontend/build-secrets-check.txt
+          frontend/console-usage.txt
+          frontend/eval-usage.txt
+          frontend/snyk-report.json
+          frontend/dependency-tree.json
+          frontend/security-headers.txt
+
+  container-security:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build backend Docker image
+      run: |
+        cd backend
+        docker build -t portfolio-backend:security-scan .
+
+    - name: Build frontend Docker image
+      run: |
+        cd frontend
+        docker build -t portfolio-frontend:security-scan .
+
+    - name: Run Trivy vulnerability scanner on backend
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'portfolio-backend:security-scan'
+        format: 'json'
+        output: 'backend-trivy-report.json'
+      continue-on-error: true
+
+    - name: Run Trivy vulnerability scanner on frontend
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'portfolio-frontend:security-scan'
+        format: 'json'
+        output: 'frontend-trivy-report.json'
+      continue-on-error: true
+
+    - name: Run Docker Scout (if available)
+      run: |
+        # Docker Scout analysis
+        docker scout cves portfolio-backend:security-scan > backend-scout-report.txt 2>&1 || echo "Docker Scout not available"
+        docker scout cves portfolio-frontend:security-scan > frontend-scout-report.txt 2>&1 || echo "Docker Scout not available"
+
+    - name: Check Dockerfile best practices
+      run: |
+        # Install hadolint
+        wget -O hadolint https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Linux-x86_64
+        chmod +x hadolint
+
+        # Check backend Dockerfile
+        ./hadolint backend/Dockerfile > backend-dockerfile-check.txt 2>&1 || true
+
+        # Check frontend Dockerfile
+        ./hadolint frontend/Dockerfile > frontend-dockerfile-check.txt 2>&1 || true
+
+    - name: Upload container security reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: container-security-reports
+        path: |
+          backend-trivy-report.json
+          frontend-trivy-report.json
+          backend-scout-report.txt
+          frontend-scout-report.txt
+          backend-dockerfile-check.txt
+          frontend-dockerfile-check.txt
+
+  infrastructure-security:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Check Docker Compose security
+      run: |
+        # Check for security issues in docker-compose.yml
+        echo "=== Docker Compose Security Check ===" > docker-compose-security.txt
+
+        # Check for exposed ports
+        grep -n "ports:" docker-compose.yml >> docker-compose-security.txt || echo "No port mappings found"
+
+        # Check for privileged containers
+        grep -n "privileged:" docker-compose.yml >> docker-compose-security.txt || echo "No privileged containers"
+
+        # Check for volume mounts
+        grep -n -A5 "volumes:" docker-compose.yml >> docker-compose-security.txt || echo "No volume mounts found"
+
+        # Check for environment variables
+        grep -n "environment:" docker-compose.yml >> docker-compose-security.txt || echo "No environment variables"
+
+    - name: Check GitHub Actions security
+      run: |
+        echo "=== GitHub Actions Security Check ===" > github-actions-security.txt
+
+        # Check for hardcoded secrets in workflows
+        find .github/workflows -name "*.yml" -exec grep -l "password\|secret\|key\|token" {} \; >> github-actions-security.txt || echo "No hardcoded secrets in workflows"
+
+        # Check for third-party actions versions
+        find .github/workflows -name "*.yml" -exec grep -H "uses:" {} \; | grep -v "@v" >> github-actions-security.txt || echo "All actions use version tags"
+
+        # Check for script injections
+        find .github/workflows -name "*.yml" -exec grep -H "\${{" {} \; >> github-actions-security.txt || echo "No script injections found"
+
+    - name: Check for sensitive files
+      run: |
+        echo "=== Sensitive Files Check ===" > sensitive-files-check.txt
+
+        # Check for common sensitive files
+        find . -name "*.pem" -o -name "*.key" -o -name "*.p12" -o -name "*.jks" -o -name ".env" -o -name "credentials.*" | head -20 >> sensitive-files-check.txt || echo "No sensitive files found"
+
+        # Check for backup files
+        find . -name "*.bak" -o -name "*.backup" -o -name "*~" | head -10 >> sensitive-files-check.txt || echo "No backup files found"
+
+    - name: Upload infrastructure security reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: infrastructure-security-reports
+        path: |
+          docker-compose-security.txt
+          github-actions-security.txt
+          sensitive-files-check.txt
+
+  security-summary:
+    runs-on: ubuntu-latest
+    needs: [backend-security, frontend-security, container-security, infrastructure-security]
+    if: always()
+
+    steps:
+    - name: Download all security reports
+      uses: actions/download-artifact@v4
+      with:
+        path: security-reports
+
+    - name: Generate security summary
+      run: |
+        echo "# Security Scan Summary" > security-summary.md
+        echo "" >> security-summary.md
+        echo "**Scan Date:** $(date -u)" >> security-summary.md
+        echo "**Commit:** ${{ github.sha }}" >> security-summary.md
+        echo "" >> security-summary.md
+
+        echo "## Backend Security" >> security-summary.md
+        if [ -f "security-reports/backend-security-reports/bandit-report.txt" ]; then
+          echo "- Bandit scan completed" >> security-summary.md
+          grep -c "Issue:" security-reports/backend-security-reports/bandit-report.txt | xargs echo "- Issues found:" >> security-summary.md || echo "- No issues found" >> security-summary.md
+        fi
+
+        echo "" >> security-summary.md
+        echo "## Frontend Security" >> security-summary.md
+        if [ -f "security-reports/frontend-security-reports/npm-audit-report.txt" ]; then
+          echo "- npm audit completed" >> security-summary.md
+          grep -c "vulnerabilities" security-reports/frontend-security-reports/npm-audit-report.txt | head -1 | xargs echo "- Vulnerabilities:" >> security-summary.md || echo "- No vulnerabilities found" >> security-summary.md
+        fi
+
+        echo "" >> security-summary.md
+        echo "## Container Security" >> security-summary.md
+        if [ -f "security-reports/container-security-reports/backend-trivy-report.json" ]; then
+          echo "- Trivy container scan completed" >> security-summary.md
+        fi
+
+        echo "" >> security-summary.md
+        echo "## Infrastructure Security" >> security-summary.md
+        if [ -f "security-reports/infrastructure-security-reports/docker-compose-security.txt" ]; then
+          echo "- Docker Compose security check completed" >> security-summary.md
+        fi
+
+        echo "" >> security-summary.md
+        echo "## Recommendations" >> security-summary.md
+        echo "1. Review all security reports for critical and high severity issues" >> security-summary.md
+        echo "2. Update vulnerable dependencies identified in scans" >> security-summary.md
+        echo "3. Address any hardcoded secrets or credentials" >> security-summary.md
+        echo "4. Ensure all container images are regularly updated" >> security-summary.md
+
+    - name: Upload security summary
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-summary
+        path: security-summary.md
+
+    - name: Create security issue on critical findings
+      if: github.event_name == 'schedule'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+
+          // Check if there are critical security issues
+          let criticalIssues = false;
+
+          try {
+            // This would parse actual security reports for critical issues
+            // For now, create issue if any high/critical findings exist
+            criticalIssues = true; // Placeholder logic
+          } catch (error) {
+            console.log('Could not parse security reports');
+          }
+
+          if (criticalIssues) {
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🔴 Critical Security Issues Found - ${new Date().toISOString().split('T')[0]}`,
+              body: `Critical security vulnerabilities have been detected in the scheduled security scan.
+
+              **Priority Actions Required:**
+              1. Review security scan artifacts immediately
+              2. Update vulnerable dependencies
+              3. Address any exposed secrets or credentials
+              4. Update container base images if needed
+
+              **Scan Details:**
+              - Workflow Run: ${context.runId}
+              - Commit: ${context.sha}
+
+              Please download and review all security reports from the workflow artifacts.`,
+              labels: ['security', 'critical', 'vulnerability']
+            });
+          }

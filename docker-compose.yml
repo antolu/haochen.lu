@@ -1,26 +1,18 @@
-version: '3.8'
+# Removed version as it's obsolete in modern Docker Compose
 
 services:
-  nginx:
-    image: nginx:alpine
-    container_name: photography-nginx
+  frontend:
+    image: antonlu/arcadia-frontend:latest
+    container_name: portfolio-frontend
+    environment:
+      - BACKEND_URL=http://backend:8000
     ports:
-      - "9080:80"
-      - "9443:443"
-    volumes:
-      # nginx configuration
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      # Static frontend files
-      - ./index.html:/usr/share/nginx/html/index.html:ro
-      - ./thisisme.html:/usr/share/nginx/html/thisisme.html:ro
-      - ./assets:/usr/share/nginx/html/assets:ro
-      - ./admin:/usr/share/nginx/html/admin:ro
-      # Data directory for JSON files (read-only for nginx)
-      - ./data:/usr/share/nginx/html/data:ro
+      - "80:80"
+      - "443:443"
     depends_on:
       - backend
     networks:
-      - photography-network
+      - portfolio-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/"]
@@ -29,38 +21,99 @@ services:
       retries: 3
 
   backend:
-    build:
-      context: .
-      dockerfile: backend/Dockerfile
-    container_name: photography-backend
+    image: antonlu/arcadia-backend:latest
+    container_name: portfolio-backend
     environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - MAX_FILE_SIZE=52428800
-      - CORS_ORIGINS=http://localhost:9080,https://localhost:9443
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - DATABASE_URL=postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-portfolio}
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY}
+      - SESSION_SECRET_KEY=${SESSION_SECRET_KEY}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost,https://localhost,http://localhost:80,https://localhost:443}
+      - COOKIE_SECURE=${COOKIE_SECURE:-false}
+      - COOKIE_DOMAIN=${COOKIE_DOMAIN:-}
+      - WEBP_QUALITY=${WEBP_QUALITY:-85}
+      - THUMBNAIL_SIZE=${THUMBNAIL_SIZE:-400}
+      - MAX_FILE_SIZE=${MAX_FILE_SIZE:-52428800}
     volumes:
-      # Data persistence
-      - ./data:/app/data
-      # Image storage
-      - ./assets/images:/app/assets/images
-      # Upload temp directory
-      - backend-uploads:/app/uploads
+      - ./uploads:/app/uploads
+      - ./compressed:/app/compressed
+    depends_on:
+      - db
+      - redis
     networks:
-      - photography-network
+      - portfolio-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-    # Don't expose ports externally - only internal network access
     expose:
-      - "3000"
+      - "8000"
+
+  db:
+    image: postgres:15-alpine
+    container_name: portfolio-db
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-portfolio}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - portfolio-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    # Expose port for development access
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    container_name: portfolio-redis
+    volumes:
+      - redis_data:/data
+    networks:
+      - portfolio-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    # Expose port for development access
+    ports:
+      - "6379:6379"
+
+  # Database migration service
+  migrate:
+    image: antonlu/arcadia-backend:latest
+    container_name: portfolio-migrate
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-portfolio}
+      - SECRET_KEY=${SECRET_KEY}
+      - SESSION_SECRET_KEY=${SESSION_SECRET_KEY}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      - db
+    networks:
+      - portfolio-network
+    restart: "no"
 
 networks:
-  photography-network:
+  portfolio-network:
     driver: bridge
+    name: portfolio-network
 
 volumes:
-  backend-uploads:
+  postgres_data:
+    driver: local
+  redis_data:
     driver: local

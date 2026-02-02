@@ -1,0 +1,186 @@
+
+> portfolio-frontend@0.0.0 lint
+> eslint .
+
+
+/Users/antonlu/code/haochen.lu/frontend/src/api/client.ts
+  649:5  error  Unsafe return of a value of type `any`  @typescript-eslint/no-unsafe-return
+  662:5  error  Unsafe return of a value of type `any`  @typescript-eslint/no-unsafe-return
+
+/Users/antonlu/code/haochen.lu/frontend/src/components/InteractiveMap.tsx
+  32:29  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+
+/Users/antonlu/code/haochen.lu/frontend/src/components/MapLibrePhotoMap.tsx
+   37:25   warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                                                                                                                                                                                                                                                         @typescript-eslint/prefer-nullish-coalescing
+  101:33   warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                                                                                                                                                                                                                                                         @typescript-eslint/prefer-nullish-coalescing
+  102:11   error    Unsafe assignment of an `any` value                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-unsafe-assignment
+  103:20   warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                          @typescript-eslint/no-explicit-any
+  103:25   error    Unsafe member access .thumbnail on an `any` value                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-unsafe-member-access
+  103:40   warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                                                                                                                                                                                                                                                         @typescript-eslint/prefer-nullish-coalescing
+  103:56   warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                          @typescript-eslint/no-explicit-any
+  103:61   error    Unsafe member access .small on an `any` value                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-unsafe-member-access
+  104:5    error    Unsafe return of a value of type `any`                                                                                                                                                                                                                                                                                                                            @typescript-eslint/no-unsafe-return
+  104:18   warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                                                                                                                                                                                                                                                         @typescript-eslint/prefer-nullish-coalescing
+  232:25   warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                          @typescript-eslint/no-explicit-any
+  233:29   error    Unsafe member access .error on an `any` value                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-unsafe-member-access
+  233:44   warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                                                                                                                                                                                                                                                         @typescript-eslint/prefer-nullish-coalescing
+  237:17   error    Empty block statement                                                                                                                                                                                                                                                                                                                                             no-empty
+  280:41   warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                          @typescript-eslint/no-explicit-any
+  280:46   error    Unsafe member access .coordinates on an `any` value                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-unsafe-member-access
+  281:17   error    Unsafe assignment of an `any` value                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-unsafe-assignment
+  281:41   warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                          @typescript-eslint/no-explicit-any
+  282:21   error    Unsafe member access .cluster on an `any` value                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-unsafe-member-access
+  283:37   error    Unsafe member access .cluster_id on an `any` value                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-unsafe-member-access
+  288:29   warning  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                          @typescript-eslint/no-explicit-any
+  288:56   error    Unsafe member access .properties on an `any` value                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-unsafe-member-access
+  293:23   error    Unsafe member access .point_count on an `any` value                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-unsafe-member-access
+  307:15   warning  Forbidden non-null assertion                                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-non-null-assertion
+  310:31   error    Unsafe member access .id on an `any` value                                                                                                                                                                                                                                                                                                                        @typescript-eslint/no-unsafe-member-access
+  323:30   error    Unnecessary escape character: \"                                                                                                                                                                                                                                                                                                                                  no-useless-escape
+  323:45   error    Unnecessary escape character: \"                                                                                                                                                                                                                                                                                                                                  no-useless-escape
+  323:81   error    Unnecessary escape character: \"                                                                                                                                                                                                                                                                                                                                  no-useless-escape
+  323:175  error    Unnecessary escape character: \"                                                                                                                                                                                                                                                                                                                                  no-useless-escape
+  323:211  error    Unnecessary escape character: \"                                                                                                                                                                                                                                                                                                                                  no-useless-escape
+  323:238  error    Unnecessary escape character: \"                                                                                                                                                                                                                                                                                                                                  no-useless-escape
+  323:247  error    Unnecessary escape character: \"                                                                                                                                                                                                                                                                                                                                  no-useless-escape
+  323:289  error    Unnecessary escape character: \"                                                                                                                                                                                                                                                                                                                                  no-useless-escape
+  323:355  error    Unnecessary escape character: \"                                                                                                                                                                                                                                                                                                                                  no-useless-escape
+  323:387  error    Unnecessary escape character: \"                                                                                                                                                                                                                                                                                                                                  no-useless-escape
+  323:457  error    Unnecessary escape character: \"                                                                                                                                                                                                                                                                                                                                  no-useless-escape
+  323:503  error    Unnecessary escape character: \"                                                                                                                                                                                                                                                                                                                                  no-useless-escape
+  323:528  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                                                                                                                                                                                                                                                         @typescript-eslint/prefer-nullish-coalescing
+  323:573  error    Unnecessary escape character: \"                                                                                                                                                                                                                                                                                                                                  no-useless-escape
+  323:604  error    Unnecessary escape character: \"                                                                                                                                                                                                                                                                                                                                  no-useless-escape
+  323:626  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                                                                                                                                                                                                                                                         @typescript-eslint/prefer-nullish-coalescing
+  331:15   warning  Forbidden non-null assertion                                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-non-null-assertion
+  391:43   error    The ref value 'pointMarkersRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'pointMarkersRef.current' to a variable inside the effect, and use that variable in the cleanup function                                                                                     react-hooks/exhaustive-deps
+  392:45   error    The ref value 'clusterMarkersRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'clusterMarkersRef.current' to a variable inside the effect, and use that variable in the cleanup function                                                                                 react-hooks/exhaustive-deps
+  396:6    error    React Hook useEffect has missing dependencies: 'clusterIndex', 'computeBounds', 'createPhotoMarkerElement', 'idToPhoto', 'lastModalZoomKey', 'modalOpen', 'onPhotoClick', and 'zoom'. Either include them or remove the dependency array. If 'onPhotoClick' changes too often, find the parent component that defines it and wrap that definition in useCallback  react-hooks/exhaustive-deps
+  407:6    error    React Hook useEffect has a missing dependency: 'computeBounds'. Either include it or remove the dependency array                                                                                                                                                                                                                                                  react-hooks/exhaustive-deps
+
+/Users/antonlu/code/haochen.lu/frontend/src/components/MapPicker.tsx
+  168:29  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                                                                                                                 @typescript-eslint/prefer-nullish-coalescing
+  202:7   error    Expected property shorthand                                                                                                                                                                                               object-shorthand
+  212:25  warning  Unexpected any. Specify a different type                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+  213:29  error    Unsafe member access .error on an `any` value                                                                                                                                                                             @typescript-eslint/no-unsafe-member-access
+  213:44  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                                                                                                                 @typescript-eslint/prefer-nullish-coalescing
+  217:17  error    Empty block statement                                                                                                                                                                                                     no-empty
+  238:6   error    React Hook useEffect has missing dependencies: 'DEFAULT_STYLE_URL', 'FALLBACK_STYLE_URL', 'currentLat', 'currentLng', 'disabled', 'handleLocationSelect', and 'zoom'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+/Users/antonlu/code/haochen.lu/frontend/src/components/MiniMap.tsx
+  32:29  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                                                    @typescript-eslint/prefer-nullish-coalescing
+  69:6   error    React Hook useEffect has missing dependencies: 'DEFAULT_STYLE_URL', 'latitude', 'longitude', and 'zoom'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+/Users/antonlu/code/haochen.lu/frontend/src/components/ProjectCard.tsx
+  49:22  error  Unsafe assignment of an error typed value  @typescript-eslint/no-unsafe-assignment
+
+/Users/antonlu/code/haochen.lu/frontend/src/components/admin/ProjectImagesManager.tsx
+   15:1   error    '@dnd-kit/sortable' import is duplicated                                                                                                                                                                no-duplicate-imports
+   51:42  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                                                                                               @typescript-eslint/prefer-nullish-coalescing
+   52:38  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                                                                                               @typescript-eslint/prefer-nullish-coalescing
+   75:23  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                                                                                               @typescript-eslint/prefer-nullish-coalescing
+   78:26  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                                                                                               @typescript-eslint/prefer-nullish-coalescing
+  110:9   error    The 'typedImages' logical expression could make the dependencies of useMemo Hook (at line 113) change on every render. To fix this, wrap the initialization of 'typedImages' in its own useMemo() Hook  react-hooks/exhaustive-deps
+
+/Users/antonlu/code/haochen.lu/frontend/src/components/admin/SortableProjectList.tsx
+  105:3  error  'index' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/antonlu/code/haochen.lu/frontend/src/components/ui/carousel.tsx
+  14:7   error  Unsafe argument of type error typed assigned to a parameter of type `Partial<OptionsType> | undefined`     @typescript-eslint/no-unsafe-argument
+  14:7   error  This assertion is unnecessary since it does not change the type of the expression                          @typescript-eslint/no-unnecessary-type-assertion
+  14:15  error  'EmblaOptionsType' is an 'error' type that acts as 'any' and overrides all other types in this union type  @typescript-eslint/no-redundant-type-constituents
+
+/Users/antonlu/code/haochen.lu/frontend/src/components/ui/label.tsx
+  4:18  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+/Users/antonlu/code/haochen.lu/frontend/src/components/ui/skeleton.tsx
+  4:18  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+/Users/antonlu/code/haochen.lu/frontend/src/components/ui/textarea.tsx
+  4:18  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+/Users/antonlu/code/haochen.lu/frontend/src/hooks/usePhotos.ts
+  108:37  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                                                           @typescript-eslint/prefer-nullish-coalescing
+  123:7   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+  140:30  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator                                                           @typescript-eslint/prefer-nullish-coalescing
+
+/Users/antonlu/code/haochen.lu/frontend/src/hooks/useProjects.ts
+  347:5   error  Async method 'mutationFn' has no 'await' expression  @typescript-eslint/require-await
+  354:7   error  Unsafe return of a value of type error               @typescript-eslint/no-unsafe-return
+  354:14  error  Unsafe call of a(n) `error` type typed value         @typescript-eslint/no-unsafe-call
+  375:5   error  Async method 'mutationFn' has no 'await' expression  @typescript-eslint/require-await
+  380:7   error  Unsafe return of a value of type error               @typescript-eslint/no-unsafe-return
+  380:7   error  Unsafe call of a(n) `error` type typed value         @typescript-eslint/no-unsafe-call
+
+/Users/antonlu/code/haochen.lu/frontend/src/pages/HomePage.tsx
+   59:49  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  141:49  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+
+/Users/antonlu/code/haochen.lu/frontend/src/pages/ProjectDetailPage.tsx
+  162:60  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  163:61  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+
+/Users/antonlu/code/haochen.lu/frontend/src/pages/ProjectsPage.tsx
+    1:17  error    'useMemo' is defined but never used       @typescript-eslint/no-unused-vars
+  162:23  error    Unsafe assignment of an `any` value       @typescript-eslint/no-unsafe-assignment
+  162:51  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/antonlu/code/haochen.lu/frontend/src/pages/admin/AdminPhotos.tsx
+  532:27  error  Promise-returning function provided to attribute where a void return was expected  @typescript-eslint/no-misused-promises
+
+/Users/antonlu/code/haochen.lu/frontend/src/pages/admin/AdminProjects.tsx
+    2:18  error  'AnimatePresence' is defined but never used                                        @typescript-eslint/no-unused-vars
+  333:23  error  Promise-returning function provided to attribute where a void return was expected  @typescript-eslint/no-misused-promises
+  352:7   error  'ProjectListItem' is assigned a value but never used                               @typescript-eslint/no-unused-vars
+  400:22  error  Unsafe assignment of an error typed value                                          @typescript-eslint/no-unsafe-assignment
+
+/Users/antonlu/code/haochen.lu/frontend/src/pages/admin/AdminSettings.tsx
+   22:5   warning  Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+   28:19  warning  Unexpected any. Specify a different type                                                                                                                            @typescript-eslint/no-explicit-any
+   30:18  error    Unsafe argument of type `any` assigned to a parameter of type `SetStateAction<string | null>`                                                                       @typescript-eslint/no-unsafe-argument
+   30:21  error    Unsafe member access .message on an `any` value                                                                                                                     @typescript-eslint/no-unsafe-member-access
+   76:17  warning  Unexpected any. Specify a different type                                                                                                                            @typescript-eslint/no-explicit-any
+   77:16  error    Unsafe argument of type `any` assigned to a parameter of type `SetStateAction<string | null>`                                                                       @typescript-eslint/no-unsafe-argument
+   77:19  error    Unsafe member access .message on an `any` value                                                                                                                     @typescript-eslint/no-unsafe-member-access
+  226:19  error    Promise-returning function provided to attribute where a void return was expected                                                                                   @typescript-eslint/no-misused-promises
+
+/Users/antonlu/code/haochen.lu/frontend/src/stores/photoCache.ts
+  326:44  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  389:21  error    Unsafe assignment of an `any` value                                                                        @typescript-eslint/no-unsafe-assignment
+  389:58  warning  Unexpected any. Specify a different type                                                                   @typescript-eslint/no-explicit-any
+  390:44  error    Unsafe member access .loadedPages on an `any` value                                                        @typescript-eslint/no-unsafe-member-access
+  391:28  error    Unsafe member access .loadedPages on an `any` value                                                        @typescript-eslint/no-unsafe-member-access
+  391:50  error    Unsafe argument of type `any` assigned to a parameter of type `Iterable<unknown> | null | undefined`       @typescript-eslint/no-unsafe-argument
+  391:61  error    Unsafe member access .loadedPages on an `any` value                                                        @typescript-eslint/no-unsafe-member-access
+
+/Users/antonlu/code/haochen.lu/frontend/src/utils/optimizationTest.ts
+   58:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+   59:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+   62:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+   65:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+   68:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+   70:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+   72:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+   75:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  108:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  111:52  warning  Unexpected any. Specify a different type                                           @typescript-eslint/no-explicit-any
+  112:7   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  112:38  error    Unsafe member access .detail on an `any` value                                     @typescript-eslint/no-unsafe-member-access
+  115:53  warning  Unexpected any. Specify a different type                                           @typescript-eslint/no-explicit-any
+  116:7   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  116:38  error    Unsafe member access .detail on an `any` value                                     @typescript-eslint/no-unsafe-member-access
+  119:55  warning  Unexpected any. Specify a different type                                           @typescript-eslint/no-explicit-any
+  120:13  error    Unsafe assignment of an `any` value                                                @typescript-eslint/no-unsafe-assignment
+  120:45  error    Unsafe member access .detail on an `any` value                                     @typescript-eslint/no-unsafe-member-access
+  121:44  error    Unsafe argument of type `any` assigned to a parameter of type `Photo[]`            @typescript-eslint/no-unsafe-argument
+  121:52  error    Unsafe argument of type `any` assigned to a parameter of type `Photo[]`            @typescript-eslint/no-unsafe-argument
+
+/Users/antonlu/code/haochen.lu/frontend/src/utils/photoUtils.ts
+  103:45  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  104:45  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  115:45  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  116:45  warning  Prefer using nullish coalescing operator (`??`) instead of a logical or (`||`), as it is a safer operator  @typescript-eslint/prefer-nullish-coalescing
+  172:7   error    'pagesToFetch' is never reassigned. Use 'const' instead                                                    prefer-const
+
+✖ 133 problems (78 errors, 55 warnings)
+  3 errors and 0 warnings potentially fixable with the `--fix` option.
