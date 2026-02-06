@@ -215,14 +215,28 @@ ignore = [
   "SLF001",  # Private member accessed (common in tests)
   "PLC2701", # Private name import (common in tests)
 ]
+"backend/tests/**" = [
+  "SLF001",  # Private member accessed (common in tests)
+  "PLC2701", # Private name import (common in tests)
+]
 "docs/**" = [
+  "SLF001", # Private member accessed (needed for docs)
+]
+"backend/docs/**" = [
   "SLF001", # Private member accessed (needed for docs)
 ]
 "app/core/image_processor.py" = [
   "SLF001", # Private member accessed (_getexif is the correct PIL API)
 ]
-"test_simple.py" = [
-  "PLC0415", # Import at function level (demo script)
+"backend/app/core/image_processor.py" = [
+  "SLF001", # Private member accessed (_getexif is the correct PIL API)
+]
+
+"backend/app/schemas/__init__.py" = [
+  "RUF067", # Allow aliases in __init__.py
+]
+"backend/app/crud/__init__.py" = [
+  "RUF067", # Allow aliases in __init__.py
 ]
 
 [tool.ruff.format]
@@ -268,7 +282,7 @@ module = "app.core.vips_processor"
 ignore_errors = true
 
 [tool.bandit]
-exclude_dirs = ["tests", "migrations", "test_simple.py"]
+exclude_dirs = ["tests", "migrations"]
 skips = [
   "B101",
   "B601",
