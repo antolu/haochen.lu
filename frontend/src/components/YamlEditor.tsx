@@ -225,9 +225,7 @@ const YamlEditor: React.FC<YamlEditorProps> = ({
               <ul className="text-sm text-yellow-700 space-y-1">
                 {validationResult.warnings.map((warning, index) => (
                   <li key={index} className="flex items-start">
-                    <span className="flex-shrink-0 w-4 h-4 mt-0.5 mr-2">
-                      ⚠
-                    </span>
+                    <span className="flex-shrink-0 w-4 h-4 mt-0.5 mr-2">⚠</span>
                     <span>{warning}</span>
                   </li>
                 ))}

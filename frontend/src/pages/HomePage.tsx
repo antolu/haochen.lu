@@ -738,6 +738,7 @@ const HomePage: React.FC = () => {
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
+                    setSelectedPhoto(null);
                     void navigate("/photography", {
                       state: { photoId: selectedPhoto.id },
                     });

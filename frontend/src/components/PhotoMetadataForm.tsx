@@ -116,7 +116,10 @@ const PhotoMetadataForm: React.FC<PhotoMetadataFormProps> = ({
             name="category"
             control={control}
             render={({ field }) => (
-              <Select value={field.value || undefined} onValueChange={field.onChange}>
+              <Select
+                value={field.value || undefined}
+                onValueChange={field.onChange}
+              >
                 <SelectTrigger id="category">
                   <SelectValue placeholder="Select category..." />
                 </SelectTrigger>
