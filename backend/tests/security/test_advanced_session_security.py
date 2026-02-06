@@ -14,13 +14,13 @@ from unittest.mock import patch
 import jwt
 import pytest
 from httpx import AsyncClient
+from tests.factories import UserFactory
+from tests.utils.security_utils import SecurityAssertions, SecurityTestUtils
 
 from app.config import settings
 
 # from app.core.security import TokenManager as SecurityTokenManager
 from app.models import User
-from tests.factories import UserFactory
-from tests.utils.security_utils import SecurityAssertions, SecurityTestUtils
 
 
 @pytest.mark.security

@@ -9,9 +9,8 @@ Create Date: 2025-09-25 00:00:00.000000
 from __future__ import annotations
 
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import UUID
-
 from alembic import op
+from sqlalchemy.dialects.postgresql import UUID
 
 # revision identifiers, used by Alembic.
 revision = "007_add_project_images"

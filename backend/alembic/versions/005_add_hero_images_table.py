@@ -9,9 +9,8 @@ Create Date: 2025-09-24 12:00:00.000000
 from __future__ import annotations
 
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import JSON, UUID
-
 from alembic import op
+from sqlalchemy.dialects.postgresql import JSON, UUID
 
 # revision identifiers
 revision = "005_add_hero_images_table"

@@ -16,10 +16,10 @@ import jwt
 import pytest
 from fastapi import Response
 from httpx import AsyncClient
+from tests.mocks.redis_mock import MockRedis
 
 # from app.core.security import TokenManager as SecurityTokenManager
 from app.models import User
-from tests.mocks.redis_mock import MockRedis
 
 
 @pytest.fixture

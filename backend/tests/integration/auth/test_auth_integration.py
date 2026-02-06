@@ -14,10 +14,10 @@ from unittest.mock import patch
 import pytest
 from fastapi import status
 from httpx import AsyncClient
+from tests.factories import UserFactory
 
 from app.core.security import create_access_token
 from app.models import User
-from tests.factories import UserFactory
 
 
 @pytest.mark.integration

@@ -11,9 +11,8 @@ from __future__ import annotations
 from uuid import uuid4
 
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import JSON, UUID
-
 from alembic import op
+from sqlalchemy.dialects.postgresql import JSON, UUID
 
 # revision identifiers
 revision = "001_initial_schema"

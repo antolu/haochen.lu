@@ -9,9 +9,8 @@ Create Date: 2025-09-22 21:38:20.120181
 from __future__ import annotations
 
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
-
 from alembic import op
+from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = "004_add_profile_pictures_table"

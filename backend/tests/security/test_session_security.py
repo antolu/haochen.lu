@@ -13,10 +13,10 @@ import jwt
 import pytest
 from fastapi import status
 from httpx import AsyncClient
+from tests.factories import UserFactory
 
 from app.config import settings
 from app.models import User
-from tests.factories import UserFactory
 
 
 @pytest.mark.security

@@ -102,7 +102,7 @@ from app.schemas.user import (
     UserCreate as UserCreate,
 )
 from app.schemas.user import (
-    UserRead as UserRead,
+    UserRead,
 )
 from app.schemas.user import (
     UserUpdate as UserUpdate,

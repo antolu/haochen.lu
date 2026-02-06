@@ -57,4 +57,4 @@ async def login(
     strategy = auth_backend.get_strategy()
     token = await strategy.write_token(user)
 
-    return {"access_token": token, "token_type": "bearer"}
+    return {"access_token": token, "token_type": "bearer"}  # nosec B105

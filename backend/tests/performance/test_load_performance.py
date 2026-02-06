@@ -19,7 +19,6 @@ import pytest
 from httpx import AsyncClient
 from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from tests.factories import PhotoFactory, ProjectFactory
 
 

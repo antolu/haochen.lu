@@ -10,11 +10,11 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 
 import pytest
-from app.services.blog_service import BlogService
 from sqlalchemy.ext.asyncio import AsyncSession
+from tests.factories import BlogPostFactory, UserFactory
 
 from app.core.exceptions import ValidationError
-from tests.factories import BlogPostFactory, UserFactory
+from app.services.blog_service import BlogService
 
 
 class TestBlogPostManagement:

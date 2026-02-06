@@ -10,9 +10,10 @@ from unittest.mock import Mock, patch
 
 import jwt
 import pytest
-from app.core.security import TokenManager
 from fastapi import HTTPException, Response
 from freezegun import freeze_time
+
+from app.core.security import TokenManager
 
 
 @pytest.fixture

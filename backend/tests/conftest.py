@@ -34,6 +34,7 @@ from fastapi.testclient import TestClient
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
+from tests.factories import BlogPostFactory, PhotoFactory, ProjectFactory, UserFactory
 
 import app.core.file_access as fa_mod
 import app.core.image_processor as ip_mod
@@ -43,7 +44,6 @@ from app.core.redis import redis_client
 from app.database import Base, get_session
 from app.main import app
 from app.models import BlogPost, Photo, Project, User
-from tests.factories import BlogPostFactory, PhotoFactory, ProjectFactory, UserFactory
 
 
 # Test settings override

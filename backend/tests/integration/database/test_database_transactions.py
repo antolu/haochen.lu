@@ -18,10 +18,10 @@ import pytest
 from sqlalchemy import select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from tests.factories import PhotoFactory
 
 from app.database import async_session_maker
 from app.models import Photo
-from tests.factories import PhotoFactory
 
 
 @pytest.mark.integration

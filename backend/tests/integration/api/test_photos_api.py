@@ -19,9 +19,9 @@ from httpx import AsyncClient
 from PIL import Image
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from tests.factories import PhotoFactory
 
 from app.models import Photo
-from tests.factories import PhotoFactory
 
 
 @pytest.mark.integration

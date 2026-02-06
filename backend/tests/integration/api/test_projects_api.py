@@ -13,9 +13,9 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from tests.factories import ProjectFactory
 
 from app.models import Project
-from tests.factories import ProjectFactory
 
 
 @pytest.mark.integration

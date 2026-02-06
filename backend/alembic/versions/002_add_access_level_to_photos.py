@@ -9,9 +9,8 @@ Create Date: 2025-09-20 21:00:00.000000
 from __future__ import annotations
 
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
-
 from alembic import op
+from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = "002_add_access_level_to_photos"

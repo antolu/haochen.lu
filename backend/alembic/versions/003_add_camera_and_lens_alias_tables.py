@@ -9,9 +9,8 @@ Create Date: 2025-09-21 01:31:24.516317
 from __future__ import annotations
 
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import UUID
-
 from alembic import op
+from sqlalchemy.dialects.postgresql import UUID
 
 # revision identifiers, used by Alembic.
 revision = "003_add_alias_tables"

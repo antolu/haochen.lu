@@ -14,14 +14,14 @@ from unittest.mock import patch
 
 import jwt
 import pytest
+
+from app.config import settings
 from app.core.security import (
     create_access_token,
     decode_token,
     get_password_hash,
     verify_password,
 )
-
-from app.config import settings
 
 
 class TestPasswordHashing:
