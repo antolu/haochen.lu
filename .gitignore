@@ -530,3 +530,4 @@ tags
 # .pnp.*
 
 # End of https://www.toptal.com/developers/gitignore/api/react,node,python,redis,intellij,visualstudiocode,vim,macos,yarn
+backend/app/_version.py

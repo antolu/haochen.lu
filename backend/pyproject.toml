@@ -53,7 +53,7 @@ test = [
   "pytest-mock~=3.12.0",
   "pytest-benchmark~=4.0.0",
   "pytest-xdist~=3.5.0",
-  "fakeredis~=2.20.1",
+  "fakeredis~=2.33.0",
   "factory-boy~=3.3.0",
   "freezegun~=1.2.2",
   "responses~=0.24.1",
@@ -61,6 +61,7 @@ test = [
   "aiosqlite~=0.19.0",
   "sqlalchemy-utils~=0.41.1",
   "pytest-clarity~=1.0.1",
+  "psutil",
 ]
 security = ["bandit~=1.7.5", "safety~=2.3.5"]
 dev = ["black~=23.11.0", "ruff~=0.15.0", "mypy~=1.7.1"]
@@ -75,10 +76,7 @@ addopts = [
   "--strict-markers",
   "--strict-config",
   "--cov=app",
-  "--cov-report=html",
-  "--cov-report=term-missing",
-  "--cov-fail-under=40",
-  "--tb=short",
+  "--skip-covered",
 ]
 markers = [
   "unit: Unit tests",
@@ -130,7 +128,6 @@ extend-exclude = '''
 '''
 
 [tool.ruff]
-
 exclude = [
   ".bzr",
   ".direnv",
@@ -154,15 +151,12 @@ exclude = [
   "venv",
   ".venv",
 ]
-
 line-length = 88
 target-version = "py311"
-
 preview = true
 unsafe-fixes = true
 
 [tool.ruff.lint]
-# All rules can be found here: https://docs.astral.sh/ruff/rules/
 select = [
   "F",   # pyflakes
   "E",   # error  (pycodestyle)
@@ -173,13 +167,11 @@ select = [
   "PLC", # convention  (pylint)
   "PLE", # error  (pylint)
   "PLW", # warning  (pylint)
-  # "D",  # docstring (pydocstyle),  # not enabled by default
   "PD",   # pandas
   "TRY",  # tryceratops
   "NPY",  # numpy
   "PERF", # perflint
   "RUF",  # ruff
-  # v flake8 v
   "B",
   "C4",
   "FBT",
@@ -202,7 +194,6 @@ ignore = [
   "E501",
   "W505",
   "ISC001",
-  "PD901",
   "PLW2901",
   "N812",
   "N806",
@@ -213,7 +204,6 @@ ignore = [
 [tool.ruff.lint.isort]
 known-first-party = ["app"]
 known-third-party = ["alembic", "sqlalchemy", "tests"]
-
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = [
@@ -237,19 +227,6 @@ known-third-party = ["alembic", "sqlalchemy", "tests"]
   "SLF001", # Private member accessed (_getexif is the correct PIL API)
 ]
 
-"backend/app/schemas/__init__.py" = [
-  "RUF067", # Allow aliases in __init__.py
-]
-"app/schemas/__init__.py" = [
-  "RUF067", # Allow aliases in __init__.py
-]
-"backend/app/crud/__init__.py" = [
-  "RUF067", # Allow aliases in __init__.py
-]
-"app/crud/__init__.py" = [
-  "RUF067", # Allow aliases in __init__.py
-]
-
 [tool.ruff.format]
 preview = true
 
@@ -267,6 +244,32 @@ warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
 strict_equality = true
+exclude = ["alembic/"]
+
+[[tool.mypy.overrides]]
+module = [
+  "fastapi",
+  "fastapi.*",
+  "sqlalchemy",
+  "sqlalchemy.*",
+  "fastapi_users",
+  "fastapi_users.*",
+  "fastapi_users_db_sqlalchemy",
+  "fastapi_users_db_sqlalchemy.*",
+  "alembic",
+  "alembic.*",
+  "PIL",
+  "PIL.*",
+  "pyvips",
+  "piexif",
+  "geopy",
+  "geopy.*",
+  "httpx",
+  "httpx.*",
+  "jwt",
+  "yaml",
+]
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "tests.*"
@@ -274,19 +277,8 @@ disallow_untyped_defs = false
 ignore_errors = true
 
 [[tool.mypy.overrides]]
-module = "alembic.*"
-ignore_errors = true
-
-[[tool.mypy.overrides]]
 module = "app.crud.*"
 warn_return_any = false
-
-[[tool.mypy.overrides]]
-module = [
-  "pyvips",
-  "piexif",
-]
-ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "app.core.vips_processor"
