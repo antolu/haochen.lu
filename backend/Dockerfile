@@ -50,6 +50,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Final stage selection based on build type
 FROM ${BUILD_TYPE} AS final
+ARG BUILD_TYPE
 
 # Copy pyproject first to leverage Docker layer cache for dependencies
 # hadolint ignore=DL3045
@@ -57,7 +58,11 @@ COPY backend/pyproject.toml ./
 
 # Install dependencies only (not the package itself) to avoid setuptools-scm issues
 # hadolint ignore=DL3013,SC2046
-RUN pip install --no-cache-dir $(python -c "import tomllib; print(' '.join(tomllib.load(open('pyproject.toml', 'rb'))['project']['dependencies']))")
+RUN if [ "$BUILD_TYPE" = "development" ]; then \
+        pip install --no-cache-dir $(python -c "import tomllib; data = tomllib.load(open('pyproject.toml', 'rb')); print(' '.join(data['project']['dependencies'] + data.get('project', {}).get('optional-dependencies', {}).get('test', [])))"); \
+    else \
+        pip install --no-cache-dir $(python -c "import tomllib; print(' '.join(tomllib.load(open('pyproject.toml', 'rb'))['project']['dependencies']))"); \
+    fi
 
 # Copy application code after dependencies are cached
 # hadolint ignore=DL3045
