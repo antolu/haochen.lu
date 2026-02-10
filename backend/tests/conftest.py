@@ -2,7 +2,7 @@
 Test configuration and fixtures for the portfolio backend.
 """
 
-from __future__ import annotations
+from __future__ import annotations  # noqa: I001
 
 import calendar
 import io
@@ -14,9 +14,49 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 from urllib.parse import urlparse
+import sys
 
-import anyio
-from PIL import Image
+# Mock pyvips before it is imported by app modules
+mock_pyvips = MagicMock()
+
+
+def vips_new_from_file_side_effect(path, *args, **kwargs):
+    # Use PIL to get actual dimensions to support tests checking specific sizes
+    try:
+        from PIL import Image  # noqa: PLC0415
+
+        with Image.open(path) as img:
+            width, height = img.size
+    except Exception:
+        # Fallback defaults
+        width, height = 1920, 1080
+
+    img_mock = MagicMock()
+    img_mock.width = width
+    img_mock.height = height
+    img_mock.autorot.return_value = img_mock
+    img_mock.colourspace.return_value = img_mock
+    img_mock.resize.return_value = img_mock
+
+    # Side effect to write dummy file for save methods so stat().st_size works
+    def save_side_effect(save_path, *args, **kwargs):
+        # Create parent directories if needed
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        with open(save_path, "wb") as f:
+            f.write(b"dummy_data")
+
+    img_mock.heifsave.side_effect = save_side_effect
+    img_mock.webpsave.side_effect = save_side_effect
+    img_mock.jpegsave.side_effect = save_side_effect
+
+    return img_mock
+
+
+mock_pyvips.Image.new_from_file.side_effect = vips_new_from_file_side_effect
+sys.modules["pyvips"] = mock_pyvips
+
+import anyio  # noqa: E402
+from PIL import Image  # noqa: E402
 
 # Set required environment variables for testing before importing app modules
 os.environ.setdefault("SECRET_KEY", "test_secret_key_for_testing_minimum_32_chars")
@@ -25,25 +65,25 @@ os.environ.setdefault(
 )
 os.environ.setdefault("ADMIN_PASSWORD", "test_password")
 
-import contextlib
+import contextlib  # noqa: E402, I001
 
-import jwt
-import pytest
-import pytest_asyncio
-from fastapi.testclient import TestClient
-from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.pool import StaticPool
-from tests.factories import BlogPostFactory, PhotoFactory, ProjectFactory, UserFactory
+import jwt  # noqa: E402
+import pytest  # noqa: E402
+import pytest_asyncio  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
+from httpx import ASGITransport, AsyncClient  # noqa: E402
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine  # noqa: E402
+from sqlalchemy.pool import StaticPool  # noqa: E402
+from tests.factories import BlogPostFactory, PhotoFactory, ProjectFactory, UserFactory  # noqa: E402
 
-import app.core.file_access as fa_mod
-import app.core.image_processor as ip_mod
-from app import config as app_config
-from app.config import Settings
-from app.core.redis import redis_client
-from app.database import Base, get_session
-from app.main import app
-from app.models import BlogPost, Photo, Project, User
+import app.core.file_access as fa_mod  # noqa: E402
+import app.core.image_processor as ip_mod  # noqa: E402
+from app import config as app_config  # noqa: E402
+from app.config import Settings  # noqa: E402
+from app.core.redis import redis_client  # noqa: E402
+from app.database import Base, get_session  # noqa: E402
+from app.main import app  # noqa: E402
+from app.models import BlogPost, Photo, Project, User  # noqa: E402
 
 
 # Test settings override
@@ -54,7 +94,9 @@ def test_settings() -> Settings:
         database_url="sqlite+aiosqlite:///:memory:",
         # Prefer docker redis service if available; override with REDIS_URL env
         redis_url=os.getenv("REDIS_URL", "redis://redis:6379/1"),
-        secret_key="test-secret-key-for-testing-only",
+        secret_key=os.getenv(
+            "SECRET_KEY", "test_secret_key_for_testing_minimum_32_chars"
+        ),
         admin_password="test-admin-password",
         upload_dir="test_uploads",
         compressed_dir="test_compressed",
@@ -81,14 +123,16 @@ async def test_engine():
     await engine.dispose()
 
 
-@pytest_asyncio.fixture
-async def test_session(test_engine) -> AsyncGenerator[AsyncSession, None]:
-    """Create a test database session."""
-    async_session_maker = async_sessionmaker(
-        test_engine, class_=AsyncSession, expire_on_commit=False
-    )
+@pytest.fixture
+def test_session_maker(test_engine):
+    """Return a session factory bound to the test engine."""
+    return async_sessionmaker(test_engine, class_=AsyncSession, expire_on_commit=False)
 
-    async with async_session_maker() as session:
+
+@pytest_asyncio.fixture
+async def test_session(test_session_maker) -> AsyncGenerator[AsyncSession, None]:
+    """Create a test database session."""
+    async with test_session_maker() as session:
         yield session
 
 
@@ -99,11 +143,12 @@ async def db_session(test_session: AsyncSession) -> AsyncSession:  # noqa: RUF02
 
 
 @pytest.fixture
-def override_get_session(test_session):
+def override_get_session(test_session_maker):
     """Override the get_session dependency for testing."""
 
-    def _override_get_session():
-        yield test_session
+    async def _override_get_session():
+        async with test_session_maker() as session:
+            yield session
 
     return _override_get_session
 
@@ -121,17 +166,47 @@ def test_client(test_settings, override_get_session) -> TestClient:
         anyio.run(redis_client.disconnect)
 
 
+@pytest.fixture
+def fake_redis_client():
+    """Mock Redis client."""
+    import fakeredis  # noqa: PLC0415
+
+    # Check for async support in fakeredis
+    if hasattr(fakeredis, "FakeAsyncRedis"):
+        return fakeredis.FakeAsyncRedis(decode_responses=True)
+    # Fallback/compatibility
+    return fakeredis.FakeRedis(decode_responses=True)
+
+
 @pytest_asyncio.fixture
 async def async_client(
-    test_settings, override_get_session
+    test_settings, override_get_session, fake_redis_client
 ) -> AsyncGenerator[AsyncClient, None]:
     """Create an async test client compatible with httpx>=0.28."""
     app.dependency_overrides[get_session] = override_get_session
+
+    # Patch Redis client for rate limiting tests
+    # redis_client is imported at top level
+
+    # Store original state to restore later
+    original_redis = redis_client._redis
+    original_connected = redis_client._connection_attempted
+
+    # helper to ensure mock is compatible if FakeAsyncRedis isn't available
+    # But assuming it is since we are testing async code.
+    redis_client._redis = fake_redis_client
+    redis_client._connection_attempted = True
+
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as client:
         yield client
+
+    # Restore original state
+    redis_client._redis = original_redis
+    redis_client._connection_attempted = original_connected
+
     app.dependency_overrides.clear()
-    await redis_client.disconnect()
+    # We don't need to disconnect mock_redis explicitly here as it's memory-only
 
 
 # Service availability gates
@@ -168,7 +243,7 @@ def pytest_collection_modifyitems(config, items):
 async def admin_user(test_session: AsyncSession) -> User:
     """Create an admin user for testing."""
     return await UserFactory.create_async(
-        test_session, username="admin", is_admin=True, is_active=True
+        test_session, username="admin", is_superuser=True, is_active=True
     )
 
 
@@ -182,14 +257,14 @@ async def regular_user(test_session: AsyncSession) -> User:
 
 def create_access_token_for_user(user: User, settings: Settings) -> str:
     """Create JWT access token for a user - replacement for old security function."""
-    to_encode = {"sub": user.email}  # fastapi-users uses email
+    to_encode = {"sub": str(user.id)}  # fastapi-users uses UUID as string
     now = datetime.utcnow()
     expire = now + timedelta(minutes=settings.access_token_expire_minutes)
 
     to_encode.update({
         "exp": calendar.timegm(expire.utctimetuple()),
         "iat": calendar.timegm(now.utctimetuple()),
-        "type": "access",
+        "aud": ["fastapi-users:auth"],  # Required by fastapi-users
     })
     return jwt.encode(to_encode, settings.secret_key, algorithm="HS256")
 
@@ -198,6 +273,17 @@ def create_access_token_for_user(user: User, settings: Settings) -> str:
 def admin_token(admin_user: User, test_settings: Settings) -> str:
     """Generate a JWT token for admin user."""
     return create_access_token_for_user(admin_user, test_settings)
+
+
+@pytest_asyncio.fixture
+async def admin_token_via_login(async_client: AsyncClient, admin_user: User) -> str:
+    """Get a real admin token by logging in through the API."""
+    login_data = {"username": admin_user.username, "password": "TestPassword123!"}
+    response = await async_client.post("/api/auth/login", data=login_data)
+    if response.status_code != 200:
+        msg = f"Failed to login admin user: {response.status_code} - {response.text}"
+        raise RuntimeError(msg)
+    return response.json()["access_token"]
 
 
 @pytest.fixture
@@ -257,12 +343,6 @@ def use_temp_storage_dirs(
 
 
 # Mock fixtures
-@pytest.fixture
-def mock_redis():
-    """Mock Redis client."""
-    import fakeredis  # noqa: PLC0415
-
-    return fakeredis.FakeRedis()
 
 
 @pytest.fixture
