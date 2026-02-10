@@ -21,7 +21,7 @@ def get_password_hash(password: str) -> str:
         Hashed password string
     """
     if not password:
-        msg = "Password cannot be empty"
+        msg = "Password must not be empty"
         raise ValueError(msg)
     return typing.cast(str, hashpw(password.encode("utf-8"), gensalt()).decode("utf-8"))
 

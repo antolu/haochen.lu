@@ -72,11 +72,12 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = [
-  "-v",
+  "-ra",
+  "-q",
   "--strict-markers",
   "--strict-config",
   "--cov=app",
-  "--skip-covered",
+  "--cov-report=term-missing:skip-covered",
 ]
 markers = [
   "unit: Unit tests",

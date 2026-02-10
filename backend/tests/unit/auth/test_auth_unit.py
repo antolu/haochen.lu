@@ -102,7 +102,7 @@ class TestPasswordHashing:
         with pytest.raises(ValueError, match="Password must not be empty"):
             get_password_hash("")
 
-        with pytest.raises(ValueError, match="Password cannot be empty"):
+        with pytest.raises(ValueError, match="Password must not be empty"):
             # None evaluates to False, so custom check raises ValueError
             get_password_hash(None)
 
