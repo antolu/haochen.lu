@@ -128,9 +128,9 @@ api_router.include_router(
     lens_aliases.router, prefix="/lens-aliases", tags=["lens-aliases"]
 )
 api_router.include_router(content.router)
-api_router.include_router(locations.router)
+api_router.include_router(locations.router, prefix="/locations", tags=["locations"])
 
-app.include_router(api_router)
+app.include_router(api_router, prefix="/api")
 
 # Static files removed - now served through API with access control
 # Files are now accessed via /api/photos/{photo_id}/file/{variant} endpoints
