@@ -24,14 +24,14 @@ from app.core.redis import (
 @pytest.fixture
 def fake_redis():
     """Create a fake Redis instance for testing."""
-    return aioredis.FakeRedis()
+    return aioredis.FakeRedis(decode_responses=True)
 
 
 @pytest.fixture
 def redis_test_client():
     """Create a RedisClient instance with fake Redis."""
     client = RedisClient()
-    client._redis = aioredis.FakeRedis()
+    client._redis = aioredis.FakeRedis(decode_responses=True)
     client._connection_attempted = True
     return client
 
