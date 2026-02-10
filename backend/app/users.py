@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+import typing
 import uuid
-from typing import TYPE_CHECKING
 
 from fastapi import Depends, Request
 from fastapi_users import BaseUserManager, FastAPIUsers, UUIDIDMixin
@@ -17,11 +17,10 @@ from app.config import settings
 from app.database import get_session
 from app.models.user import User
 
-if TYPE_CHECKING:
-    pass
 
-
-async def get_user_db(session: AsyncSession = Depends(get_session)):  # noqa: B008, RUF029
+async def get_user_db(  # noqa: RUF029
+    session: AsyncSession = Depends(get_session),  # noqa: B008
+) -> typing.AsyncGenerator[SQLAlchemyUserDatabase[User, uuid.UUID], None]:
     yield SQLAlchemyUserDatabase(session, User)
 
 
@@ -29,21 +28,25 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
     reset_password_token_secret = settings.secret_key
     verification_token_secret = settings.secret_key
 
-    async def on_after_register(self, user: User, request: Request | None = None):
-        print(f"User {user.id} has registered.")
+    async def on_after_register(
+        self, user: User, request: Request | None = None
+    ) -> None:
+        pass
 
     async def on_after_forgot_password(
         self, user: User, token: str, request: Request | None = None
-    ):
-        print(f"User {user.id} has forgot their password. Reset token: {token}")
+    ) -> None:
+        pass
 
     async def on_after_request_verify(
         self, user: User, token: str, request: Request | None = None
-    ):
-        print(f"Verification requested for user {user.id}. Verification token: {token}")
+    ) -> None:
+        pass
 
 
-async def get_user_manager(user_db=Depends(get_user_db)):  # noqa: B008, RUF029
+async def get_user_manager(  # noqa: RUF029
+    user_db: SQLAlchemyUserDatabase[User, uuid.UUID] = Depends(get_user_db),  # noqa: B008
+) -> typing.AsyncGenerator[UserManager, None]:
     yield UserManager(user_db)
 
 
@@ -61,7 +64,10 @@ auth_backend = AuthenticationBackend(
 )
 
 fastapi_users = FastAPIUsers[User, uuid.UUID](
-    get_user_manager,
+    typing.cast(
+        typing.Any,
+        get_user_manager,
+    ),
     [auth_backend],
 )
 

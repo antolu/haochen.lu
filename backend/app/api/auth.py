@@ -14,14 +14,13 @@ router = APIRouter()
 
 # Module-level singletons for dependency injection
 _session_dependency = Depends(get_session)
-_form_data_dependency = Depends()
 
 
 @router.post("/login")
 async def login(
-    form_data: OAuth2PasswordRequestForm = _form_data_dependency,
+    form_data: OAuth2PasswordRequestForm = Depends(),  # noqa: B008
     session: AsyncSession = _session_dependency,
-):
+) -> dict[str, str]:
     """Custom login endpoint that accepts username or email."""
     # Check if the input is an email or username
     if is_email(form_data.username):
@@ -54,6 +53,7 @@ async def login(
         )
 
     # Generate token
+    # We ignore the type here because fastapi-users strategy writing is sometimes complex for mypy
     strategy = auth_backend.get_strategy()
     token = await strategy.write_token(user)
 
