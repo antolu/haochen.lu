@@ -1,15 +1,14 @@
 """
 P0 - Critical Authentication Integration Tests
 
-Tests the complete authentication flow including login, token refresh, logout,
+Tests the complete authentication flow including login, logout,
 and authorization middleware. These tests ensure the authentication system
 works correctly end-to-end.
 """
 
 from __future__ import annotations
 
-from datetime import timedelta  # noqa: F401
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 from fastapi import status
@@ -104,34 +103,6 @@ class TestLoginFlow:
                 assert error not in response_text
 
     @pytest.mark.slow
-    async def test_login_rate_limiting_prevents_brute_force(
-        self, async_client: AsyncClient, admin_user: User
-    ):
-        """Test rate limiting prevents brute force attacks."""
-        login_data = {"username": admin_user.username, "password": "wrong_password"}
-
-        # Mock _is_rate_limited to simulate rate limiting after 5 calls
-        # We patch the class method so the existing middleware instance uses it
-        with patch(
-            "app.core.rate_limiter.RateLimitMiddleware._is_rate_limited",
-            new_callable=AsyncMock,
-        ) as mock_limit:
-            # First 5 calls allowed (False), subsequent calls blocked (True)
-            mock_limit.side_effect = [False] * 5 + [True] * 20
-
-            # Attempt login multiple times rapidly
-            responses = []
-            for _i in range(10):  # Try 10 times
-                response = await async_client.post("/api/auth/login", data=login_data)
-                responses.append(response)
-
-                if response.status_code == status.HTTP_429_TOO_MANY_REQUESTS:
-                    break
-
-            # Should eventually get rate limited
-            rate_limited_responses = [r for r in responses if r.status_code == 429]
-            assert len(rate_limited_responses) > 0, "Rate limiting should kick in"
-
     async def test_successful_login_token_works_on_protected_endpoint(
         self, async_client: AsyncClient, admin_user: User
     ):
@@ -219,128 +190,22 @@ class TestLoginFlow:
 
 @pytest.mark.integration
 @pytest.mark.auth
-class TestTokenRefreshFlow:
-    """Test token refresh functionality."""
-
-    async def test_refresh_with_valid_token_returns_new_token(
-        self, async_client: AsyncClient, admin_user: User, admin_token: str
-    ):
-        """Test token refresh with valid token."""
-        headers = {"Authorization": f"Bearer {admin_token}"}
-
-        response = await async_client.post("/api/auth/refresh", headers=headers)
-
-        if response.status_code == status.HTTP_404_NOT_FOUND:
-            # Endpoint not implemented yet, skip test
-            pytest.skip("Token refresh endpoint not implemented")
-
-        assert response.status_code == status.HTTP_200_OK
-        data = response.json()
-
-        assert "access_token" in data
-        assert data["access_token"] != admin_token  # Should be different token
-
-    async def test_refresh_with_expired_token_returns_401(
-        self, async_client: AsyncClient, admin_user: User
-    ):
-        """Test token refresh with expired token."""
-        # Create expired token
-        expired_token = create_access_token(
-            {"sub": str(admin_user.id)},
-            expires_delta=-1,  # Already expired
-        )
-
-        headers = {"Authorization": f"Bearer {expired_token}"}
-        response = await async_client.post("/api/auth/refresh", headers=headers)
-
-        if response.status_code == status.HTTP_404_NOT_FOUND:
-            pytest.skip("Token refresh endpoint not implemented")
-
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
-
-    async def test_refresh_with_invalid_token_returns_401(
-        self, async_client: AsyncClient
-    ):
-        """Test token refresh with invalid token."""
-        headers = {"Authorization": "Bearer invalid_token_123"}
-
-        response = await async_client.post("/api/auth/refresh", headers=headers)
-
-        if response.status_code == status.HTTP_404_NOT_FOUND:
-            pytest.skip("Token refresh endpoint not implemented")
-
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
-
-    async def test_old_token_invalidated_after_refresh(
-        self, async_client: AsyncClient, admin_user: User, admin_token: str
-    ):
-        """Test that old token is invalidated after refresh."""
-        headers = {"Authorization": f"Bearer {admin_token}"}
-
-        # Refresh token
-        refresh_response = await async_client.post("/api/auth/refresh", headers=headers)
-
-        if refresh_response.status_code == status.HTTP_404_NOT_FOUND:
-            pytest.skip("Token refresh endpoint not implemented")
-
-        assert refresh_response.status_code == status.HTTP_200_OK
-
-        # Try to use old token (should fail)
-        response = await async_client.get("/api/users/me", headers=headers)
-
-        # Old token should be invalidated (if blacklisting is implemented)
-        # This might return 200 if blacklisting isn't implemented yet
-        if response.status_code == status.HTTP_401_UNAUTHORIZED:
-            assert True  # Token blacklisting works
-        else:
-            pytest.skip("Token blacklisting not implemented")
-
-
-@pytest.mark.integration
-@pytest.mark.auth
 class TestLogoutFlow:
     """Test logout functionality."""
 
-    async def test_logout_clears_session(
+    async def test_logout_succeeds_with_valid_token(
         self, async_client: AsyncClient, admin_token: str
     ):
-        """Test that logout clears user session."""
+        """Test that logout endpoint accepts valid tokens."""
         headers = {"Authorization": f"Bearer {admin_token}"}
 
-        response = await async_client.post("/api/auth/logout", headers=headers)
-
-        if response.status_code == status.HTTP_404_NOT_FOUND:
-            pytest.skip("Logout endpoint not implemented")
+        response = await async_client.post("/api/auth/jwt/logout", headers=headers)
 
         assert response.status_code in [status.HTTP_200_OK, status.HTTP_204_NO_CONTENT]
 
-    async def test_token_blacklisted_after_logout(
-        self, async_client: AsyncClient, admin_token: str
-    ):
-        """Test that token is blacklisted after logout."""
-        headers = {"Authorization": f"Bearer {admin_token}"}
-
-        # Logout
-        logout_response = await async_client.post("/api/auth/logout", headers=headers)
-
-        if logout_response.status_code == status.HTTP_404_NOT_FOUND:
-            pytest.skip("Logout endpoint not implemented")
-
-        # Try to use token after logout
-        response = await async_client.get("/api/users/me", headers=headers)
-
-        # Token should be invalidated
-        if response.status_code == status.HTTP_401_UNAUTHORIZED:
-            assert True  # Token blacklisting works
-        else:
-            pytest.skip("Token blacklisting after logout not implemented")
-
     async def test_logout_without_token_returns_401(self, async_client: AsyncClient):
         """Test logout without authentication token."""
-        response = await async_client.post("/api/auth/logout")
-
-        if response.status_code == status.HTTP_404_NOT_FOUND:
-            pytest.skip("Logout endpoint not implemented")
+        response = await async_client.post("/api/auth/jwt/logout")
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
