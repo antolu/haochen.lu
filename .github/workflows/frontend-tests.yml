@@ -238,7 +238,9 @@ jobs:
       run: |
         echo "DATABASE_URL=postgresql://testuser:testpassword@localhost:5432/testdb" >> $GITHUB_ENV
         echo "REDIS_URL=redis://localhost:6379/0" >> $GITHUB_ENV
-        echo "SECRET_KEY=test-secret-key-for-e2e" >> $GITHUB_ENV
+        echo "SECRET_KEY=test-secret-key-for-e2e-min-32-characters" >> $GITHUB_ENV
+        echo "SESSION_SECRET_KEY=session-secret-key-for-ci-min-32-characters" >> $GITHUB_ENV
+        echo "ADMIN_PASSWORD=testpassword123" >> $GITHUB_ENV
         echo "ENVIRONMENT=test" >> $GITHUB_ENV
 
     - name: Start backend server
