@@ -18,7 +18,7 @@ class FocalPoint(BaseModel):
 
     @field_validator("x", "y")
     @classmethod
-    def validate_percentage(cls, v):
+    def validate_percentage(cls, v: float) -> float:
         """Validate focal point is between 0 and 100."""
         if not 0 <= v <= 100:
             msg = "Focal point coordinates must be between 0 and 100"
@@ -45,7 +45,7 @@ class HeroImageBase(BaseModel):
 
     @field_validator("focal_point_x", "focal_point_y")
     @classmethod
-    def validate_focal_point(cls, v):
+    def validate_focal_point(cls, v: float) -> float:
         """Validate focal point is between 0 and 100."""
         if not 0 <= v <= 100:
             msg = "Focal point coordinates must be between 0 and 100"
@@ -67,7 +67,7 @@ class HeroImageUpdate(BaseModel):
 
     @field_validator("focal_point_x", "focal_point_y")
     @classmethod
-    def validate_focal_point(cls, v):
+    def validate_focal_point(cls, v: float | None) -> float | None:
         """Validate focal point is between 0 and 100."""
         if v is not None and not 0 <= v <= 100:
             msg = "Focal point coordinates must be between 0 and 100"
@@ -84,7 +84,7 @@ class HeroImageFocalPointUpdate(BaseModel):
 
     @field_validator("focal_point_x", "focal_point_y")
     @classmethod
-    def validate_focal_point(cls, v):
+    def validate_focal_point(cls, v: float) -> float:
         """Validate focal point is between 0 and 100."""
         if not 0 <= v <= 100:
             msg = "Focal point coordinates must be between 0 and 100"

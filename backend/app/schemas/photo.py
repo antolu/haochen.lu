@@ -41,7 +41,7 @@ class PhotoUpdate(BaseModel):
 
     @field_validator("location_lat")
     @classmethod
-    def validate_latitude(cls, v):
+    def validate_latitude(cls, v: float | None) -> float | None:
         if v is not None and not (-90 <= v <= 90):
             msg = "Latitude must be between -90 and 90"
             raise ValueError(msg)
@@ -49,7 +49,7 @@ class PhotoUpdate(BaseModel):
 
     @field_validator("location_lon")
     @classmethod
-    def validate_longitude(cls, v):
+    def validate_longitude(cls, v: float | None) -> float | None:
         if v is not None and not (-180 <= v <= 180):
             msg = "Longitude must be between -180 and 180"
             raise ValueError(msg)
@@ -57,7 +57,7 @@ class PhotoUpdate(BaseModel):
 
     @field_validator("location_name", "location_address")
     @classmethod
-    def validate_location_string(cls, v):
+    def validate_location_string(cls, v: str | None) -> str | None:
         if v is not None:
             v = v.strip()
             if len(v) == 0:
@@ -69,7 +69,7 @@ class PhotoUpdate(BaseModel):
 
     @field_validator("timezone")
     @classmethod
-    def validate_timezone(cls, v):
+    def validate_timezone(cls, v: str | None) -> str | None:
         if v is not None:
             v = v.strip()
             if len(v) == 0:
@@ -91,7 +91,7 @@ class PhotoUpdate(BaseModel):
 
     @field_validator("camera_make", "camera_model", "lens", "shutter_speed")
     @classmethod
-    def validate_camera_string(cls, v):
+    def validate_camera_string(cls, v: str | None) -> str | None:
         if v is not None:
             v = v.strip()
             if len(v) == 0:
@@ -103,7 +103,7 @@ class PhotoUpdate(BaseModel):
 
     @field_validator("iso")
     @classmethod
-    def validate_iso(cls, v):
+    def validate_iso(cls, v: int | None) -> int | None:
         if v is not None and not (1 <= v <= 10000000):
             msg = "ISO must be between 1 and 10,000,000"
             raise ValueError(msg)
@@ -111,7 +111,7 @@ class PhotoUpdate(BaseModel):
 
     @field_validator("aperture")
     @classmethod
-    def validate_aperture(cls, v):
+    def validate_aperture(cls, v: float | None) -> float | None:
         if v is not None and not (0.1 <= v <= 100):
             msg = "Aperture must be between 0.1 and 100"
             raise ValueError(msg)
@@ -119,7 +119,7 @@ class PhotoUpdate(BaseModel):
 
     @field_validator("focal_length")
     @classmethod
-    def validate_focal_length(cls, v):
+    def validate_focal_length(cls, v: int | None) -> int | None:
         if v is not None and not (1 <= v <= 10000):
             msg = "Focal length must be between 1 and 10,000mm"
             raise ValueError(msg)
@@ -213,7 +213,7 @@ class PhotoResponse(PhotoBase):
 
     @field_validator("id", mode="before")
     @classmethod
-    def convert_uuid_to_str(cls, v):
+    def convert_uuid_to_str(cls, v: UUID | str) -> str:
         if isinstance(v, UUID):
             return str(v)
         return v

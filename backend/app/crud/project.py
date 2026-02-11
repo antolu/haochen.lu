@@ -188,7 +188,7 @@ async def delete_project_and_media(db: AsyncSession, project_id: UUID) -> bool:
                     "original_path": photo.original_path,
                     "variants": photo.variants or {},
                 }
-                await vips_image_processor.delete_image_files(photo_dict)  # type: ignore[arg-type]
+                await vips_image_processor.delete_image_files(photo_dict)
             except Exception:
                 ...
             await delete_photo(db, pid)

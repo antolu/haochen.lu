@@ -53,10 +53,10 @@ class ProjectResponse(ProjectBase):
 
     @field_validator("id", mode="before")
     @classmethod
-    def convert_uuid_to_str(cls, v):
+    def convert_uuid_to_str(cls, v: UUID | str) -> str:
         if isinstance(v, UUID):
             return str(v)
-        return v
+        return str(v)
 
     class Config:
         from_attributes = True
@@ -92,10 +92,10 @@ class ProjectImageFile(BaseModel):
 
     @field_validator("id", mode="before")
     @classmethod
-    def convert_uuid_to_str(cls, v):  # type: ignore[no-untyped-def]
+    def convert_uuid_to_str(cls, v: UUID | str) -> str:
         if isinstance(v, UUID):
             return str(v)
-        return v
+        return str(v)
 
     class Config:
         from_attributes = True
@@ -111,10 +111,10 @@ class ProjectImageResponse(BaseModel):
 
     @field_validator("id", "project_id", mode="before")
     @classmethod
-    def convert_uuid_to_str(cls, v):  # type: ignore[no-untyped-def]
+    def convert_uuid_to_str(cls, v: UUID | str) -> str:
         if isinstance(v, UUID):
             return str(v)
-        return v
+        return str(v)
 
     class Config:
         from_attributes = True

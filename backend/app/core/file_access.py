@@ -4,80 +4,40 @@ import hashlib
 import hmac
 import time
 from pathlib import Path
+from typing import Any, Protocol
 from uuid import UUID
 
 from fastapi import HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
-from app.types.access_control import AccessLevel, FileType
+from app.types.access_control import FileType
+
+
+class HasFileAttributes(Protocol):
+    """Protocol for models with file attributes (Photo, ProfilePicture, etc).
+
+    Note: At runtime, SQLAlchemy Column attributes are accessed as their Python types,
+    but at type-checking time they appear as Column[T]. We use Any to accommodate both.
+    """
+
+    original_path: Any
+    variants: Any
+    title: Any
+    filename: Any
 
 
 class FileAccessController:
-    """Controls access to photo files based on permissions and file type."""
-
-    def __init__(self):
+    def __init__(self) -> None:
         self.upload_dir = Path(settings.upload_dir).resolve()
         self.compressed_dir = Path(settings.compressed_dir).resolve()
 
-    async def validate_photo_access(
-        self,
-        db: AsyncSession,
-        photo_id: UUID,
-        file_type: FileType,
-        *,
-        user_id: str | None = None,
-        is_admin: bool = False,
-    ):
-        """
-        Validate if user can access specified photo file.
-
-        Returns photo model if access is granted, raises HTTPException otherwise.
-        """
-        # Import here to avoid circular import
-        from app.crud.photo import get_photo  # noqa: PLC0415
-
-        # Get photo from database
-        photo = await get_photo(db, photo_id)
-        if not photo:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Photo not found"
-            )
-
-        # Get access level (default to public for existing photos)
-        access_level = getattr(photo, "access_level", AccessLevel.PUBLIC)
-
-        # Check access permissions
-        if access_level == AccessLevel.PRIVATE and not is_admin:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required"
-            )
-
-        if access_level == AccessLevel.AUTHENTICATED and not user_id and not is_admin:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Authentication required",
-            )
-
-        # Additional restrictions for high-resolution files (only for non-public photos)
-        if (
-            file_type in [FileType.LARGE, FileType.XLARGE, FileType.ORIGINAL]
-            and access_level != AccessLevel.PUBLIC
-            and not (user_id or is_admin)
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Authentication required for high-resolution files",
-            )
-
-        return photo
-
-    def get_file_path(self, photo, file_type: FileType) -> Path:
+    def get_file_path(self, photo: HasFileAttributes, file_type: FileType) -> Path:
         """Get the actual file path for the requested photo and file type."""
         if file_type == FileType.ORIGINAL:
             file_path = self.upload_dir / Path(photo.original_path).name
         else:
             # Get path from variants
+            # Note: SQLAlchemy Column[JSON] is accessed as dict at runtime
             if not photo.variants or not isinstance(photo.variants, dict):
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
@@ -197,9 +157,12 @@ class FileAccessController:
         }
         return content_types.get(suffix, "application/octet-stream")
 
-    def get_download_filename(self, photo, file_type: FileType) -> str:
+    def get_download_filename(
+        self, photo: HasFileAttributes, file_type: FileType
+    ) -> str:
         """Generate appropriate filename for downloads."""
         # Use photo title if available, otherwise use original filename
+        # Note: SQLAlchemy Column attributes are accessed as their Python types at runtime
         base_name = photo.title or Path(photo.filename).stem
 
         # Clean filename for download

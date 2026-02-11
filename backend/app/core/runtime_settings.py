@@ -37,13 +37,13 @@ class ImageSettings:
                 str(k): int(v) for k, v in data["quality_settings"].items()
             }
         if "avif_quality_base_offset" in data:
-            self.avif_quality_base_offset = int(data["avif_quality_base_offset"])  # type: ignore[arg-type]
+            self.avif_quality_base_offset = int(data["avif_quality_base_offset"])
         if "avif_quality_floor" in data:
-            self.avif_quality_floor = int(data["avif_quality_floor"])  # type: ignore[arg-type]
+            self.avif_quality_floor = int(data["avif_quality_floor"])
         if "avif_effort_default" in data:
-            self.avif_effort_default = int(data["avif_effort_default"])  # type: ignore[arg-type]
+            self.avif_effort_default = int(data["avif_effort_default"])
         if "webp_quality" in data:
-            self.webp_quality = int(data["webp_quality"])  # type: ignore[arg-type]
+            self.webp_quality = int(data["webp_quality"])
 
 
 _image_settings = ImageSettings()

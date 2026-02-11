@@ -2,12 +2,14 @@ from __future__ import annotations
 
 from uuid import UUID
 
+from fastapi import HTTPException, status
 from sqlalchemy import asc, desc, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import case
 
 from app.models.photo import Photo
 from app.schemas.photo import PhotoCreate, PhotoUpdate
+from app.types.access_control import AccessLevel, FileType
 
 
 async def get_photos(
@@ -128,7 +130,58 @@ async def get_photo(db: AsyncSession, photo_id: UUID) -> Photo | None:
     return result.scalar_one_or_none()
 
 
-async def create_photo(db: AsyncSession, photo: PhotoCreate, **kwargs) -> Photo:
+async def validate_photo_access(
+    db: AsyncSession,
+    photo_id: UUID,
+    file_type: FileType,
+    *,
+    user_id: str | None = None,
+    is_admin: bool = False,
+) -> Photo:
+    """
+    Validate if user can access specified photo file.
+
+    Returns photo model if access is granted, raises HTTPException otherwise.
+    """
+    # Get photo from database
+    photo = await get_photo(db, photo_id)
+    if not photo:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Photo not found"
+        )
+
+    # Get access level (default to public for existing photos)
+    access_level = getattr(photo, "access_level", AccessLevel.PUBLIC)
+
+    # Check access permissions
+    if access_level == AccessLevel.PRIVATE and not is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required"
+        )
+
+    if access_level == AccessLevel.AUTHENTICATED and not user_id and not is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+        )
+
+    # Additional restrictions for high-resolution files (only for non-public photos)
+    if (
+        file_type in [FileType.LARGE, FileType.XLARGE, FileType.ORIGINAL]
+        and access_level != AccessLevel.PUBLIC
+        and not (user_id or is_admin)
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required for high-resolution files",
+        )
+
+    return photo
+
+
+async def create_photo(
+    db: AsyncSession, photo: PhotoCreate, **kwargs: str | float | dict | None
+) -> Photo:
     db_photo = Photo(**photo.model_dump(), **kwargs)
     db.add(db_photo)
     await db.commit()
@@ -140,7 +193,7 @@ async def update_photo(
     db: AsyncSession, photo_id: UUID, photo: PhotoUpdate
 ) -> Photo | None:
     result = await db.execute(select(Photo).where(Photo.id == photo_id))
-    db_photo = result.scalar_one_or_none()
+    db_photo: Photo | None = result.scalar_one_or_none()
 
     if db_photo:
         update_data = photo.model_dump(exclude_unset=True)
@@ -155,7 +208,7 @@ async def update_photo(
 
 async def delete_photo(db: AsyncSession, photo_id: UUID) -> bool:
     result = await db.execute(select(Photo).where(Photo.id == photo_id))
-    db_photo = result.scalar_one_or_none()
+    db_photo: Photo | None = result.scalar_one_or_none()
 
     if db_photo:
         await db.delete(db_photo)
@@ -167,16 +220,16 @@ async def delete_photo(db: AsyncSession, photo_id: UUID) -> bool:
 
 async def increment_view_count(db: AsyncSession, photo_id: UUID) -> None:
     result = await db.execute(select(Photo).where(Photo.id == photo_id))
-    db_photo = result.scalar_one_or_none()
+    db_photo: Photo | None = result.scalar_one_or_none()
 
     if db_photo:
-        db_photo.view_count += 1  # type: ignore[assignment]
+        db_photo.view_count = Photo.view_count + 1  # type: ignore[assignment]
         await db.commit()
 
 
 async def bulk_reorder_photos(
     db: AsyncSession,
-    items: list[tuple[UUID, int]] | list[dict],
+    items: list[tuple[UUID, int]] | list[dict[str, str | int]],
     *,
     normalize: bool = False,
 ) -> None:
