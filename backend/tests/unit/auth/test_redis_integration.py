@@ -50,7 +50,7 @@ class TestRedisClient:
 
     async def test_connect_success(self):
         """Test successful Redis connection."""
-        with patch("app.core.redis.redis.Redis") as mock_redis_class:
+        with patch("app.core.redis.redis_module.Redis") as mock_redis_class:
             mock_redis = AsyncMock()
             mock_redis.ping.return_value = True
             mock_redis_class.return_value = mock_redis
@@ -64,7 +64,7 @@ class TestRedisClient:
 
     async def test_connect_failure(self):
         """Test Redis connection failure."""
-        with patch("app.core.redis.redis.Redis") as mock_redis_class:
+        with patch("app.core.redis.redis_module.Redis") as mock_redis_class:
             mock_redis = AsyncMock()
             mock_redis.ping.side_effect = Exception("Connection failed")
             mock_redis_class.return_value = mock_redis
@@ -86,7 +86,7 @@ class TestRedisClient:
 
     async def test_connect_only_once(self):
         """Test that connection is only attempted once."""
-        with patch("app.core.redis.redis.Redis") as mock_redis_class:
+        with patch("app.core.redis.redis_module.Redis") as mock_redis_class:
             mock_redis = AsyncMock()
             mock_redis.ping.return_value = True
             mock_redis_class.return_value = mock_redis

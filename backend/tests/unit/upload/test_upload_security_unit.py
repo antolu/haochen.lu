@@ -568,13 +568,22 @@ class TestFilenameSanitization:
         """Helper to sanitize filename (placeholder implementation)."""
         import re  # noqa: PLC0415
         import uuid  # noqa: PLC0415
+        from urllib.parse import unquote  # noqa: PLC0415
 
         if not filename or filename.isspace():
             return f"file_{uuid.uuid4().hex[:8]}.jpg"
 
+        # URL decode multiple times to handle double encoding
+        decoded = filename
+        for _ in range(3):  # Decode up to 3 levels
+            prev = decoded
+            decoded = unquote(decoded)
+            if prev == decoded:
+                break
+
         # Remove directory traversal
-        filename = filename.replace("..", "")
-        filename = re.sub(r"[/\\]", "", filename)
+        decoded = decoded.replace("..", "")
+        filename = re.sub(r"[/\\]", "", decoded)
 
         # Remove special characters
         filename = re.sub(r'[<>:"|?*]', "", filename)
