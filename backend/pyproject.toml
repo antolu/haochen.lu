@@ -314,6 +314,7 @@ skips = [
 [tool.setuptools_scm]
 write_to = "app/_version.py"
 local_scheme = "no-local-version"
+fallback_version = "0.1.0.dev0"
 
 [tool.setuptools.dynamic]
 readme = { file = ["README.md"], content-type = "text/markdown" }
