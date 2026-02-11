@@ -29,6 +29,7 @@ services:
     volumes:
       # Mount source code for live reload
       - ./backend:/app
+      - ./.git:/app/.git
       - ./uploads:/app/uploads
       - ./compressed:/app/compressed
       # Preserve build artifacts
