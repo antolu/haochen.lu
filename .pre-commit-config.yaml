@@ -33,9 +33,11 @@ repos:
       - id: ruff-check
         args: [--fix, --exit-non-zero-on-fix, --unsafe-fixes, --preview, --config=backend/pyproject.toml]
         files: ^backend/
+        exclude: ^backend/app/_version\.py$
       - id: ruff-format
         args: [--config=backend/pyproject.toml]
         files: ^backend/
+        exclude: ^backend/app/_version\.py$
 
   # Python type checking
   - repo: https://github.com/pre-commit/mirrors-mypy
@@ -43,11 +45,18 @@ repos:
     hooks:
       - id: mypy
         files: ^backend/
-        exclude: ^backend/(tests/.*|alembic/.*|.*redis.*\.py)$
+        exclude: ^backend/(tests/.*|alembic/.*|app/_version\.py)$
+        args: [--config-file=backend/pyproject.toml]
         additional_dependencies:
-          - 'pydantic'
-          - 'sqlalchemy[mypy]'
+          - 'pydantic>=2.11'
+          - 'pydantic-settings>=2.10'
+          - 'sqlalchemy[mypy]>=2.0'
           - 'types-PyYAML'
+          - 'types-redis>=4.6'
+          - 'httpx>=0.28'
+          - 'fastapi>=0.117'
+          - 'starlette>=0.41'
+          - 'bcrypt>=4.1'
 
   # ESLint for TypeScript/JavaScript linting
   - repo: https://github.com/pre-commit/mirrors-eslint
@@ -93,7 +102,7 @@ repos:
     hooks:
       - id: bandit
         files: ^backend/
-        exclude: ^backend/tests/
+        exclude: ^backend/(tests/|app/_version\.py$)
 
   # YAML linting
   - repo: https://github.com/adrienverge/yamllint

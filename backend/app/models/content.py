@@ -1,4 +1,4 @@
-"""Content model for managing editable website text."""
+from __future__ import annotations
 
 from uuid import uuid4
 
@@ -30,5 +30,5 @@ class Content(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Content(key='{self.key}', title='{self.title}')>"

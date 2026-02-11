@@ -42,7 +42,7 @@ class HeroImage(Base):
     # Relationships
     photo = relationship("Photo", lazy="select")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<HeroImage(title='{self.title}', active={self.is_active})>"
 
     @property

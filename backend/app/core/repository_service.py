@@ -19,7 +19,7 @@ class RepositoryInfo(BaseModel):
 class RepositoryService:
     """Service for fetching repository data from GitHub and GitLab"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.github_token = getattr(settings, "GITHUB_TOKEN", None)
         self.gitlab_token = getattr(settings, "GITLAB_TOKEN", None)
 
@@ -115,7 +115,7 @@ class RepositoryService:
                             commits_url = f"https://api.github.com/repos/{repo_info.owner}/{repo_info.name}/commits"
                             # Use the branch that worked for content
                             branch = "master" if "master" in raw_url else "main"
-                            commits_params = {
+                            commits_params: dict[str, str | int] = {
                                 "path": filename,
                                 "per_page": 1,
                                 "sha": branch,
@@ -186,7 +186,10 @@ class RepositoryService:
                         commits_url = (
                             f"{base_url}/projects/{encoded_path}/repository/commits"
                         )
-                        commits_params = {"path": filename, "per_page": 1}
+                        commits_params: dict[str, str | int] = {
+                            "path": filename,
+                            "per_page": 1,
+                        }
                         commits_response = await client.get(
                             commits_url, headers=headers, params=commits_params
                         )

@@ -6,54 +6,98 @@ import json
 import logging
 import math
 import time
-from typing import Any
+import typing
+from typing import TypeVar
 
 import httpx
 from geopy.geocoders import Nominatim
+from pydantic import TypeAdapter, ValidationError
 
 from app.config import settings
 from app.core.redis import redis_client
+from app.models.location import (
+    ForwardGeocodeResult,
+    LocationSearchResult,
+    NearbyLocationResult,
+    ReverseGeocodeResult,
+)
 
 logger = logging.getLogger(__name__)
+
+T = TypeVar("T")
+
+# Runtime validators for cached data
+_reverse_geocode_adapter = TypeAdapter(ReverseGeocodeResult)
+_forward_geocode_adapter = TypeAdapter(ForwardGeocodeResult)
+_location_search_adapter = TypeAdapter(list[LocationSearchResult])
+_nearby_location_adapter = TypeAdapter(list[NearbyLocationResult])
 
 
 class LocationService:
     """Service for geocoding and reverse geocoding using OpenStreetMap Nominatim."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.geolocator = Nominatim(user_agent=settings.user_agent, timeout=10)
         # Cache TTL in seconds (24 hours for geocoding, 1 hour for search)
         self.geocoding_cache_ttl = 24 * 60 * 60
         self.search_cache_ttl = 60 * 60
         # Rate limiting (1 request per second per operation)
         self.rate_limit_window = 1.0
-        self._last_request_times = {}
+        self._last_request_times: dict[str, float] = {}
 
-    def _generate_cache_key(self, operation: str, *args) -> str:
+    def _generate_cache_key(self, operation: str, *args: typing.Any) -> str:
         """Generate a cache key for the given operation and arguments."""
         key_data = f"{operation}:{':'.join(str(arg) for arg in args)}"
         return f"location:{hashlib.md5(key_data.encode(), usedforsecurity=False).hexdigest()}"
 
     async def _get_cached_result(
-        self, cache_key: str
-    ) -> dict[str, Any] | list[dict[str, Any]] | None:
-        """Get cached result from Redis."""
+        self, cache_key: str, adapter: TypeAdapter[T]
+    ) -> T | None:
+        """Get and validate cached result from Redis.
+
+        Args:
+            cache_key: Redis cache key
+            adapter: Pydantic TypeAdapter for runtime validation
+
+        Returns:
+            Validated data or None if cache miss or validation fails
+        """
         try:
             if await redis_client.is_connected():
                 cached_data = await redis_client.get(cache_key)
                 if cached_data:
-                    return json.loads(cached_data)
+                    raw_data = json.loads(cached_data)
+                    try:
+                        validated: T = adapter.validate_python(raw_data)
+                    except ValidationError:
+                        logger.warning(
+                            f"Invalid cached data for key {cache_key}, will fetch fresh"
+                        )
+                        return None
+                    else:
+                        return validated
         except Exception as e:
             logger.warning(f"Error reading from cache: {e}")
         return None
 
     async def _cache_result(
-        self, cache_key: str, result: dict[str, Any] | list[dict[str, Any]], ttl: int
+        self,
+        cache_key: str,
+        result: ReverseGeocodeResult
+        | ForwardGeocodeResult
+        | list[LocationSearchResult]
+        | list[NearbyLocationResult],
+        ttl: int,
     ) -> None:
-        """Cache result in Redis."""
+        """Cache result in Redis as JSON."""
         try:
             if await redis_client.is_connected() and result is not None:
-                await redis_client.setex(cache_key, ttl, json.dumps(result))
+                # Serialize Pydantic model to JSON
+                if isinstance(result, list):
+                    json_data = json.dumps([r.model_dump() for r in result])
+                else:
+                    json_data = json.dumps(result.model_dump())
+                await redis_client.setex(cache_key, ttl, json_data)
         except Exception as e:
             logger.warning(f"Error writing to cache: {e}")
 
@@ -67,7 +111,11 @@ class LocationService:
             raise ValueError(msg)
 
     def _validate_string_input(
-        self, text: str, field_name: str, min_length: int = 1, max_length: int = 500
+        self,
+        text: typing.Any,
+        field_name: str,
+        min_length: int = 1,
+        max_length: int = 500,
     ) -> str:
         """Validate and sanitize string input."""
         if not isinstance(text, str):
@@ -82,7 +130,7 @@ class LocationService:
             msg = f"{field_name} must be at most {max_length} characters"
             raise ValueError(msg)
 
-        return text
+        return str(text)
 
     async def _rate_limit_check(self, operation: str) -> None:
         """Check rate limits for operations."""
@@ -97,7 +145,7 @@ class LocationService:
 
     async def reverse_geocode(
         self, latitude: float, longitude: float, language: str = "en"
-    ) -> dict[str, Any] | None:
+    ) -> ReverseGeocodeResult | None:
         """Get location information from coordinates."""
         # Validate inputs
         self._validate_coordinates(latitude, longitude)
@@ -106,9 +154,11 @@ class LocationService:
         # Generate cache key
         cache_key = self._generate_cache_key("reverse", latitude, longitude, language)
 
-        # Try to get from cache first
-        cached_result = await self._get_cached_result(cache_key)
-        if cached_result and isinstance(cached_result, dict):
+        # Try to get from cache first with runtime validation
+        cached_result = await self._get_cached_result(
+            cache_key, _reverse_geocode_adapter
+        )
+        if cached_result:
             logger.debug(f"Cache hit for reverse geocoding {latitude}, {longitude}")
             return cached_result
 
@@ -125,7 +175,7 @@ class LocationService:
                 return None
 
             # Parse the raw address data
-            address = location.raw.get("address", {})
+            address: dict[str, str] = location.raw.get("address", {})
 
             # Build location name prioritizing general area over specific address
             location_parts = []
@@ -148,18 +198,18 @@ class LocationService:
 
             location_name = ", ".join(location_parts) if location_parts else None
 
-            result = {
-                "location_name": location_name,
-                "location_address": location.address,
-                "raw_address": address,
-                "place_id": str(location.raw.get("place_id"))
+            result = ReverseGeocodeResult(
+                location_name=location_name,
+                location_address=location.address,
+                raw_address=address,
+                place_id=str(location.raw.get("place_id"))
                 if location.raw.get("place_id")
                 else None,
-                "osm_type": location.raw.get("osm_type"),
-                "osm_id": str(location.raw.get("osm_id"))
+                osm_type=location.raw.get("osm_type"),
+                osm_id=str(location.raw.get("osm_id"))
                 if location.raw.get("osm_id")
                 else None,
-            }
+            )
 
             # Cache the result
             await self._cache_result(cache_key, result, self.geocoding_cache_ttl)
@@ -175,7 +225,7 @@ class LocationService:
 
     async def forward_geocode(
         self, address: str, language: str = "en"
-    ) -> dict[str, Any] | None:
+    ) -> ForwardGeocodeResult | None:
         """Get coordinates from address."""
         # Validate inputs
         address = self._validate_string_input(address, "address", 3, 500)
@@ -184,9 +234,11 @@ class LocationService:
         # Generate cache key
         cache_key = self._generate_cache_key("forward", address, language)
 
-        # Try to get from cache first
-        cached_result = await self._get_cached_result(cache_key)
-        if cached_result and isinstance(cached_result, dict):
+        # Try to get from cache first with runtime validation
+        cached_result = await self._get_cached_result(
+            cache_key, _forward_geocode_adapter
+        )
+        if cached_result:
             logger.debug(f"Cache hit for forward geocoding '{address}'")
             return cached_result
 
@@ -201,20 +253,20 @@ class LocationService:
             if not location:
                 return None
 
-            result = {
-                "latitude": location.latitude,
-                "longitude": location.longitude,
-                "location_name": location.address,
-                "location_address": location.address,
-                "raw_address": location.raw.get("address", {}),
-                "place_id": str(location.raw.get("place_id"))
+            result = ForwardGeocodeResult(
+                latitude=location.latitude,
+                longitude=location.longitude,
+                location_name=location.address,
+                location_address=location.address,
+                raw_address=location.raw.get("address", {}),
+                place_id=str(location.raw.get("place_id"))
                 if location.raw.get("place_id")
                 else None,
-                "osm_type": location.raw.get("osm_type"),
-                "osm_id": str(location.raw.get("osm_id"))
+                osm_type=location.raw.get("osm_type"),
+                osm_id=str(location.raw.get("osm_id"))
                 if location.raw.get("osm_id")
                 else None,
-            }
+            )
 
             # Cache the result
             await self._cache_result(cache_key, result, self.geocoding_cache_ttl)
@@ -230,7 +282,7 @@ class LocationService:
 
     async def search_locations(
         self, query: str, limit: int = 10, language: str = "en"
-    ) -> list[dict[str, Any]]:
+    ) -> list[LocationSearchResult]:
         """Search for locations matching query."""
         # Validate inputs
         query = self._validate_string_input(query, "query", 2, 200)
@@ -243,9 +295,11 @@ class LocationService:
         # Generate cache key
         cache_key = self._generate_cache_key("search", query, limit, language)
 
-        # Try to get from cache first
-        cached_result = await self._get_cached_result(cache_key)
-        if cached_result and isinstance(cached_result, list):
+        # Try to get from cache first with runtime validation
+        cached_result = await self._get_cached_result(
+            cache_key, _location_search_adapter
+        )
+        if cached_result:
             logger.debug(f"Cache hit for location search '{query}'")
             return cached_result
 
@@ -271,7 +325,7 @@ class LocationService:
                 if response.status_code == 200:
                     results = response.json()
 
-                    locations = []
+                    locations: list[LocationSearchResult] = []
                     for result in results:
                         address = result.get("address", {})
 
@@ -296,20 +350,22 @@ class LocationService:
                             else result.get("display_name")
                         )
 
-                        locations.append({
-                            "latitude": float(result["lat"]),
-                            "longitude": float(result["lon"]),
-                            "location_name": location_name,
-                            "location_address": result.get("display_name"),
-                            "place_id": str(result.get("place_id"))
-                            if result.get("place_id")
-                            else None,
-                            "osm_type": result.get("osm_type"),
-                            "osm_id": str(result.get("osm_id"))
-                            if result.get("osm_id")
-                            else None,
-                            "raw_address": address,
-                        })
+                        locations.append(
+                            LocationSearchResult(
+                                latitude=float(result["lat"]),
+                                longitude=float(result["lon"]),
+                                location_name=location_name,
+                                location_address=result.get("display_name"),
+                                place_id=str(result.get("place_id"))
+                                if result.get("place_id")
+                                else None,
+                                osm_type=result.get("osm_type"),
+                                osm_id=str(result.get("osm_id"))
+                                if result.get("osm_id")
+                                else None,
+                                raw_address=address,
+                            )
+                        )
 
                     # Cache the results
                     await self._cache_result(
@@ -332,7 +388,7 @@ class LocationService:
         longitude: float,
         radius_km: float = 10.0,
         limit: int = 20,
-    ) -> list[dict[str, Any]]:
+    ) -> list[NearbyLocationResult]:
         """Get notable locations near given coordinates."""
         # Validate inputs
         self._validate_coordinates(latitude, longitude)
@@ -344,6 +400,7 @@ class LocationService:
             msg = f"Limit must be between 1 and 100, got {limit}"
             raise ValueError(msg)
 
+        locations: list[NearbyLocationResult] = []
         try:
             # Rate limiting
             await self._rate_limit_check("nearby")
@@ -369,27 +426,29 @@ class LocationService:
                     results = response.json()
 
                     locations = [
-                        {
-                            "latitude": float(result["lat"]),
-                            "longitude": float(result["lon"]),
-                            "name": result.get("display_name"),
-                            "type": result.get("type"),
-                            "class": result.get("class"),
-                            "place_id": str(result.get("place_id"))
+                        NearbyLocationResult(
+                            latitude=float(result["lat"]),
+                            longitude=float(result["lon"]),
+                            name=result.get("display_name"),
+                            type=result.get("type"),
+                            place_id=str(result.get("place_id"))
                             if result.get("place_id")
                             else None,
-                            "distance_km": self._calculate_distance(
+                            distance_km=self._calculate_distance(
                                 latitude,
                                 longitude,
                                 float(result["lat"]),
                                 float(result["lon"]),
                             ),
-                        }
+                            **{
+                                "class": result.get("class")
+                            },  # Use alias to avoid keyword issue
+                        )
                         for result in results
                     ]
 
                     # Sort by distance
-                    locations.sort(key=lambda x: x["distance_km"])
+                    locations.sort(key=lambda x: x.distance_km)
 
         except ValueError:
             # Re-raise validation errors

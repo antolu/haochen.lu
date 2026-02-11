@@ -23,7 +23,8 @@ def get_password_hash(password: str) -> str:
     if not password:
         msg = "Password must not be empty"
         raise ValueError(msg)
-    return typing.cast(str, hashpw(password.encode("utf-8"), gensalt()).decode("utf-8"))
+    hashed_bytes: bytes = hashpw(password.encode("utf-8"), gensalt())
+    return hashed_bytes.decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -36,9 +37,10 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     Returns:
         True if password matches, False otherwise
     """
-    return typing.cast(
-        bool, checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
+    result: bool = checkpw(
+        plain_password.encode("utf-8"), hashed_password.encode("utf-8")
     )
+    return result
 
 
 def create_access_token(
@@ -62,14 +64,12 @@ def create_access_token(
     token_data["aud"] = ["fastapi-users:auth"]
 
     # Generate token using fastapi-users JWT utility
-    return typing.cast(
-        str,
-        generate_jwt(
-            token_data,
-            secret=settings.secret_key,
-            lifetime_seconds=lifetime_seconds,
-        ),
+    token: str = generate_jwt(
+        token_data,
+        secret=settings.secret_key,
+        lifetime_seconds=lifetime_seconds,
     )
+    return token
 
 
 def decode_token(token: str) -> dict[str, typing.Any] | None:

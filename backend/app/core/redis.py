@@ -5,14 +5,15 @@ Redis integration for token revocation and session management
 from __future__ import annotations
 
 import logging
+import typing
 
 try:
-    import redis.asyncio as redis
+    import redis.asyncio as redis_module
 
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
-    redis = None
+    redis_module = typing.cast(typing.Any, None)
 
 from urllib.parse import urlparse
 
@@ -24,13 +25,13 @@ logger = logging.getLogger(__name__)
 class RedisClient:
     """Redis client wrapper for session management"""
 
-    def __init__(self):
-        self._redis: redis.Redis | None = None
+    def __init__(self) -> None:
+        self._redis: typing.Any | None = None
         self._connection_attempted = False
 
     async def connect(self) -> bool:
         """Connect to Redis server"""
-        if not REDIS_AVAILABLE:
+        if not REDIS_AVAILABLE or redis_module is None:
             logger.warning(
                 "Redis not available - install redis[asyncio] for session management"
             )
@@ -52,7 +53,7 @@ class RedisClient:
             except Exception:
                 db = 0
 
-            self._redis = redis.Redis(
+            self._redis = redis_module.Redis(
                 host=host,
                 port=port,
                 db=db,
@@ -71,7 +72,7 @@ class RedisClient:
         else:
             return True
 
-    async def disconnect(self):
+    async def disconnect(self) -> None:
         """Close Redis connection"""
         if self._redis:
             await self._redis.close()
@@ -123,7 +124,7 @@ class RedisClient:
             logger.exception("Redis GET failed")
             return None
         else:
-            return value
+            return value or None
 
     async def delete(self, *keys: str) -> int:
         """Delete one or more keys"""
@@ -131,7 +132,7 @@ class RedisClient:
             return 0
 
         try:
-            return await self._redis.delete(*keys)
+            return int(await self._redis.delete(*keys))
         except Exception:
             logger.exception("Redis DELETE failed")
             return 0
@@ -142,7 +143,7 @@ class RedisClient:
             return []
 
         try:
-            return await self._redis.keys(pattern)
+            return [str(k) for k in await self._redis.keys(pattern)]
         except Exception:
             logger.exception("Redis KEYS failed")
             return []
@@ -164,7 +165,7 @@ class RedisClient:
             return -1
 
         try:
-            return await self._redis.ttl(key)
+            return int(await self._redis.ttl(key))
         except Exception:
             logger.exception("Redis TTL failed")
             return -1
@@ -174,12 +175,12 @@ class RedisClient:
 redis_client = RedisClient()
 
 
-async def init_redis():
+async def init_redis() -> None:
     """Initialize Redis connection"""
     await redis_client.connect()
 
 
-async def close_redis():
+async def close_redis() -> None:
     """Close Redis connection"""
     await redis_client.disconnect()
 

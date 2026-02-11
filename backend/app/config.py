@@ -39,13 +39,11 @@ class Settings(BaseSettings):
 
     @field_validator("cors_origins")
     @classmethod
-    def _normalize_cors(cls, v: str | list[str]):
+    def _normalize_cors(cls, v: str | list[str]) -> list[str]:
         if isinstance(v, list):
             origins = v
         elif isinstance(v, str):
             origins = [origin.strip() for origin in v.split(",") if origin.strip()]
-        else:
-            return []
 
         # Validate each origin is a valid URL format or *
         validated = []

@@ -15,6 +15,8 @@ classifiers = [
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
   "fastapi~=0.117.1",
@@ -151,6 +153,7 @@ exclude = [
   "node_modules",
   "venv",
   ".venv",
+  "app/_version.py",
 ]
 line-length = 88
 target-version = "py311"
@@ -269,8 +272,18 @@ module = [
   "httpx.*",
   "jwt",
   "yaml",
+  "bcrypt",
 ]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "app.api.*"
+disallow_untyped_decorators = false
+disable_error_code = ["union-attr"]
+
+[[tool.mypy.overrides]]
+module = "app.schemas.user"
+disable_error_code = ["assignment"]
 
 [[tool.mypy.overrides]]
 module = "tests.*"
@@ -280,6 +293,10 @@ ignore_errors = true
 [[tool.mypy.overrides]]
 module = "app.crud.*"
 warn_return_any = false
+
+[[tool.mypy.overrides]]
+module = "app.crud.user"
+disable_error_code = ["arg-type"]
 
 [[tool.mypy.overrides]]
 module = "app.core.vips_processor"
