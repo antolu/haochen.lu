@@ -418,7 +418,7 @@ async def get_photo_detail(
     return PhotoResponse.model_validate(photo_dict)
 
 
-@router.post("", response_model=PhotoResponse)
+@router.post("", response_model=PhotoResponse, status_code=status.HTTP_201_CREATED)
 async def upload_photo(
     file: UploadFile = _image_file_dependency,
     title: typing.Annotated[str, Form(max_length=200)] = "",
