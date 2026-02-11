@@ -113,7 +113,7 @@ jobs:
 
     - name: Run axe accessibility tests
       run: |
-        axe http://localhost:3000 --include-tags wcag2a,wcag2aa --reporter junit --output-file axe-results.xml
+        axe http://localhost:3000 --tags wcag2a,wcag2aa --save axe-results.json
 
     - name: Run Lighthouse accessibility audit
       run: |
@@ -125,7 +125,7 @@ jobs:
       with:
         name: accessibility-reports
         path: |
-          axe-results.xml
+          axe-results.json
           lighthouse-accessibility.json
 
   security-scan:
