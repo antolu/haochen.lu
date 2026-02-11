@@ -18,6 +18,7 @@ from app.crud.blog import (
 )
 from app.database import get_session
 from app.dependencies import get_current_admin_user
+from app.models.user import User
 from app.schemas.blog import (
     BlogPostCreate,
     BlogPostListResponse,
@@ -41,7 +42,7 @@ async def list_blog_posts(
         default=True, description="Filter to only published posts"
     ),
     db: AsyncSession = db_dependency,
-):
+) -> BlogPostListResponse:
     """List blog posts with pagination."""
     skip = (page - 1) * per_page
 
@@ -66,8 +67,8 @@ async def list_all_blog_posts(
     page: int = 1,
     per_page: int = 20,
     db: AsyncSession = db_dependency,
-    current_user=admin_dependency,
-):
+    current_user: User = admin_dependency,
+) -> BlogPostListResponse:
     """List all blog posts including drafts (admin only)."""
     skip = (page - 1) * per_page
 
@@ -93,7 +94,7 @@ async def get_blog_post_detail(
         default=True, description="Whether to increment view count"
     ),
     db: AsyncSession = db_dependency,
-):
+) -> BlogPostResponse:
     """Get blog post by ID or slug."""
     post = None
 
@@ -125,8 +126,8 @@ async def get_blog_post_detail(
 async def create_blog_post_endpoint(
     post: BlogPostCreate,
     db: AsyncSession = db_dependency,
-    current_user=admin_dependency,
-):
+    current_user: User = admin_dependency,
+) -> BlogPostResponse:
     """Create a new blog post (admin only)."""
     try:
         db_post = await create_blog_post(db, post)
@@ -142,8 +143,8 @@ async def update_blog_post_endpoint(
     post_id: UUID,
     post_update: BlogPostUpdate,
     db: AsyncSession = db_dependency,
-    current_user=admin_dependency,
-):
+    current_user: User = admin_dependency,
+) -> BlogPostResponse:
     """Update blog post (admin only)."""
     post = await update_blog_post(db, post_id, post_update)
     if not post:
@@ -156,8 +157,8 @@ async def update_blog_post_endpoint(
 async def delete_blog_post_endpoint(
     post_id: UUID,
     db: AsyncSession = db_dependency,
-    current_user=admin_dependency,
-):
+    current_user: User = admin_dependency,
+) -> dict[str, str]:
     """Delete blog post (admin only)."""
     success = await delete_blog_post(db, post_id)
     if not success:
@@ -169,8 +170,8 @@ async def delete_blog_post_endpoint(
 @router.get("/stats/summary")
 async def get_blog_stats(
     db: AsyncSession = db_dependency,
-    current_user=admin_dependency,
-):
+    current_user: User = admin_dependency,
+) -> dict[str, int]:
     """Get blog statistics (admin only)."""
     total_posts = await get_blog_post_count(db, published_only=False)
     published_posts = await get_blog_post_count(db, published_only=True)

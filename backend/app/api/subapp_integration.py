@@ -10,10 +10,12 @@ from app.dependencies import (
     _current_admin_user_dependency,
     _session_dependency,
 )
+from app.models.user import User
 from app.schemas.subapp_config import (
     SubAppConfig,
     SubAppConfigValidationResponse,
     SubAppIntegrationRequest,
+    SubAppIntegrationResponse,
 )
 
 router = APIRouter()
@@ -94,8 +96,8 @@ def validate_subapp_config(
 async def validate_subapp_config_endpoint(
     request: SubAppIntegrationRequest,
     db: AsyncSession = _session_dependency,
-    current_user=_current_admin_user_dependency,
-):
+    current_user: User = _current_admin_user_dependency,
+) -> SubAppConfigValidationResponse:
     """Validate subapp YAML configuration."""
 
     # Parse YAML
@@ -131,12 +133,15 @@ async def validate_subapp_config_endpoint(
 async def integrate_subapp(
     request: SubAppIntegrationRequest,
     db: AsyncSession = _session_dependency,
-    current_user=_current_admin_user_dependency,
-):
+    current_user: User = _current_admin_user_dependency,
+) -> SubAppConfigValidationResponse | SubAppIntegrationResponse:
     """Integrate a new subapp from YAML configuration."""
 
     if request.validate_only:
-        return await validate_subapp_config_endpoint(request, db, current_user)
+        result: SubAppConfigValidationResponse = await validate_subapp_config_endpoint(
+            request, db, current_user
+        )
+        return result
 
     # First validate
     validation_result = await validate_subapp_config_endpoint(request, db, current_user)
@@ -151,6 +156,10 @@ async def integrate_subapp(
         )
 
     config = validation_result.config
+    if config is None:
+        raise HTTPException(
+            status_code=400, detail="Validated configuration is missing"
+        )
 
     # TODO: Implementation for actual integration
     # This would involve:
@@ -159,13 +168,13 @@ async def integrate_subapp(
     # 3. Updating nginx configuration
     # 4. Deploying containers
 
-    return {
-        "success": True,
-        "message": f"Subapp '{config.meta.name}' integrated successfully",
-        "slug": config.meta.slug,
-        "frontend_url": config.integration.frontend_path,
-        "api_url": config.integration.api_path,
-        "admin_url": f"/admin/subapps/{config.meta.slug}"
+    return SubAppIntegrationResponse(
+        success=True,
+        message=f"Subapp '{config.meta.name}' integrated successfully",
+        slug=config.meta.slug,
+        frontend_url=config.integration.frontend_path,
+        api_url=config.integration.api_path,
+        admin_url=f"/admin/subapps/{config.meta.slug}"
         if config.integration.has_admin
         else None,
-    }
+    )

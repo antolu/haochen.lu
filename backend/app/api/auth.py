@@ -53,7 +53,6 @@ async def login(
         )
 
     # Generate token
-    # We ignore the type here because fastapi-users strategy writing is sometimes complex for mypy
     strategy = auth_backend.get_strategy()
     token = await strategy.write_token(user)
 

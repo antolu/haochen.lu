@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import math
 import time
+import typing
 import uuid
-from typing import Annotated, Any
 from uuid import UUID
 
 from fastapi import (
@@ -34,6 +34,7 @@ from app.crud.photo import (
     get_photos,
     increment_view_count,
     update_photo,
+    validate_photo_access,
 )
 from app.dependencies import (
     _current_admin_user_dependency,
@@ -45,6 +46,7 @@ from app.models.camera_alias import CameraAlias
 from app.models.hero_image import HeroImage
 from app.models.lens_alias import LensAlias
 from app.models.photo import Photo as PhotoModel
+from app.models.user import User
 from app.schemas.photo import (
     PhotoCreate,
     PhotoListResponse,
@@ -292,7 +294,9 @@ async def list_photos(
 
 
 @router.get("/featured", response_model=list[PhotoResponse])
-async def list_featured_photos(limit: int = 10, db: AsyncSession = _session_dependency):
+async def list_featured_photos(
+    limit: int = 10, db: AsyncSession = _session_dependency
+) -> list[PhotoResponse]:
     """Get featured photos."""
     photos = await get_photos(db, limit=limit, featured=True)
 
@@ -321,7 +325,7 @@ async def list_featured_photos(limit: int = 10, db: AsyncSession = _session_depe
 
 
 @router.get("/tags", response_model=list[str])
-async def list_distinct_tags(db: AsyncSession = _session_dependency):
+async def list_distinct_tags(db: AsyncSession = _session_dependency) -> list[str]:
     """Return a distinct, sorted list of tags across all photos."""
     # Fetch tags column for all photos (could paginate in large datasets)
     result = await db.execute(select(PhotoModel.tags))
@@ -338,7 +342,7 @@ async def list_distinct_tags(db: AsyncSession = _session_dependency):
 @router.get("/locations", response_model=PhotoLocationsResponse)
 async def get_photo_locations(
     db: AsyncSession = _session_dependency,
-):
+) -> PhotoLocationsResponse:
     """Get all photos with valid location data for map display."""
     # Query photos with valid coordinates
     result = await db.execute(
@@ -358,10 +362,11 @@ async def get_photo_locations(
     for photo in photos:
         # Use secure API URLs for thumbnail
         thumbnail_url = None
-        if photo.variants and isinstance(photo.variants, dict):
-            if "thumbnail" in photo.variants:
+        variants = typing.cast(dict[str, typing.Any], photo.variants)
+        if variants and isinstance(variants, dict):
+            if "thumbnail" in variants:
                 thumbnail_url = f"/api/photos/{photo.id}/file/thumbnail"
-            elif "small" in photo.variants:
+            elif "small" in variants:
                 thumbnail_url = f"/api/photos/{photo.id}/file/small"
 
         if not thumbnail_url:
@@ -385,7 +390,7 @@ async def get_photo_detail(
     *,
     increment_views: bool = True,
     db: AsyncSession = _session_dependency,
-):
+) -> PhotoResponse:
     """Get photo details and optionally increment view count."""
     photo = await get_photo(db, photo_id)
     if not photo:
@@ -416,17 +421,17 @@ async def get_photo_detail(
 @router.post("", response_model=PhotoResponse)
 async def upload_photo(
     file: UploadFile = _image_file_dependency,
-    title: Annotated[str, Form(max_length=200)] = "",
-    description: Annotated[str, Form(max_length=2000)] = "",
-    category: Annotated[str, Form(max_length=100)] = "",
-    tags: Annotated[str, Form(max_length=500)] = "",
-    comments: Annotated[str, Form(max_length=2000)] = "",
+    title: typing.Annotated[str, Form(max_length=200)] = "",
+    description: typing.Annotated[str, Form(max_length=2000)] = "",
+    category: typing.Annotated[str, Form(max_length=100)] = "",
+    tags: typing.Annotated[str, Form(max_length=500)] = "",
+    comments: typing.Annotated[str, Form(max_length=2000)] = "",
     *,
-    featured: Annotated[bool, Form()] = False,
+    featured: typing.Annotated[bool, Form()] = False,
     db: AsyncSession = _session_dependency,
-    current_user=_current_admin_user_dependency,
+    current_user: User = _current_admin_user_dependency,
     request: Request,
-):
+) -> PhotoResponse:
     """Upload a new photo (admin only)."""
 
     # Validate file type using magic number detection
@@ -504,8 +509,8 @@ async def update_photo_endpoint(
     photo_id: UUID,
     photo_update: PhotoUpdate,
     db: AsyncSession = _session_dependency,
-    current_user=_current_admin_user_dependency,
-):
+    current_user: User = _current_admin_user_dependency,
+) -> PhotoResponse:
     """Update photo metadata (admin only)."""
     photo = await update_photo(db, photo_id, photo_update)
     if not photo:
@@ -522,8 +527,8 @@ async def update_photo_endpoint(
 async def delete_photo_endpoint(
     photo_id: UUID,
     db: AsyncSession = _session_dependency,
-    current_user=_current_admin_user_dependency,
-):
+    current_user: User = _current_admin_user_dependency,
+) -> dict[str, str]:
     """Delete photo (admin only)."""
     photo = await get_photo(db, photo_id)
     if not photo:
@@ -548,11 +553,14 @@ async def delete_photo_endpoint(
 async def reorder_photos(
     payload: PhotoReorderRequest,
     db: AsyncSession = _session_dependency,
-    current_user=_current_admin_user_dependency,
-):
+    current_user: User = _current_admin_user_dependency,
+) -> dict[str, str]:
     """Bulk reorder photos (admin only)."""
-    # Convert to simple dicts for the crud layer
-    items = [{"id": i.id, "order": i.order} for i in payload.items]
+    # Convert to simple dicts for the crud layer, converting UUID to str
+    items: list[dict[str, str | int]] = []
+    for i in payload.items:
+        photo_id = str(i.id) if isinstance(i.id, UUID) else i.id
+        items.append({"id": photo_id, "order": i.order})
     await bulk_reorder_photos(db, items, normalize=payload.normalize)
     return {"message": "Reordered successfully"}
 
@@ -560,8 +568,8 @@ async def reorder_photos(
 @router.get("/stats/summary")
 async def get_photo_stats(
     db: AsyncSession = _session_dependency,
-    current_user=_current_admin_user_dependency,
-):
+    current_user: User = _current_admin_user_dependency,
+) -> dict[str, typing.Any]:
     """Get photo statistics (admin only)."""
     total_photos = await get_photo_count(db)
     featured_photos = await get_photo_count(db, featured=True)
@@ -578,10 +586,10 @@ async def serve_photo_original(
     photo_id: UUID,
     request: Request,
     db: AsyncSession = _session_dependency,
-    current_user: Any | None = _current_user_optional_dependency,
+    current_user: User | None = _current_user_optional_dependency,
     expires: int | None = Query(None, description="Temporary URL expiration timestamp"),
     signature: str | None = Query(None, description="Temporary URL signature"),
-):
+) -> FileResponse:
     """Serve original photo file with access control."""
     # Check if using temporary URL
     if expires and signature:
@@ -594,7 +602,7 @@ async def serve_photo_original(
             )
     else:
         # Regular access control
-        photo = await file_access_controller.validate_photo_access(
+        photo = await validate_photo_access(
             db,
             photo_id,
             FileType.ORIGINAL,
@@ -618,7 +626,10 @@ async def serve_photo_original(
 
     # Get photo and file path
     if not (expires and signature):
-        photo = await get_photo(db, photo_id)
+        photo_result = await get_photo(db, photo_id)
+        if not photo_result:
+            raise HTTPException(status_code=404, detail="Photo not found")
+        photo = photo_result
     file_path = file_access_controller.get_file_path(photo, FileType.ORIGINAL)
 
     # Record access
@@ -661,10 +672,10 @@ async def serve_photo_variant(
     variant: str,
     request: Request,
     db: AsyncSession = _session_dependency,
-    current_user: Any | None = _current_user_optional_dependency,
+    current_user: User | None = _current_user_optional_dependency,
     expires: int | None = Query(None, description="Temporary URL expiration timestamp"),
     signature: str | None = Query(None, description="Temporary URL signature"),
-):
+) -> FileResponse:
     """Serve photo variant with access control."""
     # Validate and negotiate variant based on Accept header
     try:
@@ -686,7 +697,7 @@ async def serve_photo_variant(
             )
     else:
         # Regular access control
-        photo = await file_access_controller.validate_photo_access(
+        photo = await validate_photo_access(
             db,
             photo_id,
             file_type,
@@ -698,7 +709,10 @@ async def serve_photo_variant(
 
     # Get photo and file path
     if not (expires and signature):
-        photo = await get_photo(db, photo_id)
+        photo_result = await get_photo(db, photo_id)
+        if not photo_result:
+            raise HTTPException(status_code=404, detail="Photo not found")
+        photo = photo_result
 
     fallback_used = False
     try:
@@ -737,11 +751,11 @@ async def download_photo_original(
     photo_id: UUID,
     request: Request,
     db: AsyncSession = _session_dependency,
-    current_user: Any | None = _current_user_optional_dependency,
-):
+    current_user: User | None = _current_user_optional_dependency,
+) -> FileResponse:
     """Download original photo file (forces download with proper filename)."""
     # Validate access
-    photo = await file_access_controller.validate_photo_access(
+    photo = await validate_photo_access(
         db,
         photo_id,
         FileType.ORIGINAL,
@@ -793,8 +807,8 @@ async def download_photo_variant(
     variant: str,
     request: Request,
     db: AsyncSession = _session_dependency,
-    current_user: Any | None = _current_user_optional_dependency,
-):
+    current_user: User | None = _current_user_optional_dependency,
+) -> FileResponse:
     """Download photo variant (forces download with proper filename)."""
     # Validate and negotiate variant based on Accept header
     try:
@@ -806,7 +820,7 @@ async def download_photo_variant(
         ) from e
 
     # Validate access
-    photo = await file_access_controller.validate_photo_access(
+    photo = await validate_photo_access(
         db,
         photo_id,
         file_type,
@@ -858,8 +872,8 @@ async def generate_temporary_url(
         3600, ge=60, le=86400, description="URL expires in seconds"
     ),
     db: AsyncSession = _session_dependency,
-    current_user=_current_admin_user_dependency,  # Only admins can generate temp URLs
-):
+    current_user: User = _current_admin_user_dependency,  # Only admins can generate temp URLs
+) -> dict[str, typing.Any]:
     """Generate temporary signed URL for photo access."""
     # Validate variant
     try:

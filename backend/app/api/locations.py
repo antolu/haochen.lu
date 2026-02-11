@@ -1,37 +1,18 @@
 from __future__ import annotations
 
-from typing import Any
-
 from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel
 
 from app.core.location_service import location_service
 from app.dependencies import _current_admin_user_dependency
+from app.models.location import (
+    ForwardGeocodeResult,
+    LocationSearchResult,
+    NearbyLocationResult,
+    ReverseGeocodeResult,
+)
+from app.models.user import User
 
-router = APIRouter(prefix="/locations", tags=["locations"])
-
-
-class LocationSearchResult(BaseModel):
-    """Location search result."""
-
-    latitude: float
-    longitude: float
-    location_name: str
-    location_address: str
-    place_id: str | None = None
-    osm_type: str | None = None
-    osm_id: str | None = None
-
-
-class ReverseGeocodeResult(BaseModel):
-    """Reverse geocoding result."""
-
-    location_name: str | None
-    location_address: str | None
-    raw_address: dict[str, Any]
-    place_id: str | None = None
-    osm_type: str | None = None
-    osm_id: str | None = None
+router = APIRouter()
 
 
 @router.get("/reverse")
@@ -57,7 +38,7 @@ async def reverse_geocode(
             status_code=404, detail="No location found for the given coordinates"
         )
 
-    return ReverseGeocodeResult(**result)
+    return result
 
 
 @router.get("/search")
@@ -81,18 +62,7 @@ async def search_locations(
             status_code=503, detail="Location service temporarily unavailable"
         ) from e
 
-    return [
-        LocationSearchResult(
-            latitude=result["latitude"],
-            longitude=result["longitude"],
-            location_name=result["location_name"],
-            location_address=result["location_address"],
-            place_id=result.get("place_id"),
-            osm_type=result.get("osm_type"),
-            osm_id=result.get("osm_id"),
-        )
-        for result in results
-    ]
+    return results
 
 
 @router.get("/geocode")
@@ -103,7 +73,7 @@ async def forward_geocode(
     language: str = Query(
         "en", description="Language code", min_length=2, max_length=5
     ),
-) -> LocationSearchResult:
+) -> ForwardGeocodeResult:
     """Get coordinates from address."""
     # Sanitize address
     address = address.strip()
@@ -122,27 +92,7 @@ async def forward_geocode(
             status_code=404, detail="No location found for the given address"
         )
 
-    return LocationSearchResult(
-        latitude=result["latitude"],
-        longitude=result["longitude"],
-        location_name=result["location_name"],
-        location_address=result["location_address"],
-        place_id=result.get("place_id"),
-        osm_type=result.get("osm_type"),
-        osm_id=result.get("osm_id"),
-    )
-
-
-class NearbyLocation(BaseModel):
-    """Nearby location result."""
-
-    latitude: float
-    longitude: float
-    name: str
-    type: str | None = None
-    class_: str | None = None
-    place_id: str | None = None
-    distance_km: float
+    return result
 
 
 @router.get("/nearby")
@@ -153,7 +103,7 @@ async def get_nearby_locations(
         10.0, ge=0.1, le=50.0, description="Search radius in kilometers"
     ),
     limit: int = Query(20, ge=1, le=100, description="Maximum number of results"),
-) -> list[NearbyLocation]:
+) -> list[NearbyLocationResult]:
     """Get notable locations near given coordinates."""
     try:
         results = await location_service.get_nearby_locations(lat, lng, radius, limit)
@@ -164,23 +114,12 @@ async def get_nearby_locations(
             status_code=503, detail="Location service temporarily unavailable"
         ) from e
 
-    return [
-        NearbyLocation(
-            latitude=result["latitude"],
-            longitude=result["longitude"],
-            name=result["name"],
-            type=result.get("type"),
-            class_=result.get("class"),
-            place_id=result.get("place_id"),
-            distance_km=result["distance_km"],
-        )
-        for result in results
-    ]
+    return results
 
 
 @router.get("/cache/stats")
 async def get_cache_stats(
-    current_user=_current_admin_user_dependency,
+    current_user: User = _current_admin_user_dependency,
 ) -> dict[str, int | bool]:
     """Get location cache statistics (admin only)."""
     return await location_service.get_cache_stats()
@@ -191,7 +130,7 @@ async def clear_cache(
     operation: str | None = Query(
         None, description="Operation type to clear (reverse, forward, search)"
     ),
-    current_user=_current_admin_user_dependency,
+    current_user: User = _current_admin_user_dependency,
 ) -> dict[str, int | str]:
     """Clear location cache (admin only)."""
     deleted_count = await location_service.clear_cache(operation)

@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import uuid
 from math import ceil
-from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
-from sqlalchemy import and_, func, select
+from sqlalchemy import ColumnElement, and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import _session_dependency
@@ -38,7 +37,7 @@ async def list_lens_aliases(
 
     # Build base query
     query = select(LensAlias)
-    conditions: list[Any] = []
+    conditions: list[ColumnElement[bool]] = []
 
     if search:
         search_term = f"%{search}%"

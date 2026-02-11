@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import typing
 from uuid import UUID
 
 from fastapi import APIRouter, Form, HTTPException, Query, Request, UploadFile
@@ -34,6 +35,7 @@ from app.dependencies import (
 )
 from app.models.project import Project as ProjectModel
 from app.models.project_image import ProjectImage
+from app.models.user import User
 from app.schemas.project import (
     ProjectCreate,
     ProjectImageAttach,
@@ -80,7 +82,7 @@ async def list_projects(
     status: str | None = None,
     order_by: str = Query("created_at", regex="^(created_at|updated_at|order)$"),
     db: AsyncSession = _session_dependency,
-):
+) -> ProjectListResponse:
     """List all projects."""
     projects = await get_projects(
         db, featured_only=featured_only, status=status, order_by=order_by
@@ -115,7 +117,9 @@ async def list_projects(
 
 
 @router.get("/featured", response_model=list[ProjectResponse])
-async def list_featured_projects(db: AsyncSession = _session_dependency):
+async def list_featured_projects(
+    db: AsyncSession = _session_dependency,
+) -> list[ProjectResponse]:
     """Get featured projects."""
     projects = await get_projects(db, featured_only=True)
     responses: list[ProjectResponse] = []
@@ -143,7 +147,9 @@ async def list_featured_projects(db: AsyncSession = _session_dependency):
 
 
 @router.get("/technologies", response_model=list[str])
-async def list_distinct_technologies(db: AsyncSession = _session_dependency):
+async def list_distinct_technologies(
+    db: AsyncSession = _session_dependency,
+) -> list[str]:
     """Return a distinct, sorted list of technologies across all projects."""
 
     result = await db.execute(select(ProjectModel.technologies))
@@ -176,8 +182,8 @@ async def list_distinct_technologies(db: AsyncSession = _session_dependency):
 @router.get("/stats/summary")
 async def get_project_stats(
     db: AsyncSession = _session_dependency,
-    current_user=_current_admin_user_dependency,
-):
+    current_user: User = _current_admin_user_dependency,
+) -> dict[str, int]:
     """Get project statistics (admin only)."""
     total_projects = await get_project_count(db)
     featured_projects = len(await get_projects(db, featured_only=True))
@@ -187,9 +193,9 @@ async def get_project_stats(
 
 @router.post("/repository/validate")
 async def validate_repository_url(
-    request: dict,
-    current_user=_current_admin_user_dependency,
-):
+    request: dict[str, typing.Any],
+    current_user: User = _current_admin_user_dependency,
+) -> dict[str, typing.Any]:
     """Validate a repository URL and return repository info (admin only)."""
     repository_url = request.get("repository_url")
     if not repository_url:
@@ -215,7 +221,10 @@ async def validate_repository_url(
 
 
 @router.post("/preview-readme", response_model=ProjectPreviewResponse)
-async def preview_readme(request: dict, current_user=_current_admin_user_dependency):
+async def preview_readme(
+    request: dict[str, typing.Any],
+    current_user: User = _current_admin_user_dependency,
+) -> ProjectPreviewResponse:
     """Fetch README content directly from a repository URL (admin only)."""
     repo_url = request.get("repo_url")
     if not repo_url:
@@ -241,7 +250,7 @@ async def preview_readme(request: dict, current_user=_current_admin_user_depende
 @router.get("/{project_identifier}", response_model=ProjectResponse)
 async def get_project_detail(
     project_identifier: str, db: AsyncSession = _session_dependency
-):
+) -> ProjectResponse:
     """Get project by ID or slug."""
     project = None
 
@@ -281,8 +290,8 @@ async def get_project_detail(
 async def reorder_projects(
     payload: ProjectReorderRequest,
     db: AsyncSession = _session_dependency,
-    current_user=_current_admin_user_dependency,
-):
+    current_user: User = _current_admin_user_dependency,
+) -> dict[str, str]:
     """Bulk reorder projects (admin only)."""
     items = [{"id": it.id, "order": it.order} for it in payload.items]
     await bulk_reorder_projects(db, items, normalize=payload.normalize)
@@ -296,7 +305,7 @@ async def get_project_images(
     skip: int = Query(0, ge=0, description="Number of images to skip"),
     limit: int = Query(10, ge=1, le=50, description="Maximum images to return"),
     db: AsyncSession = _session_dependency,
-):
+) -> list[ProjectImageResponse]:
     images = await list_project_images(db, project_id, skip=skip, limit=limit)
     payload: list[ProjectImageResponse] = []
     for img in images:
@@ -317,8 +326,8 @@ async def add_project_image(
     project_id: UUID,
     payload: ProjectImageAttach,
     db: AsyncSession = _session_dependency,
-    current_user=_current_admin_user_dependency,
-):
+    current_user: User = _current_admin_user_dependency,
+) -> ProjectImageResponse:
     # Enforce hard limit of images per project
     count_res = await db.execute(
         select(func.count())
@@ -345,8 +354,8 @@ async def upload_project_image(
     title: str = Form(""),
     alt_text: str = Form(""),
     db: AsyncSession = _session_dependency,
-    current_user=_current_admin_user_dependency,
-):
+    current_user: User = _current_admin_user_dependency,
+) -> ProjectImageResponse:
     """Upload a new image directly to a project (separate from photos)."""
     # Validate file type using magic number detection
     await file_validator.validate_image_file(file)
@@ -400,8 +409,8 @@ async def upload_project_image(
 async def delete_project_image(
     project_image_id: UUID,
     db: AsyncSession = _session_dependency,
-    current_user=_current_admin_user_dependency,
-):
+    current_user: User = _current_admin_user_dependency,
+) -> dict[str, str]:
     ok = await remove_project_image(db, project_image_id)
     if not ok:
         raise HTTPException(status_code=404, detail="Project image not found")
@@ -413,8 +422,8 @@ async def reorder_images(
     project_id: UUID,
     payload: ProjectImageReorderRequest,
     db: AsyncSession = _session_dependency,
-    current_user=_current_admin_user_dependency,
-):
+    current_user: User = _current_admin_user_dependency,
+) -> dict[str, str]:
     items = [{"id": it.id, "order": it.order} for it in payload.items]
     await reorder_project_images(db, project_id, items, normalize=payload.normalize)
     return {"message": "Reordered"}
@@ -426,8 +435,8 @@ async def serve_project_image_original(
     project_image_id: UUID,
     request: Request,
     db: AsyncSession = _session_dependency,
-    current_user: object | None = _current_user_optional_dependency,
-):
+    current_user: User | None = _current_user_optional_dependency,
+) -> FileResponse:
     res = await db.execute(
         select(ProjectImage).where(ProjectImage.id == project_image_id)
     )
@@ -437,12 +446,21 @@ async def serve_project_image_original(
 
     # Build a photo-like object
     class _PL:
-        def __init__(self, original_path, variants):
-            self.original_path = original_path
+        def __init__(
+            self,
+            original_path: str | None,
+            variants: typing.Any,
+            title: str | None = None,
+            filename: str | None = None,
+        ) -> None:
+            self.original_path = original_path or ""
             self.variants = variants or {}
+            self.title = title
+            self.filename = filename or ""
 
     file_path = file_access_controller.get_file_path(
-        _PL(pi.original_path, pi.variants), FileType.ORIGINAL
+        _PL(pi.original_path, pi.variants, pi.title, pi.original_path),
+        FileType.ORIGINAL,
     )
     content_type = file_access_controller.get_content_type(file_path)
     return FileResponse(
@@ -458,8 +476,8 @@ async def serve_project_image_variant(
     variant: str,
     request: Request,
     db: AsyncSession = _session_dependency,
-    current_user: object | None = _current_user_optional_dependency,
-):
+    current_user: User | None = _current_user_optional_dependency,
+) -> FileResponse:
     res = await db.execute(
         select(ProjectImage).where(ProjectImage.id == project_image_id)
     )
@@ -476,22 +494,31 @@ async def serve_project_image_variant(
                 status_code=400, detail=f"Invalid variant '{variant}'"
             ) from None
         # Map bare size to the base enum (same value)
-        file_type = getattr(FileType, variant.upper())  # type: ignore[arg-type]
+        file_type = getattr(FileType, variant.upper())
 
     class _PL:
-        def __init__(self, original_path, variants):
-            self.original_path = original_path
+        def __init__(
+            self,
+            original_path: str | None,
+            variants: typing.Any,
+            title: str | None = None,
+            filename: str | None = None,
+        ) -> None:
+            self.original_path = original_path or ""
             self.variants = variants or {}
+            self.title = title
+            self.filename = filename or ""
 
     try:
         file_path = file_access_controller.get_file_path(
-            _PL(pi.original_path, pi.variants), file_type
+            _PL(pi.original_path, pi.variants, pi.title, pi.original_path), file_type
         )
     except HTTPException as e:
         if e.status_code == 404:
             # fallback to original
             file_path = file_access_controller.get_file_path(
-                _PL(pi.original_path, pi.variants), FileType.ORIGINAL
+                _PL(pi.original_path, pi.variants, pi.title, pi.original_path),
+                FileType.ORIGINAL,
             )
             file_type = FileType.ORIGINAL
         else:
@@ -514,8 +541,8 @@ async def serve_project_image_variant(
 async def create_project_endpoint(
     project: ProjectCreate,
     db: AsyncSession = _session_dependency,
-    current_user=_current_admin_user_dependency,
-):
+    current_user: User = _current_admin_user_dependency,
+) -> ProjectResponse:
     """Create a new project (admin only)."""
     try:
         db_project = await create_project(db, project)
@@ -531,8 +558,8 @@ async def update_project_endpoint(
     project_id: UUID,
     project_update: ProjectUpdate,
     db: AsyncSession = _session_dependency,
-    current_user=_current_admin_user_dependency,
-):
+    current_user: User = _current_admin_user_dependency,
+) -> ProjectResponse:
     """Update project (admin only)."""
     project = await update_project(db, project_id, project_update)
     if not project:
@@ -545,8 +572,8 @@ async def update_project_endpoint(
 async def delete_project_endpoint(
     project_id: UUID,
     db: AsyncSession = _session_dependency,
-    current_user=_current_admin_user_dependency,
-):
+    current_user: User = _current_admin_user_dependency,
+) -> dict[str, str]:
     """Delete project (admin only)."""
     success = await delete_project_and_media(db, project_id)
     if not success:
@@ -561,7 +588,7 @@ async def get_project_readme(
     *,
     refresh: bool = False,
     db: AsyncSession = _session_dependency,
-):
+) -> ReadmeResponse:
     """Get project README content."""
     project = None
 

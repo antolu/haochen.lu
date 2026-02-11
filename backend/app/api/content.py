@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,6 +15,7 @@ from app.crud.content import (
 )
 from app.database import get_session
 from app.dependencies import get_current_admin_user
+from app.models.user import User
 from app.schemas.content import (
     ContentCreate,
     ContentKeyValueResponse,
@@ -33,7 +36,7 @@ async def get_public_content(
     db: AsyncSession = db_dependency,
     keys: str | None = Query(None, description="Comma-separated list of content keys"),
     category: str | None = Query(None, description="Filter by content category"),
-):
+) -> dict[str, ContentKeyValueResponse]:
     """
     Retrieve public (active) content items by keys or category.
     Returns a dictionary where keys are content keys and values are
@@ -51,7 +54,9 @@ async def get_public_content(
         )
 
     return {
-        item.key: ContentKeyValueResponse.model_validate(item, from_attributes=True)
+        str(item.key): ContentKeyValueResponse.model_validate(
+            item, from_attributes=True
+        )
         for item in content_items
     }
 
@@ -60,7 +65,7 @@ async def get_public_content(
 async def get_public_content_by_key_endpoint(
     key: str,
     db: AsyncSession = db_dependency,
-):
+) -> ContentKeyValueResponse:
     """
     Retrieve a single public (active) content item by its unique key.
     """
@@ -76,7 +81,7 @@ async def get_public_content_by_key_endpoint(
 @router.get("", response_model=ContentListResponse)
 async def list_content(
     db: AsyncSession = db_dependency,
-    current_user=admin_dependency,
+    current_user: User = admin_dependency,
     page: int = Query(1, ge=1),
     per_page: int = Query(10, ge=1, le=100),
     category: str | None = Query(None),
@@ -85,11 +90,11 @@ async def list_content(
     search: str | None = Query(None),
     order_by: str = Query("created_at"),
     order_direction: str = Query("desc"),
-):
+) -> ContentListResponse:
     """
     Retrieve a list of content items (admin only).
     """
-    return await get_content_list(
+    result = await get_content_list(
         db,
         page=page,
         per_page=per_page,
@@ -99,14 +104,15 @@ async def list_content(
         order_by=order_by,
         order_direction=order_direction,
     )
+    return ContentListResponse.model_validate(result)
 
 
 @router.get("/{content_id}", response_model=ContentResponse)
 async def get_content_by_id_endpoint(
     content_id: str,
     db: AsyncSession = db_dependency,
-    current_user=admin_dependency,
-):
+    current_user: User = admin_dependency,
+) -> ContentResponse:
     """
     Retrieve a single content item by ID (admin only).
     """
@@ -115,15 +121,15 @@ async def get_content_by_id_endpoint(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Content not found"
         )
-    return content_item
+    return ContentResponse.model_validate(content_item)
 
 
 @router.post("", response_model=ContentResponse, status_code=status.HTTP_201_CREATED)
 async def create_content_endpoint(
     content_in: ContentCreate,
     db: AsyncSession = db_dependency,
-    current_user=admin_dependency,
-):
+    current_user: User = admin_dependency,
+) -> ContentResponse:
     """
     Create a new content item (admin only).
     """
@@ -133,7 +139,8 @@ async def create_content_endpoint(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Content with key '{content_in.key}' already exists.",
         )
-    return await create_content(db, content_in)
+    result = await create_content(db, content_in)
+    return ContentResponse.model_validate(result)
 
 
 @router.put("/{content_id}", response_model=ContentResponse)
@@ -141,8 +148,8 @@ async def update_content_endpoint(
     content_id: str,
     content_in: ContentUpdate,
     db: AsyncSession = db_dependency,
-    current_user=admin_dependency,
-):
+    current_user: User = admin_dependency,
+) -> ContentResponse:
     """
     Update an existing content item (admin only).
     """
@@ -151,15 +158,15 @@ async def update_content_endpoint(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Content not found"
         )
-    return content_item
+    return ContentResponse.model_validate(content_item)
 
 
 @router.delete("/{content_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_content_endpoint(
     content_id: str,
     db: AsyncSession = db_dependency,
-    current_user=admin_dependency,
-):
+    current_user: User = admin_dependency,
+) -> dict[str, str]:
     """
     Delete a content item (admin only).
     """

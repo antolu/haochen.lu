@@ -19,45 +19,21 @@ from app.dependencies import (
     _current_user_dependency,
     _session_dependency,
 )
+from app.models.user import User
 from app.schemas.subapp import (
     SubAppCreate,
+    SubAppListResponse,
+    SubAppResponse,
     SubAppUpdate,
 )
 
 router = APIRouter()
 
 
-def convert_to_response(db_subapp) -> dict:
-    """Convert a database SubApp model to response dict."""
-    return {
-        "id": str(db_subapp.id),
-        "slug": db_subapp.slug,
-        "name": db_subapp.name,
-        "description": db_subapp.description,
-        "icon": db_subapp.icon,
-        "color": db_subapp.color,
-        "url": db_subapp.url,
-        "is_external": db_subapp.is_external,
-        "requires_auth": db_subapp.requires_auth,
-        "admin_only": db_subapp.admin_only,
-        "show_in_menu": db_subapp.show_in_menu,
-        "enabled": db_subapp.enabled,
-        "order": db_subapp.order,
-        "created_at": db_subapp.created_at.isoformat()
-        if db_subapp.created_at
-        else None,
-        "updated_at": db_subapp.updated_at.isoformat()
-        if db_subapp.updated_at
-        else None,
-    }
-
-
-@router.get(
-    "/",
-)
+@router.get("/")
 async def list_subapps(
     *, menu_only: bool = True, db: AsyncSession = _session_dependency
-):
+) -> SubAppListResponse:
     """List available sub-applications for public access."""
     # Show only public subapps (those that don't require auth)
     subapps = await get_subapps(
@@ -67,23 +43,19 @@ async def list_subapps(
     # Filter out auth-required apps
     public_subapps = [app for app in subapps if not app.requires_auth]
 
-    total = len(public_subapps)
-
-    return {
-        "subapps": [convert_to_response(app) for app in public_subapps],
-        "total": total,
-    }
+    return SubAppListResponse(
+        subapps=[SubAppResponse.model_validate(app) for app in public_subapps],
+        total=len(public_subapps),
+    )
 
 
-@router.get(
-    "/authenticated",
-)
+@router.get("/authenticated")
 async def list_authenticated_subapps(
     *,
     menu_only: bool = True,
     db: AsyncSession = _session_dependency,
-    current_user=_current_user_dependency,
-):
+    current_user: User = _current_user_dependency,
+) -> SubAppListResponse:
     """List sub-applications available to authenticated users."""
     admin_only = None if current_user.is_admin else False
 
@@ -91,32 +63,34 @@ async def list_authenticated_subapps(
         db, enabled_only=True, menu_only=menu_only, admin_only=admin_only
     )
 
-    total = len(subapps)
+    return SubAppListResponse(
+        subapps=[SubAppResponse.model_validate(app) for app in subapps],
+        total=len(subapps),
+    )
 
-    return {"subapps": [convert_to_response(app) for app in subapps], "total": total}
 
-
-@router.get(
-    "/admin",
-)
+@router.get("/admin")
 async def list_all_subapps(
+    *,
+    menu_only: bool = False,
     db: AsyncSession = _session_dependency,
-    current_user=_current_admin_user_dependency,
-):
+    current_user: User = _current_admin_user_dependency,
+) -> SubAppListResponse:
     """List all sub-applications (admin only)."""
-    subapps = await get_subapps(db, enabled_only=False, menu_only=False)
+    subapps = await get_subapps(
+        db, enabled_only=False, menu_only=menu_only, admin_only=None
+    )
 
-    total = await get_subapp_count(db)
+    return SubAppListResponse(
+        subapps=[SubAppResponse.model_validate(app) for app in subapps],
+        total=len(subapps),
+    )
 
-    return {"subapps": [convert_to_response(app) for app in subapps], "total": total}
 
-
-@router.get(
-    "/{subapp_identifier}",
-)
+@router.get("/{subapp_identifier}")
 async def get_subapp_detail(
     subapp_identifier: str, db: AsyncSession = _session_dependency
-):
+) -> SubAppResponse:
     """Get sub-application by ID or slug."""
     subapp = None
 
@@ -131,48 +105,46 @@ async def get_subapp_detail(
     if not subapp or not subapp.enabled:
         raise HTTPException(status_code=404, detail="Sub-application not found")
 
-    return convert_to_response(subapp)
+    return SubAppResponse.model_validate(subapp)
 
 
 @router.post("")
 async def create_subapp_endpoint(
     subapp: SubAppCreate,
     db: AsyncSession = _session_dependency,
-    current_user=_current_admin_user_dependency,
-):
+    current_user: User = _current_admin_user_dependency,
+) -> SubAppResponse:
     """Create a new sub-application (admin only)."""
     try:
         db_subapp = await create_subapp(db, subapp)
-        return convert_to_response(db_subapp)
+        return SubAppResponse.model_validate(db_subapp)
     except Exception as e:
         raise HTTPException(
             status_code=400, detail=f"Error creating sub-application: {e!s}"
         ) from e
 
 
-@router.put(
-    "/{subapp_id}",
-)
+@router.put("/{subapp_id}")
 async def update_subapp_endpoint(
     subapp_id: UUID,
     subapp_update: SubAppUpdate,
     db: AsyncSession = _session_dependency,
-    current_user=_current_admin_user_dependency,
-):
+    current_user: User = _current_admin_user_dependency,
+) -> SubAppResponse:
     """Update sub-application (admin only)."""
     subapp = await update_subapp(db, subapp_id, subapp_update)
     if not subapp:
         raise HTTPException(status_code=404, detail="Sub-application not found")
 
-    return convert_to_response(subapp)
+    return SubAppResponse.model_validate(subapp)
 
 
 @router.delete("/{subapp_id}")
 async def delete_subapp_endpoint(
     subapp_id: UUID,
     db: AsyncSession = _session_dependency,
-    current_user=_current_admin_user_dependency,
-):
+    current_user: User = _current_admin_user_dependency,
+) -> dict[str, str]:
     """Delete sub-application (admin only)."""
     success = await delete_subapp(db, subapp_id)
     if not success:
@@ -184,8 +156,8 @@ async def delete_subapp_endpoint(
 @router.get("/stats/summary")
 async def get_subapp_stats(
     db: AsyncSession = _session_dependency,
-    current_user=_current_admin_user_dependency,
-):
+    current_user: User = _current_admin_user_dependency,
+) -> dict[str, int]:
     """Get sub-application statistics (admin only)."""
     total_subapps = await get_subapp_count(db)
     enabled_subapps = len(await get_subapps(db, enabled_only=True, menu_only=False))

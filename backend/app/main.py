@@ -1,10 +1,18 @@
 from __future__ import annotations
 
+import typing
 from contextlib import asynccontextmanager
 from datetime import datetime
 
 import jwt
-from fastapi import APIRouter, FastAPI, Request, WebSocket, WebSocketDisconnect
+from fastapi import (
+    APIRouter,
+    FastAPI,
+    Request,
+    Response,
+    WebSocket,
+    WebSocketDisconnect,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -34,7 +42,11 @@ from app.users import auth_backend, fastapi_users
 
 
 class NoCacheMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(
+        self,
+        request: Request,
+        call_next: typing.Callable[[Request], typing.Awaitable[Response]],
+    ) -> Response:
         response = await call_next(request)
         if request.url.path.startswith("/api/"):
             response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
@@ -44,7 +56,7 @@ class NoCacheMiddleware(BaseHTTPMiddleware):
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> typing.AsyncGenerator[None, None]:
     # Startup
     await init_redis()
     yield
@@ -137,17 +149,17 @@ app.include_router(api_router, prefix="/api")
 
 
 @app.get("/")
-async def root():
+async def root() -> dict[str, str]:
     return {"message": "Portfolio API", "version": "1.0.0"}
 
 
 @app.get("/health")
-async def health_check():
+async def health_check() -> dict[str, str]:
     return {"status": "healthy", "timestamp": datetime.utcnow().isoformat() + "Z"}
 
 
 @app.websocket("/ws/uploads/{upload_id}")
-async def uploads_progress_ws(websocket: WebSocket, upload_id: str):
+async def uploads_progress_ws(websocket: WebSocket, upload_id: str) -> None:
     """WebSocket channel for real-time upload/compression progress."""
     # Accept connection first
     await websocket.accept()
@@ -178,7 +190,7 @@ async def uploads_progress_ws(websocket: WebSocket, upload_id: str):
 
 
 @app.get("/api/health")
-async def api_health_check():
+async def api_health_check() -> dict[str, str]:
     return {
         "status": "healthy",
         "api": "ready",
