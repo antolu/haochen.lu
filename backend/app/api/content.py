@@ -166,7 +166,7 @@ async def delete_content_endpoint(
     content_id: str,
     db: AsyncSession = db_dependency,
     current_user: User = admin_dependency,
-) -> dict[str, str]:
+) -> None:
     """
     Delete a content item (admin only).
     """
@@ -175,4 +175,3 @@ async def delete_content_endpoint(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Content not found"
         )
-    return {"message": "Content deleted successfully"}
