@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import ClassVar
 
-import filetype
+import filetype  # type: ignore
 from fastapi import HTTPException, UploadFile, status
 
 

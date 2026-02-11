@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import os
+import typing
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -133,12 +134,12 @@ class ImageProcessor:
                     gps_data["location_lat"], gps_data["location_lon"]
                 )
                 if location_info:
-                    data["location_name"] = location_info["location_name"]
-                    data["location_address"] = location_info["location_address"]
+                    data["location_name"] = location_info.location_name
+                    data["location_address"] = location_info.location_address
 
         return data
 
-    def _extract_basic_exif(self, exif: dict) -> dict[str, Any]:
+    def _extract_basic_exif(self, exif: dict[typing.Any, typing.Any]) -> dict[str, Any]:
         """Fallback basic EXIF extraction using PIL."""
         data: dict[str, Any] = {}
 
@@ -186,13 +187,18 @@ class ImageProcessor:
 
         return data
 
-    def _extract_enhanced_gps_data(self, gps_info: dict) -> dict:
+    def _extract_enhanced_gps_data(
+        self, gps_info: dict[int | str, typing.Any]
+    ) -> dict[str, typing.Any]:
         """Extract enhanced GPS coordinates and altitude from EXIF GPS info using piexif."""
         gps_data = {}
 
         try:
 
-            def convert_dms_to_decimal(dms_tuple):
+            def convert_dms_to_decimal(
+                dms_tuple: tuple[tuple[int, int], tuple[int, int], tuple[int, int]]
+                | None,
+            ) -> float | None:
                 """Convert DMS (degrees, minutes, seconds) tuple to decimal degrees."""
                 if not dms_tuple or len(dms_tuple) != 3:
                     return None
@@ -262,13 +268,17 @@ class ImageProcessor:
 
         return gps_data
 
-    def _extract_gps_data(self, gps_info: dict) -> dict:
+    def _extract_gps_data(
+        self, gps_info: dict[int | str, typing.Any]
+    ) -> dict[str, typing.Any]:
         """Fallback GPS extraction for PIL-based EXIF."""
         gps_data = {}
 
         try:
 
-            def get_decimal_from_dms(dms, ref):
+            def get_decimal_from_dms(
+                dms: tuple[float, float, float], ref: str
+            ) -> float:
                 degrees = float(dms[0])
                 minutes = float(dms[1])
                 seconds = float(dms[2])
@@ -296,7 +306,7 @@ class ImageProcessor:
 
     async def process_image(
         self, file: BinaryIO, filename: str, title: str | None = None
-    ) -> dict:
+    ) -> dict[str, typing.Any]:
         """Process uploaded image: save original, create multiple responsive sizes."""
 
         # Generate unique filename
@@ -331,7 +341,9 @@ class ImageProcessor:
             **exif_data,
         }
 
-    def _generate_responsive_variants(self, original_path: Path, file_id: str) -> dict:
+    def _generate_responsive_variants(
+        self, original_path: Path, file_id: str
+    ) -> dict[str, typing.Any]:
         """Generate multiple responsive image sizes."""
         variants = {}
 
@@ -418,7 +430,7 @@ class ImageProcessor:
         # Resize with high-quality resampling
         return img.resize((new_width, new_height), Image.Resampling.LANCZOS)
 
-    async def delete_image_files(self, photo_data: dict):
+    async def delete_image_files(self, photo_data: dict[str, typing.Any]) -> None:
         """Delete all files associated with a photo."""
         files_to_delete = [
             photo_data.get("original_path"),
@@ -441,7 +453,7 @@ class ImageProcessor:
 
     @staticmethod
     def get_image_url(
-        photo_data: dict, size: str = "medium", base_url: str = ""
+        photo_data: dict[str, typing.Any], size: str = "medium", base_url: str = ""
     ) -> str:
         """Get the appropriate image URL for a given size."""
         variants = photo_data.get("variants", {})
@@ -461,7 +473,7 @@ class ImageProcessor:
         return ""
 
     @staticmethod
-    def get_image_srcset(photo_data: dict, base_url: str = "") -> str:
+    def get_image_srcset(photo_data: dict[str, typing.Any], base_url: str = "") -> str:
         """Generate srcset string for responsive images."""
         variants = photo_data.get("variants", {})
         srcset_parts = []

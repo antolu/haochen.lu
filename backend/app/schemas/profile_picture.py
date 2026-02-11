@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, field_validator
+
+from app.types.images import ImageVariants
 
 
 class ProfilePictureBase(BaseModel):
@@ -25,7 +26,7 @@ class ProfilePictureResponse(ProfilePictureBase):
     id: str
     filename: str
     original_path: str
-    variants: dict[str, Any]
+    variants: ImageVariants
     file_size: int | None = None
     width: int | None = None
     height: int | None = None

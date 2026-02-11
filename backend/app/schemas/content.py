@@ -1,4 +1,4 @@
-"""Content schemas for API validation."""
+from __future__ import annotations
 
 from datetime import datetime
 from uuid import UUID

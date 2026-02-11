@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+import typing
 import uuid
 from collections.abc import Callable
 
@@ -16,7 +17,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
     def __init__(
         self,
-        app,
+        app: typing.Any,
         calls: int = 100,  # Number of calls allowed
         period: int = 3600,  # Time period in seconds (1 hour)
         file_calls: int = 20,  # Calls for file endpoints
@@ -31,7 +32,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         # Only apply rate limiting to file access endpoints
         if not self._should_rate_limit(request):
-            return await call_next(request)
+            return typing.cast(Response, await call_next(request))
 
         # Get client identifier
         client_id = self._get_client_id(request)
@@ -71,7 +72,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         response.headers["X-RateLimit-Remaining"] = str(max(0, remaining))
         response.headers["X-RateLimit-Reset"] = str(int(time.time()) + period)
 
-        return response
+        return typing.cast(Response, response)
 
     def _should_rate_limit(self, request: Request) -> bool:
         """Determine if request should be rate limited."""
@@ -140,7 +141,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             print(f"Rate limiting error: {e}")
             return False
         else:
-            return current_calls >= calls_allowed
+            return bool(current_calls >= calls_allowed)
 
     async def _get_remaining_calls(
         self, client_id: str, calls_allowed: int, period: int, key_suffix: str
@@ -160,7 +161,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             # Count current requests in window
             await redis_conn.zremrangebyscore(key, 0, window_start)
             current_calls = await redis_conn.zcard(key)
-            return max(0, calls_allowed - current_calls)
+            return int(max(0, calls_allowed - current_calls))
         except Exception:
             return calls_allowed
 
@@ -194,4 +195,4 @@ class FileAccessRateLimiter:
         except Exception:
             return True
         else:
-            return current_downloads < limit
+            return bool(current_downloads < limit)

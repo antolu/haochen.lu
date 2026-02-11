@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from typing import Any
 from uuid import UUID
 
 from sqlalchemy import select, update
@@ -8,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.profile_picture import ProfilePicture
 from app.schemas.profile_picture import ProfilePictureCreate, ProfilePictureUpdate
+from app.types.images import ImageVariants
 
 
 async def get_profile_pictures(
@@ -52,7 +52,7 @@ async def create_profile_picture(
     profile_picture_data: ProfilePictureCreate,
     filename: str,
     original_path: str,
-    variants: dict[str, Any],
+    variants: ImageVariants,
     file_size: int | None = None,
     width: int | None = None,
     height: int | None = None,

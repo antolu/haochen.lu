@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 
 class SubAppMeta(BaseModel):
@@ -11,7 +11,7 @@ class SubAppMeta(BaseModel):
 
     @field_validator("slug")
     @classmethod
-    def validate_slug(cls, v):
+    def validate_slug(cls, v: str) -> str:
         if len(v) < 2 or len(v) > 50:
             msg = "Slug must be between 2 and 50 characters"
             raise ValueError(msg)
@@ -90,7 +90,9 @@ class SubAppConfig(BaseModel):
 
     @field_validator("integration")
     @classmethod
-    def validate_integration_paths(cls, v, info):
+    def validate_integration_paths(
+        cls, v: SubAppIntegration, info: ValidationInfo
+    ) -> SubAppIntegration:
         """Validate that paths are consistent with meta.slug"""
         if hasattr(info.data, "get") and info.data.get("meta"):
             slug = info.data["meta"].slug
@@ -108,7 +110,9 @@ class SubAppConfig(BaseModel):
 
     @field_validator("routing")
     @classmethod
-    def validate_routing_consistency(cls, v, info):
+    def validate_routing_consistency(
+        cls, v: SubAppRouting, info: ValidationInfo
+    ) -> SubAppRouting:
         """Validate that routing matches integration paths"""
         if hasattr(info.data, "get") and info.data.get("integration"):
             integration = info.data["integration"]
@@ -138,3 +142,12 @@ class SubAppIntegrationRequest(BaseModel):
     validate_only: bool = Field(
         default=False, description="Only validate, don't integrate"
     )
+
+
+class SubAppIntegrationResponse(BaseModel):
+    success: bool
+    message: str
+    slug: str
+    frontend_url: str
+    api_url: str
+    admin_url: str | None = None

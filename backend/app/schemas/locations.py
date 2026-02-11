@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import typing
-
 from pydantic import BaseModel
+
+from app.types.images import NominatimAddress
 
 
 class LocationSearchResult(BaseModel):
@@ -22,7 +22,7 @@ class ReverseGeocodeResult(BaseModel):
 
     location_name: str | None
     location_address: str | None
-    raw_address: dict[str, typing.Any]
+    raw_address: NominatimAddress
     place_id: str | None = None
     osm_type: str | None = None
     osm_id: str | None = None

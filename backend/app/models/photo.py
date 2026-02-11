@@ -61,7 +61,7 @@ class Photo(Base):
     height = Column(Integer)
     featured = Column(Boolean, default=False)
     order = Column(Integer, default=0)
-    view_count = Column(Integer, default=0)
+    view_count: Mapped[int] = Column(Integer, default=0)  # type: ignore[assignment]
 
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow)

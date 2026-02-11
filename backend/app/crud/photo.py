@@ -223,7 +223,7 @@ async def increment_view_count(db: AsyncSession, photo_id: UUID) -> None:
     db_photo: Photo | None = result.scalar_one_or_none()
 
     if db_photo:
-        db_photo.view_count = Photo.view_count + 1  # type: ignore[assignment]
+        db_photo.view_count = Photo.view_count + 1
         await db.commit()
 
 
