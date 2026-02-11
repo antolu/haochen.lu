@@ -64,6 +64,7 @@ test = [
   "sqlalchemy-utils~=0.41.1",
   "pytest-clarity~=1.0.1",
   "psutil",
+  "photography-portfolio[dev]",
 ]
 security = ["bandit~=1.7.5", "safety~=2.3.5"]
 dev = ["black~=23.11.0", "ruff~=0.15.0", "mypy~=1.7.1"]
