@@ -64,6 +64,7 @@ test = [
   "sqlalchemy-utils~=0.41.1",
   "pytest-clarity~=1.0.1",
   "psutil",
+  "psycopg2-binary~=2.9.11",
   "photography-portfolio[dev]",
 ]
 security = ["bandit~=1.7.5", "safety~=2.3.5"]
