@@ -460,7 +460,7 @@ class ImageProcessor:
 
         # Try to get the requested size
         if size in variants:
-            path = variants[size]["path"]
+            path: str = variants[size]["path"]
             return f"{base_url}/{path}" if base_url else path
 
         # Fallback to available sizes in order of preference
