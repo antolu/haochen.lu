@@ -35,8 +35,6 @@ export default class LgSidebar {
     if (this.settings.sidebarToggleBtn) {
       this.addToggleButton();
     }
-
-    console.log("[LgSidebar] Plugin initialized");
   }
 
   private createSidebar(): void {
@@ -96,8 +94,6 @@ export default class LgSidebar {
   }
 
   private addToggleButton(): void {
-    console.log("[LgSidebar] Adding toggle button to toolbar");
-
     // Use the same approach as rotate plugin - directly append to core.$toolbar
     const toggleButtonHtml = `<button type="button" id="lg-sidebar-toggle" aria-label="Toggle photo information" title="Photo Info (i)" class="lg-icon lg-sidebar-toggle"></button>`;
 
@@ -112,23 +108,24 @@ export default class LgSidebar {
     this.toggleBtnEl = this.core.$toolbar
       .get()
       .querySelector("#lg-sidebar-toggle") as HTMLButtonElement;
-
-    console.log("[LgSidebar] Toggle button added successfully");
   }
 
   private addEventListeners(): void {
     // Handle gallery slide changes
-    (this.core.outer as any).addEventListener("lgAfterSlide", (e: any) => {
-      this.onSlideChange(e.detail.index);
+    this.core.outer.get().addEventListener("lgAfterSlide", (e: Event) => {
+      const detail = (e as CustomEvent).detail as { index: number } | undefined;
+      if (detail && typeof detail.index === "number") {
+        this.onSlideChange(detail.index);
+      }
     });
 
     // Handle gallery open
-    (this.core.outer as any).addEventListener("lgAfterOpen", () => {
+    this.core.outer.get().addEventListener("lgAfterOpen", () => {
       this.onGalleryOpen();
     });
 
     // Handle gallery close
-    (this.core.outer as any).addEventListener("lgBeforeClose", () => {
+    this.core.outer.get().addEventListener("lgBeforeClose", () => {
       this.hideSidebar();
     });
 
@@ -225,11 +222,11 @@ export default class LgSidebar {
             }
 
             ${
-              photo.lens || photo.lens_display_name
+              (photo.lens ?? photo.lens_display_name)
                 ? `
             <div class="lg-sidebar-section">
                 <h5>Lens</h5>
-                <p>${photo.lens_display_name || photo.lens}</p>
+                <p>${photo.lens_display_name ?? photo.lens}</p>
             </div>
             `
                 : ""
@@ -292,8 +289,6 @@ export default class LgSidebar {
       this.toggleBtnEl.setAttribute("aria-label", "Hide photo information");
       this.toggleBtnEl.classList.add("lg-sidebar-toggle--active");
     }
-
-    console.log("[LgSidebar] Sidebar shown");
   }
 
   hideSidebar(): void {
@@ -308,8 +303,6 @@ export default class LgSidebar {
       this.toggleBtnEl.setAttribute("aria-label", "Show photo information");
       this.toggleBtnEl.classList.remove("lg-sidebar-toggle--active");
     }
-
-    console.log("[LgSidebar] Sidebar hidden");
   }
 
   toggleSidebar(): void {
@@ -328,13 +321,13 @@ export default class LgSidebar {
 
   destroy(): void {
     // Remove sidebar from DOM
-    if (this.sidebarEl && this.sidebarEl.parentNode) {
-      this.sidebarEl.parentNode.removeChild(this.sidebarEl);
+    if (this.sidebarEl?.parentElement) {
+      this.sidebarEl.parentElement.removeChild(this.sidebarEl);
     }
 
     // Remove toggle button
-    if (this.toggleBtnEl && this.toggleBtnEl.parentNode) {
-      this.toggleBtnEl.parentNode.removeChild(this.toggleBtnEl);
+    if (this.toggleBtnEl?.parentElement) {
+      this.toggleBtnEl.parentElement.removeChild(this.toggleBtnEl);
     }
 
     // Clean up references
@@ -342,7 +335,5 @@ export default class LgSidebar {
     this.sidebarContentEl = null;
     this.toggleBtnEl = null;
     this.currentPhotoData = null;
-
-    console.log("[LgSidebar] Plugin destroyed");
   }
 }

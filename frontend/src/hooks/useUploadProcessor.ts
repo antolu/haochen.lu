@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { useUploadQueue } from "../stores/uploadQueue";
 import { useUploadPhoto } from "./usePhotos";
 import type { AxiosError } from "axios";
@@ -13,7 +13,7 @@ export const useUploadProcessor = () => {
   const activeUploadsRef = useRef<Set<string>>(new Set());
   const abortControllersRef = useRef<Map<string, AbortController>>(new Map());
 
-  const processQueue = async () => {
+  const processQueue = useCallback(() => {
     const pendingUploads = queue.filter((u) => u.status === "pending");
     const currentlyUploading = queue.filter((u) => u.status === "uploading");
 
@@ -146,7 +146,7 @@ export const useUploadProcessor = () => {
         },
       );
     }
-  };
+  }, [queue, updateUpload, uploadMutation]);
 
   // Process queue when it changes
   useEffect(() => {
@@ -158,7 +158,7 @@ export const useUploadProcessor = () => {
     } else if (pendingCount === 0 && isProcessing) {
       setProcessing(false);
     }
-  }, [queue, isProcessing, getPendingCount, setProcessing]);
+  }, [queue, isProcessing, getPendingCount, setProcessing, processQueue]);
 
   // Retry processing every 2 seconds if there are pending uploads
   useEffect(() => {
@@ -170,17 +170,19 @@ export const useUploadProcessor = () => {
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [getPendingCount]);
+  }, [getPendingCount, processQueue]);
 
   // Cleanup on unmount
   useEffect(() => {
+    const abortControllers = abortControllersRef.current;
+    const activeUploads = activeUploadsRef.current;
     return () => {
       // Cancel all active uploads
-      abortControllersRef.current.forEach((controller) => {
+      abortControllers.forEach((controller) => {
         controller.abort();
       });
-      abortControllersRef.current.clear();
-      activeUploadsRef.current.clear();
+      abortControllers.clear();
+      activeUploads.clear();
     };
   }, []);
 
