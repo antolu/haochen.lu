@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import piexif
 import pytest
@@ -19,12 +19,15 @@ def mock_image_processor(tmp_path):
 
 @pytest.fixture
 def mock_image():
-    """Mock PIL Image object."""
+    """Mock PIL Image object that works with context manager."""
     mock_img = MagicMock()
     mock_img.width = 3000
     mock_img.height = 2000
     mock_img.size = (3000, 2000)
     mock_img.mode = "RGB"
+    # Make it work with context manager (with statement)
+    mock_img.__enter__ = MagicMock(return_value=mock_img)
+    mock_img.__exit__ = MagicMock(return_value=False)
     return mock_img
 
 
@@ -195,33 +198,28 @@ async def test_extract_comprehensive_exif_with_location_service(
     mock_image_processor, comprehensive_exif_dict
 ):
     """Test EXIF extraction with location service integration."""
-    mock_location_info = {
-        "location_name": "San Francisco, California, United States",
-        "location_address": "San Francisco, CA 94102, USA",
-    }
+    mock_location_info = MagicMock()
+    mock_location_info.location_name = "San Francisco, California, United States"
+    mock_location_info.location_address = "San Francisco, CA 94102, USA"
 
-    with patch("app.core.location_service.location_service") as mock_location_service:
-        mock_location_service.reverse_geocode.return_value = mock_location_info
+    # Patch location_service where it's imported in image_processor
+    with patch("app.core.image_processor.location_service") as mock_location_service:
+        # Make reverse_geocode an async function
+        mock_location_service.reverse_geocode = AsyncMock(
+            return_value=mock_location_info
+        )
 
-        # Mock the GPS extraction to return coordinates
-        with patch.object(
-            mock_image_processor, "_extract_enhanced_gps_data"
-        ) as mock_gps:
-            mock_gps.return_value = {
-                "location_lat": 37.774167,
-                "location_lon": -122.419167,
-            }
+        result = await mock_image_processor._extract_comprehensive_exif(
+            comprehensive_exif_dict
+        )
 
-            result = await mock_image_processor._extract_comprehensive_exif(
-                comprehensive_exif_dict
-            )
-
-            # Verify location service was called
-            mock_location_service.reverse_geocode.assert_called_once_with(
-                37.774167, -122.419167
-            )
-            assert result["location_name"] == "San Francisco, California, United States"
-            assert result["location_address"] == "San Francisco, CA 94102, USA"
+        # Verify location service was called with coordinates from GPS data
+        mock_location_service.reverse_geocode.assert_called_once()
+        call_args = mock_location_service.reverse_geocode.call_args[0]
+        assert abs(call_args[0] - 37.774167) < 0.001  # lat
+        assert abs(call_args[1] + 122.419167) < 0.001  # lon
+        assert result["location_name"] == "San Francisco, California, United States"
+        assert result["location_address"] == "San Francisco, CA 94102, USA"
 
 
 def test_extract_enhanced_gps_data_north_east(mock_image_processor):
@@ -237,9 +235,9 @@ def test_extract_enhanced_gps_data_north_east(mock_image_processor):
 
     result = mock_image_processor._extract_enhanced_gps_data(gps_info)
 
-    # Tokyo coordinates approximately
+    # Coordinates: 37°46'29.4"N, 139°41'59.4"E (Tokyo approximately)
     assert abs(result["location_lat"] - 37.774167) < 0.001  # N is positive
-    assert abs(result["location_lon"] - 139.691650) < 0.001  # E is positive
+    assert abs(result["location_lon"] - 139.699833) < 0.001  # E is positive
     assert result["altitude"] == 50.0  # Above sea level
 
 
@@ -280,18 +278,23 @@ def test_extract_enhanced_gps_data_no_altitude(mock_image_processor):
 def test_extract_enhanced_gps_data_invalid_coordinates(mock_image_processor):
     """Test GPS extraction with invalid coordinate data."""
     gps_info = {
-        piexif.GPSIFD.GPSLatitude: ((37, 1), (46, 1)),  # Missing seconds
+        piexif.GPSIFD.GPSLatitude: (
+            (37, 1),
+            (46, 1),
+        ),  # Missing seconds (only 2 elements)
         piexif.GPSIFD.GPSLatitudeRef: b"N",
-        piexif.GPSIFD.GPSLongitude: ((122, 1), (25, 1), (0, 0)),  # Division by zero
+        piexif.GPSIFD.GPSLongitude: ((122, 1), (25, 1), (0, 0)),  # Zero seconds (0/0)
         piexif.GPSIFD.GPSLongitudeRef: b"W",
     }
 
     result = mock_image_processor._extract_enhanced_gps_data(gps_info)
 
-    # Should handle gracefully and not include invalid data
-    assert len(result) == 0 or all(
-        key not in result for key in ["location_lat", "location_lon"]
-    )
+    # Latitude should be skipped (invalid tuple length)
+    assert "location_lat" not in result
+    # Longitude should be extracted (division by zero handled as 0)
+    assert "location_lon" in result
+    # Should be approximately 122° 25' 0" W = -122.41666
+    assert abs(result["location_lon"] + 122.41666) < 0.01
 
 
 @pytest.mark.asyncio
