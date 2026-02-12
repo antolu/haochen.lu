@@ -10,7 +10,7 @@ async def test_reverse_geocode_invalid_latitude(async_client: AsyncClient):
     response = await async_client.get("/api/locations/reverse?lat=91&lng=0")
     assert response.status_code == 422
     data = response.json()
-    assert "latitude" in data["detail"][0]["loc"]
+    assert "lat" in data["detail"][0]["loc"]
 
 
 @pytest.mark.asyncio
@@ -19,7 +19,7 @@ async def test_reverse_geocode_invalid_longitude(async_client: AsyncClient):
     response = await async_client.get("/api/locations/reverse?lat=0&lng=181")
     assert response.status_code == 422
     data = response.json()
-    assert "longitude" in data["detail"][0]["loc"]
+    assert "lng" in data["detail"][0]["loc"]
 
 
 @pytest.mark.asyncio
@@ -99,12 +99,12 @@ async def test_nearby_locations_invalid_limit(async_client: AsyncClient):
 async def test_photos_api_invalid_proximity_params(async_client: AsyncClient):
     """Test photos API with invalid proximity search parameters."""
     # Missing longitude
-    response = await async_client.get("/api/photos/?near_lat=37.7749")
+    response = await async_client.get("/api/photos?near_lat=37.7749")
     assert response.status_code == 422
     assert "near_lon" in response.text
 
     # Missing latitude
-    response = await async_client.get("/api/photos/?near_lon=-122.4194")
+    response = await async_client.get("/api/photos?near_lon=-122.4194")
     assert response.status_code == 422
     assert "near_lat" in response.text
 
@@ -112,7 +112,7 @@ async def test_photos_api_invalid_proximity_params(async_client: AsyncClient):
 @pytest.mark.asyncio
 async def test_photos_api_invalid_coordinates(async_client: AsyncClient):
     """Test photos API with invalid coordinates."""
-    response = await async_client.get("/api/photos/?near_lat=91&near_lon=0")
+    response = await async_client.get("/api/photos?near_lat=91&near_lon=0")
     assert response.status_code == 422
 
 
@@ -120,7 +120,7 @@ async def test_photos_api_invalid_coordinates(async_client: AsyncClient):
 async def test_photos_api_invalid_radius(async_client: AsyncClient):
     """Test photos API with invalid radius."""
     response = await async_client.get(
-        "/api/photos/?near_lat=37.7749&near_lon=-122.4194&radius=51"
+        "/api/photos?near_lat=37.7749&near_lon=-122.4194&radius=51"
     )
     assert response.status_code == 422
 
@@ -128,5 +128,5 @@ async def test_photos_api_invalid_radius(async_client: AsyncClient):
 @pytest.mark.asyncio
 async def test_photos_api_invalid_order_by(async_client: AsyncClient):
     """Test photos API with invalid order_by parameter."""
-    response = await async_client.get("/api/photos/?order_by=invalid")
+    response = await async_client.get("/api/photos?order_by=invalid")
     assert response.status_code == 422

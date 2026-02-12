@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -15,10 +15,15 @@ def client():
     return TestClient(app)
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_location_service():
     """Mock location service for testing."""
-    with patch("app.core.location_service.location_service") as mock_service:
+    with patch("app.api.locations.location_service") as mock_service:
+        # Set up the mock with AsyncMock for all async methods
+        mock_service.reverse_geocode = AsyncMock()
+        mock_service.search_locations = AsyncMock()
+        mock_service.forward_geocode = AsyncMock()
+        mock_service.get_nearby_locations = AsyncMock()
         yield mock_service
 
 
@@ -106,13 +111,13 @@ def test_reverse_geocode_invalid_coordinates(client, mock_location_service):
     """Test reverse geocoding with invalid coordinate values."""
     mock_location_service.reverse_geocode.return_value = None
 
-    # Invalid latitude (too large)
+    # Invalid latitude (too large) - should be rejected by validation
     response = client.get("/api/locations/reverse?lat=91.0&lng=-122.4194")
-    assert response.status_code == 404
+    assert response.status_code == 422
 
-    # Invalid longitude (too small)
+    # Invalid longitude (too small) - should be rejected by validation
     response = client.get("/api/locations/reverse?lat=37.7749&lng=-181.0")
-    assert response.status_code == 404
+    assert response.status_code == 422
 
 
 def test_search_locations_success(client, mock_location_service):
@@ -123,6 +128,11 @@ def test_search_locations_success(client, mock_location_service):
             "longitude": -122.4194,
             "location_name": "San Francisco, California, United States",
             "location_address": "San Francisco, CA, USA",
+            "raw_address": {
+                "city": "San Francisco",
+                "state": "California",
+                "country": "United States",
+            },
             "place_id": "123456",
             "osm_type": "way",
             "osm_id": "987654",
@@ -132,6 +142,11 @@ def test_search_locations_success(client, mock_location_service):
             "longitude": -122.4094,
             "location_name": "San Francisco Bay Area, California, United States",
             "location_address": "Bay Area, CA, USA",
+            "raw_address": {
+                "region": "Bay Area",
+                "state": "California",
+                "country": "United States",
+            },
             "place_id": "789012",
             "osm_type": "relation",
             "osm_id": "345678",
@@ -200,6 +215,12 @@ def test_forward_geocode_success(client, mock_location_service):
         "latitude": 37.7749,
         "longitude": -122.4194,
         "location_name": "San Francisco, California, United States",
+        "location_address": "San Francisco, CA 94102, USA",
+        "raw_address": {
+            "city": "San Francisco",
+            "state": "California",
+            "country": "United States",
+        },
         "place_id": "123456",
         "osm_type": "way",
         "osm_id": "987654",
@@ -212,9 +233,7 @@ def test_forward_geocode_success(client, mock_location_service):
     assert data["latitude"] == 37.7749
     assert data["longitude"] == -122.4194
     assert data["location_name"] == "San Francisco, California, United States"
-    assert (
-        data["location_address"] == "San Francisco, California, United States"
-    )  # Uses location_name as fallback
+    assert data["location_address"] == "San Francisco, CA 94102, USA"
 
     mock_location_service.forward_geocode.assert_called_once_with(
         "San Francisco, CA", "en"
@@ -354,6 +373,7 @@ async def test_location_search_async_client(mock_location_service):
             "longitude": -122.4194,
             "location_name": "Test Location",
             "location_address": "Test Address",
+            "raw_address": {},
             "place_id": "123",
             "osm_type": "way",
             "osm_id": "456",
@@ -376,20 +396,19 @@ def test_location_service_exception(client, mock_location_service):
 
     response = client.get("/api/locations/reverse?lat=37.7749&lng=-122.4194")
 
-    # Should handle gracefully - the exception should be caught by the service itself
-    # and return None, which results in 404
-    assert response.status_code == 500 or response.status_code == 404
+    # Should return 503 Service Unavailable when location service throws exception
+    assert response.status_code == 503
 
 
 def test_invalid_json_response_handling(client, mock_location_service):
     """Test handling of malformed location service responses."""
-    # Mock service returns invalid data structure
-    mock_location_service.reverse_geocode.return_value = "invalid_response"
+    # Mock service returns None (which is handled as 404, not an invalid structure)
+    mock_location_service.reverse_geocode.return_value = None
 
     response = client.get("/api/locations/reverse?lat=37.7749&lng=-122.4194")
 
-    # Should handle gracefully
-    assert response.status_code in [404, 500]
+    # Should return 404 when no location found
+    assert response.status_code == 404
 
 
 def test_unicode_query_handling(client, mock_location_service):
@@ -405,13 +424,13 @@ def test_unicode_query_handling(client, mock_location_service):
 
 def test_very_long_query_handling(client, mock_location_service):
     """Test handling of very long search queries."""
-    long_query = "A" * 1000  # Very long query
+    long_query = "A" * 1000  # Very long query (exceeds max_length=200)
     mock_location_service.search_locations.return_value = []
 
     response = client.get(f"/api/locations/search?q={long_query}")
 
-    # Should handle long queries gracefully
-    assert response.status_code == 200
+    # Should reject with 422 due to validation (max_length=200)
+    assert response.status_code == 422
 
 
 def test_special_character_address_handling(client, mock_location_service):

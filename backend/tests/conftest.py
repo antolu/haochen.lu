@@ -378,6 +378,50 @@ def mock_email_service():
     return mock
 
 
+@pytest.fixture
+def mock_location_service():
+    """Mock location service for API testing."""
+    mock = MagicMock()
+    mock.reverse_geocode = AsyncMock(
+        return_value={
+            "location_name": "San Francisco, California, United States",
+            "location_address": "San Francisco, CA 94102, USA",
+            "raw_address": {
+                "city": "San Francisco",
+                "state": "California",
+                "country": "United States",
+            },
+            "place_id": "123456",
+            "osm_type": "way",
+            "osm_id": "987654",
+        }
+    )
+    mock.forward_geocode = AsyncMock(
+        return_value={
+            "location_name": "San Francisco, California, United States",
+            "latitude": 37.7749,
+            "longitude": -122.4194,
+            "raw_address": {
+                "city": "San Francisco",
+                "state": "California",
+                "country": "United States",
+            },
+        }
+    )
+    mock.search_locations = AsyncMock(
+        return_value=[
+            {
+                "display_name": "San Francisco, California, United States",
+                "lat": 37.7749,
+                "lon": -122.4194,
+                "place_id": "123456",
+            }
+        ]
+    )
+    mock.get_nearby_locations = AsyncMock(return_value=[])
+    return mock
+
+
 # Test data fixtures
 @pytest_asyncio.fixture
 async def sample_photo(test_session: AsyncSession) -> Photo:
