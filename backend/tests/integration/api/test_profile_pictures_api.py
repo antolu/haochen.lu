@@ -64,7 +64,7 @@ async def test_upload_non_square_image_rejected(
     """Non-square images should be rejected with a helpful message."""
     headers = {"Authorization": f"Bearer {admin_token}"}
 
-    temp_file_path = await _create_temp_image(800, 300)
+    temp_file_path = _create_temp_image(800, 300)
     try:
         with open(temp_file_path, "rb") as img_file:
             files = {"file": ("rect.jpg", img_file, "image/jpeg")}
@@ -98,9 +98,9 @@ async def test_activate_and_get_active(async_client: AsyncClient, admin_token: s
     headers = {"Authorization": f"Bearer {admin_token}"}
 
     # Upload first (square)
-    path1 = await _create_temp_image(300, 300)
+    path1 = _create_temp_image(300, 300)
     # Upload second (square)
-    path2 = await _create_temp_image(400, 400)
+    path2 = _create_temp_image(400, 400)
 
     try:
         # First
