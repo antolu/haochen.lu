@@ -6,6 +6,15 @@ from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
 
+def normalize_async_database_url(url: str) -> str:
+    """Ensure SQLAlchemy async URLs use asyncpg for PostgreSQL."""
+    if url.startswith("postgresql://"):
+        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    if url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql+asyncpg://", 1)
+    return url
+
+
 class Settings(BaseSettings):
     # Database
     database_url: str = os.getenv(
@@ -65,6 +74,11 @@ class Settings(BaseSettings):
                 raise ValueError(msg)
 
         return validated
+
+    @field_validator("database_url")
+    @classmethod
+    def _normalize_database_url(cls, v: str) -> str:
+        return normalize_async_database_url(v)
 
     @property
     def cors_origins_list(self) -> list[str]:

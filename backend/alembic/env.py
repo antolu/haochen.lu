@@ -10,6 +10,7 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 # Import your models here
+from app.config import normalize_async_database_url
 from app.database import Base
 
 # this is the Alembic Config object, which provides
@@ -19,7 +20,7 @@ config = context.config
 # Override the sqlalchemy.url with environment variable if available
 database_url = os.getenv("DATABASE_URL")
 if database_url:
-    config.set_main_option("sqlalchemy.url", database_url)
+    config.set_main_option("sqlalchemy.url", normalize_async_database_url(database_url))
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
