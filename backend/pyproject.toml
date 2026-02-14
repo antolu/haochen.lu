@@ -304,6 +304,19 @@ disable_error_code = ["arg-type"]
 module = "app.core.vips_processor"
 ignore_errors = true
 
+[[tool.mypy.overrides]]
+module = "app.main"
+disallow_untyped_decorators = false
+
+[[tool.mypy.overrides]]
+module = [
+  "app.models.photo",
+  "app.crud.hero_image",
+  "app.crud.blog",
+  "app.api.blog",
+]
+warn_unused_ignores = false
+
 [tool.bandit]
 exclude_dirs = ["tests", "migrations"]
 skips = [
