@@ -121,7 +121,11 @@ jobs:
 
     - name: Install accessibility tools
       run: |
-        npm install -g @axe-core/cli lighthouse
+        npm install -g @axe-core/cli lighthouse browser-driver-manager
+
+    - name: Install matching Chrome and ChromeDriver
+      run: |
+        npx browser-driver-manager install chrome
 
     - name: Run axe accessibility tests
       run: |
