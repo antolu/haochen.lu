@@ -104,8 +104,20 @@ jobs:
     - name: Serve application
       run: |
         cd frontend
-        npx serve -s dist -l 3000 &
-        sleep 5
+        npx serve -s dist -l tcp://127.0.0.1:3000 > /tmp/frontend-accessibility-serve.log 2>&1 &
+        ready=0
+        for i in {1..60}; do
+          if curl -fsS http://127.0.0.1:3000 > /dev/null; then
+            ready=1
+            break
+          fi
+          sleep 1
+        done
+        if [ "$ready" -ne 1 ]; then
+          echo "Frontend app did not become ready in time"
+          cat /tmp/frontend-accessibility-serve.log
+          exit 1
+        fi
 
     - name: Install accessibility tools
       run: |
@@ -117,15 +129,17 @@ jobs:
 
     - name: Run axe accessibility tests
       run: |
-        axe http://localhost:3000 --tags wcag2a,wcag2aa --save axe-results.json
+        axe http://127.0.0.1:3000 --tags wcag2a,wcag2aa --save axe-results.json
 
     - name: Run Lighthouse accessibility audit
       run: |
-        lighthouse http://localhost:3000 \
+        lighthouse http://127.0.0.1:3000 \
           --only-categories=accessibility \
           --output json \
           --output-path lighthouse-accessibility.json \
-          --chrome-flags="--headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu"
+          --max-wait-for-load=60000 \
+          --throttling-method=provided \
+          --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-software-rasterizer"
 
     - name: Upload accessibility reports
       uses: actions/upload-artifact@v4
@@ -361,19 +375,34 @@ jobs:
     - name: Start application
       run: |
         cd frontend
-        npx serve -s dist -l 3000 &
-        sleep 5
+        npx serve -s dist -l tcp://127.0.0.1:3000 > /tmp/frontend-performance-serve.log 2>&1 &
+        ready=0
+        for i in {1..60}; do
+          if curl -fsS http://127.0.0.1:3000 > /dev/null; then
+            ready=1
+            break
+          fi
+          sleep 1
+        done
+        if [ "$ready" -ne 1 ]; then
+          echo "Frontend app did not become ready in time"
+          cat /tmp/frontend-performance-serve.log
+          exit 1
+        fi
 
     - name: Install Lighthouse
       run: npm install -g lighthouse
 
     - name: Run Lighthouse performance audit
       run: |
-        lighthouse http://localhost:3000 \
+        lighthouse http://127.0.0.1:3000 \
           --only-categories=performance \
           --output json \
           --output html \
-          --output-path lighthouse-performance
+          --output-path lighthouse-performance \
+          --max-wait-for-load=60000 \
+          --throttling-method=provided \
+          --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-software-rasterizer"
 
     - name: Check bundle size limits
       run: |
