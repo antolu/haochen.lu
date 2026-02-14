@@ -32,7 +32,7 @@ jobs:
 
     - name: Install security tools
       run: |
-        pip install bandit safety pip-audit semgrep
+        pip install bandit safety pip-audit pipx
 
     - name: Run Bandit security linter
       run: |
@@ -55,8 +55,8 @@ jobs:
     - name: Run Semgrep static analysis
       run: |
         cd backend
-        semgrep --config=auto --json --output=semgrep-report.json app/ || true
-        semgrep --config=auto --text --output=semgrep-report.txt app/ || true
+        python -m pipx run --spec semgrep semgrep --config=auto --json --output=semgrep-report.json app/ || true
+        python -m pipx run --spec semgrep semgrep --config=auto --text --output=semgrep-report.txt app/ || true
 
     - name: Check for secrets in code
       run: |
@@ -179,13 +179,11 @@ jobs:
 
     - name: Build backend Docker image
       run: |
-        cd backend
-        docker build -t portfolio-backend:security-scan .
+        docker build -f backend/Dockerfile -t portfolio-backend:security-scan .
 
     - name: Build frontend Docker image
       run: |
-        cd frontend
-        docker build -t portfolio-frontend:security-scan .
+        docker build -f frontend/Dockerfile -t portfolio-frontend:security-scan frontend
 
     - name: Run Trivy vulnerability scanner on backend
       uses: aquasecurity/trivy-action@0.28.0
