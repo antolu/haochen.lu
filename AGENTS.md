@@ -99,27 +99,55 @@ docker compose -f docker-compose.dev.yml exec backend alembic history
 
 ### Testing
 
-**Backend testing:**
+**Backend unit tests:**
 ```bash
 # Via Docker
-docker compose -f docker-compose.dev.yml exec backend python -m pytest
 docker compose -f docker-compose.dev.yml exec backend python -m pytest tests/unit/
-docker compose -f docker-compose.dev.yml exec backend python -m pytest tests/integration/
+docker compose -f docker-compose.dev.yml exec backend python -m pytest tests/security/
 
 # Local
 cd backend
-pytest
-pytest --cov=app tests/
+pytest tests/unit/
+pytest --cov=app tests/unit/
 ```
+
+**Integration tests (full stack):**
+```bash
+# Run all integration tests (recommended)
+./test-integration.sh
+
+# Run with verbose output
+./test-integration.sh -v
+
+# Run specific test file
+./test-integration.sh backend/tests/integration/api/test_photos_integration.py
+
+# Clean up test containers
+./test-integration.sh --clean
+```
+
+Integration tests run in Docker Compose with:
+- PostgreSQL test database with seeded data
+- Redis for caching
+- Backend API server
+- Fixture test images
 
 **Frontend testing:**
 ```bash
 cd frontend
 npm run test              # Unit tests with Vitest
-npm run test:e2e          # E2E tests with Playwright
 npm run test:components   # Component tests only
 npm run test:coverage     # Generate coverage report
 ```
+
+**CI/CD Integration Tests:**
+Integration tests run automatically on:
+- Every push to master
+- Every pull request
+- Daily at 2 AM UTC (scheduled)
+
+The CI workflow uses the same Docker Compose environment as local testing,
+ensuring consistent behavior.
 
 ### Code Quality
 
