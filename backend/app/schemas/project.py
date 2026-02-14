@@ -42,7 +42,7 @@ class ProjectUpdate(BaseModel):
 
 
 class ProjectResponse(ProjectBase):
-    id: str
+    id: str | UUID
     slug: str
     readme_content: str | None = None
     readme_last_updated: datetime | None = None

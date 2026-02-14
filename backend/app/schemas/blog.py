@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -27,7 +28,7 @@ class BlogPostUpdate(BaseModel):
 
 
 class BlogPostResponse(BlogPostBase):
-    id: str
+    id: str | UUID
     slug: str
     view_count: int
     read_time: int | None
