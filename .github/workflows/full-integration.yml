@@ -5,9 +5,6 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
-  schedule:
-    # Run integration tests daily at 2 AM UTC
-    - cron: '0 2 * * *'
 
 permissions:
   contents: read
