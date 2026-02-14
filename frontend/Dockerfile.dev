@@ -1,20 +1,22 @@
 # Development Dockerfile for frontend
 # hadolint ignore=DL3018
-FROM node:20-alpine
+# hadolint ignore=DL3018
+FROM node:20-slim
 
 WORKDIR /app
 
 # Install system dependencies for native builds
-# hadolint ignore=DL3018
-RUN apk add --no-cache \
-    build-base \
-    cairo-dev \
-    jpeg-dev \
-    pango-dev \
-    giflib-dev \
+# hadolint ignore=DL3008
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libcairo2-dev \
+    libjpeg-dev \
+    libpango1.0-dev \
+    libgif-dev \
     python3 \
     make \
-    g++
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install dependencies first for better caching
 COPY package*.json ./
