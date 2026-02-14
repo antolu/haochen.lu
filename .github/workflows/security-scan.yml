@@ -9,6 +9,10 @@ on:
     # Run security scans daily at 3 AM UTC
     - cron: '0 3 * * *'
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   backend-security:
     runs-on: ubuntu-latest
@@ -184,7 +188,7 @@ jobs:
         docker build -t portfolio-frontend:security-scan .
 
     - name: Run Trivy vulnerability scanner on backend
-      uses: aquasecurity/trivy-action@master
+      uses: aquasecurity/trivy-action@0.28.0
       with:
         image-ref: 'portfolio-backend:security-scan'
         format: 'json'
@@ -192,7 +196,7 @@ jobs:
       continue-on-error: true
 
     - name: Run Trivy vulnerability scanner on frontend
-      uses: aquasecurity/trivy-action@master
+      uses: aquasecurity/trivy-action@0.28.0
       with:
         image-ref: 'portfolio-frontend:security-scan'
         format: 'json'
@@ -263,8 +267,8 @@ jobs:
         # Check for third-party actions versions
         find .github/workflows -name "*.yml" -exec grep -H "uses:" {} \; | grep -v "@v" >> github-actions-security.txt || echo "All actions use version tags"
 
-        # Check for script injections
-        find .github/workflows -name "*.yml" -exec grep -H "\${{" {} \; >> github-actions-security.txt || echo "No script injections found"
+        # Check for GitHub expression tokens in workflow files
+        find .github/workflows -name "*.yml" -exec grep -H -E "\\$\\{\\{" {} \; >> github-actions-security.txt || echo "No script injections found"
 
     - name: Check for sensitive files
       run: |
