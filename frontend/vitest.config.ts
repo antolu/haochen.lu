@@ -29,7 +29,7 @@ export default defineConfig({
     // Disable watch mode in CI-like runs
     watch: false,
     coverage: {
-      reporter: ["text", "json", "html"],
+      reporter: ["text", "json", "html", "lcov"],
       exclude: [
         "node_modules/",
         "src/test/",
