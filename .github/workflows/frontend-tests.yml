@@ -121,11 +121,7 @@ jobs:
 
     - name: Install accessibility tools
       run: |
-        npm install -g @axe-core/cli lighthouse browser-driver-manager
-
-    - name: Sync Chrome and ChromeDriver
-      run: |
-        browser-driver-manager install chrome
+        npm install -g @axe-core/cli lighthouse
 
     - name: Run axe accessibility tests
       run: |
@@ -133,12 +129,20 @@ jobs:
 
     - name: Run Lighthouse accessibility audit
       run: |
+        CHROME_BIN="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium-browser || command -v chromium)"
+        if [ -z "$CHROME_BIN" ]; then
+          echo "No Chrome/Chromium binary found on runner"
+          exit 1
+        fi
         lighthouse http://127.0.0.1:3000 \
           --only-categories=accessibility \
           --output json \
           --output-path lighthouse-accessibility.json \
           --max-wait-for-load=60000 \
           --throttling-method=provided \
+          --disable-storage-reset \
+          --emulated-form-factor=desktop \
+          --chrome-path="$CHROME_BIN" \
           --chrome-flags="--headless=new --no-sandbox --disable-dev-shm-usage --window-size=1920,1080"
 
     - name: Upload accessibility reports
@@ -395,6 +399,11 @@ jobs:
 
     - name: Run Lighthouse performance audit
       run: |
+        CHROME_BIN="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium-browser || command -v chromium)"
+        if [ -z "$CHROME_BIN" ]; then
+          echo "No Chrome/Chromium binary found on runner"
+          exit 1
+        fi
         lighthouse http://127.0.0.1:3000 \
           --only-categories=performance \
           --output json \
@@ -402,6 +411,9 @@ jobs:
           --output-path lighthouse-performance \
           --max-wait-for-load=60000 \
           --throttling-method=provided \
+          --disable-storage-reset \
+          --emulated-form-factor=desktop \
+          --chrome-path="$CHROME_BIN" \
           --chrome-flags="--headless=new --no-sandbox --disable-dev-shm-usage --window-size=1920,1080"
 
     - name: Check bundle size limits
