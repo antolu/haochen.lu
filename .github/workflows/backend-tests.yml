@@ -133,8 +133,8 @@ jobs:
     - name: Run P0 Critical Security Tests
       run: |
         cd backend
-        pytest tests/unit/auth/ tests/integration/auth/ \
-               tests/unit/upload/ tests/integration/database/ \
+        pytest tests/ \
+               -k "(auth or upload)" \
                -v --tb=short --strict-markers \
                --cov=app --cov-report=xml --cov-report=term \
                --cov-fail-under=40 \
@@ -143,8 +143,8 @@ jobs:
     - name: Run P1 Core Functionality Tests
       run: |
         cd backend
-        pytest tests/unit/image/ tests/integration/image/ \
-               tests/integration/api/ \
+        pytest tests/ \
+               -k "(api or image or photos or projects or locations or blog)" \
                -v --tb=short --strict-markers \
                --cov=app --cov-report=xml --cov-report=term \
                --cov-append \
@@ -153,16 +153,17 @@ jobs:
     - name: Run P1 Performance Tests (Quick)
       run: |
         cd backend
-        pytest tests/performance/ \
+        pytest tests/ \
                -v --tb=short --strict-markers \
                --cov=app --cov-report=xml --cov-report=term \
                --cov-append \
-               -m "not slow and not benchmark"
+               -m "performance and not slow and not benchmark"
 
     - name: Run P2 Business Logic Tests
       run: |
         cd backend
-        pytest tests/unit/services/ \
+        pytest tests/ \
+               -k "(service or location_validation) and not integration" \
                -v --tb=short --strict-markers \
                --cov=app --cov-report=xml --cov-report=term \
                --cov-append \
@@ -244,7 +245,7 @@ jobs:
     - name: Run ruff linting
       run: |
         cd backend
-        ruff check --format=github .
+        ruff check --output-format=github .
 
     - name: Run ruff formatting check
       run: |
