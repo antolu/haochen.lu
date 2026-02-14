@@ -62,6 +62,20 @@ from app.types.access_control import FileType
 router = APIRouter()
 
 
+def _ensure_success(
+    processed_data: dict[str, typing.Any] | None,
+    processing_error: Exception | None,
+) -> dict[str, typing.Any]:
+    """Ensure image processing succeeded or raise the appropriate error."""
+    if processed_data is None:
+        if processing_error is None:
+            raise HTTPException(
+                status_code=500, detail="Unknown image processing error"
+            )
+        raise processing_error
+    return processed_data
+
+
 def _negotiate_variant_file_type(
     raw_variant: str, accept_header: str | None
 ) -> FileType:
@@ -445,21 +459,28 @@ async def upload_photo(
         )
 
     try:
-        # Optional upload id for real-time progress over WebSocket
         upload_id = request.headers.get("X-Upload-Id")
-        progress_processor = (
-            VipsImageProcessor(
-                settings.upload_dir,
-                settings.compressed_dir,
-                upload_id=upload_id,
-            )
-            if upload_id
-            else image_processor
-        )
-        # Process image
-        processed_data = await progress_processor.process_image(
-            file.file, file.filename or "image.jpg", title or file.filename
-        )
+        filename = file.filename or "image.jpg"
+        processing_error: Exception | None = None
+        processed_data: dict[str, typing.Any] | None = None
+
+        for _attempt in range(2):
+            try:
+                file.file.seek(0)
+                processor = VipsImageProcessor(
+                    settings.upload_dir,
+                    settings.compressed_dir,
+                    upload_id=upload_id,
+                )
+                processed_data = await processor.process_image(
+                    file.file, filename, title or file.filename
+                )
+                processing_error = None
+                break
+            except Exception as e:
+                processing_error = e
+
+        valid_processed_data = _ensure_success(processed_data, processing_error)
 
         # Compute default title from filename stem if empty
         default_title = (file.filename or "image").rsplit(".", 1)[0]
@@ -475,7 +496,7 @@ async def upload_photo(
             featured=featured,
         )
 
-        photo = await create_photo(db, photo_data, **processed_data)
+        photo = await create_photo(db, photo_data, **valid_processed_data)
 
         # Auto-create aliases for camera and lens if they don't exist
         alias_warnings = []
