@@ -121,7 +121,11 @@ jobs:
 
     - name: Run Lighthouse accessibility audit
       run: |
-        lighthouse http://localhost:3000 --only-categories=accessibility --output json --output-path lighthouse-accessibility.json
+        lighthouse http://localhost:3000 \
+          --only-categories=accessibility \
+          --output json \
+          --output-path lighthouse-accessibility.json \
+          --chrome-flags="--headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu"
 
     - name: Upload accessibility reports
       uses: actions/upload-artifact@v4
