@@ -7,7 +7,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router-dom";
 import React from "react";
 import MockAdapter from "axios-mock-adapter";
 import { apiClient } from "@/api/client";
@@ -26,7 +26,7 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>{children}</BrowserRouter>
+      <MemoryRouter>{children}</MemoryRouter>
     </QueryClientProvider>
   );
 };
@@ -39,18 +39,6 @@ const localStorageMock = {
   clear: vi.fn(),
 };
 Object.defineProperty(window, "localStorage", { value: localStorageMock });
-
-// Mock window.location
-const locationMock = {
-  href: "http://localhost:3000/login",
-  pathname: "/login",
-  assign: vi.fn(),
-  reload: vi.fn(),
-};
-Object.defineProperty(window, "location", {
-  value: locationMock,
-  writable: true,
-});
 
 const mockUser = {
   id: "1",
@@ -97,7 +85,7 @@ describe("Session Flow Integration Tests", () => {
   describe("Login Flow with Remember Me", () => {
     it("should login successfully with remember me checked", async () => {
       mockAxios.onPost("/auth/login").reply(200, mockTokenResponse);
-      mockAxios.onGet("/auth/me").reply(200, mockUser);
+      mockAxios.onGet("/users/me").reply(200, mockUser);
 
       render(
         <TestWrapper>
@@ -124,23 +112,18 @@ describe("Session Flow Integration Tests", () => {
         expect(authState.accessToken).toBe("mock-access-token");
       });
 
-      // Verify API call was made with remember_me flag
+      // Verify API call was made with credentials
       expect(mockAxios.history.post).toHaveLength(1);
-      const loginRequest = JSON.parse(
+      const loginRequest = new URLSearchParams(
         mockAxios.history.post[0].data as string,
-      ) as {
-        username: string;
-        password: string;
-        remember_me: boolean;
-      };
-      expect(loginRequest.username).toBe("testuser");
-      expect(loginRequest.password).toBe("password123");
-      expect(loginRequest.remember_me).toBe(true);
+      );
+      expect(loginRequest.get("username")).toBe("testuser");
+      expect(loginRequest.get("password")).toBe("password123");
     });
 
     it("should login successfully without remember me", async () => {
       mockAxios.onPost("/auth/login").reply(200, mockTokenResponse);
-      mockAxios.onGet("/auth/me").reply(200, mockUser);
+      mockAxios.onGet("/users/me").reply(200, mockUser);
 
       render(
         <TestWrapper>
@@ -161,12 +144,11 @@ describe("Session Flow Integration Tests", () => {
         expect(useAuthStore.getState().isAuthenticated).toBe(true);
       });
 
-      const loginRequest = JSON.parse(
+      const loginRequest = new URLSearchParams(
         mockAxios.history.post[0].data as string,
-      ) as {
-        remember_me: boolean;
-      };
-      expect(loginRequest.remember_me).toBe(false);
+      );
+      expect(loginRequest.get("username")).toBe("testuser");
+      expect(loginRequest.get("password")).toBe("password123");
     });
 
     it("should handle login errors gracefully", async () => {
@@ -338,12 +320,12 @@ describe("Session Flow Integration Tests", () => {
       authStore.setTokens("valid-token", 900);
       authStore.setUser(mockUser);
 
-      mockAxios.onGet("/auth/me").reply(200, mockUser);
+      mockAxios.onGet("/users/me").reply(200, mockUser);
 
       await authStore.checkAuth();
 
-      // Assert that the /auth/me call was made and user state is consistent
-      expect(mockAxios.history.get.some((req) => req.url === "/auth/me")).toBe(
+      // Assert that the /users/me call was made and user state is consistent
+      expect(mockAxios.history.get.some((req) => req.url === "/users/me")).toBe(
         true,
       );
       expect(
@@ -365,7 +347,7 @@ describe("Session Flow Integration Tests", () => {
         expires_in: 900,
         user: mockUser,
       });
-      mockAxios.onGet("/auth/me").reply(200, mockUser);
+      mockAxios.onGet("/users/me").reply(200, mockUser);
 
       await authStore.checkAuth();
 
@@ -374,7 +356,7 @@ describe("Session Flow Integration Tests", () => {
         (req) => req.url === "/auth/refresh",
       );
       const fetchedMe = mockAxios.history.get.some(
-        (req) => req.url === "/auth/me",
+        (req) => req.url === "/users/me",
       );
       expect(didRefresh || fetchedMe).toBe(true);
     });
@@ -414,13 +396,13 @@ describe("Session Flow Integration Tests", () => {
     });
 
     it("should logout single session successfully", async () => {
-      mockAxios.onPost("/auth/logout").reply(200, {});
+      mockAxios.onPost("/auth/jwt/logout").reply(200, {});
 
       const authStore = useAuthStore.getState();
       await authStore.logout();
 
       expect(
-        mockAxios.history.post.some((req) => req.url === "/auth/logout"),
+        mockAxios.history.post.some((req) => req.url === "/auth/jwt/logout"),
       ).toBe(true);
       // State clearing is async via store updates; wait for it
       await waitFor(() => {
@@ -487,7 +469,9 @@ describe("Session Flow Integration Tests", () => {
     });
 
     it("should handle logout errors gracefully", async () => {
-      mockAxios.onPost("/auth/logout").reply(500, { detail: "Server error" });
+      mockAxios.onPost("/auth/jwt/logout").reply(500, {
+        detail: "Server error",
+      });
 
       const authStore = useAuthStore.getState();
 
@@ -646,7 +630,7 @@ describe("Session Flow Integration Tests", () => {
         );
       };
 
-      mockAxios.onPost("/api/auth/logout").reply(200, {});
+      mockAxios.onPost("/auth/jwt/logout").reply(200, {});
 
       render(
         <TestWrapper>

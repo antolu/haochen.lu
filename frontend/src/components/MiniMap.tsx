@@ -76,7 +76,14 @@ const MiniMap: React.FC<MiniMapProps> = ({
       style={getMapDimensions()}
       onClick={onClick}
     >
-      <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
+      <div
+        ref={containerRef}
+        data-testid="mini-map-container"
+        style={{ width: "100%", height: "100%" }}
+      />
+      <div data-testid="mini-marker" className="sr-only">
+        {latitude},{longitude}
+      </div>
 
       {onClick && (
         <div

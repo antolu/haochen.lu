@@ -220,11 +220,7 @@ describe("ProjectDetailPage", () => {
       renderWithRouter(<ProjectDetailPage />);
 
       const statusBadge = screen.getByText("Archived");
-      expect(statusBadge).toHaveClass(
-        "bg-gray-100",
-        "text-gray-800",
-        "border-gray-200",
-      );
+      expect(statusBadge).toHaveClass("bg-muted", "text-foreground", "border");
     });
 
     it("handles unknown status gracefully", () => {
@@ -240,11 +236,7 @@ describe("ProjectDetailPage", () => {
       renderWithRouter(<ProjectDetailPage />);
 
       const statusBadge = screen.getByText("Unknown");
-      expect(statusBadge).toHaveClass(
-        "bg-gray-100",
-        "text-gray-800",
-        "border-gray-200",
-      );
+      expect(statusBadge).toHaveClass("bg-muted", "text-foreground", "border");
     });
   });
 

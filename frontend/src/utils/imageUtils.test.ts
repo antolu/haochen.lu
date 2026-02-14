@@ -211,14 +211,14 @@ describe("Complete Image Selection", () => {
   });
 
   test("selects appropriate variants for different use cases on retina display", () => {
-    // Thumbnail usage - should prefer small for retina
+    // Thumbnail usage picks the 400px thumbnail variant at 2x DPR
     const thumbnailSelection = selectOptimalImage(
       mockPhoto,
       ImageUseCase.THUMBNAIL,
     );
-    expect(thumbnailSelection.selectedVariant).toBe("small");
+    expect(thumbnailSelection.selectedVariant).toBe("thumbnail");
     expect(thumbnailSelection.url).toBe(
-      "/api/photos/test-photo-123/file/small",
+      "/api/photos/test-photo-123/file/thumbnail",
     );
 
     // Gallery usage - should prefer medium/large for retina

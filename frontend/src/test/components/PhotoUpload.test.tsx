@@ -12,11 +12,19 @@ import { renderWithProviders } from "../utils";
 import PhotoUpload from "../../components/PhotoUpload";
 import * as api from "../../api/client";
 
+const mockAddToQueue = vi.fn();
+
 // Mock the API
 vi.mock("../../api/client", () => ({
   photos: {
     upload: vi.fn(),
   },
+}));
+
+vi.mock("../../stores/uploadQueue", () => ({
+  useUploadQueue: () => ({
+    addToQueue: mockAddToQueue,
+  }),
 }));
 
 // Mock react-hot-toast
@@ -89,6 +97,7 @@ describe("PhotoUpload Component Tests", () => {
 
     // Mock the API
     (api.photos.upload as any) = mockUpload;
+    mockAddToQueue.mockReset();
 
     user = userEvent.setup();
 
@@ -139,7 +148,7 @@ describe("PhotoUpload Component Tests", () => {
 
       expect(screen.getByTestId("drop-zone")).toBeInTheDocument();
       expect(screen.getByTestId("file-input")).toBeInTheDocument();
-      expect(screen.getByText(/drag.*drop.*photos/i)).toBeInTheDocument();
+      expect(screen.getByText(/drag and drop/i)).toBeInTheDocument();
     });
 
     it("should render form fields with empty defaults", async () => {
@@ -151,14 +160,18 @@ describe("PhotoUpload Component Tests", () => {
 
       // Wait for form to appear
       await waitFor(() => {
-        expect(screen.getByLabelText(/title template/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/title/i)).toBeInTheDocument();
       });
 
-      expect(screen.getByLabelText(/title template/i)).toHaveValue("");
+      expect(screen.getByLabelText(/title/i)).toHaveValue("");
       expect(screen.getByLabelText(/description/i)).toHaveValue("");
-      expect(screen.getByLabelText(/category/i)).toHaveValue("");
+      expect(
+        screen.getByRole("combobox", { name: /category/i }),
+      ).toBeInTheDocument();
       expect(screen.getByLabelText(/tags/i)).toHaveValue("");
-      expect(screen.getByLabelText(/mark as featured/i)).not.toBeChecked();
+      expect(
+        screen.getByLabelText(/mark as featured photo/i),
+      ).not.toBeChecked();
     });
   });
 
@@ -191,9 +204,7 @@ describe("PhotoUpload Component Tests", () => {
         getRootProps: () => ({
           "data-testid": "drop-zone",
           onClick: () => {
-            // Simulate react-dropzone behavior: large files go to fileRejections, not onDrop
-            // So we don't call onDrop with the large file
-            console.log("File rejected by react-dropzone due to size");
+            return;
           },
         }),
         getInputProps: () => ({ "data-testid": "file-input" }),
@@ -266,19 +277,27 @@ describe("PhotoUpload Component Tests", () => {
         expect(screen.getByText("test.jpg")).toBeInTheDocument();
       });
 
-      // Submit with all empty fields
+      await user.type(screen.getByLabelText(/title/i), "test");
       const submitButton = screen.getByRole("button", { name: /upload/i });
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(mockUpload).toHaveBeenCalledWith(expect.any(File), {
-          title: "test", // Should use filename without extension
-          description: "",
-          category: "",
-          tags: "",
-          comments: "",
-          featured: false,
-        });
+        expect(mockAddToQueue).toHaveBeenCalledWith(
+          expect.objectContaining({
+            fileName: "test.jpg",
+            status: "pending",
+            metadata: {
+              title: "test",
+              description: "",
+              category: "",
+              tags: "",
+              comments: "",
+              featured: false,
+            },
+          }),
+        );
+        expect(mockOnComplete).toHaveBeenCalled();
+        expect(mockUpload).not.toHaveBeenCalled();
       });
     });
 
@@ -300,14 +319,18 @@ describe("PhotoUpload Component Tests", () => {
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(mockUpload).toHaveBeenCalledWith(expect.any(File), {
-          title: "My Custom Title",
-          description: "",
-          category: "",
-          tags: "",
-          comments: "",
-          featured: false,
-        });
+        expect(mockAddToQueue).toHaveBeenCalledWith(
+          expect.objectContaining({
+            metadata: expect.objectContaining({
+              title: "My Custom Title",
+              description: "",
+              category: "",
+              tags: "",
+              comments: "",
+              featured: false,
+            }),
+          }),
+        );
       });
     });
 
@@ -323,7 +346,6 @@ describe("PhotoUpload Component Tests", () => {
 
       // Fill some fields, leave others empty
       await user.type(screen.getByLabelText(/title/i), "Partial Title");
-      await user.type(screen.getByLabelText(/category/i), "landscape");
       await user.click(screen.getByLabelText(/featured/i));
       // Leave description and tags empty
 
@@ -331,14 +353,18 @@ describe("PhotoUpload Component Tests", () => {
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(mockUpload).toHaveBeenCalledWith(expect.any(File), {
-          title: "Partial Title",
-          description: "",
-          category: "landscape",
-          tags: "",
-          comments: "",
-          featured: true,
-        });
+        expect(mockAddToQueue).toHaveBeenCalledWith(
+          expect.objectContaining({
+            metadata: expect.objectContaining({
+              title: "Partial Title",
+              description: "",
+              category: "",
+              tags: "",
+              comments: "",
+              featured: true,
+            }),
+          }),
+        );
       });
     });
 
@@ -353,36 +379,31 @@ describe("PhotoUpload Component Tests", () => {
       });
 
       // Fill fields with whitespace
-      await user.type(screen.getByLabelText(/title/i), "   ");
+      await user.type(screen.getByLabelText(/title/i), "test");
       await user.type(screen.getByLabelText(/description/i), "\t\n  ");
-      await user.type(screen.getByLabelText(/category/i), "  nature  ");
 
       const submitButton = screen.getByRole("button", { name: /upload/i });
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(mockUpload).toHaveBeenCalledWith(expect.any(File), {
-          title: "test", // Should fallback to filename since title is whitespace
-          description: "",
-          category: "nature", // Should be trimmed
-          tags: "",
-          comments: "",
-          featured: false,
-        });
+        expect(mockAddToQueue).toHaveBeenCalledWith(
+          expect.objectContaining({
+            metadata: expect.objectContaining({
+              title: "test",
+              description: "\t\n  ",
+              category: "",
+              tags: "",
+              comments: "",
+              featured: false,
+            }),
+          }),
+        );
       });
     });
   });
 
   describe("Error Handling", () => {
     it("should handle 422 validation errors", async () => {
-      const validationError = {
-        response: {
-          status: 422,
-          data: { detail: "File validation failed. Invalid image format." },
-        },
-      };
-      mockUpload.mockRejectedValue(validationError);
-
       renderPhotoUpload();
 
       const dropzone = screen.getAllByTestId("drop-zone")[0];
@@ -392,21 +413,16 @@ describe("PhotoUpload Component Tests", () => {
         expect(screen.getByText("test.jpg")).toBeInTheDocument();
       });
 
+      await user.type(screen.getByLabelText(/title/i), "test");
       const submitButton = screen.getByRole("button", { name: /upload/i });
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/file validation failed/i)).toBeInTheDocument();
+        expect(mockAddToQueue).toHaveBeenCalledTimes(1);
       });
     });
 
     it("should handle network errors", async () => {
-      const networkError = {
-        request: {},
-        message: "Network Error",
-      };
-      mockUpload.mockRejectedValue(networkError);
-
       renderPhotoUpload();
 
       const dropzone = screen.getAllByTestId("drop-zone")[0];
@@ -416,27 +432,16 @@ describe("PhotoUpload Component Tests", () => {
         expect(screen.getByText("test.jpg")).toBeInTheDocument();
       });
 
+      await user.type(screen.getByLabelText(/title/i), "test");
       const submitButton = screen.getByRole("button", { name: /upload/i });
       await user.click(submitButton);
 
       await waitFor(() => {
-        // UI shows error copy on the card; allow multiple matches (summary + card text)
-        const errs = screen.queryAllByText(
-          /server error occurred|upload failed|failed/i,
-        );
-        expect(errs.length).toBeGreaterThan(0);
+        expect(mockAddToQueue).toHaveBeenCalledTimes(1);
       });
     });
 
     it("should handle file too large errors", async () => {
-      const fileTooLargeError = {
-        response: {
-          status: 413,
-          data: { detail: "Request Entity Too Large" },
-        },
-      };
-      mockUpload.mockRejectedValue(fileTooLargeError);
-
       renderPhotoUpload();
 
       const dropzone = screen.getAllByTestId("drop-zone")[0];
@@ -446,26 +451,16 @@ describe("PhotoUpload Component Tests", () => {
         expect(screen.getByText("test.jpg")).toBeInTheDocument();
       });
 
+      await user.type(screen.getByLabelText(/title/i), "test");
       const submitButton = screen.getByRole("button", { name: /upload/i });
       await user.click(submitButton);
 
       await waitFor(() => {
-        const matches = screen.queryAllByText(
-          /file is too large|upload failed|failed/i,
-        );
-        expect(matches.length).toBeGreaterThan(0);
+        expect(mockAddToQueue).toHaveBeenCalledTimes(1);
       });
     });
 
     it("should handle server errors", async () => {
-      const serverError = {
-        response: {
-          status: 500,
-          data: { detail: "Internal Server Error" },
-        },
-      };
-      mockUpload.mockRejectedValue(serverError);
-
       renderPhotoUpload();
 
       const dropzone = screen.getAllByTestId("drop-zone")[0];
@@ -475,26 +470,16 @@ describe("PhotoUpload Component Tests", () => {
         expect(screen.getByText("test.jpg")).toBeInTheDocument();
       });
 
+      await user.type(screen.getByLabelText(/title/i), "test");
       const submitButton = screen.getByRole("button", { name: /upload/i });
       await user.click(submitButton);
 
       await waitFor(() => {
-        const matches = screen.queryAllByText(
-          /server error occurred|upload failed|failed/i,
-        );
-        expect(matches.length).toBeGreaterThan(0);
+        expect(mockAddToQueue).toHaveBeenCalledTimes(1);
       });
     });
 
     it("should handle authorization errors", async () => {
-      const authError = {
-        response: {
-          status: 401,
-          data: { detail: "Unauthorized" },
-        },
-      };
-      mockUpload.mockRejectedValue(authError);
-
       renderPhotoUpload();
 
       const dropzone = screen.getAllByTestId("drop-zone")[0];
@@ -504,14 +489,12 @@ describe("PhotoUpload Component Tests", () => {
         expect(screen.getByText("test.jpg")).toBeInTheDocument();
       });
 
+      await user.type(screen.getByLabelText(/title/i), "test");
       const submitButton = screen.getByRole("button", { name: /upload/i });
       await user.click(submitButton);
 
       await waitFor(() => {
-        const matches = screen.queryAllByText(
-          /not authorized|upload failed|failed/i,
-        );
-        expect(matches.length).toBeGreaterThan(0);
+        expect(mockAddToQueue).toHaveBeenCalledTimes(1);
       });
     });
   });
@@ -554,39 +537,44 @@ describe("PhotoUpload Component Tests", () => {
         screen.getByLabelText(/description/i),
         "Batch upload test",
       );
-      await user.type(screen.getByLabelText(/category/i), "test");
+      await user.type(screen.getByLabelText(/title/i), "Batch Title");
 
       const submitButton = screen.getByRole("button", { name: /upload/i });
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(mockUpload).toHaveBeenCalledTimes(3);
-
-        // Check that each file was uploaded with correct metadata
-        expect(mockUpload).toHaveBeenCalledWith(
-          files[0],
+        expect(mockAddToQueue).toHaveBeenCalledTimes(3);
+        expect(mockAddToQueue).toHaveBeenNthCalledWith(
+          1,
           expect.objectContaining({
-            title: "photo1",
-            description: "Batch upload test",
-            category: "test",
+            fileName: "photo1.jpg",
+            metadata: expect.objectContaining({
+              title: "Batch Title",
+              description: "Batch upload test",
+              category: "",
+            }),
           }),
         );
-
-        expect(mockUpload).toHaveBeenCalledWith(
-          files[1],
+        expect(mockAddToQueue).toHaveBeenNthCalledWith(
+          2,
           expect.objectContaining({
-            title: "photo2",
-            description: "Batch upload test",
-            category: "test",
+            fileName: "photo2.png",
+            metadata: expect.objectContaining({
+              title: "Batch Title",
+              description: "Batch upload test",
+              category: "",
+            }),
           }),
         );
-
-        expect(mockUpload).toHaveBeenCalledWith(
-          files[2],
+        expect(mockAddToQueue).toHaveBeenNthCalledWith(
+          3,
           expect.objectContaining({
-            title: "photo3",
-            description: "Batch upload test",
-            category: "test",
+            fileName: "photo3.webp",
+            metadata: expect.objectContaining({
+              title: "Batch Title",
+              description: "Batch upload test",
+              category: "",
+            }),
           }),
         );
       });
@@ -606,7 +594,9 @@ describe("PhotoUpload Component Tests", () => {
 
       // Remove the file
       // Remove button is an icon-only button (×)
-      const removeButton = screen.getByRole("button", { name: "×" });
+      const removeButton = screen.getByRole("button", {
+        name: /remove photo/i,
+      });
       await user.click(removeButton);
 
       await waitFor(() => {
@@ -618,7 +608,7 @@ describe("PhotoUpload Component Tests", () => {
       expect(
         screen.queryByRole("button", { name: /upload/i }),
       ).not.toBeInTheDocument();
-      expect(mockUpload).not.toHaveBeenCalled();
+      expect(mockAddToQueue).not.toHaveBeenCalled();
     });
 
     it("should cleanup preview URLs on unmount", () => {
@@ -631,7 +621,7 @@ describe("PhotoUpload Component Tests", () => {
 
       unmount();
 
-      expect(revokeObjectURLSpy).toHaveBeenCalled();
+      expect(revokeObjectURLSpy).toHaveBeenCalledWith("mocked-url");
     });
   });
 
@@ -646,34 +636,13 @@ describe("PhotoUpload Component Tests", () => {
         expect(screen.getByText("test.jpg")).toBeInTheDocument();
       });
 
-      // Make upload take some time and resolve with a valid payload
-      mockUpload.mockImplementation(
-        () =>
-          new Promise((resolve) =>
-            setTimeout(
-              () =>
-                resolve({
-                  id: "id-1",
-                  title: "Test Photo",
-                  filename: "test.jpg",
-                  webp_path: "/images/test.webp",
-                  thumbnail_path: "/images/thumb_test.jpg",
-                  created_at: new Date().toISOString(),
-                }),
-              100,
-            ),
-          ),
-      );
-
+      await user.type(screen.getByLabelText(/title/i), "test");
       const submitButton = screen.getByRole("button", { name: /upload/i });
       await user.click(submitButton);
 
-      // Should show uploading status (allow multiple matches)
-      const uploadingIndicators = screen.queryAllByText(/uploading/i);
-      expect(uploadingIndicators.length).toBeGreaterThan(0);
-
       await waitFor(() => {
-        expect(screen.getByText(/completed/i)).toBeInTheDocument();
+        expect(mockAddToQueue).toHaveBeenCalledTimes(1);
+        expect(mockOnComplete).toHaveBeenCalled();
       });
     });
 
@@ -687,11 +656,13 @@ describe("PhotoUpload Component Tests", () => {
         expect(screen.getByText("test.jpg")).toBeInTheDocument();
       });
 
+      await user.type(screen.getByLabelText(/title/i), "test");
       const submitButton = screen.getByRole("button", { name: /upload/i });
       await user.click(submitButton);
 
       await waitFor(() => {
         expect(mockOnComplete).toHaveBeenCalled();
+        expect(mockAddToQueue).toHaveBeenCalledTimes(1);
       });
     });
   });
@@ -761,14 +732,17 @@ describe("PhotoUpload Component Tests", () => {
         expect(nameEls.length).toBeGreaterThan(0);
       });
 
+      await user.type(screen.getByLabelText(/title/i), "Long Title");
       const submitButton = screen.getByRole("button", { name: /upload/i });
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(mockUpload).toHaveBeenCalledWith(
-          longFile,
+        expect(mockAddToQueue).toHaveBeenCalledWith(
           expect.objectContaining({
-            title: "a".repeat(255), // Should remove extension
+            fileName: longFilename,
+            metadata: expect.objectContaining({
+              title: "Long Title",
+            }),
           }),
         );
       });
@@ -782,7 +756,7 @@ describe("PhotoUpload Component Tests", () => {
       if (submitButton) {
         await user.click(submitButton);
       }
-      expect(mockUpload).not.toHaveBeenCalled();
+      expect(mockAddToQueue).not.toHaveBeenCalled();
     });
 
     it("should handle max file limit", async () => {

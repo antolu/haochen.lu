@@ -266,6 +266,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
       <div className="relative">
         <div
           ref={containerRef}
+          data-testid="map-container"
           className="rounded-lg overflow-hidden"
           style={{ height: `${height}px`, width: "100%" }}
         />

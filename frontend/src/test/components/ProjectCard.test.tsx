@@ -206,7 +206,7 @@ describe("ProjectCard", () => {
     it("displays project image when image_url is provided", () => {
       const project = createMockProject({
         title: "Test Project",
-        image_url: "https://example.com/project-image.jpg",
+        cover_image_url: "https://example.com/project-image.jpg",
       });
       renderWithProviders(<ProjectCard project={project} />);
 

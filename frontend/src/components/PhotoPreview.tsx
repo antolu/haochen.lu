@@ -112,7 +112,8 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({
             )}
 
             {(uploadFile.status === "error" ||
-              uploadFile.status === "completed") &&
+              uploadFile.status === "completed" ||
+              uploadFile.status === "pending") &&
               onRemove && (
                 <button
                   onClick={onRemove}

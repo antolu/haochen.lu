@@ -48,6 +48,16 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
     }
   }, [uploadFiles, onComplete]);
 
+  useEffect(() => {
+    return () => {
+      uploadFiles.forEach((file) => {
+        if (file.preview) {
+          URL.revokeObjectURL(file.preview);
+        }
+      });
+    };
+  }, [uploadFiles]);
+
   const handleFilesAdded = (newFiles: UploadFile[]) => {
     if (!newFiles || newFiles.length === 0) {
       return;

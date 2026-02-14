@@ -1,5 +1,5 @@
 import React from "react";
-import { describe, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   renderWithProviders,
   userEvent,
@@ -12,7 +12,7 @@ describe("ProfilePictureUpload", () => {
     const onUpload = vi.fn().mockResolvedValue(undefined);
     const onCancel = vi.fn();
 
-    const { getByText, findByText } = renderWithProviders(
+    const { container, findByRole } = renderWithProviders(
       <ProfilePictureUpload
         onUpload={onUpload}
         onCancel={onCancel}
@@ -20,20 +20,13 @@ describe("ProfilePictureUpload", () => {
       />,
     );
 
-    // Open file picker via button and upload an image file
-    const clickToSelect = getByText(/click to select/i);
-    await userEvent.click(clickToSelect);
-    const fileInput = document.querySelector(
-      'input[type="file"]',
-    ) as HTMLInputElement;
+    const fileInput = container.querySelector(
+      'input[type="file"].hidden[accept="image/*"]',
+    ) as HTMLInputElement | null;
+    expect(fileInput).not.toBeNull();
     const file = createMockImageFile("avatar.jpg", 800, 600);
-    await userEvent.upload(fileInput, file);
+    await userEvent.upload(fileInput as HTMLInputElement, file);
 
-    // Wait for component to process selected image
-    await new Promise((r) => setTimeout(r, 20));
-
-    // Expect crop UI visible and action button disabled until crop completes
-    // Cropping UI should still render container after selection
-    await findByText(/Upload Profile Picture/i);
+    await findByRole("button", { name: /^upload$/i });
   });
 });

@@ -10,11 +10,18 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
 }));
 
 // Mock ResizeObserver
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+class MockResizeObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+(
+  global as unknown as { ResizeObserver: typeof MockResizeObserver }
+).ResizeObserver = MockResizeObserver;
+Object.defineProperty(window, "ResizeObserver", {
+  writable: true,
+  value: MockResizeObserver,
+});
 
 // Mock matchMedia
 Object.defineProperty(window, "matchMedia", {
@@ -33,6 +40,26 @@ Object.defineProperty(window, "matchMedia", {
 
 // Mock scrollTo
 Object.defineProperty(window, "scrollTo", {
+  writable: true,
+  value: vi.fn(),
+});
+
+Object.defineProperty(Element.prototype, "scrollIntoView", {
+  writable: true,
+  value: vi.fn(),
+});
+
+Object.defineProperty(Element.prototype, "hasPointerCapture", {
+  writable: true,
+  value: vi.fn(() => false),
+});
+
+Object.defineProperty(Element.prototype, "setPointerCapture", {
+  writable: true,
+  value: vi.fn(),
+});
+
+Object.defineProperty(Element.prototype, "releasePointerCapture", {
   writable: true,
   value: vi.fn(),
 });
@@ -146,16 +173,18 @@ Object.defineProperty(window.URL, "revokeObjectURL", {
   private listeners: Record<string, Array<() => void>> = {};
   readAsDataURL() {
     setTimeout(() => {
+      this.result = "data:image/jpeg;base64,mock-image-data";
       this.onload?.({
-        target: { result: "data:image/jpeg;base64,mock-image-data" },
+        target: { result: this.result },
       } as any);
       (this.listeners["load"] || []).forEach((cb) => cb());
     }, 0);
   }
   readAsText() {
     setTimeout(() => {
+      this.result = "mock text content";
       this.onload?.({
-        target: { result: "mock text content" },
+        target: { result: this.result },
       } as any);
       (this.listeners["load"] || []).forEach((cb) => cb());
     }, 0);

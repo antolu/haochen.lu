@@ -221,13 +221,13 @@ describe("Enhanced PhotoEditForm", () => {
       const locationTab = screen.getByRole("button", { name: /location/i });
 
       // Basic should be active by default (border/text classes)
-      expect(basicTab.className).toMatch(/border-blue-500|text-blue-600/);
+      expect(basicTab.className).toMatch(/border-primary|text-primary/);
       expect(locationTab.className).toMatch(/border-transparent|text-gray-500/);
 
       await user.click(locationTab);
 
       // Location should now be active
-      expect(locationTab.className).toMatch(/border-blue-500|text-blue-600/);
+      expect(locationTab.className).toMatch(/border-primary|text-primary/);
       expect(basicTab.className).toMatch(/border-transparent|text-gray-500/);
     });
   });
@@ -622,7 +622,7 @@ describe("Enhanced PhotoEditForm", () => {
       await user.click(locationTab);
 
       // Tab content should reflect active styling (border/text for active)
-      expect(locationTab.className).toMatch(/border-blue-500|text-blue-600/);
+      expect(locationTab.className).toMatch(/border-primary|text-primary/);
     });
 
     it("provides helpful field descriptions", () => {

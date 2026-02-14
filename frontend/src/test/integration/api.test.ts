@@ -176,13 +176,15 @@ describe("API Integration Tests", () => {
       const result = await auth.login(mockLoginRequest);
 
       expect(result).toEqual(mockTokenResponse);
-      expect(mockAdapter.history.post[0].data).toBe(
-        JSON.stringify(mockLoginRequest),
+      const payload = new URLSearchParams(
+        mockAdapter.history.post[0].data as string,
       );
+      expect(payload.get("username")).toBe(mockLoginRequest.username);
+      expect(payload.get("password")).toBe(mockLoginRequest.password);
     });
 
     it("gets current user info", async () => {
-      mockAdapter.onGet("/auth/me").reply(200, mockUser);
+      mockAdapter.onGet("/users/me").reply(200, mockUser);
 
       const result = await auth.getMe();
 
@@ -190,11 +192,11 @@ describe("API Integration Tests", () => {
     });
 
     it("logs out user successfully", async () => {
-      mockAdapter.onPost("/auth/logout").reply(200, {});
+      mockAdapter.onPost("/auth/jwt/logout").reply(200, {});
 
       await expect(auth.logout()).resolves.toBeUndefined();
       expect(
-        mockAdapter.history.post.some((req) => req.url === "/auth/logout"),
+        mockAdapter.history.post.some((req) => req.url === "/auth/jwt/logout"),
       ).toBe(true);
     });
 

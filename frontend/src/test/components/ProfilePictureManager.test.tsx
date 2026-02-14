@@ -40,14 +40,14 @@ describe("ProfilePictureManager", () => {
 
     // Open upload modal
     await userEvent.click(getByText(/upload new picture/i));
-    await findByText(/upload profile picture/i);
+    await findByText(/select an image and crop it to a square/i);
 
     // Close modal via Cancel (inside upload component)
     await userEvent.click(getByText(/^cancel$/i));
 
     // Open again to ensure we can reach upload path; we won't drive full selection here
     await userEvent.click(getByText(/upload new picture/i));
-    await findByText(/upload profile picture/i);
+    await findByText(/select an image and crop it to a square/i);
 
     // Simulate a successful upload call by invoking upload directly
     await uploadSpy({

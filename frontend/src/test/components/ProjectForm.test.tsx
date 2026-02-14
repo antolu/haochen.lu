@@ -116,6 +116,7 @@ vi.mock("../../components/RepositoryConnector", () => ({
 
 // Mock framer-motion
 vi.mock("framer-motion", () => ({
+  AnimatePresence: ({ children }: any) => <>{children}</>,
   motion: {
     div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
   },
@@ -149,6 +150,10 @@ vi.mock("../../hooks/useProjects", async () => {
     parseTechnologies: vi.fn((techString: string) =>
       techString ? techString.split(",").map((t: string) => t.trim()) : [],
     ),
+    useProjectTechnologies: () => ({
+      data: [],
+      isLoading: false,
+    }),
   };
 });
 
@@ -219,7 +224,7 @@ describe("ProjectForm", () => {
         screen.getByPlaceholderText("https://project-demo.com"),
       ).toBeInTheDocument();
       expect(
-        screen.getByPlaceholderText("https://example.com/image.jpg"),
+        screen.getByPlaceholderText("https://project-demo.com"),
       ).toBeInTheDocument();
     });
 
@@ -278,15 +283,12 @@ describe("ProjectForm", () => {
       expect(screen.getByText("Archived")).toBeInTheDocument();
     });
 
-    it("renders featured checkbox with description", () => {
+    it("does not render removed featured project controls", () => {
       renderWithProviders(<ProjectForm />);
 
-      expect(screen.getByText("Mark as featured project")).toBeInTheDocument();
       expect(
-        screen.getByText(
-          "Featured projects appear on the homepage and in special sections",
-        ),
-      ).toBeInTheDocument();
+        screen.queryByText("Mark as featured project"),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -372,17 +374,19 @@ describe("ProjectForm", () => {
   });
 
   describe("Markdown Editor", () => {
-    it("renders markdown editor", () => {
+    it("renders collapsed description input", () => {
       renderWithProviders(<ProjectForm />);
 
-      expect(screen.getByTestId("markdown-editor")).toBeInTheDocument();
-      expect(screen.getByTestId("markdown-textarea")).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText("Click to expand editor"),
+      ).toBeInTheDocument();
     });
 
     it("handles markdown content changes", async () => {
       const user = userEvent.setup();
       renderWithProviders(<ProjectForm />);
 
+      await user.click(screen.getByPlaceholderText("Click to expand editor"));
       const textarea = screen.getByTestId("markdown-textarea");
       await user.type(textarea, "# New Content");
 
@@ -564,8 +568,9 @@ describe("ProjectForm", () => {
       renderWithProviders(<ProjectForm />);
 
       expect(screen.getByText("Create New Project")).toBeInTheDocument();
-      // Form fields should be empty initially
-      expect(screen.getByTestId("markdown-textarea")).toHaveValue("");
+      expect(screen.getByPlaceholderText("Click to expand editor")).toHaveValue(
+        "",
+      );
     });
   });
 
@@ -582,22 +587,16 @@ describe("ProjectForm", () => {
       expect(mockCancel).toHaveBeenCalled();
     });
 
-    it("handles checkbox interactions", async () => {
+    it("handles README checkbox interactions", async () => {
       const user = userEvent.setup();
       renderWithProviders(<ProjectForm />);
 
-      const featuredCheckbox = screen.getByLabelText(
-        "Mark as featured project",
-      );
       const readmeCheckbox = screen.getByLabelText(
         "Use README.md from repository",
       );
 
-      await user.click(featuredCheckbox);
       await user.click(readmeCheckbox);
 
-      // Checkboxes should be interactive
-      expect(featuredCheckbox).toBeInTheDocument();
       expect(readmeCheckbox).toBeInTheDocument();
     });
 
@@ -619,7 +618,6 @@ describe("ProjectForm", () => {
 
       expect(screen.getByText("Project Title *")).toBeInTheDocument();
       expect(screen.getByText("Status")).toBeInTheDocument();
-      expect(screen.getByText("Mark as featured project")).toBeInTheDocument();
       expect(
         screen.getByText("Use README.md from repository"),
       ).toBeInTheDocument();
@@ -656,10 +654,10 @@ describe("ProjectForm", () => {
         ),
       ).toBeInTheDocument();
       expect(
-        screen.getByText(
+        screen.queryByText(
           "Featured projects appear on the homepage and in special sections",
         ),
-      ).toBeInTheDocument();
+      ).not.toBeInTheDocument();
     });
   });
 

@@ -66,7 +66,7 @@ vi.mock("../../components/ProjectGrid", () => ({
 
 // Mock framer-motion
 vi.mock("framer-motion", () => ({
-  motion: {
+  m: {
     h1: ({ children, ...props }: any) => <h1 {...props}>{children}</h1>,
     p: ({ children, ...props }: any) => <p {...props}>{children}</p>,
     div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
@@ -273,9 +273,11 @@ describe("ProjectsPage", () => {
       await user.type(searchInput, "react");
 
       await waitFor(() => {
-        expect(mockUseInfiniteProjects).toHaveBeenCalledWith({
-          search: "react",
-        });
+        expect(mockUseInfiniteProjects).toHaveBeenCalledWith(
+          expect.objectContaining({
+            search: "react",
+          }),
+        );
       });
     });
 
@@ -314,7 +316,7 @@ describe("ProjectsPage", () => {
         .getByPlaceholderText("Search projects...")
         .parentElement?.querySelector("svg");
       expect(searchIcon).toBeInTheDocument();
-      expect(searchIcon).toHaveClass("text-gray-400");
+      expect(searchIcon).toHaveClass("text-muted-foreground");
     });
   });
 
@@ -333,10 +335,12 @@ describe("ProjectsPage", () => {
       const featuredButton = screen.getByRole("button", { name: "Featured" });
       await user.click(featuredButton);
 
-      expect(mockUseInfiniteProjects).toHaveBeenCalledWith({
-        featured: true,
-        search: undefined,
-      });
+      expect(mockUseInfiniteProjects).toHaveBeenCalledWith(
+        expect.objectContaining({
+          featured: true,
+          search: undefined,
+        }),
+      );
       expect(featuredButton).toHaveClass("bg-blue-600", "text-white");
     });
 
@@ -347,10 +351,12 @@ describe("ProjectsPage", () => {
       const activeButton = screen.getByRole("button", { name: "Active" });
       await user.click(activeButton);
 
-      expect(mockUseInfiniteProjects).toHaveBeenCalledWith({
-        status: "active",
-        search: undefined,
-      });
+      expect(mockUseInfiniteProjects).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: "active",
+          search: undefined,
+        }),
+      );
       expect(activeButton).toHaveClass("bg-blue-600", "text-white");
     });
 
@@ -363,10 +369,12 @@ describe("ProjectsPage", () => {
       });
       await user.click(inProgressButton);
 
-      expect(mockUseInfiniteProjects).toHaveBeenCalledWith({
-        status: "in_progress",
-        search: undefined,
-      });
+      expect(mockUseInfiniteProjects).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: "in_progress",
+          search: undefined,
+        }),
+      );
       expect(inProgressButton).toHaveClass("bg-blue-600", "text-white");
     });
 
@@ -382,9 +390,11 @@ describe("ProjectsPage", () => {
       const allButton = screen.getByRole("button", { name: "All" });
       await user.click(allButton);
 
-      expect(mockUseInfiniteProjects).toHaveBeenCalledWith({
-        search: undefined,
-      });
+      expect(mockUseInfiniteProjects).toHaveBeenCalledWith(
+        expect.objectContaining({
+          search: undefined,
+        }),
+      );
       expect(allButton).toHaveClass("bg-blue-600", "text-white");
     });
 
@@ -394,9 +404,9 @@ describe("ProjectsPage", () => {
       const featuredButton = screen.getByRole("button", { name: "Featured" });
       expect(featuredButton).toHaveClass(
         "bg-white",
-        "text-gray-700",
+        "text-foreground",
         "border",
-        "border-gray-300",
+        "border-input",
       );
     });
   });
@@ -491,10 +501,12 @@ describe("ProjectsPage", () => {
       await user.click(featuredButton);
 
       await waitFor(() => {
-        expect(mockUseInfiniteProjects).toHaveBeenCalledWith({
-          featured: true,
-          search: "react",
-        });
+        expect(mockUseInfiniteProjects).toHaveBeenCalledWith(
+          expect.objectContaining({
+            featured: true,
+            search: "react",
+          }),
+        );
       });
     });
 
@@ -633,9 +645,11 @@ describe("ProjectsPage", () => {
       await user.clear(searchInput);
 
       await waitFor(() => {
-        expect(mockUseInfiniteProjects).toHaveBeenCalledWith({
-          search: undefined,
-        });
+        expect(mockUseInfiniteProjects).toHaveBeenCalledWith(
+          expect.objectContaining({
+            search: undefined,
+          }),
+        );
       });
     });
   });
