@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+import logging
 import math
 import time
 import typing
@@ -59,6 +61,7 @@ from app.schemas.photo import (
 from app.services.alias_service import AliasService
 from app.types.access_control import FileType
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -72,7 +75,11 @@ def _ensure_success(
             raise HTTPException(
                 status_code=500, detail="Unknown image processing error"
             )
-        raise processing_error
+        # Log the final error before raising
+        logger.error(f"Image processing failed: {processing_error}")
+        raise HTTPException(
+            status_code=500, detail=f"Image processing failed: {processing_error!s}"
+        )
     return processed_data
 
 
@@ -464,7 +471,7 @@ async def upload_photo(
         processing_error: Exception | None = None
         processed_data: dict[str, typing.Any] | None = None
 
-        for _attempt in range(2):
+        for attempt in range(3):
             try:
                 file.file.seek(0)
                 processor = VipsImageProcessor(
@@ -479,6 +486,12 @@ async def upload_photo(
                 break
             except Exception as e:
                 processing_error = e
+                logger.warning(
+                    f"Image processing attempt {attempt + 1} failed for {filename}: {e}"
+                )
+                if attempt < 2:
+                    # Exponential backoff: 0.5s, 1.0s
+                    await asyncio.sleep(0.5 * (attempt + 1))
 
         valid_processed_data = _ensure_success(processed_data, processing_error)
 
