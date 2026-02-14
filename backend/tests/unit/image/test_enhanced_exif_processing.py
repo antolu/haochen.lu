@@ -492,6 +492,9 @@ async def test_memory_efficiency_large_image(mock_image_processor):
     large_mock_image.width = 10000
     large_mock_image.height = 8000
     large_mock_image.size = (10000, 8000)
+    # Make it work with context manager
+    large_mock_image.__enter__ = MagicMock(return_value=large_mock_image)
+    large_mock_image.__exit__ = MagicMock(return_value=False)
 
     with (
         patch("PIL.Image.open", return_value=large_mock_image),

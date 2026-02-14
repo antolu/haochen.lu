@@ -92,7 +92,7 @@ class ImageProcessor:
 
             if piexif.ExifIFD.FNumber in ifd:
                 f_num = ifd[piexif.ExifIFD.FNumber]
-                if isinstance(f_num, tuple) and len(f_num) == 2:
+                if isinstance(f_num, tuple) and len(f_num) == 2 and f_num[1] != 0:
                     data["aperture"] = float(f_num[0] / f_num[1])
 
             if piexif.ExifIFD.ExposureTime in ifd:
@@ -105,7 +105,7 @@ class ImageProcessor:
 
             if piexif.ExifIFD.FocalLength in ifd:
                 focal = ifd[piexif.ExifIFD.FocalLength]
-                if isinstance(focal, tuple) and len(focal) == 2:
+                if isinstance(focal, tuple) and len(focal) == 2 and focal[1] != 0:
                     data["focal_length"] = int(focal[0] / focal[1])
 
             # Lens information
@@ -165,7 +165,7 @@ class ImageProcessor:
                 data["iso"] = int(value) if isinstance(value, (int, float)) else None
 
             elif tag == "FNumber":
-                if hasattr(value, "num") and hasattr(value, "den"):
+                if hasattr(value, "num") and hasattr(value, "den") and value.den != 0:
                     data["aperture"] = float(value.num / value.den)
                 elif isinstance(value, (int, float)):
                     data["aperture"] = float(value)
