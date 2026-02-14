@@ -1,20 +1,20 @@
 # Build stage
-# hadolint ignore=DL3018
-FROM node:20-alpine as build
+FROM node:20-bookworm AS build
 
 WORKDIR /app
 
 # Install build dependencies for canvas
-# hadolint ignore=DL3018
-RUN apk add --no-cache \
+# hadolint ignore=DL3008
+RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     make \
     g++ \
-    cairo-dev \
-    jpeg-dev \
-    pango-dev \
-    giflib-dev \
-    pixman-dev
+    libcairo2-dev \
+    libjpeg-dev \
+    libpango1.0-dev \
+    libgif-dev \
+    librsvg2-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy package files
 COPY package*.json ./
