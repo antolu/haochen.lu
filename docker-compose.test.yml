@@ -1,0 +1,128 @@
+# Integration test environment
+# Usage: docker compose -f docker-compose.test.yml up --abort-on-container-exit
+# This creates an isolated test environment with seeded data
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpassword
+      POSTGRES_DB: testdb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U testuser -d testdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - test-network
+    tmpfs:
+      - /var/lib/postgresql/data  # Use tmpfs for faster I/O
+
+  redis:
+    image: redis:7
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - test-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        BUILD_TYPE: development
+    environment:
+      ENVIRONMENT: test
+      DATABASE_URL: postgresql+asyncpg://testuser:testpassword@db:5432/testdb
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: test_secret_key_for_integration_min_32_chars
+      SESSION_SECRET_KEY: test_session_secret_for_integration_min_32_chars
+      ADMIN_PASSWORD: testpassword123
+      CORS_ORIGINS: http://testserver
+      COOKIE_SECURE: "false"
+      COOKIE_DOMAIN: ""
+      MAX_FILE_SIZE: 52428800
+    volumes:
+      - ./backend:/app
+      - ./backend/tests/fixtures:/app/tests/fixtures:ro
+      - test-uploads:/app/uploads
+      - test-compressed:/app/compressed
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    networks:
+      - test-network
+    entrypoint: []  # Override the default entrypoint from Dockerfile
+    command: >
+      sh -c "
+        echo 'Running migrations...' &&
+        alembic upgrade head &&
+        echo 'Seeding test data...' &&
+        python -m tests.integration.seed_integration_data &&
+        echo 'Starting backend server...' &&
+        uvicorn app.main:app --host 0.0.0.0 --port 8000
+      "
+
+  test-runner:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        BUILD_TYPE: development
+    environment:
+      ENVIRONMENT: test
+      DATABASE_URL: postgresql+asyncpg://testuser:testpassword@db:5432/testdb
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: test_secret_key_for_integration_min_32_chars
+      SESSION_SECRET_KEY: test_session_secret_for_integration_min_32_chars
+      ADMIN_PASSWORD: testpassword123
+      BACKEND_URL: http://backend:8000
+      CORS_ORIGINS: http://testserver
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - ./backend:/app
+      - ./backend/tests/fixtures:/app/tests/fixtures:ro
+      - ./backend/test-results:/app/test-results
+      - ./backend/test-logs:/app/test-logs
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - test-network
+    entrypoint: []  # Override the default entrypoint from Dockerfile
+    command: >
+      sh -c "
+        echo 'Waiting for backend to be fully ready...' &&
+        sleep 2 &&
+        echo 'Running integration tests...' &&
+        pytest tests/integration/ \
+          -v \
+          --tb=short \
+          --junit-xml=test-results/junit.xml \
+          --cov=app \
+          --cov-report=html:test-results/htmlcov \
+          --cov-report=term-missing \
+          --durations=10 \
+          -m 'integration' \
+          || exit 1
+      "
+
+networks:
+  test-network:
+    driver: bridge
+
+volumes:
+  test-uploads:
+  test-compressed:
