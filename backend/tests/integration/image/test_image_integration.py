@@ -250,24 +250,25 @@ async def test_concurrent_image_uploads_handle_safely(
 
     try:
         # Upload all images concurrently
-        upload_tasks = []
-        for i, temp_file_path in enumerate(temp_files):
+        async def upload_image(file_path: str, index: int):
+            # Read file content into memory before upload to avoid file handle issues
+            with open(file_path, "rb") as img_file:
+                file_content = img_file.read()
 
-            async def upload_image(file_path: str, index: int):
-                with open(file_path, "rb") as img_file:
-                    files = {
-                        "file": (f"concurrent_{index}.jpg", img_file, "image/jpeg")
-                    }
-                    data = {"title": f"Concurrent Upload {index}"}
+            files = {"file": (f"concurrent_{index}.jpg", file_content, "image/jpeg")}
+            data = {"title": f"Concurrent Upload {index}"}
 
-                    return await async_client.post(
-                        "/api/photos",
-                        headers=headers,
-                        files=files,
-                        data=data,
-                    )
+            return await async_client.post(
+                "/api/photos",
+                headers=headers,
+                files=files,
+                data=data,
+            )
 
-            upload_tasks.append(upload_image(temp_file_path, i))
+        upload_tasks = [
+            upload_image(temp_file_path, i)
+            for i, temp_file_path in enumerate(temp_files)
+        ]
 
         # Execute all uploads concurrently
         responses = await asyncio.gather(*upload_tasks, return_exceptions=True)
