@@ -172,7 +172,9 @@ async def test_exif_data_extraction_and_storage(
 
             # Shooting parameters
             if "f_number" in exif_data:
-                assert exif_data["f_number"] == "f/2.8" or exif_data["f_number"] == 2.8
+                assert exif_data["f_number"] == "f/2.8" or exif_data[
+                    "f_number"
+                ] == pytest.approx(2.8)
             if "iso" in exif_data:
                 assert exif_data["iso"] == 400
 

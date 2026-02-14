@@ -119,8 +119,8 @@ async def test_forward_geocode_success(location_service_instance, mock_geopy_loc
         result = await location_service_instance.forward_geocode("San Francisco, CA")
 
         assert result is not None
-        assert result["latitude"] == 37.7749
-        assert result["longitude"] == -122.4194
+        assert result["latitude"] == pytest.approx(37.7749)
+        assert result["longitude"] == pytest.approx(-122.4194)
         assert result["location_name"] == "San Francisco, California, United States"
         assert result["place_id"] == "123456"
 
@@ -162,8 +162,8 @@ async def test_search_locations_success(location_service_instance):
         result = await location_service_instance.search_locations("San Francisco")
 
         assert len(result) == 1
-        assert result[0]["latitude"] == 37.7749
-        assert result[0]["longitude"] == -122.4194
+        assert result[0]["latitude"] == pytest.approx(37.7749)
+        assert result[0]["longitude"] == pytest.approx(-122.4194)
         assert result[0]["location_name"] == "San Francisco, California, United States"
 
 
@@ -215,8 +215,8 @@ async def test_get_nearby_locations_success(location_service_instance):
         )
 
         assert len(result) == 1
-        assert result[0]["latitude"] == 37.7849
-        assert result[0]["longitude"] == -122.4094
+        assert result[0]["latitude"] == pytest.approx(37.7849)
+        assert result[0]["longitude"] == pytest.approx(-122.4094)
         assert result[0]["type"] == "attraction"
         assert "distance_km" in result[0]
 
@@ -264,7 +264,7 @@ def test_calculate_distance_same_point(location_service_instance):
     distance = location_service_instance._calculate_distance(
         37.7749, -122.4194, 37.7749, -122.4194
     )
-    assert distance == 0.0
+    assert distance == pytest.approx(0.0)
 
 
 def test_global_instance_exists():

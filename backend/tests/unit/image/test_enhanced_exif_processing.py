@@ -116,14 +116,14 @@ async def test_extract_comprehensive_exif_success(
         assert result["camera_make"] == "Canon"
         assert result["camera_model"] == "EOS R5"
         assert result["iso"] == 400
-        assert result["aperture"] == 2.8
+        assert result["aperture"] == pytest.approx(2.8)
         assert result["shutter_speed"] == "1/250"
         assert result["focal_length"] == 85
         assert result["lens"] == "RF85mm F2 MACRO IS STM"
         assert result["timezone"] == "+02:00"
         assert abs(result["location_lat"] - 37.774167) < 0.001
         assert abs(result["location_lon"] + 122.419167) < 0.001
-        assert result["altitude"] == 125.0
+        assert result["altitude"] == pytest.approx(125.0)
         assert result["width"] == 3000
         assert result["height"] == 2000
 
@@ -164,7 +164,7 @@ async def test_extract_comprehensive_exif_camera_settings(
     )
 
     assert result["iso"] == 400
-    assert result["aperture"] == 2.8  # 280/100
+    assert result["aperture"] == pytest.approx(2.8)  # 280/100
     assert result["shutter_speed"] == "1/250"
     assert result["focal_length"] == 85
     assert result["lens"] == "RF85mm F2 MACRO IS STM"
@@ -190,7 +190,7 @@ async def test_extract_comprehensive_exif_gps_coordinates(
         mock_gps.assert_called_once_with(comprehensive_exif_dict["GPS"])
         assert abs(result["location_lat"] - 37.774167) < 0.001
         assert abs(result["location_lon"] + 122.419167) < 0.001
-        assert result["altitude"] == 125.0
+        assert result["altitude"] == pytest.approx(125.0)
 
 
 @pytest.mark.asyncio
@@ -238,7 +238,7 @@ def test_extract_enhanced_gps_data_north_east(mock_image_processor):
     # Coordinates: 37°46'29.4"N, 139°41'59.4"E (Tokyo approximately)
     assert abs(result["location_lat"] - 37.774167) < 0.001  # N is positive
     assert abs(result["location_lon"] - 139.699833) < 0.001  # E is positive
-    assert result["altitude"] == 50.0  # Above sea level
+    assert result["altitude"] == pytest.approx(50.0)  # Above sea level
 
 
 def test_extract_enhanced_gps_data_south_west(mock_image_processor):
@@ -256,7 +256,7 @@ def test_extract_enhanced_gps_data_south_west(mock_image_processor):
 
     assert result["location_lat"] < 0  # S is negative
     assert result["location_lon"] < 0  # W is negative
-    assert result["altitude"] == -10.0  # Below sea level (negative)
+    assert result["altitude"] == pytest.approx(-10.0)  # Below sea level (negative)
 
 
 def test_extract_enhanced_gps_data_no_altitude(mock_image_processor):
@@ -439,7 +439,7 @@ async def test_aperture_calculation_edge_cases(mock_image_processor):
         result = await mock_image_processor._extract_comprehensive_exif(full_dict)
 
         if exif_dict[piexif.ExifIFD.FNumber] == (280, 100):
-            assert result["aperture"] == 2.8
+            assert result["aperture"] == pytest.approx(2.8)
         else:
             # Should handle edge cases gracefully - may return 0.0 or None
             assert "aperture" not in result or result["aperture"] in [None, 0.0]

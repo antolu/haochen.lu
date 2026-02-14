@@ -213,8 +213,8 @@ async def test_photo_location_update(
     assert response.status_code == 200
     photo = response.json()
 
-    assert photo["location_lat"] == 40.7128
-    assert photo["location_lon"] == -74.0060
+    assert photo["location_lat"] == pytest.approx(40.7128)
+    assert photo["location_lon"] == pytest.approx(-74.0060)
     assert "New York" in photo["location_name"]
 
 

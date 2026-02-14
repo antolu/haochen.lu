@@ -133,7 +133,7 @@ async def test_complete_gps_upload_workflow(
         assert "location_lon" in result
         assert abs(result["location_lat"] - 37.774167) < 0.001
         assert abs(result["location_lon"] + 122.419167) < 0.001
-        assert result["altitude"] == 125.0
+        assert result["altitude"] == pytest.approx(125.0)
         assert result["timezone"] == "+02:00"
 
         # Verify location service was called (async mock)
@@ -187,7 +187,7 @@ async def test_complete_gps_upload_workflow(
         assert photo.location_lat is not None
         assert photo.location_lon is not None
         assert photo.location_name == "San Francisco, California, United States"
-        assert photo.altitude == 125.0
+        assert photo.altitude == pytest.approx(125.0)
         assert photo.timezone == "+02:00"
 
 
@@ -460,7 +460,7 @@ async def test_api_upload_with_gps(test_image_with_gps, async_client, admin_toke
         assert photo_data["location_lon"] is not None
         # Location name may be None if location service mock doesn't work
         # assert photo_data["location_name"] == "API Test Location"
-        assert photo_data["altitude"] == 125.0
+        assert photo_data["altitude"] == pytest.approx(125.0)
         assert photo_data["timezone"] == "+02:00"
 
         # Verify camera data
@@ -609,7 +609,7 @@ async def test_end_to_end_workflow_with_database(
         assert retrieved_photo["location_lat"] is not None
         assert retrieved_photo["location_lon"] is not None
         assert retrieved_photo["location_name"] == "E2E Test Location"
-        assert retrieved_photo["altitude"] == 125.0
+        assert retrieved_photo["altitude"] == pytest.approx(125.0)
         assert retrieved_photo["camera_make"] == "Canon"
         assert retrieved_photo["variants"] is not None
 

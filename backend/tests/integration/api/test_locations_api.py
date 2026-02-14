@@ -158,8 +158,8 @@ def test_search_locations_success(client, mock_location_service):
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 2
-    assert data[0]["latitude"] == 37.7749
-    assert data[0]["longitude"] == -122.4194
+    assert data[0]["latitude"] == pytest.approx(37.7749)
+    assert data[0]["longitude"] == pytest.approx(-122.4194)
     assert data[0]["location_name"] == "San Francisco, California, United States"
 
     mock_location_service.search_locations.assert_called_once_with(
@@ -230,8 +230,8 @@ def test_forward_geocode_success(client, mock_location_service):
 
     assert response.status_code == 200
     data = response.json()
-    assert data["latitude"] == 37.7749
-    assert data["longitude"] == -122.4194
+    assert data["latitude"] == pytest.approx(37.7749)
+    assert data["longitude"] == pytest.approx(-122.4194)
     assert data["location_name"] == "San Francisco, California, United States"
     assert data["location_address"] == "San Francisco, CA 94102, USA"
 
@@ -285,7 +285,7 @@ def test_get_nearby_locations_success(client, mock_location_service):
     data = response.json()
     assert len(data) == 2
     assert data[0]["name"] == "Golden Gate Bridge"
-    assert data[0]["distance_km"] == 1.2
+    assert data[0]["distance_km"] == pytest.approx(1.2)
     assert data[0]["type"] == "attraction"
 
     mock_location_service.get_nearby_locations.assert_called_once_with(
