@@ -133,8 +133,21 @@ jobs:
     - name: Run P0 Critical Security Tests
       run: |
         cd backend
-        pytest tests/ \
-               -k "(auth or upload)" \
+        test_targets=(
+          tests/unit/auth
+          tests/unit/upload
+          tests/integration/auth
+          tests/security
+        )
+
+        existing_targets=()
+        for target in "${test_targets[@]}"; do
+          if [ -d "${target}" ]; then
+            existing_targets+=("${target}")
+          fi
+        done
+
+        pytest "${existing_targets[@]}" \
                -v --tb=short --strict-markers \
                --cov=app --cov-report=xml --cov-report=term \
                --cov-fail-under=40 \
