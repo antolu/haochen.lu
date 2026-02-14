@@ -244,18 +244,15 @@ jobs:
 
     - name: Run ruff linting
       run: |
-        cd backend
-        ruff check --output-format=github .
+        ruff check --config backend/pyproject.toml --output-format=github backend/
 
     - name: Run ruff formatting check
       run: |
-        cd backend
-        ruff format --check .
+        ruff format --config backend/pyproject.toml --check backend/
 
     - name: Run mypy type checking
       run: |
-        cd backend
-        mypy app/ --strict --ignore-missing-imports
+        mypy --config-file backend/pyproject.toml backend/app/
 
   integration-tests:
     runs-on: ubuntu-latest
