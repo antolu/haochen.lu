@@ -278,13 +278,13 @@ jobs:
         node -e "
         const fs = require('fs');
         const report = JSON.parse(fs.readFileSync('bundle-size-report.json', 'utf8'));
-        const totalSize = report.reduce((acc, asset) => acc + asset.statSize, 0);
+        const totalSize = report.reduce((acc, asset) => acc + (asset.gzipSize || asset.statSize), 0);
         const maxSize = 1024 * 1024; // 1MB limit
 
-        console.log(\`Total bundle size: \${(totalSize / 1024).toFixed(2)} KB\`);
+        console.log(\`Total bundle size (gzipped): \${(totalSize / 1024).toFixed(2)} KB\`);
 
         if (totalSize > maxSize) {
-          console.error(\`Bundle size \${(totalSize / 1024).toFixed(2)} KB exceeds limit of \${maxSize / 1024} KB\`);
+          console.error(\`Bundle size (gzipped) \${(totalSize / 1024).toFixed(2)} KB exceeds limit of \${maxSize / 1024} KB\`);
           process.exit(1);
         }
         "
