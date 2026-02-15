@@ -275,15 +275,10 @@ async def test_concurrent_image_uploads_handle_safely(
 
         # All uploads should succeed
         successful_uploads = 0
-        for i, response in enumerate(responses):
-            if isinstance(response, Exception):
-                print(f"Upload {i} failed with exception: {response}")
-            else:
+        for response in responses:
+            if not isinstance(response, Exception):
                 # Type assertion for mypy
                 http_response = response  # type: ignore[assignment]
-                if http_response.status_code != 201:
-                    print(f"Upload {i} failed with status {http_response.status_code}")
-                    print(f"Response body: {http_response.text}")
                 assert http_response.status_code == 201
                 successful_uploads += 1
 
