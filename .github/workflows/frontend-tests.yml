@@ -183,8 +183,7 @@ jobs:
     - name: Run bundle analyzer (security)
       run: |
         cd frontend
-        npm install -D webpack-bundle-analyzer
-        npx webpack-bundle-analyzer dist/assets/*.js -m json -r bundle-analysis.json || true
+        node scripts/generate-bundle-report.js bundle-analysis.json || true
 
     - name: Check for secrets in build
       run: |
@@ -231,8 +230,7 @@ jobs:
     - name: Analyze bundle size
       run: |
         cd frontend
-        npm install -D webpack-bundle-analyzer
-        npx webpack-bundle-analyzer dist/assets/*.js -m json -r bundle-size-report.json
+        node scripts/generate-bundle-report.js bundle-size-report.json
 
     - name: Start application
       run: |
