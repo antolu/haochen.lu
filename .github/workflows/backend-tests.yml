@@ -175,13 +175,13 @@ jobs:
                --cov-append \
                -m "not slow"
 
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./backend/coverage.xml
-        flags: backend
-        name: backend-coverage
-        fail_ci_if_error: true
+    # - name: Upload coverage to Codecov
+    #   uses: codecov/codecov-action@v3
+    #   with:
+    #     file: ./backend/coverage.xml
+    #     flags: backend
+    #     name: backend-coverage
+    #     fail_ci_if_error: true
 
     - name: Generate test report
       if: always()
