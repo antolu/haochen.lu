@@ -164,16 +164,6 @@ jobs:
                --cov-append \
                -m "not slow"
 
-    - name: Run P1 Performance Tests (Quick)
-      run: |
-        cd backend
-        pytest tests/ \
-               --ignore=tests/integration \
-               -v --tb=short --strict-markers \
-               --cov=app --cov-report=xml --cov-report=term \
-               --cov-append \
-               -m "performance and not slow and not benchmark"
-
     - name: Run P2 Business Logic Tests
       run: |
         cd backend
