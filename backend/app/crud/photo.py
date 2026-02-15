@@ -185,7 +185,6 @@ async def create_photo(
     db_photo = Photo(**photo.model_dump(), **kwargs)
     db.add(db_photo)
     await db.commit()
-    await db.refresh(db_photo)
     return db_photo
 
 
@@ -201,7 +200,6 @@ async def update_photo(
             setattr(db_photo, field, value)
 
         await db.commit()
-        await db.refresh(db_photo)
 
     return db_photo
 

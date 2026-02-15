@@ -17,6 +17,10 @@ from app.core.location_service import location_service
 from app.core.progress import progress_manager
 from app.core.runtime_settings import get_image_settings
 
+# Configure pyvips global cache once at module level
+pyvips.cache_set_max(100)  # Set cache size
+pyvips.cache_set_max_mem(100 * 1024 * 1024)  # 100MB cache
+
 
 class VipsImageProcessor:
     """High-performance image processor using libvips with AVIF/WebP/JPEG support."""
@@ -36,10 +40,6 @@ class VipsImageProcessor:
         self.progress_callback = progress_callback
         self.upload_id = upload_id
         self._progress_task: asyncio.Task | None = None
-
-        # Configure vips for better performance
-        pyvips.cache_set_max(100)  # Set cache size
-        pyvips.cache_set_max_mem(100 * 1024 * 1024)  # 100MB cache
 
     def _update_progress(self, stage: str, progress: int) -> None:
         """Update progress if callback is available."""

@@ -257,10 +257,14 @@ async def test_concurrent_image_uploads_handle_safely(
 
             files = {"file": (f"concurrent_{index}.jpg", file_content, "image/jpeg")}
             data = {"title": f"Concurrent Upload {index}"}
+            headers_with_id = {
+                **headers,
+                "X-Upload-Id": f"concurrent_test_{index}",
+            }
 
             return await async_client.post(
                 "/api/photos",
-                headers=headers,
+                headers=headers_with_id,
                 files=files,
                 data=data,
             )
@@ -275,14 +279,23 @@ async def test_concurrent_image_uploads_handle_safely(
 
         # All uploads should succeed
         successful_uploads = 0
-        for response in responses:
-            if not isinstance(response, Exception):
+        failed_responses = []
+        for i, response in enumerate(responses):
+            if isinstance(response, Exception):
+                failed_responses.append(f"Upload {i}: {response}")
+            else:
                 # Type assertion for mypy
                 http_response = response  # type: ignore[assignment]
-                assert http_response.status_code == 201
-                successful_uploads += 1
+                if http_response.status_code != 201:
+                    failed_responses.append(
+                        f"Upload {i}: HTTP {http_response.status_code} - {http_response.text}"
+                    )
+                else:
+                    successful_uploads += 1
 
-        assert successful_uploads == len(temp_files)
+        assert successful_uploads == len(temp_files), (
+            f"Expected {len(temp_files)} successful uploads, got {successful_uploads}. Failures: {failed_responses}"
+        )
 
     finally:
         # Cleanup

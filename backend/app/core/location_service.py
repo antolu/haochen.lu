@@ -44,6 +44,7 @@ class LocationService:
         # Rate limiting (1 request per second per operation)
         self.rate_limit_window = 1.0
         self._last_request_times: dict[str, float] = {}
+        self._rate_limit_locks: dict[str, asyncio.Lock] = {}
 
     def _generate_cache_key(self, operation: str, *args: typing.Any) -> str:
         """Generate a cache key for the given operation and arguments."""
@@ -133,15 +134,20 @@ class LocationService:
         return str(text)
 
     async def _rate_limit_check(self, operation: str) -> None:
-        """Check rate limits for operations."""
-        current_time = time.time()
-        last_time = self._last_request_times.get(operation, 0)
+        """Check rate limits for operations with thread-safe locking."""
+        # Get or create lock for this operation
+        if operation not in self._rate_limit_locks:
+            self._rate_limit_locks[operation] = asyncio.Lock()
 
-        if current_time - last_time < self.rate_limit_window:
-            sleep_time = self.rate_limit_window - (current_time - last_time)
-            await asyncio.sleep(sleep_time)
+        async with self._rate_limit_locks[operation]:
+            current_time = time.time()
+            last_time = self._last_request_times.get(operation, 0)
 
-        self._last_request_times[operation] = time.time()
+            if current_time - last_time < self.rate_limit_window:
+                sleep_time = self.rate_limit_window - (current_time - last_time)
+                await asyncio.sleep(sleep_time)
+
+            self._last_request_times[operation] = time.time()
 
     async def reverse_geocode(
         self, latitude: float, longitude: float, language: str = "en"

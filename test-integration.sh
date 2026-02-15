@@ -170,8 +170,12 @@ else
 
   # Show backend logs if tests failed
   echo ""
-  echo -e "${YELLOW}Backend logs:${NC}"
-  docker compose -f docker-compose.test.yml logs --tail=50 backend
+  echo -e "${YELLOW}Backend logs (last 200 lines):${NC}"
+  docker compose -f docker-compose.test.yml logs --tail=200 backend
+
+  echo ""
+  echo -e "${YELLOW}Test runner logs:${NC}"
+  docker compose -f docker-compose.test.yml logs --tail=100 test-runner
 
   exit 1
 fi
