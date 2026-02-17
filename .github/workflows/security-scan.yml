@@ -294,93 +294,55 @@ jobs:
     if: always()
 
     steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
     - name: Download all security reports
       uses: actions/download-artifact@v4
       with:
         path: security-reports
 
-    - name: Generate security summary
+    - name: Parse security reports and generate summary
+      id: parse
+      continue-on-error: true
       run: |
-        echo "# Security Scan Summary" > security-summary.md
-        echo "" >> security-summary.md
-        echo "**Scan Date:** $(date -u)" >> security-summary.md
-        echo "**Commit:** ${{ github.sha }}" >> security-summary.md
-        echo "" >> security-summary.md
-
-        echo "## Backend Security" >> security-summary.md
-        if [ -f "security-reports/backend-security-reports/bandit-report.txt" ]; then
-          echo "- Bandit scan completed" >> security-summary.md
-          grep -c "Issue:" security-reports/backend-security-reports/bandit-report.txt | xargs echo "- Issues found:" >> security-summary.md || echo "- No issues found" >> security-summary.md
-        fi
-
-        echo "" >> security-summary.md
-        echo "## Frontend Security" >> security-summary.md
-        if [ -f "security-reports/frontend-security-reports/npm-audit-report.txt" ]; then
-          echo "- npm audit completed" >> security-summary.md
-          grep -c "vulnerabilities" security-reports/frontend-security-reports/npm-audit-report.txt | head -1 | xargs echo "- Vulnerabilities:" >> security-summary.md || echo "- No vulnerabilities found" >> security-summary.md
-        fi
-
-        echo "" >> security-summary.md
-        echo "## Container Security" >> security-summary.md
-        if [ -f "security-reports/container-security-reports/backend-trivy-report.json" ]; then
-          echo "- Trivy container scan completed" >> security-summary.md
-        fi
-
-        echo "" >> security-summary.md
-        echo "## Infrastructure Security" >> security-summary.md
-        if [ -f "security-reports/infrastructure-security-reports/docker-compose-security.txt" ]; then
-          echo "- Docker Compose security check completed" >> security-summary.md
-        fi
-
-        echo "" >> security-summary.md
-        echo "## Recommendations" >> security-summary.md
-        echo "1. Review all security reports for critical and high severity issues" >> security-summary.md
-        echo "2. Update vulnerable dependencies identified in scans" >> security-summary.md
-        echo "3. Address any hardcoded secrets or credentials" >> security-summary.md
-        echo "4. Ensure all container images are regularly updated" >> security-summary.md
+        python .github/scripts/parse-security-reports.py security-reports ${{ github.run_id }} ${{ github.sha }} > summary.json
+        echo "has_actionable=$([ $? -eq 1 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
 
     - name: Upload security summary
       uses: actions/upload-artifact@v4
+      if: always()
       with:
         name: security-summary
-        path: security-summary.md
+        path: |
+          security-summary.md
+          summary.json
 
     - name: Create security issue on critical findings
-      if: github.event_name == 'schedule'
+      if: github.event_name == 'schedule' && steps.parse.outputs.has_actionable == 'true'
       uses: actions/github-script@v6
       with:
         script: |
           const fs = require('fs');
 
-          // Check if there are critical security issues
-          let criticalIssues = false;
-
           try {
-            // This would parse actual security reports for critical issues
-            // For now, create issue if any high/critical findings exist
-            criticalIssues = true; // Placeholder logic
-          } catch (error) {
-            console.log('Could not parse security reports');
-          }
+            const summary = fs.readFileSync('security-summary.md', 'utf8');
+            const repo = context.repo;
 
-          if (criticalIssues) {
             await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: `🔴 Critical Security Issues Found - ${new Date().toISOString().split('T')[0]}`,
-              body: `Critical security vulnerabilities have been detected in the scheduled security scan.
-
-              **Priority Actions Required:**
-              1. Review security scan artifacts immediately
-              2. Update vulnerable dependencies
-              3. Address any exposed secrets or credentials
-              4. Update container base images if needed
-
-              **Scan Details:**
-              - Workflow Run: ${context.runId}
-              - Commit: ${context.sha}
-
-              Please download and review all security reports from the workflow artifacts.`,
-              labels: ['security', 'critical', 'vulnerability']
+              owner: repo.owner,
+              repo: repo.repo,
+              title: `🔴 Security Issues Found - ${new Date().toISOString().split('T')[0]}`,
+              body: summary + `\n\n---\n\n**Download detailed reports:** https://github.com/${repo.owner}/${repo.repo}/actions/runs/${context.runId}`,
+              labels: ['security', 'vulnerability']
             });
+
+            console.log('Security issue created successfully');
+          } catch (error) {
+            console.error('Failed to create security issue:', error);
+            throw error;
           }
