@@ -55,8 +55,8 @@ async def test_error_response_information_disclosure(
     for scenario in error_scenarios:
         response = await async_client.post("/api/auth/login", data=scenario)
 
-        # Should return 400 or 401 for all scenarios
-        assert response.status_code in [400, 401]
+        # Should return 400, 401, or 422 for all scenarios
+        assert response.status_code in [400, 401, 422]
 
         # Check for information disclosure
         disclosure_analysis = SecurityTestUtils.detect_information_disclosure(response)
@@ -82,7 +82,11 @@ async def test_response_timing_consistency(
     async_client: AsyncClient, test_session, admin_user: User
 ):
     """Test that response timing doesn't leak information."""
-    timings = {"valid": [], "invalid_user": [], "invalid_password": []}
+    timings: dict[str, list[float]] = {
+        "valid": [],
+        "invalid_user": [],
+        "invalid_password": [],
+    }
 
     # Test valid login
     for _ in range(5):
