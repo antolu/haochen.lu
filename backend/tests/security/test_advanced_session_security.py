@@ -71,9 +71,10 @@ async def test_error_response_information_disclosure(
         ]
 
         # Error messages should be generic
-        detail = response.json().get("detail", "").lower()
-        assert "traceback" not in detail
-        assert "exception" not in detail
+        detail_obj = response.json().get("detail", "")
+        detail_str = str(detail_obj).lower()
+        assert "traceback" not in detail_str
+        assert "exception" not in detail_str
 
 
 @pytest.mark.security
