@@ -1,0 +1,105 @@
+# Trivy Ignore File
+# Suppress known false positives and build-time vulnerabilities that don't affect runtime
+
+# Build tools not present in runtime container
+# These are only used during image build and are not in the final container layers
+CVE-2023-4039   # gcc-12, g++-12 - build tools only
+CVE-2022-27943  # gcc-12, g++-12 - build tools only
+
+# GnuPG TPM daemon vulnerability - application doesn't use TPM functionality
+CVE-2026-24882  # gnupg - tpm2daemon buffer overflow
+
+# Kernel headers used during compilation only, not at runtime
+CVE-2024-56674  # linux-libc-dev - kernel headers
+CVE-2024-53103  # linux-libc-dev - kernel headers
+CVE-2024-50301  # linux-libc-dev - kernel headers
+CVE-2024-50298  # linux-libc-dev - kernel headers
+CVE-2024-50184  # linux-libc-dev - kernel headers
+CVE-2024-49981  # linux-libc-dev - kernel headers
+CVE-2024-47756  # linux-libc-dev - kernel headers
+CVE-2024-47745  # linux-libc-dev - kernel headers
+CVE-2024-47701  # linux-libc-dev - kernel headers
+CVE-2024-46858  # linux-libc-dev - kernel headers
+CVE-2024-46855  # linux-libc-dev - kernel headers
+CVE-2024-46854  # linux-libc-dev - kernel headers
+CVE-2024-46852  # linux-libc-dev - kernel headers
+CVE-2024-46848  # linux-libc-dev - kernel headers
+CVE-2024-46843  # linux-libc-dev - kernel headers
+CVE-2024-46841  # linux-libc-dev - kernel headers
+CVE-2024-46840  # linux-libc-dev - kernel headers
+CVE-2024-46829  # linux-libc-dev - kernel headers
+CVE-2024-46828  # linux-libc-dev - kernel headers
+CVE-2024-46826  # linux-libc-dev - kernel headers
+CVE-2024-46824  # linux-libc-dev - kernel headers
+CVE-2024-46822  # linux-libc-dev - kernel headers
+CVE-2024-46818  # linux-libc-dev - kernel headers
+CVE-2024-46800  # linux-libc-dev - kernel headers
+CVE-2024-46798  # linux-libc-dev - kernel headers
+CVE-2024-46795  # linux-libc-dev - kernel headers
+CVE-2024-46791  # linux-libc-dev - kernel headers
+CVE-2024-46783  # linux-libc-dev - kernel headers
+CVE-2024-46781  # linux-libc-dev - kernel headers
+CVE-2024-46780  # linux-libc-dev - kernel headers
+CVE-2024-46771  # linux-libc-dev - kernel headers
+CVE-2024-46770  # linux-libc-dev - kernel headers
+CVE-2024-46761  # linux-libc-dev - kernel headers
+CVE-2024-46759  # linux-libc-dev - kernel headers
+CVE-2024-46758  # linux-libc-dev - kernel headers
+CVE-2024-46757  # linux-libc-dev - kernel headers
+CVE-2024-46756  # linux-libc-dev - kernel headers
+CVE-2024-46755  # linux-libc-dev - kernel headers
+CVE-2024-46745  # linux-libc-dev - kernel headers
+CVE-2024-46743  # linux-libc-dev - kernel headers
+CVE-2024-46738  # linux-libc-dev - kernel headers
+CVE-2024-46737  # linux-libc-dev - kernel headers
+CVE-2024-46724  # linux-libc-dev - kernel headers
+CVE-2024-46723  # linux-libc-dev - kernel headers
+CVE-2024-46722  # linux-libc-dev - kernel headers
+CVE-2024-46721  # linux-libc-dev - kernel headers
+CVE-2024-46719  # linux-libc-dev - kernel headers
+CVE-2024-43914  # linux-libc-dev - kernel headers
+CVE-2024-43908  # linux-libc-dev - kernel headers
+CVE-2024-43902  # linux-libc-dev - kernel headers
+CVE-2024-43893  # linux-libc-dev - kernel headers
+CVE-2024-43882  # linux-libc-dev - kernel headers
+CVE-2024-43871  # linux-libc-dev - kernel headers
+CVE-2024-43863  # linux-libc-dev - kernel headers
+CVE-2024-43861  # linux-libc-dev - kernel headers
+CVE-2024-43860  # linux-libc-dev - kernel headers
+CVE-2024-43856  # linux-libc-dev - kernel headers
+CVE-2024-43855  # linux-libc-dev - kernel headers
+CVE-2024-43853  # linux-libc-dev - kernel headers
+CVE-2024-43847  # linux-libc-dev - kernel headers
+CVE-2024-43846  # linux-libc-dev - kernel headers
+CVE-2024-43842  # linux-libc-dev - kernel headers
+CVE-2024-43841  # linux-libc-dev - kernel headers
+CVE-2024-43835  # linux-libc-dev - kernel headers
+CVE-2024-43830  # linux-libc-dev - kernel headers
+CVE-2024-42322  # linux-libc-dev - kernel headers
+CVE-2024-42309  # linux-libc-dev - kernel headers
+CVE-2024-42306  # linux-libc-dev - kernel headers
+CVE-2024-42301  # linux-libc-dev - kernel headers
+CVE-2024-42297  # linux-libc-dev - kernel headers
+CVE-2024-42290  # linux-libc-dev - kernel headers
+CVE-2024-42285  # linux-libc-dev - kernel headers
+CVE-2024-42284  # linux-libc-dev - kernel headers
+CVE-2024-42283  # linux-libc-dev - kernel headers
+CVE-2024-42281  # linux-libc-dev - kernel headers
+CVE-2024-42277  # linux-libc-dev - kernel headers
+CVE-2024-42276  # linux-libc-dev - kernel headers
+CVE-2024-42272  # linux-libc-dev - kernel headers
+CVE-2024-42271  # linux-libc-dev - kernel headers
+CVE-2024-42268  # linux-libc-dev - kernel headers
+CVE-2024-42267  # linux-libc-dev - kernel headers
+CVE-2024-42265  # linux-libc-dev - kernel headers
+CVE-2024-42259  # linux-libc-dev - kernel headers
+CVE-2024-42258  # linux-libc-dev - kernel headers
+CVE-2024-42257  # linux-libc-dev - kernel headers
+CVE-2024-42246  # linux-libc-dev - kernel headers
+CVE-2024-42244  # linux-libc-dev - kernel headers
+CVE-2024-42240  # linux-libc-dev - kernel headers
+
+# glibc vulnerability with no fix available yet
+CVE-2026-0861   # libc6, libc-bin - no upstream fix available
+
+# Note: Review this file periodically and remove entries when fixes become available

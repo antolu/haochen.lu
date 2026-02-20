@@ -50,8 +50,8 @@ class UserFactory(AsyncSQLAlchemyModelFactory):
         model = User
 
     id = factory.LazyFunction(uuid.uuid4)
-    username = Faker("user_name")
-    email = Faker("email")
+    username = factory.Sequence(lambda n: f"user_{n}")
+    email = factory.Sequence(lambda n: f"user_{n}@example.com")
     hashed_password = LazyAttribute(
         lambda obj: hashpw(b"TestPassword123!", gensalt()).decode("utf-8")
     )
@@ -164,7 +164,7 @@ class ProjectFactory(AsyncSQLAlchemyModelFactory):
         model = Project
 
     id = factory.LazyFunction(uuid.uuid4)
-    title = Faker("sentence", nb_words=3)
+    title = factory.Sequence(lambda n: f"Project {n}")
     slug = LazyAttribute(
         lambda obj: obj.title.lower().replace(" ", "-").replace(".", "")
     )
@@ -193,7 +193,7 @@ class BlogPostFactory(AsyncSQLAlchemyModelFactory):
         model = BlogPost
 
     id = factory.LazyFunction(uuid.uuid4)
-    title = Faker("sentence", nb_words=5)
+    title = factory.Sequence(lambda n: f"Blog Post {n}")
     slug = LazyAttribute(
         lambda obj: obj.title.lower().replace(" ", "-").replace(".", "")
     )
@@ -227,8 +227,8 @@ class SubAppFactory(AsyncSQLAlchemyModelFactory):
         model = SubApp
 
     id = factory.LazyFunction(uuid.uuid4)
-    name = Faker("word")
-    slug = LazyAttribute(lambda obj: obj.name.lower())
+    name = factory.Sequence(lambda n: f"SubApp {n}")
+    slug = LazyAttribute(lambda obj: obj.name.lower().replace(" ", "-"))
     description = Faker("sentence", nb_words=8)
 
     icon = Faker("random_element", elements=("📊", "🛠️", "📝", "🎯", "🚀"))

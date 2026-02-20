@@ -348,16 +348,16 @@ class ImageProcessor:
         variants = {}
 
         try:
-            with Image.open(original_path) as img:
+            with Image.open(original_path) as opened_img:
                 # Auto-rotate based on EXIF orientation
-                img = self._auto_rotate_image(img)
+                processed_img = self._auto_rotate_image(opened_img)
 
                 # Convert to RGB if necessary
-                if img.mode in ("RGBA", "LA", "P"):
-                    img = img.convert("RGB")
+                if processed_img.mode in ("RGBA", "LA", "P"):
+                    processed_img = processed_img.convert("RGB")
 
                 # Get original dimensions
-                original_width, original_height = img.size
+                original_width, original_height = processed_img.size
 
                 # Generate each responsive size
                 for size_name, target_size in settings.responsive_sizes.items():
@@ -368,7 +368,7 @@ class ImageProcessor:
                         continue
 
                     # Create resized image
-                    resized_img = self._resize_image(img, target_size)
+                    resized_img = self._resize_image(processed_img, target_size)
 
                     # Save WebP version
                     webp_filename = f"{file_id}_{size_name}.webp"
