@@ -345,7 +345,7 @@ git push origin v1.0.0
 
 ### TrueNAS Scale Deployment
 
-See [TRUENAS_DEPLOYMENT.md](./TRUENAS_DEPLOYMENT.md) for detailed TrueNAS Scale deployment instructions including:
+See [docs/TRUENAS_DEPLOYMENT.md](./docs/TRUENAS_DEPLOYMENT.md) for detailed TrueNAS Scale deployment instructions including:
 - Container service configuration
 - Dataset setup and persistent storage
 - Network configuration and port mapping
@@ -437,6 +437,6 @@ docker compose logs db | grep -i slow
 ## Documentation
 
 - [CLAUDE.md](./CLAUDE.md): Comprehensive development guide with architecture details
-- [TRUENAS_DEPLOYMENT.md](./TRUENAS_DEPLOYMENT.md): TrueNAS Scale deployment instructions
+- [docs/TRUENAS_DEPLOYMENT.md](./docs/TRUENAS_DEPLOYMENT.md): TrueNAS Scale deployment instructions
 - [dev.sh](./dev.sh): Development script command reference (run `./dev.sh help`)
 - `/api/docs`: Interactive API documentation (when running)

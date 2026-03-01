@@ -34,8 +34,8 @@ jobs:
 
     - name: Run integration tests
       run: |
-        chmod +x test-integration.sh
-        ./test-integration.sh -v
+        chmod +x .github/scripts/test-integration.sh
+        .github/scripts/test-integration.sh -v
 
     - name: Upload test results
       uses: actions/upload-artifact@v4
