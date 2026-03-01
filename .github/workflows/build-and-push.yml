@@ -23,6 +23,9 @@ jobs:
         with:
           fetch-depth: 0  # Fetch all history for setuptools-scm to detect version
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -33,39 +36,46 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
-
-      - name: Build images with docker compose
+      - name: Extract tag
+        id: vars
         run: |
-          # Extract tag from ref
-          TAG=${GITHUB_REF#refs/tags/}
+          RAW_TAG="${GITHUB_REF#refs/tags/}"
+          VERSION_TAG="${RAW_TAG#v}"
+          echo "raw_tag=${RAW_TAG}" >> "$GITHUB_OUTPUT"
+          echo "version_tag=${VERSION_TAG}" >> "$GITHUB_OUTPUT"
 
-          # Build images using docker compose
-          docker compose -f docker-compose.build.yml build
-
-          # Tag images with the release tag
-          docker tag antonlu/arcadia-backend:latest antonlu/arcadia-backend:$TAG
-          docker tag antonlu/arcadia-frontend:latest antonlu/arcadia-frontend:$TAG
-
-      - name: Push images to registry
+      - name: Build and push backend image (multi-arch)
         run: |
-          # Extract tag from ref
-          TAG=${GITHUB_REF#refs/tags/}
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            --build-arg BUILD_TYPE=production \
+            --file backend/Dockerfile \
+            --tag antonlu/arcadia-backend:latest \
+            --tag antonlu/arcadia-backend:${{ steps.vars.outputs.version_tag }} \
+            --push \
+            .
 
-          # Push both latest and tagged versions
-          docker push antonlu/arcadia-backend:latest
-          docker push antonlu/arcadia-backend:$TAG
-          docker push antonlu/arcadia-frontend:latest
-          docker push antonlu/arcadia-frontend:$TAG
+      - name: Build and push frontend image (multi-arch)
+        run: |
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            --file frontend/Dockerfile \
+            --tag antonlu/arcadia-frontend:latest \
+            --tag antonlu/arcadia-frontend:${{ steps.vars.outputs.version_tag }} \
+            --push \
+            frontend
 
       - name: Summary
         run: |
-          TAG=${GITHUB_REF#refs/tags/}
           echo "## Images Built and Pushed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Source git tag: ${{ steps.vars.outputs.raw_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "Published image tag: ${{ steps.vars.outputs.version_tag }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Images" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "antonlu/arcadia-frontend:latest" >> $GITHUB_STEP_SUMMARY
-          echo "antonlu/arcadia-frontend:$TAG" >> $GITHUB_STEP_SUMMARY
+          echo "antonlu/arcadia-frontend:${{ steps.vars.outputs.version_tag }}" >> $GITHUB_STEP_SUMMARY
           echo "antonlu/arcadia-backend:latest" >> $GITHUB_STEP_SUMMARY
-          echo "antonlu/arcadia-backend:$TAG" >> $GITHUB_STEP_SUMMARY
+          echo "antonlu/arcadia-backend:${{ steps.vars.outputs.version_tag }}" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
