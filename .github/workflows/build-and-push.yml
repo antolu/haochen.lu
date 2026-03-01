@@ -44,6 +44,31 @@ jobs:
           echo "raw_tag=${RAW_TAG}" >> "$GITHUB_OUTPUT"
           echo "version_tag=${VERSION_TAG}" >> "$GITHUB_OUTPUT"
 
+      - name: Validate backend package version tag
+        run: |
+          python - <<'PY'
+          from __future__ import annotations
+
+          import os
+          import sys
+
+          try:
+            from packaging.version import InvalidVersion, Version
+          except Exception:
+            print("packaging is required on the runner but is not available.")
+            sys.exit(1)
+
+          version_tag = os.environ["VERSION_TAG"]
+          try:
+            Version(version_tag)
+          except InvalidVersion:
+            print(f"Invalid PEP 440 version for backend build: {version_tag}")
+            print("Use tags like v1.2.3, v1.2.3rc1, or v1.2.3.dev1")
+            sys.exit(1)
+          PY
+        env:
+          VERSION_TAG: ${{ steps.vars.outputs.version_tag }}
+
       - name: Build and push backend image (multi-arch)
         run: |
           docker buildx build \
