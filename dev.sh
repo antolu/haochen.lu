@@ -79,6 +79,75 @@ restart_dev() {
     start_dev
 }
 
+# Rebuild development images from scratch (no cache) and restart
+rebuild_dev() {
+    print_status "Rebuilding development images with buildx..."
+
+    # Ensure buildx builder exists and is bootstrapped
+    if ! docker buildx inspect devbuilder >/dev/null 2>&1; then
+        print_status "Creating buildx builder 'devbuilder'..."
+        docker buildx create --name devbuilder --use
+    else
+        docker buildx use devbuilder >/dev/null 2>&1 || true
+    fi
+    docker buildx inspect --bootstrap
+
+    # Determine mode: push (create/push multi-arch image) or load (build host arch and load)
+    push_mode=0
+    if [ "${2:-$1}" = "--push" ] || [ "$1" = "--push" ]; then
+        push_mode=1
+    fi
+
+    # Map uname arch to docker platform
+    host_arch=$(uname -m)
+    case "$host_arch" in
+        x86_64) host_platform="linux/amd64" ;;
+        aarch64|arm64) host_platform="linux/arm64" ;;
+        *) host_platform="linux/amd64" ;;
+    esac
+
+    build_one() {
+        local context="$1"
+        local dockerfile="$2"
+        local tag="$3"
+        local build_args="$4"
+
+        if [ "$push_mode" -eq 1 ]; then
+            print_status "Pushing multi-arch image ${tag} (amd64, arm64)"
+            if [ -n "$build_args" ]; then
+                docker buildx build --builder devbuilder --platform "linux/amd64,linux/arm64" --pull --no-cache --build-arg "$build_args" -t "$tag" -f "$dockerfile" "$context" --push
+            else
+                docker buildx build --builder devbuilder --platform "linux/amd64,linux/arm64" --pull --no-cache -t "$tag" -f "$dockerfile" "$context" --push
+            fi
+        else
+            print_status "Building ${tag} for host ${host_platform} and loading into local daemon"
+            if [ -n "$build_args" ]; then
+                docker buildx build --builder devbuilder --platform "$host_platform" --load --pull --no-cache --build-arg "$build_args" -t "$tag" -f "$dockerfile" "$context"
+            else
+                docker buildx build --builder devbuilder --platform "$host_platform" --load --pull --no-cache -t "$tag" -f "$dockerfile" "$context"
+            fi
+        fi
+    }
+
+    # Build/push backend and frontend (targets specified for Docker Hub)
+    build_one "." "backend/Dockerfile" "antonlu/arcadia-backend:dev" "BUILD_TYPE=development"
+    build_one "./frontend" "frontend/Dockerfile.dev" "antonlu/arcadia-frontend:dev" ""
+
+    # Always build nginx for local dev (load only)
+    if [ "$push_mode" -eq 1 ]; then
+        print_status "Also building nginx images locally for host arch"
+        docker buildx build --builder devbuilder --platform "$host_platform" --load --pull --no-cache -t "antonlu/arcadia-nginx:dev" -f "frontend/Dockerfile.nginx.dev" "./frontend"
+    else
+        build_one "./frontend" "frontend/Dockerfile.nginx.dev" "antonlu/arcadia-nginx:dev" ""
+    fi
+
+    if [ "$push_mode" -eq 1 ]; then
+        print_status "Push mode complete: images pushed to Docker Hub under antonlu/arcadia-*-dev"
+    else
+        print_status "Build-and-load complete: images loaded into local docker for host arch (${host_platform})."
+    fi
+}
+
 # Function to show logs
 show_logs() {
     service=${2:-""}
@@ -174,6 +243,9 @@ case "${1:-help}" in
         ;;
     "restart")
         restart_dev
+        ;;
+    "rebuild")
+        rebuild_dev "$@"
         ;;
     "logs")
         show_logs "$@"
