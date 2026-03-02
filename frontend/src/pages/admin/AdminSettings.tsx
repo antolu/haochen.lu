@@ -104,9 +104,7 @@ const AdminSettings: React.FC = () => {
   return (
     <div className="space-y-10">
       <div className="space-y-3">
-        <h1 className="text-5xl font-bold tracking-tight bg-gradient-primary bg-clip-text text-transparent">
-          Settings
-        </h1>
+        <h1 className="admin-page-title">Settings</h1>
         <p className="text-muted-foreground text-xl">
           Configure image processing and quality settings
         </p>

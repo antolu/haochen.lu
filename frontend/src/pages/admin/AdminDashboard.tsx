@@ -80,7 +80,7 @@ const AdminDashboard: React.FC = () => {
       icon: FolderOpen,
       gradient: "from-blue-500/10 via-cyan-500/10 to-blue-600/10",
       iconColor: "text-blue-600 dark:text-blue-400",
-      bgColor: "bg-blue-50 dark:bg-blue-950/30",
+      bgColor: "bg-primary/10 dark:bg-blue-950/30",
       borderGlow: "shadow-[0_0_15px_rgba(59,130,246,0.15)]",
     },
     {
@@ -147,9 +147,7 @@ const AdminDashboard: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         className="space-y-3"
       >
-        <h1 className="text-5xl font-bold tracking-tight bg-gradient-primary bg-clip-text text-transparent">
-          Dashboard
-        </h1>
+        <h1 className="admin-page-title">Dashboard</h1>
         <p className="text-muted-foreground text-xl">
           Welcome back! Here's an overview of your content.
         </p>

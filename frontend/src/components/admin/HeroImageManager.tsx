@@ -6,6 +6,7 @@ import type { HeroImage, Photo, HeroImageCreate } from "../../types";
 import { selectOptimalImage, ImageUseCase } from "../../utils/imageUtils";
 import FocalPointEditor from "./FocalPointEditor";
 import SimplePhotoUpload from "../SimplePhotoUpload";
+import { Button } from "../ui/button";
 
 const HeroImageManager: React.FC = () => {
   const [selectedHero, setSelectedHero] = useState<HeroImage | null>(null);
@@ -116,14 +117,14 @@ const HeroImageManager: React.FC = () => {
   if (isLoadingHeros) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="text-gray-500">Loading hero images...</div>
+        <div className="text-muted-foreground">Loading hero images...</div>
       </div>
     );
   }
 
   if (heroError) {
     return (
-      <div className="text-red-600 p-4">
+      <div className="text-destructive p-4">
         Error loading hero images: {heroError.message}
       </div>
     );
@@ -132,24 +133,27 @@ const HeroImageManager: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-2">
-          <h2 className="text-4xl font-bold tracking-tight">Hero Images</h2>
-          <p className="text-muted-foreground text-lg">
-            Manage homepage hero images and focal points
-          </p>
+      <div className="mb-10">
+        <div className="flex items-center justify-between">
+          <div className="space-y-3">
+            <h1 className="admin-page-title">Hero Images</h1>
+            <p className="text-muted-foreground text-xl">
+              Manage homepage hero images and focal points
+            </p>
+          </div>
+          <Button
+            variant="gradient"
+            size="lg"
+            onClick={() => setShowCreateForm(true)}
+          >
+            Add Hero Image
+          </Button>
         </div>
-        <button
-          onClick={() => setShowCreateForm(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          Add Hero Image
-        </button>
       </div>
 
       {/* Active Hero Indicator */}
-      <div className="bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-xl p-6">
-        <h3 className="font-semibold text-green-800 mb-2">Active Hero Image</h3>
+      <div className="bg-primary/5 border border-primary/10 rounded-xl p-6">
+        <h3 className="font-semibold text-primary mb-2">Active Hero Image</h3>
         {(() => {
           const activeHero = heroImagesList?.find((h) => h.is_active);
           if (activeHero) {
@@ -165,10 +169,10 @@ const HeroImageManager: React.FC = () => {
                   className="w-16 h-16 object-cover rounded-lg"
                 />
                 <div>
-                  <div className="font-medium text-green-800">
+                  <div className="font-medium text-foreground">
                     {activeHero.title}
                   </div>
-                  <div className="text-sm text-green-600">
+                  <div className="text-sm text-muted-foreground">
                     Focal Point: {activeHero.focal_point_x}%,{" "}
                     {activeHero.focal_point_y}%
                   </div>
@@ -184,10 +188,10 @@ const HeroImageManager: React.FC = () => {
                 className="w-16 h-16 object-cover rounded-lg"
               />
               <div>
-                <div className="font-medium text-green-800">
+                <div className="font-medium text-foreground">
                   Default Hero Image
                 </div>
-                <div className="text-sm text-green-600">
+                <div className="text-sm text-muted-foreground">
                   Using built-in mountain landscape image
                 </div>
               </div>
@@ -209,9 +213,7 @@ const HeroImageManager: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className={`bg-card rounded-xl shadow-sm overflow-hidden transition-all ${
-                heroImage.is_active
-                  ? "ring-2 ring-green-500/50"
-                  : "hover:shadow-md"
+                heroImage.is_active ? "ring-2 ring-primary" : "hover:shadow-md"
               }`}
             >
               {/* Image Preview */}
@@ -227,7 +229,7 @@ const HeroImageManager: React.FC = () => {
                   }}
                 />
                 {heroImage.is_active && (
-                  <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded text-xs font-medium">
+                  <div className="absolute top-2 right-2 bg-primary text-primary-foreground px-2 py-1 rounded text-xs font-medium">
                     ACTIVE
                   </div>
                 )}
@@ -238,37 +240,43 @@ const HeroImageManager: React.FC = () => {
 
               {/* Details */}
               <div className="p-4">
-                <h3 className="font-semibold text-gray-900 mb-2">
+                <h3 className="font-semibold text-foreground mb-2">
                   {heroImage.title}
                 </h3>
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-muted-foreground mb-4">
                   Photo: {heroImage.photo.title}
                 </p>
 
                 {/* Actions */}
                 <div className="flex space-x-2">
                   {!heroImage.is_active && (
-                    <button
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 text-green-700 border-green-300 hover:bg-green-50 dark:text-green-400 dark:border-green-700 dark:hover:bg-green-950/30"
                       onClick={() => handleActivate(heroImage)}
                       disabled={activateMutation.isPending}
-                      className="flex-1 bg-green-600 text-white px-3 py-2 rounded text-sm hover:bg-green-700 transition-colors disabled:opacity-50"
                     >
                       Activate
-                    </button>
+                    </Button>
                   )}
-                  <button
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
                     onClick={() => handleEditFocalPoints(heroImage)}
-                    className="flex-1 bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 transition-colors"
                   >
                     Edit Focus
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-destructive border-destructive/30 hover:bg-destructive/10"
                     onClick={() => handleDelete(heroImage)}
                     disabled={deleteMutation.isPending}
-                    className="bg-red-600 text-white px-3 py-2 rounded text-sm hover:bg-red-700 transition-colors disabled:opacity-50"
                   >
                     Delete
-                  </button>
+                  </Button>
                 </div>
               </div>
             </motion.div>
@@ -279,13 +287,14 @@ const HeroImageManager: React.FC = () => {
       {/* Empty State */}
       {heroImagesList?.length === 0 && (
         <div className="text-center py-12">
-          <div className="text-gray-500 mb-4">No hero images yet</div>
-          <button
+          <div className="text-muted-foreground mb-4">No hero images yet</div>
+          <Button
+            variant="gradient"
+            size="lg"
             onClick={() => setShowCreateForm(true)}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
           >
             Create Your First Hero Image
-          </button>
+          </Button>
         </div>
       )}
 
@@ -299,7 +308,7 @@ const HeroImageManager: React.FC = () => {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+              className="bg-card rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
@@ -312,20 +321,20 @@ const HeroImageManager: React.FC = () => {
                       setShowCreateForm(false);
                       setSelectedPhoto(null);
                     }}
-                    className="text-gray-500 hover:text-gray-700"
+                    className="text-muted-foreground hover:text-foreground"
                   >
                     ✕
                   </button>
                 </div>
 
                 {/* Tabs */}
-                <div className="flex mb-6 border-b border-gray-200">
+                <div className="flex mb-6 border-b border-border">
                   <button
                     onClick={() => setActiveTab("upload")}
                     className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
                       activeTab === "upload"
-                        ? "border-blue-500 text-blue-600"
-                        : "border-transparent text-gray-500 hover:text-gray-700"
+                        ? "border-primary text-primary"
+                        : "border-transparent text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     Upload New Photo
@@ -334,8 +343,8 @@ const HeroImageManager: React.FC = () => {
                     onClick={() => setActiveTab("select")}
                     className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
                       activeTab === "select"
-                        ? "border-blue-500 text-blue-600"
-                        : "border-transparent text-gray-500 hover:text-gray-700"
+                        ? "border-primary text-primary"
+                        : "border-transparent text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     Select Existing Photo
@@ -363,7 +372,7 @@ const HeroImageManager: React.FC = () => {
                     {/* Default/Static Hero Images Section */}
                     <div className="mb-6">
                       <div className="flex items-center justify-between mb-4">
-                        <h4 className="text-md font-medium text-gray-900">
+                        <h4 className="text-md font-medium text-foreground">
                           Default Hero Images
                         </h4>
                         <button
@@ -371,7 +380,7 @@ const HeroImageManager: React.FC = () => {
                             // Clear selected photo to reset to default
                             setSelectedPhoto(null);
                           }}
-                          className="text-sm text-blue-600 hover:text-blue-800 underline"
+                          className="text-sm text-primary hover:text-primary-foreground underline"
                         >
                           Reset to Default
                         </button>
@@ -385,14 +394,14 @@ const HeroImageManager: React.FC = () => {
                             className="w-16 h-16 object-cover rounded-lg"
                           />
                           <div>
-                            <div className="font-medium text-gray-900">
+                            <div className="font-medium text-foreground">
                               Mountain Landscape
                             </div>
-                            <div className="text-sm text-gray-600">
+                            <div className="text-sm text-muted-foreground">
                               Default static hero image with mountain landscape
                             </div>
                             {!selectedPhoto && (
-                              <div className="text-xs text-blue-600 font-medium mt-1">
+                              <div className="text-xs text-primary font-medium mt-1">
                                 ✓ Currently using default
                               </div>
                             )}
@@ -408,7 +417,7 @@ const HeroImageManager: React.FC = () => {
                           <div className="w-full border-t border-gray-300" />
                         </div>
                         <div className="relative flex justify-center text-sm">
-                          <span className="px-2 bg-white text-gray-500">
+                          <span className="px-2 bg-card text-muted-foreground">
                             or
                           </span>
                         </div>
@@ -420,7 +429,7 @@ const HeroImageManager: React.FC = () => {
                     ) : (
                       <>
                         <div className="mb-4">
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <label className="block text-sm font-medium text-foreground mb-2">
                             Select Uploaded Photo for Hero Image
                           </label>
                         </div>
@@ -447,8 +456,8 @@ const HeroImageManager: React.FC = () => {
                                   className="w-full h-full object-cover"
                                 />
                                 {selectedPhoto?.id === photo.id && (
-                                  <div className="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
-                                    <div className="bg-blue-500 text-white rounded-full p-1">
+                                  <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                                    <div className="bg-primary text-primary-foreground rounded-full p-1 text-xs">
                                       ✓
                                     </div>
                                   </div>
@@ -460,7 +469,7 @@ const HeroImageManager: React.FC = () => {
 
                         {selectedPhoto && (
                           <div className="bg-muted/30 rounded-xl p-4 mb-6">
-                            <h4 className="font-medium text-gray-900 mb-2">
+                            <h4 className="font-medium text-foreground mb-2">
                               Selected Photo
                             </h4>
                             <div className="flex items-center space-x-4">
@@ -475,11 +484,11 @@ const HeroImageManager: React.FC = () => {
                                 className="w-16 h-16 object-cover rounded-lg"
                               />
                               <div>
-                                <div className="font-medium">
+                                <div className="font-medium text-foreground">
                                   {selectedPhoto.title}
                                 </div>
                                 {selectedPhoto.description && (
-                                  <div className="text-sm text-gray-600">
+                                  <div className="text-sm text-muted-foreground">
                                     {selectedPhoto.description}
                                   </div>
                                 )}
@@ -489,27 +498,28 @@ const HeroImageManager: React.FC = () => {
                         )}
 
                         <div className="flex space-x-4">
-                          <button
+                          <Button
+                            variant="ghost"
+                            className="flex-1"
                             onClick={() => {
                               setShowCreateForm(false);
                               setSelectedPhoto(null);
                               setActiveTab("upload");
                             }}
-                            className="flex-1 text-muted-foreground px-4 py-2 rounded-lg hover:bg-muted/50 transition-colors"
                           >
                             Cancel
-                          </button>
-                          <button
+                          </Button>
+                          <Button
+                            variant="gradient"
+                            className="flex-1"
                             onClick={() => {
                               if (selectedPhoto) {
                                 handleCreateHeroImage();
                               } else {
-                                // Handle reset to default - deactivate all hero images
                                 const activeHero = heroImagesList?.find(
                                   (h) => h.is_active,
                                 );
                                 if (activeHero) {
-                                  // Deactivate current hero to use default
                                   void deleteMutation.mutate(activeHero.id);
                                 }
                                 setShowCreateForm(false);
@@ -520,7 +530,6 @@ const HeroImageManager: React.FC = () => {
                               createMutation.isPending ||
                               deleteMutation.isPending
                             }
-                            className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
                           >
                             {createMutation.isPending ||
                             deleteMutation.isPending
@@ -528,7 +537,7 @@ const HeroImageManager: React.FC = () => {
                               : selectedPhoto
                                 ? "Create Hero Image"
                                 : "Reset to Default"}
-                          </button>
+                          </Button>
                         </div>
                       </>
                     )}

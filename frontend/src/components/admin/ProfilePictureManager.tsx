@@ -10,6 +10,7 @@ import {
 } from "../../hooks/useProfilePictures";
 import { selectOptimalImage, ImageUseCase } from "../../utils/imageUtils";
 import type { ProfilePicture } from "../../types";
+import { Button } from "../ui/button";
 
 const ProfilePictureManager: React.FC = () => {
   const [showUpload, setShowUpload] = useState(false);
@@ -95,22 +96,21 @@ const ProfilePictureManager: React.FC = () => {
   return (
     <div>
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-10">
         <div className="flex justify-between items-start">
-          <div className="space-y-2">
-            <h1 className="text-4xl font-bold tracking-tight">
-              Profile Pictures
-            </h1>
-            <p className="text-muted-foreground text-lg">
+          <div className="space-y-3">
+            <h1 className="admin-page-title">Profile Pictures</h1>
+            <p className="text-muted-foreground text-xl">
               Manage your profile pictures. Only one can be active at a time.
             </p>
           </div>
-          <button
+          <Button
+            variant="gradient"
+            size="lg"
             onClick={() => setShowUpload(true)}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
           >
             Upload New Picture
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -144,9 +144,9 @@ const ProfilePictureManager: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-green-500/20 to-green-600/20 p-6 rounded-xl hover:shadow-lg transition-all duration-200">
+        <div className="bg-primary/5 border border-primary/10 p-6 rounded-xl hover:shadow-lg transition-all duration-200">
           <div className="flex items-center">
-            <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
+            <div className="p-2 bg-primary/10 rounded-lg">
               <svg
                 className="w-6 h-6 text-green-600 dark:text-green-400"
                 fill="none"
@@ -165,16 +165,16 @@ const ProfilePictureManager: React.FC = () => {
               <p className="text-sm font-medium text-muted-foreground">
                 Active Picture
               </p>
-              <p className="text-3xl font-bold tracking-tight mt-2">
+              <p className="text-3xl font-bold tracking-tight mt-2 text-foreground">
                 {activeProfilePicture ? "1" : "0"}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/20 p-6 rounded-xl hover:shadow-lg transition-all duration-200">
+        <div className="bg-primary/5 border border-primary/10 p-6 rounded-xl hover:shadow-lg transition-all duration-200">
           <div className="flex items-center">
-            <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
+            <div className="p-2 bg-primary/10 rounded-lg">
               <svg
                 className="w-6 h-6 text-purple-600 dark:text-purple-400"
                 fill="none"
@@ -285,13 +285,13 @@ const ProfilePictureManager: React.FC = () => {
                   <div
                     key={profilePicture.id}
                     className={`relative bg-card rounded-xl overflow-hidden transition-all ${
-                      isActive ? "ring-2 ring-green-500" : "hover:shadow-md"
+                      isActive ? "ring-2 ring-primary" : "hover:shadow-md"
                     }`}
                   >
                     {/* Active Badge */}
                     {isActive && (
                       <div className="absolute top-2 left-2 z-10">
-                        <span className="bg-green-500 text-white dark:bg-green-600 text-xs font-medium px-2 py-1 rounded-full">
+                        <span className="bg-primary text-primary-foreground text-xs font-medium px-2 py-1 rounded-full">
                           Active
                         </span>
                       </div>
@@ -324,25 +324,28 @@ const ProfilePictureManager: React.FC = () => {
                       {/* Actions */}
                       <div className="flex space-x-2 mt-3">
                         {!isActive && (
-                          <button
+                          <Button
                             onClick={() =>
                               void handleActivate(profilePicture.id)
                             }
                             disabled={activateMutation.isPending}
-                            className="flex-1 px-3 py-1 text-sm bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors disabled:opacity-50"
+                            className="flex-1"
+                            size="sm"
                           >
                             {activateMutation.isPending
                               ? "Setting..."
                               : "Set Active"}
-                          </button>
+                          </Button>
                         )}
-                        <button
+                        <Button
+                          variant="destructive"
                           onClick={() => void handleDelete(profilePicture)}
                           disabled={deleteMutation.isPending}
-                          className="px-3 py-1 text-sm bg-destructive text-destructive-foreground rounded hover:bg-destructive/90 transition-colors disabled:opacity-50"
+                          className="flex-1"
+                          size="sm"
                         >
                           {deleteMutation.isPending ? "Deleting..." : "Delete"}
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </div>

@@ -4,9 +4,9 @@ import ContentManager from "../../components/admin/ContentManager";
 const AdminContent: React.FC = () => {
   return (
     <div>
-      <div className="mb-8 space-y-2">
-        <h1 className="text-4xl font-bold tracking-tight">Website Content</h1>
-        <p className="text-muted-foreground text-lg">
+      <div className="mb-10 space-y-3">
+        <h1 className="admin-page-title">Website Content</h1>
+        <p className="text-muted-foreground text-xl">
           Manage all editable text content on your website
         </p>
       </div>

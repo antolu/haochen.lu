@@ -186,13 +186,13 @@ const SortableRow: React.FC<SortableRowProps> = ({
       ref={setNodeRef}
       style={style}
       animate={{
-        backgroundColor: reorderEnabled ? "rgb(255 251 235)" : undefined,
+        backgroundColor: reorderEnabled ? "var(--muted)" : undefined,
       }}
       transition={{ duration: 0.3, ease: "easeOut" }}
       className={cn(
         "group border-b border-border transition-colors",
         reorderEnabled ? "cursor-move" : "cursor-pointer",
-        isDragging && "bg-amber-100 shadow-sm",
+        isDragging && "bg-primary/10 shadow-sm",
       )}
       onClick={() => {
         if (!reorderEnabled) {
@@ -215,7 +215,7 @@ const SortableRow: React.FC<SortableRowProps> = ({
               }}
               {...listeners}
               {...attributes}
-              className="mx-auto flex h-8 w-8 items-center justify-center rounded-full border border-dashed border-border text-muted-foreground transition hover:border-amber-400 hover:text-amber-500"
+              className="mx-auto flex h-8 w-8 items-center justify-center rounded-full border border-dashed border-border text-muted-foreground transition hover:border-primary hover:text-primary"
               aria-label="Drag to reorder"
             >
               {viewMode === "list" ? (
@@ -236,7 +236,7 @@ const SortableRow: React.FC<SortableRowProps> = ({
             loading="lazy"
           />
           {photo.featured && (
-            <span className="absolute top-1 right-1 inline-flex items-center rounded bg-yellow-100 px-1.5 py-0.5 text-[10px] font-semibold text-yellow-700 shadow">
+            <span className="absolute top-1 right-1 inline-flex items-center rounded bg-yellow-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-yellow-600 dark:text-yellow-400 shadow-sm border border-yellow-500/20 backdrop-blur-sm">
               Featured
             </span>
           )}
@@ -275,7 +275,9 @@ const SortableRow: React.FC<SortableRowProps> = ({
       <TableCell>
         <div className="flex flex-wrap items-center gap-1">
           {photo.featured && (
-            <Badge className="bg-yellow-100 text-yellow-800">Featured</Badge>
+            <Badge className="bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20 hover:bg-yellow-500/20">
+              Featured
+            </Badge>
           )}
           {photo.category && (
             <Badge variant="outline" className="text-xs">
@@ -310,7 +312,7 @@ const SortableRow: React.FC<SortableRowProps> = ({
               event.stopPropagation();
               onEdit(photo);
             }}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-blue-600"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-primary"
             aria-label="Edit photo"
           >
             <Edit3 className="h-4 w-4" />

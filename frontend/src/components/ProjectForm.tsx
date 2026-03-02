@@ -426,7 +426,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                         setUseReadme(e.target.checked);
                         setValue("use_readme", e.target.checked);
                       }}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      className="h-4 w-4 text-primary focus:ring-primary border-border rounded"
                     />
                     <span className="ml-2 text-sm font-medium">
                       Use README.md from repository

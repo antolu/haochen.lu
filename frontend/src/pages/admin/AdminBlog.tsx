@@ -3,9 +3,9 @@ import React from "react";
 const AdminBlog: React.FC = () => {
   return (
     <div>
-      <div className="mb-8 space-y-2">
-        <h1 className="text-4xl font-bold tracking-tight">Blog Management</h1>
-        <p className="text-muted-foreground text-lg">
+      <div className="mb-10 space-y-3">
+        <h1 className="admin-page-title">Blog Management</h1>
+        <p className="text-muted-foreground text-xl">
           Create and manage your blog posts
         </p>
       </div>

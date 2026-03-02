@@ -236,7 +236,7 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
                 onClick={() => setActiveDevice(device)}
                 className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                   activeDevice === device
-                    ? "bg-background text-blue-600 shadow-sm"
+                    ? "bg-background text-primary shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -251,14 +251,14 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
             <div className="flex-1">
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <h4 className="font-semibold text-gray-900">
+                  <h4 className="font-semibold text-foreground">
                     Preview ({activeDevice})
                   </h4>
                   {/* Help Tooltip */}
                   <div className="relative group">
                     <button
                       type="button"
-                      className="w-5 h-5 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors flex items-center justify-center text-xs text-gray-600 font-medium"
+                      className="w-5 h-5 rounded-full bg-muted hover:bg-muted/80 transition-colors flex items-center justify-center text-xs text-muted-foreground font-medium"
                       aria-label="Help"
                     >
                       ?
@@ -279,9 +279,7 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
                 <div className="text-sm text-muted-foreground">
                   {previewFocalPoint ? (
                     <>
-                      <span className="text-blue-600 font-medium">
-                        Preview:
-                      </span>{" "}
+                      <span className="text-primary font-medium">Preview:</span>{" "}
                       {previewFocalPoint.x.toFixed(1)}%,{" "}
                       {previewFocalPoint.y.toFixed(1)}%{" "}
                       <span className="text-xs text-muted-foreground">
@@ -333,18 +331,18 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
                     {/* Crosshair lines - different colors for preview vs committed */}
                     <div
                       className={`absolute w-8 h-0.5 shadow-lg -translate-x-1/2 -translate-y-px transition-colors duration-150 ${
-                        previewFocalPoint ? "bg-blue-400" : "bg-red-500"
+                        previewFocalPoint ? "bg-primary" : "bg-destructive"
                       }`}
                     />
                     <div
                       className={`absolute h-8 w-0.5 shadow-lg -translate-y-1/2 -translate-x-px transition-colors duration-150 ${
-                        previewFocalPoint ? "bg-blue-400" : "bg-red-500"
+                        previewFocalPoint ? "bg-primary" : "bg-destructive"
                       }`}
                     />
                     {/* Center dot */}
                     <div
                       className={`w-2 h-2 rounded-full shadow-lg -translate-x-1/2 -translate-y-1/2 transition-colors duration-150 ${
-                        previewFocalPoint ? "bg-blue-400" : "bg-red-500"
+                        previewFocalPoint ? "bg-primary" : "bg-destructive"
                       }`}
                     />
                   </div>

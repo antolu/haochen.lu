@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { Button } from "../../components/ui/button";
 import YamlEditor from "../../components/YamlEditor";
 
 // Types retained in comments for reference; inferred at usage sites
@@ -143,9 +144,9 @@ const AdminSubAppIntegration: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="space-y-2">
-        <h1 className="text-4xl font-bold tracking-tight">Integrate Subapp</h1>
-        <p className="text-muted-foreground text-lg">
+      <div className="space-y-3">
+        <h1 className="admin-page-title">Integrate Subapp</h1>
+        <p className="text-muted-foreground text-xl">
           Add a new subapp by pasting its YAML configuration below. The
           configuration will be validated in real-time.
         </p>
@@ -153,19 +154,12 @@ const AdminSubAppIntegration: React.FC = () => {
 
       {/* Actions */}
       <div className="flex items-center gap-4">
-        <button
-          onClick={() => setShowExample(!showExample)}
-          className="px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 dark:text-blue-400 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
-        >
+        <Button variant="outline" onClick={() => setShowExample(!showExample)}>
           {showExample ? "Hide Example" : "Show Example"}
-        </button>
-
-        <button
-          onClick={handleClear}
-          className="px-4 py-2 text-sm font-medium text-muted-foreground bg-muted hover:bg-muted/80 rounded-lg transition-colors"
-        >
+        </Button>
+        <Button variant="ghost" onClick={handleClear}>
           Clear
-        </button>
+        </Button>
       </div>
 
       {/* Example Configuration */}
@@ -178,12 +172,9 @@ const AdminSubAppIntegration: React.FC = () => {
         >
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-medium">Example Configuration</h3>
-            <button
-              onClick={handleLoadExample}
-              className="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 dark:text-blue-400 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 rounded transition-colors"
-            >
+            <Button variant="outline" size="sm" onClick={handleLoadExample}>
               Load Example
-            </button>
+            </Button>
           </div>
           <pre className="text-xs text-muted-foreground overflow-x-auto whitespace-pre-wrap">
             {EXAMPLE_CONFIG}
@@ -287,19 +278,13 @@ const AdminSubAppIntegration: React.FC = () => {
             </div>
           )}
 
-          <button
+          <Button
+            variant="gradient"
+            size="lg"
             onClick={() => {
               void handleIntegrate();
             }}
             disabled={isIntegrating}
-            className={`
-              px-6 py-3 font-medium rounded-lg transition-colors
-              ${
-                isIntegrating
-                  ? "bg-muted text-muted-foreground cursor-not-allowed"
-                  : "bg-primary text-primary-foreground hover:bg-primary/90"
-              }
-            `}
           >
             {isIntegrating ? (
               <div className="flex items-center">
@@ -309,7 +294,7 @@ const AdminSubAppIntegration: React.FC = () => {
             ) : (
               "Integrate Subapp"
             )}
-          </button>
+          </Button>
         </motion.div>
       )}
 

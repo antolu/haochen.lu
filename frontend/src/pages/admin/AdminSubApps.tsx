@@ -1,9 +1,12 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { Plus, Layers, CheckCircle, XCircle, Puzzle } from "lucide-react";
 
 import SubAppForm from "../../components/SubAppForm";
 import SubAppList from "../../components/SubAppList";
+import StatCard from "../../components/admin/StatCard";
+import { Button } from "../../components/ui/button";
 import {
   useSubApps,
   useSubAppStats,
@@ -126,12 +129,9 @@ const AdminSubApps: React.FC = () => {
           Error loading sub-applications
         </div>
         <p className="text-muted-foreground">{subappsError.message}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="mt-4 px-4 py-2 text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 rounded-lg transition-colors"
-        >
+        <Button className="mt-4" onClick={() => window.location.reload()}>
           Retry
-        </button>
+        </Button>
       </div>
     );
   }
@@ -139,149 +139,63 @@ const AdminSubApps: React.FC = () => {
   return (
     <div>
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-10">
         <div className="flex justify-between items-start">
-          <div className="space-y-2">
-            <h1 className="text-4xl font-bold tracking-tight">
-              Sub-Applications
-            </h1>
-            <p className="text-muted-foreground text-lg">
+          <div className="space-y-3">
+            <h1 className="admin-page-title">Sub-Applications</h1>
+            <p className="text-muted-foreground text-xl">
               Manage external and internal sub-applications
             </p>
           </div>
           <div className="flex gap-3">
-            <Link
-              to="/admin/subapps/integrate"
-              className="px-4 py-2 text-sm font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 dark:text-blue-400 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
-            >
-              <span className="flex items-center">
-                <svg
-                  className="h-4 w-4 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"
-                  />
-                </svg>
+            <Button variant="outline" asChild>
+              <Link to="/admin/subapps/integrate">
+                <Puzzle className="h-4 w-4 mr-2" />
                 Integrate Subapp
-              </span>
-            </Link>
-            <button
+              </Link>
+            </Button>
+            <Button
+              variant="gradient"
+              size="lg"
               onClick={() => handleCreateSubApp()}
               disabled={showForm}
-              className="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
             >
-              <span className="flex items-center">
-                <svg
-                  className="h-4 w-4 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                Add Sub-App
-              </span>
-            </button>
+              <Plus className="h-5 w-5 mr-2" />
+              Add Sub-App
+            </Button>
           </div>
         </div>
 
         {/* Stats Cards */}
         {!isLoadingStats && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-            <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 p-6 rounded-xl hover:shadow-lg transition-all duration-200">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Total Sub-Apps
-                  </p>
-                  <p className="text-3xl font-bold tracking-tight mt-2">
-                    {stats.total_subapps}
-                  </p>
-                </div>
-                <div className="p-3 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl">
-                  <svg
-                    className="w-5 h-5 text-blue-600 dark:text-blue-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 11H5m14-7H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2z"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-br from-green-500/20 to-green-600/20 p-6 rounded-xl hover:shadow-lg transition-all duration-200">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Enabled
-                  </p>
-                  <p className="text-3xl font-bold tracking-tight mt-2">
-                    {stats.enabled_subapps}
-                  </p>
-                </div>
-                <div className="p-3 bg-green-50/50 dark:bg-green-950/20 rounded-xl">
-                  <svg
-                    className="w-5 h-5 text-green-600 dark:text-green-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-br from-orange-500/20 to-orange-600/20 p-6 rounded-xl hover:shadow-lg transition-all duration-200">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Disabled
-                  </p>
-                  <p className="text-3xl font-bold tracking-tight mt-2">
-                    {stats.disabled_subapps}
-                  </p>
-                </div>
-                <div className="p-3 bg-orange-50/50 dark:bg-orange-950/20 rounded-xl">
-                  <svg
-                    className="w-5 h-5 text-orange-600 dark:text-orange-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L5.636 5.636"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
+            <StatCard
+              title="Total Sub-Apps"
+              value={stats.total_subapps}
+              gradient="from-blue-500/20 to-blue-600/20"
+              iconBg="bg-blue-50/50 dark:bg-blue-950/20"
+              icon={
+                <Layers className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              }
+            />
+            <StatCard
+              title="Enabled"
+              value={stats.enabled_subapps}
+              gradient="from-green-500/20 to-green-600/20"
+              iconBg="bg-green-50/50 dark:bg-green-950/20"
+              icon={
+                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+              }
+            />
+            <StatCard
+              title="Disabled"
+              value={stats.disabled_subapps}
+              gradient="from-orange-500/20 to-orange-600/20"
+              iconBg="bg-orange-50/50 dark:bg-orange-950/20"
+              icon={
+                <XCircle className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+              }
+            />
           </div>
         )}
       </div>

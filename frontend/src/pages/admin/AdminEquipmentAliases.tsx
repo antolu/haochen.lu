@@ -371,11 +371,9 @@ const AdminEquipmentAliases: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="space-y-2">
-          <h1 className="text-4xl font-bold tracking-tight">
-            Equipment Aliases
-          </h1>
-          <p className="text-muted-foreground text-lg">
+        <div className="space-y-3">
+          <h1 className="admin-page-title">Equipment Aliases</h1>
+          <p className="text-muted-foreground text-xl">
             Manage display names for cameras and lenses found in photo metadata
           </p>
         </div>

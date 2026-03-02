@@ -8,6 +8,7 @@ import {
 } from "../../hooks/useProjects";
 import SortableProjectList from "../../components/admin/SortableProjectList";
 import ProjectForm from "../../components/ProjectForm";
+import StatCard from "../../components/admin/StatCard";
 import {
   Select,
   SelectContent,
@@ -102,7 +103,7 @@ const AdminProjects: React.FC = () => {
 
   if (viewMode === "create" || viewMode === "edit") {
     return (
-      <div className="max-w-7xl mx-auto">
+      <div>
         <ProjectForm
           project={editingProject ?? undefined}
           onSuccess={handleFormSuccess}
@@ -113,14 +114,12 @@ const AdminProjects: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div>
       {/* Header */}
       <div className="mb-10">
         <div className="flex items-center justify-between">
           <div className="space-y-3">
-            <h1 className="text-5xl font-bold tracking-tight bg-gradient-primary bg-clip-text text-transparent">
-              Project Management
-            </h1>
+            <h1 className="admin-page-title">Project Management</h1>
             <p className="text-muted-foreground text-xl">
               Create and manage your project portfolio
             </p>
@@ -134,53 +133,31 @@ const AdminProjects: React.FC = () => {
         {/* Stats */}
         {stats && (
           <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-gradient-to-br from-primary/10 to-primary/20 p-6 rounded-xl hover:shadow-lg transition-all duration-200">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Total Projects
-                  </p>
-                  <p className="text-3xl font-bold tracking-tight mt-2">
-                    {stats.total_projects}
-                  </p>
-                </div>
-                <div className="p-3 bg-primary/10 dark:bg-primary/20 rounded-xl">
-                  <Briefcase className="w-5 h-5 text-primary" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 p-6 rounded-xl hover:shadow-lg transition-all duration-200">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Featured
-                  </p>
-                  <p className="text-3xl font-bold tracking-tight mt-2">
-                    {stats.featured_projects}
-                  </p>
-                </div>
-                <div className="p-3 bg-yellow-50/50 dark:bg-yellow-950/20 rounded-xl">
-                  <Star className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-br from-green-500/20 to-green-600/20 p-6 rounded-xl hover:shadow-lg transition-all duration-200">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Active
-                  </p>
-                  <p className="text-3xl font-bold tracking-tight mt-2">
-                    {projects.filter((p) => p.status === "active").length}
-                  </p>
-                </div>
-                <div className="p-3 bg-green-50/50 dark:bg-green-950/20 rounded-xl">
-                  <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
-                </div>
-              </div>
-            </div>
+            <StatCard
+              title="Total Projects"
+              value={stats.total_projects}
+              gradient="from-primary/10 to-primary/20"
+              iconBg="bg-primary/10 dark:bg-primary/20"
+              icon={<Briefcase className="w-5 h-5 text-primary" />}
+            />
+            <StatCard
+              title="Featured"
+              value={stats.featured_projects}
+              gradient="from-yellow-500/20 to-yellow-600/20"
+              iconBg="bg-yellow-50/50 dark:bg-yellow-950/20"
+              icon={
+                <Star className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+              }
+            />
+            <StatCard
+              title="Active"
+              value={projects.filter((p) => p.status === "active").length}
+              gradient="from-green-500/20 to-green-600/20"
+              iconBg="bg-green-50/50 dark:bg-green-950/20"
+              icon={
+                <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
+              }
+            />
           </div>
         )}
       </div>

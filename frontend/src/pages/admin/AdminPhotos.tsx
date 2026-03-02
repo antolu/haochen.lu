@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { RefreshCcw } from "lucide-react";
+import { RefreshCcw, Camera, Star, HardDrive, CheckSquare } from "lucide-react";
 import { Switch } from "../../components/ui/switch";
 import { Button } from "../../components/ui/button";
+import StatCard from "../../components/admin/StatCard";
 // photoswipe not used in admin (editor replaces lightbox)
 
 import PhotoUpload from "../../components/PhotoUpload";
@@ -173,12 +174,9 @@ const AdminPhotos: React.FC = () => {
           Error loading photos
         </div>
         <p className="text-muted-foreground">{photosError.message}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="mt-4 px-4 py-2 text-sm font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors shadow-sm"
-        >
+        <Button className="mt-4" onClick={() => window.location.reload()}>
           Retry
-        </button>
+        </Button>
       </div>
     );
   }
@@ -189,9 +187,7 @@ const AdminPhotos: React.FC = () => {
       <div className="mb-10 space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="space-y-3">
-            <h1 className="text-5xl font-bold tracking-tight bg-gradient-primary bg-clip-text text-transparent">
-              Photos
-            </h1>
+            <h1 className="admin-page-title">Photos</h1>
             <p className="text-muted-foreground text-xl">
               Manage your photo collection
             </p>
@@ -320,124 +316,48 @@ const AdminPhotos: React.FC = () => {
                 exit={{ opacity: 0, height: 0 }}
                 className="grid grid-cols-1 md:grid-cols-4 gap-4"
               >
-                <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 p-6 rounded-xl hover:shadow-lg transition-all duration-200">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">
-                        Total Photos
-                      </p>
-                      <p className="text-3xl font-bold tracking-tight mt-2">
-                        {stats.total_photos || photos.length}
-                      </p>
-                    </div>
-                    <div className="p-3 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl">
-                      <svg
-                        className="w-5 h-5 text-blue-600 dark:text-blue-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 p-6 rounded-xl hover:shadow-lg transition-all duration-200">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">
-                        Featured
-                      </p>
-                      <p className="text-3xl font-bold tracking-tight mt-2">
-                        {stats.featured_photos ||
-                          photos.filter((p) => p.featured).length}
-                      </p>
-                    </div>
-                    <div className="p-3 bg-yellow-50/50 dark:bg-yellow-950/20 rounded-xl">
-                      <svg
-                        className="w-5 h-5 text-yellow-600 dark:text-yellow-400"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-br from-green-500/20 to-green-600/20 p-6 rounded-xl hover:shadow-lg transition-all duration-200">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">
-                        Storage Used
-                      </p>
-                      <p className="text-3xl font-bold tracking-tight mt-2">
-                        {formatFileSize(
-                          stats.total_size ||
-                            photos.reduce(
-                              (sum, p) => sum + (p.file_size || 0),
-                              0,
-                            ),
-                        )}
-                      </p>
-                    </div>
-                    <div className="p-3 bg-green-50/50 dark:bg-green-950/20 rounded-xl">
-                      <svg
-                        className="w-5 h-5 text-green-600 dark:text-green-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2h4a1 1 0 010 2h-1v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6H3a1 1 0 010-2h4zM6 6v12h12V6H6zm3-2V3h6v1H9z"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/20 p-6 rounded-xl hover:shadow-lg transition-all duration-200">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">
-                        Selected
-                      </p>
-                      <p className="text-3xl font-bold tracking-tight mt-2">
-                        {selectedPhotos.size}
-                      </p>
-                    </div>
-                    <div className="p-3 bg-purple-50/50 dark:bg-purple-950/20 rounded-xl">
-                      <svg
-                        className="w-5 h-5 text-purple-600 dark:text-purple-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
+                <StatCard
+                  title="Total Photos"
+                  value={stats.total_photos || photos.length}
+                  gradient="from-blue-500/20 to-blue-600/20"
+                  iconBg="bg-blue-50/50 dark:bg-blue-950/20"
+                  icon={
+                    <Camera className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  }
+                />
+                <StatCard
+                  title="Featured"
+                  value={
+                    stats.featured_photos ||
+                    photos.filter((p) => p.featured).length
+                  }
+                  gradient="from-yellow-500/20 to-yellow-600/20"
+                  iconBg="bg-yellow-50/50 dark:bg-yellow-950/20"
+                  icon={
+                    <Star className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+                  }
+                />
+                <StatCard
+                  title="Storage Used"
+                  value={formatFileSize(
+                    stats.total_size ||
+                      photos.reduce((sum, p) => sum + (p.file_size || 0), 0),
+                  )}
+                  gradient="from-green-500/20 to-green-600/20"
+                  iconBg="bg-green-50/50 dark:bg-green-950/20"
+                  icon={
+                    <HardDrive className="w-5 h-5 text-green-600 dark:text-green-400" />
+                  }
+                />
+                <StatCard
+                  title="Selected"
+                  value={selectedPhotos.size}
+                  gradient="from-purple-500/20 to-purple-600/20"
+                  iconBg="bg-purple-50/50 dark:bg-purple-950/20"
+                  icon={
+                    <CheckSquare className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                  }
+                />
               </motion.div>
             )}
           </div>
@@ -446,43 +366,49 @@ const AdminPhotos: React.FC = () => {
 
       {/* Bulk Actions */}
       {selectedPhotos.size > 0 && (
-        <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/10 rounded-xl">
+        <div className="mb-6 p-4 bg-primary/10 rounded-xl">
           <div className="flex items-center justify-between">
-            <div className="text-sm text-blue-700 dark:text-blue-400">
+            <div className="text-sm text-primary font-medium">
               {selectedPhotos.size} photo{selectedPhotos.size > 1 ? "s" : ""}{" "}
               selected
             </div>
             <div className="flex space-x-2">
-              <button
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-yellow-700 border-yellow-300 hover:bg-yellow-50 dark:text-yellow-400 dark:border-yellow-700 dark:hover:bg-yellow-950/30"
                 onClick={() => {
                   void handleBulkToggleFeatured(true);
                 }}
-                className="px-3 py-1 text-xs font-medium text-yellow-700 bg-yellow-100 hover:bg-yellow-200 dark:text-yellow-300 dark:bg-yellow-900/30 dark:hover:bg-yellow-900/40 rounded transition-colors shadow-sm"
               >
                 ⭐ Feature
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => {
                   void handleBulkToggleFeatured(false);
                 }}
-                className="px-3 py-1 text-xs font-medium text-muted-foreground bg-muted hover:bg-muted/80 rounded transition-colors"
               >
                 Remove Feature
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-destructive border-destructive/30 hover:bg-destructive/10"
                 onClick={() => {
                   void handleBulkDelete();
                 }}
-                className="px-3 py-1 text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 dark:text-red-300 dark:bg-red-900/30 dark:hover:bg-red-900/40 rounded transition-colors shadow-sm"
               >
                 🗑 Delete
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setSelectedPhotos(new Set())}
-                className="px-3 py-1 text-xs font-medium text-muted-foreground bg-muted hover:bg-muted/80 rounded transition-colors"
               >
                 Clear
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -551,14 +477,11 @@ const AdminPhotos: React.FC = () => {
           </h2>
 
           {photos.length > 0 && !editingPhoto && (
-            <button
-              onClick={() => handleSelectAll()}
-              className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors"
-            >
+            <Button variant="ghost" size="sm" onClick={() => handleSelectAll()}>
               {selectedPhotos.size === photos.length
                 ? "Deselect All"
                 : "Select All"}
-            </button>
+            </Button>
           )}
         </div>
 

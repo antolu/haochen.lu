@@ -160,9 +160,7 @@ const AdminLayoutContent: React.FC = () => {
             <Layers className="h-5 w-5 text-white" />
           </div>
           {(!sidebarCollapsed || mobile) && (
-            <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Admin
-            </span>
+            <span className="text-xl font-bold text-foreground">Admin</span>
           )}
         </Link>
         {!mobile && (
