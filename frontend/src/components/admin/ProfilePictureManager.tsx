@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Upload } from "lucide-react";
 import ProfilePictureUpload from "../ProfilePictureUpload";
 import {
   useProfilePictures,
@@ -97,7 +98,7 @@ const ProfilePictureManager: React.FC = () => {
     <div>
       {/* Header */}
       <div className="mb-10">
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-center">
           <div className="space-y-3">
             <h1 className="admin-page-title">Profile Pictures</h1>
             <p className="text-muted-foreground text-xl">
@@ -109,6 +110,7 @@ const ProfilePictureManager: React.FC = () => {
             size="lg"
             onClick={() => setShowUpload(true)}
           >
+            <Upload className="h-5 w-5 mr-2" />
             Upload New Picture
           </Button>
         </div>

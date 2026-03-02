@@ -19,9 +19,18 @@ export default tseslint.config([
       js.configs.recommended,
       tseslint.configs.recommended,
       tseslint.configs.recommendedTypeChecked,
-      reactHooks.configs["recommended-latest"],
-      reactRefresh.configs.vite,
+      // Manually merge recommended-latest to avoid legacy plugins array
+      {
+        plugins: {
+          "react-hooks": reactHooks,
+        },
+        rules: reactHooks.configs["recommended-latest"].rules,
+      },
     ],
+    plugins: {
+      "react-hooks": reactHooks,
+      "react-refresh": reactRefresh,
+    },
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,

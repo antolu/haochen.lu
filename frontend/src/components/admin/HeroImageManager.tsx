@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { heroImages, photos } from "../../api/client";
 import type { HeroImage, Photo, HeroImageCreate } from "../../types";
 import { selectOptimalImage, ImageUseCase } from "../../utils/imageUtils";
+import { Plus } from "lucide-react";
 import FocalPointEditor from "./FocalPointEditor";
 import SimplePhotoUpload from "../SimplePhotoUpload";
 import { Button } from "../ui/button";
@@ -146,6 +147,7 @@ const HeroImageManager: React.FC = () => {
             size="lg"
             onClick={() => setShowCreateForm(true)}
           >
+            <Plus className="h-5 w-5 mr-2" />
             Add Hero Image
           </Button>
         </div>

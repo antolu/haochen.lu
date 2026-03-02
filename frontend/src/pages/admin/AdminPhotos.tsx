@@ -1,6 +1,13 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { RefreshCcw, Camera, Star, HardDrive, CheckSquare } from "lucide-react";
+import {
+  RefreshCcw,
+  Camera,
+  Star,
+  HardDrive,
+  CheckSquare,
+  Plus,
+} from "lucide-react";
 import { Switch } from "../../components/ui/switch";
 import { Button } from "../../components/ui/button";
 import StatCard from "../../components/admin/StatCard";
@@ -185,7 +192,7 @@ const AdminPhotos: React.FC = () => {
     <div>
       {/* Header */}
       <div className="mb-10 space-y-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="space-y-3">
             <h1 className="admin-page-title">Photos</h1>
             <p className="text-muted-foreground text-xl">
@@ -266,19 +273,7 @@ const AdminPhotos: React.FC = () => {
               onClick={() => setShowUpload(true)}
               disabled={showUpload || reorderEnabled || isReordering}
             >
-              <svg
-                className="h-5 w-5 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
+              <Plus className="h-5 w-5 mr-2" />
               Upload Photos
             </Button>
           </div>

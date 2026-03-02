@@ -140,7 +140,7 @@ const AdminSubApps: React.FC = () => {
     <div>
       {/* Header */}
       <div className="mb-10">
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-center">
           <div className="space-y-3">
             <h1 className="admin-page-title">Sub-Applications</h1>
             <p className="text-muted-foreground text-xl">

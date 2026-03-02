@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Eye, EyeOff, Camera, Settings } from "lucide-react";
+import { Plus, Search, Eye, EyeOff, Camera, Settings } from "lucide-react";
 import {
   useCameraAliases,
   type CameraAlias,
@@ -377,6 +377,14 @@ const AdminEquipmentAliases: React.FC = () => {
             Manage display names for cameras and lenses found in photo metadata
           </p>
         </div>
+        <Button
+          variant="gradient"
+          size="lg"
+          onClick={() => setEditingAlias({} as any)}
+        >
+          <Plus className="h-5 w-5 mr-2" />
+          Add Alias
+        </Button>
       </div>
 
       {/* Tabs */}

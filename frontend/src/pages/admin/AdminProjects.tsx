@@ -125,7 +125,7 @@ const AdminProjects: React.FC = () => {
             </p>
           </div>
           <Button variant="gradient" size="lg" onClick={handleCreateProject}>
-            <Plus className="w-5 h-5 mr-2" />
+            <Plus className="h-5 w-5 mr-2" />
             New Project
           </Button>
         </div>
