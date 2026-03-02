@@ -305,10 +305,10 @@ If getting "File is too large" errors for files under 50MB:
 
 ### API Routing Issues
 **Double API Prefix Problem** (`/api/api/endpoint`):
-- **Root Cause**: FastAPI routes with `/api/` prefix + nginx proxy stripping
-- **Solution**: Remove `/api/` prefixes from FastAPI router registrations in main.py
-- **Nginx Config**: Ensure `proxy_pass ${BACKEND_URL}/;` has trailing slash to strip prefix
-- **Frontend**: Set `VITE_API_URL=` (empty) to prevent double prefixing
+- **Root Cause**: Frontend base URL already includes `/api` while backend/proxy paths add another `/api`
+- **Solution**: Keep backend routes mounted at `/api` in `main.py` and keep frontend `VITE_API_URL=/api`
+- **Nginx Config**: Forward `/api/*` to backend without stripping the `/api` prefix
+- **Frontend**: Use relative API base `/api` in development and production
 
 ### Authentication
 - Default admin credentials: `admin` / `adminpassword`

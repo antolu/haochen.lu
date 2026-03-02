@@ -86,7 +86,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Routes without /api prefix (nginx handles the prefix)
+# API routes are mounted under /api.
+# Proxies should forward /api/* without stripping the prefix.
 api_router = APIRouter()
 
 # Custom auth routes (must come before fastapi-users routes)

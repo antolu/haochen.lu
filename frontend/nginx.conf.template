@@ -24,9 +24,6 @@ server {
 
     # Handle API requests (proxy to backend) - MUST BE BEFORE generic location /
     location /api/ {
-        # Strip /api/ prefix and any trailing slashes to make it agnostic
-        rewrite ^/api/(.*)/$ /$1 break;
-        rewrite ^/api/(.*)$ /$1 break;
         proxy_pass ${BACKEND_URL};
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
