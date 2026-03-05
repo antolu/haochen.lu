@@ -100,9 +100,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if forwarded_for:
             client_ip = forwarded_for.split(",")[0].strip()
 
-        # nosemgrep: python.flask.security.audit.directly-returned-format-string.directly-returned-format-string
-        # This is used as a Redis cache key, not returned as HTTP response
-        return f"ip:{client_ip}"
+        return f"ip:{client_ip}"  # nosemgrep: python.flask.security.audit.directly-returned-format-string.directly-returned-format-string
 
     async def _is_rate_limited(
         self, client_id: str, calls_allowed: int, period: int, key_suffix: str
