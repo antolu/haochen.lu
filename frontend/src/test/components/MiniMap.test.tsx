@@ -23,13 +23,21 @@ vi.mock("maplibre-gl", () => {
 
   const mockAttributionControl = vi.fn();
 
+  // Use functions instead of arrow functions to support 'new'
+  const MapConstructor = function () {
+    return mockMap;
+  };
+  const MarkerConstructor = function () {
+    return mockMarker;
+  };
+
   return {
-    Map: vi.fn(() => mockMap),
-    Marker: vi.fn(() => mockMarker),
+    Map: MapConstructor,
+    Marker: MarkerConstructor,
     AttributionControl: mockAttributionControl,
     default: {
-      Map: vi.fn(() => mockMap),
-      Marker: vi.fn(() => mockMarker),
+      Map: MapConstructor,
+      Marker: MarkerConstructor,
       AttributionControl: mockAttributionControl,
     },
   };

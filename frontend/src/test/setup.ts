@@ -3,11 +3,16 @@ import { cleanup } from "@testing-library/react";
 import { afterEach, beforeAll, afterAll, vi } from "vitest";
 
 // Mock IntersectionObserver
-global.IntersectionObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+class MockIntersectionObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+  root = null;
+  rootMargin = "";
+  thresholds = [];
+  takeRecords = vi.fn(() => []);
+}
+(global as any).IntersectionObserver = MockIntersectionObserver;
 
 // Mock ResizeObserver
 class MockResizeObserver {
