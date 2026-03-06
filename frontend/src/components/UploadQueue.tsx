@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUploadQueue } from "../stores/uploadQueue";
-import { useUploadProcessor } from "../hooks/useUploadProcessor";
 import {
   Upload,
   X,
@@ -26,6 +25,7 @@ const formatFileSize = (bytes: number): string => {
 export const UploadQueue: React.FC = () => {
   const {
     queue,
+    isProcessing,
     removeFromQueue,
     pauseUpload,
     resumeUpload,
@@ -36,7 +36,6 @@ export const UploadQueue: React.FC = () => {
     getErrorCount,
   } = useUploadQueue();
 
-  const { isProcessing } = useUploadProcessor();
   const [isExpanded, setIsExpanded] = useState(true);
   const [filter, setFilter] = useState<
     "all" | "active" | "completed" | "error"

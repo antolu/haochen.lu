@@ -202,45 +202,55 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
     }
   };
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleMetadataSubmit = (newMetadata: PhotoMetadata) => {
-    setMetadata(newMetadata);
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
-    const pendingFiles = uploadFiles.filter((f) => f.status === "pending");
+    try {
+      setMetadata(newMetadata);
 
-    if (useQueue) {
-      // Add to persistent queue
-      pendingFiles.forEach((file) => {
-        const queuedUpload: QueuedUpload = {
-          id: file.id,
-          file: file.file,
-          fileName: file.file.name,
-          fileSize: file.file.size,
-          fileType: file.file.type,
-          status: "pending",
-          progress: 0,
-          metadata: {
-            title: newMetadata.title ?? file.file.name.replace(/\.[^/.]+$/, ""),
-            description: newMetadata.description ?? "",
-            category: newMetadata.category ?? "",
-            tags: newMetadata.tags ?? "",
-            comments: newMetadata.comments ?? "",
-            featured: newMetadata.featured,
-          },
-          createdAt: Date.now(),
-        };
-        addToQueue(queuedUpload);
-      });
+      const pendingFiles = uploadFiles.filter((f) => f.status === "pending");
 
-      // Clear local upload files and call completion
-      setUploadFiles([]);
-      if (onComplete) {
-        onComplete();
+      if (useQueue) {
+        // Add to persistent queue
+        pendingFiles.forEach((file) => {
+          const queuedUpload: QueuedUpload = {
+            id: file.id,
+            file: file.file,
+            fileName: file.file.name,
+            fileSize: file.file.size,
+            fileType: file.file.type,
+            status: "pending",
+            progress: 0,
+            metadata: {
+              title:
+                newMetadata.title ?? file.file.name.replace(/\.[^/.]+$/, ""),
+              description: newMetadata.description ?? "",
+              category: newMetadata.category ?? "",
+              tags: newMetadata.tags ?? "",
+              comments: newMetadata.comments ?? "",
+              featured: newMetadata.featured,
+            },
+            createdAt: Date.now(),
+          };
+          addToQueue(queuedUpload);
+        });
+
+        // Clear local upload files and call completion
+        setUploadFiles([]);
+        if (onComplete) {
+          onComplete();
+        }
+      } else {
+        // Legacy immediate upload
+        pendingFiles.forEach((file) => {
+          handleUpload(file);
+        });
       }
-    } else {
-      // Legacy immediate upload
-      pendingFiles.forEach((file) => {
-        handleUpload(file);
-      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -305,7 +315,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
             onSubmit={handleMetadataSubmit}
             onCancel={handleCancel}
             submitLabel={`Upload ${pendingFiles.length} Photo${pendingFiles.length !== 1 ? "s" : ""}`}
-            isSubmitting={uploadMutation.isPending}
+            isSubmitting={isSubmitting || uploadMutation.isPending}
           />
         </div>
       )}

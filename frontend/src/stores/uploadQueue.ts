@@ -55,9 +55,15 @@ export const useUploadQueue = create<UploadQueueState>()(
       isProcessing: false,
 
       addToQueue: (upload) => {
-        set((state) => ({
-          queue: [...state.queue, upload],
-        }));
+        set((state) => {
+          // Prevent duplicates by ID
+          if (state.queue.some((u) => u.id === upload.id)) {
+            return state;
+          }
+          return {
+            queue: [...state.queue, upload],
+          };
+        });
       },
 
       removeFromQueue: (id) => {
