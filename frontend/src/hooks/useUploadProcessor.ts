@@ -102,7 +102,7 @@ export const useUploadProcessor = () => {
           },
           onError: (error) => {
             const axiosError = error as AxiosError;
-            let errorMessage = "Upload failed";
+            let errorMessage: string;
 
             // Provide specific error messages
             if (axiosError.response?.status === 413) {
@@ -188,6 +188,6 @@ export const useUploadProcessor = () => {
 
   return {
     isProcessing,
-    activeCount: activeUploadsRef.current.size,
+    activeCount: queue.filter((u) => u.status === "uploading").length,
   };
 };

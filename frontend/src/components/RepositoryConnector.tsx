@@ -37,10 +37,13 @@ const RepositoryConnector: React.FC<RepositoryConnectorProps> = ({
 
   // Sync internal state with value prop when it changes
   useEffect(() => {
-    setUrl(value || "");
-    // Reset validation state when value changes externally
-    setRepoInfo(null);
-    setError("");
+    const timer = setTimeout(() => {
+      setUrl(value || "");
+      // Reset validation state when value changes externally
+      setRepoInfo(null);
+      setError("");
+    }, 0);
+    return () => clearTimeout(timer);
   }, [value]);
 
   const validateMutation = useMutation({

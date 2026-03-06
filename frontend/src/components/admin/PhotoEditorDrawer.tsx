@@ -28,14 +28,17 @@ const PhotoEditorDrawer: React.FC<PhotoEditorDrawerProps> = ({
 
   useEffect(() => {
     if (photo) {
-      setForm({
-        title: photo.title ?? "",
-        description: photo.description ?? "",
-        category: photo.category ?? "",
-        tags: photo.tags ?? "",
-        comments: photo.comments ?? "",
-        featured: !!photo.featured,
-      });
+      const timer = setTimeout(() => {
+        setForm({
+          title: photo.title ?? "",
+          description: photo.description ?? "",
+          category: photo.category ?? "",
+          tags: photo.tags ?? "",
+          comments: photo.comments ?? "",
+          featured: !!photo.featured,
+        });
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [photo]);
 

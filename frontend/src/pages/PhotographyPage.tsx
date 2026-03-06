@@ -64,12 +64,18 @@ const PhotographyPage: React.FC = () => {
     if (!targetId || allPhotos.length === 0) return;
     const idx = allPhotos.findIndex((p) => p.id === targetId);
     if (idx >= 0) {
-      setTriggerGallery({ index: idx });
+      setTimeout(() => {
+        setTriggerGallery({ index: idx });
+      }, 0);
     }
   }, [location?.state, allPhotos]);
 
   const handlePhotoClick = useCallback((_photo: Photo, index: number) => {
     setTriggerGallery({ index });
+  }, []);
+
+  const handleLightboxClose = useCallback(() => {
+    setTriggerGallery(null);
   }, []);
 
   const handleMapPhotoClick = useCallback(
@@ -301,7 +307,7 @@ const PhotographyPage: React.FC = () => {
           photos={allPhotos}
           initialIndex={triggerGallery.index}
           defaultShowInfo={!!location?.state?.photoId}
-          onClose={() => setTriggerGallery(null)}
+          onClose={handleLightboxClose}
         />
       )}
     </div>

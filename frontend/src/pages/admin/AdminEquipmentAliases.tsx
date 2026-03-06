@@ -380,7 +380,7 @@ const AdminEquipmentAliases: React.FC = () => {
         <Button
           variant="gradient"
           size="lg"
-          onClick={() => setEditingAlias({} as any)}
+          onClick={() => setEditingAlias({} as AliasType)}
         >
           <Plus className="h-5 w-5 mr-2" />
           Add Alias

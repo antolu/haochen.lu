@@ -171,8 +171,11 @@ const MapPicker: React.FC<MapPickerProps> = ({
 
   // Update internal state when props change
   useEffect(() => {
-    setCurrentLat(latitude);
-    setCurrentLng(longitude);
+    const timer = setTimeout(() => {
+      setCurrentLat(latitude);
+      setCurrentLng(longitude);
+    }, 0);
+    return () => clearTimeout(timer);
   }, [latitude, longitude]);
 
   const handleLocationSelect = useCallback(

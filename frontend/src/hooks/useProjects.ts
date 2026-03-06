@@ -231,7 +231,7 @@ export function useProjectReadme(projectId: string, repoUrl?: string) {
         if (error instanceof Error) {
           throw error;
         }
-        throw new Error("Unknown error");
+        throw new Error("Unknown error", { cause: error });
       }
     },
     enabled: !!projectId && !!repoUrl,

@@ -60,20 +60,28 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
   });
 
   useEffect(() => {
-    setForm({
-      title: photo.title ?? "",
-      description: photo.description ?? "",
-      category: photo.category ?? "",
-      tags: photo.tags ?? "",
-      comments: photo.comments ?? "",
-      featured: !!photo.featured,
-      location_lat:
-        typeof photo.location_lat === "number" ? photo.location_lat : undefined,
-      location_lon:
-        typeof photo.location_lon === "number" ? photo.location_lon : undefined,
-      location_name: photo.location_name ?? "",
-      location_address: photo.location_address ?? "",
-    });
+    const timer = setTimeout(() => {
+      setForm({
+        title: photo.title ?? "",
+        description: photo.description ?? "",
+        category: photo.category ?? "",
+        tags: photo.tags ?? "",
+        comments: photo.comments ?? "",
+        featured: !!photo.featured,
+        // Location
+        location_lat:
+          typeof photo.location_lat === "number"
+            ? photo.location_lat
+            : undefined,
+        location_lon:
+          typeof photo.location_lon === "number"
+            ? photo.location_lon
+            : undefined,
+        location_name: photo.location_name ?? "",
+        location_address: photo.location_address ?? "",
+      });
+    }, 0);
+    return () => clearTimeout(timer);
   }, [photo]);
 
   const isSaving = updateMutation.isPending;

@@ -18,6 +18,7 @@ import {
   Laptop,
   Settings,
   Sparkles,
+  type LucideIcon,
 } from "lucide-react";
 
 import { useAuthStore } from "../stores/authStore";
@@ -28,6 +29,7 @@ import { ScrollArea } from "../components/ui/scroll-area";
 import { ThemeProvider, useTheme } from "../components/theme-provider";
 import { cn } from "../lib/utils";
 import { CommandPalette } from "../components/command-palette";
+import type { User as AuthUser } from "../types";
 
 const ThemeToggle = () => {
   const { theme, setTheme } = useTheme();
@@ -63,6 +65,144 @@ const ThemeToggle = () => {
   );
 };
 
+interface SidebarContentProps {
+  mobile?: boolean;
+  sidebarCollapsed: boolean;
+  setSidebarCollapsed: (value: boolean) => void;
+  setMobileMenuOpen: (value: boolean) => void;
+  navigation: Array<{
+    name: string;
+    href: string;
+    icon: LucideIcon;
+    badge: string | null;
+  }>;
+  location: ReturnType<typeof useLocation>;
+  user: AuthUser;
+  handleLogout: () => void;
+}
+
+const SidebarContent = ({
+  mobile = false,
+  sidebarCollapsed,
+  setSidebarCollapsed,
+  setMobileMenuOpen,
+  navigation,
+  location,
+  user,
+  handleLogout,
+}: SidebarContentProps) => (
+  <div className="flex flex-col h-full">
+    {/* Header */}
+    <div className="flex items-center justify-between p-6">
+      <Link to="/" className="flex items-center gap-3">
+        <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center shadow-glow-sm">
+          <Layers className="h-5 w-5 text-white" />
+        </div>
+        {(!sidebarCollapsed || mobile) && (
+          <span className="text-xl font-bold text-foreground">Admin</span>
+        )}
+      </Link>
+      {!mobile && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+        >
+          <ChevronLeft
+            className={cn(
+              "h-4 w-4 transition-transform",
+              sidebarCollapsed && "rotate-180",
+            )}
+          />
+        </Button>
+      )}
+      {mobile && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      )}
+    </div>
+
+    {/* Navigation */}
+    <ScrollArea className="flex-1 px-3 py-6">
+      <nav className="space-y-2">
+        {navigation.map((item) => {
+          const Icon = item.icon;
+          const isActive =
+            item.href === "/admin"
+              ? location.pathname === "/admin"
+              : location.pathname.startsWith(item.href);
+
+          return (
+            <Link
+              key={item.name}
+              to={item.href}
+              onClick={() => mobile && setMobileMenuOpen(false)}
+              className={cn(
+                "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all",
+                isActive
+                  ? "bg-primary text-primary-foreground shadow-glow-sm"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground",
+              )}
+            >
+              <Icon className="h-5 w-5 flex-shrink-0" />
+              {(!sidebarCollapsed || mobile) && (
+                <>
+                  <span className="flex-1">{item.name}</span>
+                  {item.badge && (
+                    <Badge
+                      variant="secondary"
+                      className="ml-auto px-2 py-0.5 text-xs"
+                    >
+                      {item.badge}
+                    </Badge>
+                  )}
+                </>
+              )}
+            </Link>
+          );
+        })}
+      </nav>
+    </ScrollArea>
+
+    <Separator />
+
+    {/* Theme Toggle & User */}
+    <div className="p-4 space-y-3">
+      {(!sidebarCollapsed || mobile) && <ThemeToggle />}
+
+      {/* User info */}
+      <div className="flex items-center gap-3 p-3 rounded-xl glass">
+        <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow-sm">
+          <span className="text-sm font-semibold text-white">
+            {user.username.charAt(0).toUpperCase()}
+          </span>
+        </div>
+        {(!sidebarCollapsed || mobile) && (
+          <>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold truncate">{user.username}</p>
+              <p className="text-xs text-muted-foreground">Administrator</p>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              className="h-9 w-9 p-0 hover:bg-destructive/10 hover:text-destructive"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </>
+        )}
+      </div>
+    </div>
+  </div>
+);
+
 const AdminLayoutContent: React.FC = () => {
   const location = useLocation();
   const { user, isAuthenticated, logout, checkAuth } = useAuthStore();
@@ -91,7 +231,7 @@ const AdminLayoutContent: React.FC = () => {
       name: "Photos",
       href: "/admin/photos",
       icon: Camera,
-      badge: null, // photoStats?.total_photos?.toString() - removed for now
+      badge: null,
     },
     {
       name: "Profile Pictures",
@@ -143,128 +283,9 @@ const AdminLayoutContent: React.FC = () => {
     },
   ];
 
-  // Badge stats would be fetched in a real app
-
-  // isActive function removed - using inline logic in navigation items
-
   const handleLogout = () => {
     void logout();
   };
-
-  const SidebarContent = ({ mobile = false }: { mobile?: boolean }) => (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="flex items-center justify-between p-6">
-        <Link to="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center shadow-glow-sm">
-            <Layers className="h-5 w-5 text-white" />
-          </div>
-          {(!sidebarCollapsed || mobile) && (
-            <span className="text-xl font-bold text-foreground">Admin</span>
-          )}
-        </Link>
-        {!mobile && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          >
-            <ChevronLeft
-              className={cn(
-                "h-4 w-4 transition-transform",
-                sidebarCollapsed && "rotate-180",
-              )}
-            />
-          </Button>
-        )}
-        {mobile && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
-
-      {/* Navigation */}
-      <ScrollArea className="flex-1 px-3 py-6">
-        <nav className="space-y-2">
-          {navigation.map((item) => {
-            const Icon = item.icon;
-            const isActive =
-              item.href === "/admin"
-                ? location.pathname === "/admin"
-                : location.pathname.startsWith(item.href);
-
-            return (
-              <Link
-                key={item.name}
-                to={item.href}
-                onClick={() => mobile && setMobileMenuOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all",
-                  isActive
-                    ? "bg-primary text-primary-foreground shadow-glow-sm"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
-                )}
-              >
-                <Icon className="h-5 w-5 flex-shrink-0" />
-                {(!sidebarCollapsed || mobile) && (
-                  <>
-                    <span className="flex-1">{item.name}</span>
-                    {item.badge && (
-                      <Badge
-                        variant="secondary"
-                        className="ml-auto px-2 py-0.5 text-xs"
-                      >
-                        {item.badge}
-                      </Badge>
-                    )}
-                  </>
-                )}
-              </Link>
-            );
-          })}
-        </nav>
-      </ScrollArea>
-
-      <Separator />
-
-      {/* Theme Toggle & User */}
-      <div className="p-4 space-y-3">
-        {(!sidebarCollapsed || mobile) && <ThemeToggle />}
-
-        {/* User info */}
-        <div className="flex items-center gap-3 p-3 rounded-xl glass">
-          <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow-sm">
-            <span className="text-sm font-semibold text-white">
-              {user.username.charAt(0).toUpperCase()}
-            </span>
-          </div>
-          {(!sidebarCollapsed || mobile) && (
-            <>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold truncate">
-                  {user.username}
-                </p>
-                <p className="text-xs text-muted-foreground">Administrator</p>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleLogout}
-                className="h-9 w-9 p-0 hover:bg-destructive/10 hover:text-destructive"
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -276,7 +297,15 @@ const AdminLayoutContent: React.FC = () => {
             sidebarCollapsed ? "w-20" : "w-72",
           )}
         >
-          <SidebarContent />
+          <SidebarContent
+            sidebarCollapsed={sidebarCollapsed}
+            setSidebarCollapsed={setSidebarCollapsed}
+            setMobileMenuOpen={setMobileMenuOpen}
+            navigation={navigation}
+            location={location}
+            user={user}
+            handleLogout={handleLogout}
+          />
         </aside>
 
         {/* Mobile Menu Overlay */}
@@ -299,7 +328,16 @@ const AdminLayoutContent: React.FC = () => {
                 transition={{ type: "spring", damping: 20, stiffness: 100 }}
                 className="absolute left-0 top-0 h-full w-64 bg-card shadow-2xl"
               >
-                <SidebarContent mobile />
+                <SidebarContent
+                  mobile
+                  sidebarCollapsed={sidebarCollapsed}
+                  setSidebarCollapsed={setSidebarCollapsed}
+                  setMobileMenuOpen={setMobileMenuOpen}
+                  navigation={navigation}
+                  location={location}
+                  user={user}
+                  handleLogout={handleLogout}
+                />
               </motion.aside>
             </motion.div>
           )}

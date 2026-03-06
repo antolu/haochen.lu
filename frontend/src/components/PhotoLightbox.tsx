@@ -70,14 +70,8 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
       return null;
     }
 
-    // Clean up any existing gallery instance
     if (galleryRef.current) {
-      try {
-        galleryRef.current.destroy();
-      } catch (error) {
-        console.error("Error destroying previous gallery:", error);
-      }
-      galleryRef.current = null;
+      return galleryRef.current;
     }
 
     const dynamicElements = photos.map((photo) => {
@@ -221,17 +215,11 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
 
       container.addEventListener("lgAfterClose", onAfterClose);
 
-      return () => {
-        if (container) {
-          container.removeEventListener("lgAfterClose", onAfterClose);
-        }
-      };
+      return galleryRef.current;
     } catch (error) {
       console.error("Failed to initialize gallery:", error);
       return null;
     }
-
-    return galleryRef.current;
   }, [photos, onClose, defaultShowInfo]);
 
   // Create gallery on mount and open it

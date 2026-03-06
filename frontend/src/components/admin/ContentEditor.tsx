@@ -47,22 +47,25 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
   // Reset form when value changes or modal opens/closes
   useEffect(() => {
     if (open) {
-      if (value) {
-        setKeyField(value.key);
-        setTitle(value.title);
-        setCategory(value.category);
-        setContentType(value.content_type as EditorMode);
-        setContent(value.content);
-        setIsActive(value.is_active);
-      } else {
-        // Reset to defaults for new content
-        setKeyField("");
-        setTitle("");
-        setCategory("general");
-        setContentType("text");
-        setContent("");
-        setIsActive(true);
-      }
+      const timer = setTimeout(() => {
+        if (value) {
+          setKeyField(value.key);
+          setTitle(value.title);
+          setCategory(value.category);
+          setContentType(value.content_type as EditorMode);
+          setContent(value.content);
+          setIsActive(value.is_active);
+        } else {
+          // Reset to defaults for new content
+          setKeyField("");
+          setTitle("");
+          setCategory("general");
+          setContentType("text");
+          setContent("");
+          setIsActive(true);
+        }
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [open, value]);
 
