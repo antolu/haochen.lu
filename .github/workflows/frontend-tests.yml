@@ -157,7 +157,7 @@ jobs:
           --disable-storage-reset \
           --emulated-form-factor=desktop \
           --chrome-path="$CHROME_BIN" \
-          --chrome-flags="--headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-software-rasterizer --enable-features=NetworkService,NetworkServiceInProcess --window-size=1920,1080"
+          --chrome-flags="--headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --window-size=1920,1080"
 
     - name: Upload accessibility reports
       uses: actions/upload-artifact@v4
@@ -291,7 +291,7 @@ jobs:
           --disable-storage-reset \
           --emulated-form-factor=desktop \
           --chrome-path="$CHROME_BIN" \
-          --chrome-flags="--headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-software-rasterizer --enable-features=NetworkService,NetworkServiceInProcess --window-size=1920,1080"
+          --chrome-flags="--headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --window-size=1920,1080"
 
     - name: Check bundle size limits
       run: |
