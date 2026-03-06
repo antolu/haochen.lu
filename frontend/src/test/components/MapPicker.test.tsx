@@ -115,7 +115,7 @@ describe("MapPicker", () => {
     expect(onLocationChange).not.toHaveBeenCalled();
   });
 
-  it("updates coordinates when props change", () => {
+  it("updates coordinates when props change", async () => {
     const { rerender } = render(<MapPicker {...defaultProps} />);
 
     expect(screen.getByText(/37\.774900/)).toBeInTheDocument();
@@ -124,8 +124,10 @@ describe("MapPicker", () => {
       <MapPicker {...defaultProps} latitude={40.7128} longitude={-74.006} />,
     );
 
-    expect(screen.getByText(/40\.712800/)).toBeInTheDocument();
-    expect(screen.getByText(/-74\.006000/)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/40\.712800/)).toBeInTheDocument();
+      expect(screen.getByText(/-74\.006000/)).toBeInTheDocument();
+    });
   });
 
   it("shows disabled overlay when disabled", () => {
