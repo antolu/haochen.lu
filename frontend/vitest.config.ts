@@ -14,14 +14,8 @@ export default defineConfig({
     // Exclude node_modules tests and Playwright E2E tests from Vitest
     exclude: [...configDefaults.exclude, "node_modules/**", "src/test/e2e/**"],
     // Resource limits to prevent process spawning issues
-    pool: "forks",
-    poolOptions: {
-      forks: {
-        singleFork: true,
-        maxForks: 1,
-        minForks: 1,
-      },
-    },
+    maxWorkers: 1,
+    pool: "threads",
     // Timeout configurations
     testTimeout: 10000,
     hookTimeout: 10000,
