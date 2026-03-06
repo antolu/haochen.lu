@@ -97,7 +97,10 @@
     "vitest": "^4.0.18"
   },
   "overrides": {
-    "rollup": "^4.59.0"
+    "rollup": "^4.59.0",
+    "eslint-plugin-react-hooks": {
+      "eslint": "^10.0.2"
+    }
   },
   "prettier": {
     "semi": true,
