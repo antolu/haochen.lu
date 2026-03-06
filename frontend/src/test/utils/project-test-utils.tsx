@@ -66,11 +66,12 @@ export const renderWithProviders = (
 
 // Mock IntersectionObserver for infinite scroll tests
 export const mockIntersectionObserver = () => {
-  const mockIntersectionObserver = vi.fn();
-  mockIntersectionObserver.mockReturnValue({
-    observe: () => null,
-    unobserve: () => null,
-    disconnect: () => null,
+  const mockIntersectionObserver = vi.fn().mockImplementation(function () {
+    return {
+      observe: vi.fn(),
+      unobserve: vi.fn(),
+      disconnect: vi.fn(),
+    };
   });
   window.IntersectionObserver = mockIntersectionObserver;
   return mockIntersectionObserver;
