@@ -3,16 +3,29 @@ import { cleanup } from "@testing-library/react";
 import { afterEach, beforeAll, afterAll, vi } from "vitest";
 
 // Mock IntersectionObserver
-class MockIntersectionObserver {
-  observe = vi.fn();
-  unobserve = vi.fn();
-  disconnect = vi.fn();
-  root = null;
-  rootMargin = "";
-  thresholds = [];
-  takeRecords = vi.fn(() => []);
-}
-(global as any).IntersectionObserver = MockIntersectionObserver;
+(window as any).IntersectionObserver = vi
+  .fn()
+  .mockImplementation((callback: any) => {
+    const observer = {
+      observe: vi.fn((element) => {
+        // Trigger callback with a default entry to prevent undefined access in components
+        // but set isIntersecting to false so it doesn't trigger logic prematurely
+        setTimeout(() => {
+          callback(
+            [{ isIntersecting: false, target: element } as any],
+            observer as any,
+          );
+        }, 0);
+      }),
+      unobserve: vi.fn(),
+      disconnect: vi.fn(),
+      root: null,
+      rootMargin: "",
+      thresholds: [],
+      takeRecords: vi.fn(() => []),
+    };
+    return observer;
+  });
 
 // Mock ResizeObserver
 class MockResizeObserver {
@@ -20,9 +33,7 @@ class MockResizeObserver {
   unobserve = vi.fn();
   disconnect = vi.fn();
 }
-(
-  global as unknown as { ResizeObserver: typeof MockResizeObserver }
-).ResizeObserver = MockResizeObserver;
+(window as any).ResizeObserver = MockResizeObserver;
 Object.defineProperty(window, "ResizeObserver", {
   writable: true,
   value: MockResizeObserver,
