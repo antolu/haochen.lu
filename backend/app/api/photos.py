@@ -6,6 +6,7 @@ import math
 import time
 import typing
 import uuid
+from datetime import datetime
 from uuid import UUID
 
 from fastapi import (
@@ -19,6 +20,7 @@ from fastapi import (
 )
 from fastapi.responses import FileResponse
 from sqlalchemy import and_, select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -124,7 +126,9 @@ def _negotiate_variant_file_type(
 async def _create_aliases_for_photo(
     db: AsyncSession, photo: PhotoModel, *, skip_hero_check: bool = False
 ) -> None:
-    """Auto-create camera and lens aliases for a new photo if they don't exist."""
+    """Auto-create camera and lens aliases for a new photo if they don't exist.
+    Uses atomic PostgreSQL operations to avoid race conditions.
+    """
 
     if not skip_hero_check:
         hero_reference = await db.execute(
@@ -137,39 +141,39 @@ async def _create_aliases_for_photo(
     if photo.camera_make and photo.camera_model:
         original_name = f"{photo.camera_make} {photo.camera_model}".strip()
         if original_name:
-            # Check if alias already exists
-            existing = await db.execute(
-                select(CameraAlias).where(CameraAlias.original_name == original_name)
-            )
-            if not existing.scalar_one_or_none():
-                # Create new camera alias
-                camera_alias = CameraAlias(
+            stmt = (
+                insert(CameraAlias)
+                .values(
                     id=uuid.uuid4(),
                     original_name=original_name,
-                    display_name=original_name,  # Default to same as original
+                    display_name=original_name,
                     brand=photo.camera_make,
                     model=photo.camera_model,
                     is_active=True,
+                    created_at=datetime.utcnow(),
+                    updated_at=datetime.utcnow(),
                 )
-                db.add(camera_alias)
+                .on_conflict_do_nothing(index_elements=["original_name"])
+            )
+            await db.execute(stmt)
 
     # Create lens alias if lens info exists
     if photo.lens:
         original_name = photo.lens.strip()
         if original_name:
-            # Check if alias already exists
-            existing = await db.execute(
-                select(LensAlias).where(LensAlias.original_name == original_name)
-            )
-            if not existing.scalar_one_or_none():
-                # Create new lens alias
-                lens_alias = LensAlias(
+            stmt = (
+                insert(LensAlias)
+                .values(
                     id=uuid.uuid4(),
                     original_name=original_name,
-                    display_name=original_name,  # Default to same as original
+                    display_name=original_name,
                     is_active=True,
+                    created_at=datetime.utcnow(),
+                    updated_at=datetime.utcnow(),
                 )
-                db.add(lens_alias)
+                .on_conflict_do_nothing(index_elements=["original_name"])
+            )
+            await db.execute(stmt)
 
     await db.commit()
 
