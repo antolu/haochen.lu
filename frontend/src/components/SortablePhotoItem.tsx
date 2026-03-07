@@ -14,6 +14,8 @@ interface SortablePhotoCardProps {
   index: number;
   reorderEnabled?: boolean;
   disabled?: boolean;
+  selected?: boolean;
+  onToggleSelection?: (id: string) => void;
   onPhotoClick?: (photo: Photo, index: number) => void;
   onDelete?: (photo: Photo) => void;
   onToggleFeatured?: (photo: Photo) => void;
@@ -24,6 +26,8 @@ const SortablePhotoCard: React.FC<SortablePhotoCardProps> = ({
   index,
   reorderEnabled = true,
   disabled = false,
+  selected = false,
+  onToggleSelection,
   onPhotoClick,
   onDelete,
   onToggleFeatured,
@@ -73,6 +77,7 @@ const SortablePhotoCard: React.FC<SortablePhotoCardProps> = ({
       className={cn(
         "group relative overflow-hidden rounded-lg border bg-card transition-all duration-300",
         isDragging && "shadow-xl ring-2 ring-amber-400",
+        selected && "ring-2 ring-primary border-primary bg-primary/5",
         disabled && "opacity-60",
         !reorderEnabled && onPhotoClick && "cursor-pointer",
         reorderEnabled && "border-amber-400/30 bg-amber-50/20",
@@ -100,11 +105,49 @@ const SortablePhotoCard: React.FC<SortablePhotoCardProps> = ({
 
       <AnimatePresence>
         {!reorderEnabled && !isDragging && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute right-2 top-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+          <div className="absolute left-2 top-2 z-10">
+            <button
+              type="button"
+              className={cn(
+                "flex h-6 w-6 items-center justify-center rounded-full border bg-card/90 backdrop-blur-sm transition-all",
+                selected
+                  ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                  : "border-muted-foreground/30 opacity-0 group-hover:opacity-100 hover:border-primary",
+              )}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleSelection?.(photo.id);
+              }}
+            >
+              {selected && (
+                <motion.svg
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={3}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </motion.svg>
+              )}
+            </button>
+          </div>
+        )}
+
+        {!reorderEnabled && !isDragging && (
+          <div
+            className={cn(
+              "absolute right-2 top-2 z-10 flex gap-1 transition-all duration-300",
+              photo.featured
+                ? "opacity-100"
+                : "opacity-0 group-hover:opacity-100",
+            )}
           >
             {onToggleFeatured && (
               <Button
@@ -137,7 +180,7 @@ const SortablePhotoCard: React.FC<SortablePhotoCardProps> = ({
                 <Trash2 className="h-4 w-4" />
               </Button>
             )}
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
 

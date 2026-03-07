@@ -41,6 +41,8 @@ interface SortablePhotoListProps {
   photos: Photo[];
   reorderEnabled: boolean;
   onReorder: (ordered: Photo[]) => void;
+  selectedIds: Set<string>;
+  onToggleSelection: (id: string) => void;
   onEdit: (photo: Photo) => void;
   onToggleFeatured: (photo: Photo) => void;
   onDelete: (photo: Photo) => void;
@@ -51,6 +53,8 @@ const SortablePhotoList: React.FC<SortablePhotoListProps> = ({
   photos,
   reorderEnabled,
   onReorder,
+  selectedIds,
+  onToggleSelection,
   onEdit,
   onToggleFeatured,
   onDelete,
@@ -113,6 +117,11 @@ const SortablePhotoList: React.FC<SortablePhotoListProps> = ({
                   className="w-12"
                   aria-label="Reorder handle"
                 ></TableHead>
+                <TableHead className="w-10 px-0">
+                  <div className="flex h-4 w-4 shrink-0 items-center justify-center">
+                    {/* Select All could go here, but it's already in the header */}
+                  </div>
+                </TableHead>
                 <TableHead className="w-24">Photo</TableHead>
                 <TableHead>Title</TableHead>
                 <TableHead className="w-[220px]">Details</TableHead>
@@ -127,6 +136,8 @@ const SortablePhotoList: React.FC<SortablePhotoListProps> = ({
                   photo={photo}
                   index={index}
                   reorderEnabled={reorderEnabled}
+                  selected={selectedIds.has(photo.id)}
+                  onToggleSelection={onToggleSelection}
                   onEdit={onEdit}
                   onToggleFeatured={onToggleFeatured}
                   onDelete={onDelete}
@@ -144,6 +155,8 @@ interface SortableRowProps {
   photo: Photo;
   index: number;
   reorderEnabled: boolean;
+  selected: boolean;
+  onToggleSelection: (id: string) => void;
   onEdit: (photo: Photo) => void;
   onToggleFeatured: (photo: Photo) => void;
   onDelete: (photo: Photo) => void;
@@ -153,6 +166,8 @@ const SortableRow: React.FC<SortableRowProps> = ({
   photo,
   index,
   reorderEnabled,
+  selected,
+  onToggleSelection,
   onEdit,
   onToggleFeatured,
   onDelete,
@@ -216,6 +231,41 @@ const SortableRow: React.FC<SortableRowProps> = ({
             </motion.button>
           )}
         </AnimatePresence>
+      </TableCell>
+      <TableCell className="w-10 px-0">
+        {!reorderEnabled && (
+          <div className="flex justify-center">
+            <button
+              type="button"
+              className={cn(
+                "flex h-4 w-4 items-center justify-center rounded-full border transition-all",
+                selected
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-muted-foreground/30 hover:border-primary",
+              )}
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleSelection(photo.id);
+              }}
+            >
+              {selected && (
+                <svg
+                  className="h-3 w-3"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={3}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              )}
+            </button>
+          </div>
+        )}
       </TableCell>
       <TableCell className="w-24">
         <div className="relative h-14 w-20 overflow-hidden rounded-md">

@@ -20,6 +20,8 @@ interface SortablePhotoGridProps {
   onReorder: (photos: Photo[]) => void;
   reorderEnabled?: boolean;
   disabled?: boolean;
+  selectedIds?: Set<string>;
+  onToggleSelection?: (id: string) => void;
   onPhotoClick?: (photo: Photo, index: number) => void;
   onDelete?: (photo: Photo) => void;
   onToggleFeatured?: (photo: Photo) => void;
@@ -30,6 +32,8 @@ const SortablePhotoGrid: React.FC<SortablePhotoGridProps> = ({
   onReorder,
   reorderEnabled = true,
   disabled = false,
+  selectedIds = new Set(),
+  onToggleSelection,
   onPhotoClick,
   onDelete,
   onToggleFeatured,
@@ -78,6 +82,8 @@ const SortablePhotoGrid: React.FC<SortablePhotoGridProps> = ({
               index={index}
               reorderEnabled={reorderEnabled}
               disabled={disabled}
+              selected={selectedIds.has(photo.id)}
+              onToggleSelection={onToggleSelection}
               onPhotoClick={onPhotoClick}
               onDelete={onDelete}
               onToggleFeatured={onToggleFeatured}

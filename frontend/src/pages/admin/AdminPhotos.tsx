@@ -63,6 +63,18 @@ const AdminPhotos: React.FC = () => {
     setShowUpload(false);
   };
 
+  const handleToggleSelection = (id: string) => {
+    setSelectedPhotos((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
   // PhotoSwipe disabled in admin; use editor instead
 
   const handlePhotoClick = (photo: Photo, _index: number) => {
@@ -548,6 +560,8 @@ const AdminPhotos: React.FC = () => {
                 reorderEnabled={reorderEnabled}
                 onReorder={(items) => void handleReorder(items)}
                 disabled={isReordering}
+                selectedIds={selectedPhotos}
+                onToggleSelection={handleToggleSelection}
                 onPhotoClick={handlePhotoClick}
                 onDelete={(photo) => {
                   if (reorderEnabled) return;
@@ -596,6 +610,8 @@ const AdminPhotos: React.FC = () => {
             onReorder={(ordered) => {
               void handleReorder(ordered);
             }}
+            selectedIds={selectedPhotos}
+            onToggleSelection={handleToggleSelection}
             onEdit={(photo) => {
               if (reorderEnabled) return;
               setEditingPhoto(photo);
