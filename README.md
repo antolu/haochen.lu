@@ -233,7 +233,18 @@ pytest tests/
 pytest --cov=app tests/
 ```
 
-Code quality:
+### API Documentation
+
+When the application is running, comprehensive API documentation is available at:
+- **Swagger UI**: [http://localhost/api/docs](http://localhost/api/docs)
+- **ReDoc**: [http://localhost/api/redoc](http://localhost/api/redoc)
+
+For direct backend access (bypassing the proxy), use:
+- **Swagger UI**: [http://localhost:8000/api/docs](http://localhost:8000/api/docs)
+- **OpenAPI Schema**: [http://localhost:8000/api/openapi.json](http://localhost:8000/api/openapi.json)
+
+### Code Quality
+
 ```bash
 # Backend linting and type checking
 ruff check --fix --unsafe-fixes --preview
@@ -377,6 +388,7 @@ Development:
 - Website: http://localhost
 - Admin interface: http://localhost/admin
 - API documentation: http://localhost/api/docs
+- Direct backend API docs: http://localhost:8000/api/docs
 - Direct backend: http://localhost:8000 (for debugging)
 
 Production:
@@ -439,4 +451,4 @@ docker compose logs db | grep -i slow
 - [CLAUDE.md](./CLAUDE.md): Comprehensive development guide with architecture details
 - [docs/TRUENAS_DEPLOYMENT.md](./docs/TRUENAS_DEPLOYMENT.md): TrueNAS Scale deployment instructions
 - [dev.sh](./dev.sh): Development script command reference (run `./dev.sh help`)
-- `/api/docs`: Interactive API documentation (when running)
+- `/api/docs`: Interactive API documentation (available via nginx at [http://localhost/api/docs](http://localhost/api/docs))

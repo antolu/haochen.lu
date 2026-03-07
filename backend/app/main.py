@@ -69,6 +69,16 @@ app = FastAPI(
     description="A comprehensive portfolio and blog API",
     version="1.0.0",
     lifespan=lifespan,
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    openapi_url="/api/openapi.json",
+    contact={
+        "name": "Portfolio API Support",
+        "url": "https://github.com/antonlu/arcadia",
+    },
+    license_info={
+        "name": "MIT",
+    },
 )
 
 # Rate limiting middleware for file access
