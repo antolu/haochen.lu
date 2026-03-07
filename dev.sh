@@ -111,34 +111,59 @@ rebuild_dev() {
         local dockerfile="$2"
         local tag="$3"
         local build_args="$4"
+        local extra_args="${5:-}"
+
+        local -a platforms
+        if [ "$push_mode" -eq 1 ]; then
+            platforms=("linux/amd64" "linux/arm64")
+        else
+            platforms=("$host_platform")
+        fi
+
+        local -a build_cmd=(docker buildx build --builder devbuilder --platform "$(IFS=,; echo "${platforms[*]}")" --pull)
+
+        # Add extra args (split by space if needed)
+        # shellcheck disable=SC2086
+        if [ -n "$extra_args" ]; then
+            for arg in $extra_args; do
+                build_cmd+=("$arg")
+            done
+        fi
 
         if [ "$push_mode" -eq 1 ]; then
-            print_status "Pushing multi-arch image ${tag} (amd64, arm64)"
-            if [ -n "$build_args" ]; then
-                docker buildx build --builder devbuilder --platform "linux/amd64,linux/arm64" --pull --no-cache --build-arg "$build_args" -t "$tag" -f "$dockerfile" "$context" --push
-            else
-                docker buildx build --builder devbuilder --platform "linux/amd64,linux/arm64" --pull --no-cache -t "$tag" -f "$dockerfile" "$context" --push
-            fi
+            build_cmd+=(--push)
         else
-            print_status "Building ${tag} for host ${host_platform} and loading into local daemon"
-            if [ -n "$build_args" ]; then
-                docker buildx build --builder devbuilder --platform "$host_platform" --load --pull --no-cache --build-arg "$build_args" -t "$tag" -f "$dockerfile" "$context"
-            else
-                docker buildx build --builder devbuilder --platform "$host_platform" --load --pull --no-cache -t "$tag" -f "$dockerfile" "$context"
-            fi
+            build_cmd+=(--load)
         fi
+
+        if [ -n "$build_args" ]; then
+            build_cmd+=(--build-arg "$build_args")
+        fi
+
+        build_cmd+=(-t "$tag" -f "$dockerfile" "$context")
+
+        print_status "Executing: ${build_cmd[*]}"
+        "${build_cmd[@]}"
     }
 
+    # Custom flags
+    extra_build_flags=""
+    if [[ "$*" == *"--no-cache"* ]]; then
+        extra_build_flags="--no-cache"
+        print_warning "Cache disabled for this build"
+    fi
+
     # Build/push backend and frontend (targets specified for Docker Hub)
-    build_one "." "backend/Dockerfile" "antonlu/arcadia-backend:dev" "BUILD_TYPE=development"
-    build_one "./frontend" "frontend/Dockerfile.dev" "antonlu/arcadia-frontend:dev" ""
+    build_one "." "backend/Dockerfile" "antonlu/arcadia-backend:dev" "BUILD_TYPE=development" "$extra_build_flags"
+    build_one "./frontend" "frontend/Dockerfile.dev" "antonlu/arcadia-frontend:dev" "" "$extra_build_flags"
 
     # Always build nginx for local dev (load only)
     if [ "$push_mode" -eq 1 ]; then
         print_status "Also building nginx images locally for host arch"
-        docker buildx build --builder devbuilder --platform "$host_platform" --load --pull --no-cache -t "antonlu/arcadia-nginx:dev" -f "frontend/Dockerfile.nginx.dev" "./frontend"
+        # shellcheck disable=SC2086
+        docker buildx build --builder devbuilder --platform "$host_platform" --load --pull $extra_build_flags -t "antonlu/arcadia-nginx:dev" -f "frontend/Dockerfile.nginx.dev" "./frontend"
     else
-        build_one "./frontend" "frontend/Dockerfile.nginx.dev" "antonlu/arcadia-nginx:dev" ""
+        build_one "./frontend" "frontend/Dockerfile.nginx.dev" "antonlu/arcadia-nginx:dev" "" "$extra_build_flags"
     fi
 
     if [ "$push_mode" -eq 1 ]; then

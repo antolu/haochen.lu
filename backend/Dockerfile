@@ -1,6 +1,7 @@
 # Multi-stage Dockerfile for both development and production builds
 # syntax=docker/dockerfile:1.4
 # hadolint ignore=DL3008
+
 ARG BUILD_TYPE=production
 
 # Base stage with common dependencies
@@ -11,7 +12,9 @@ WORKDIR /app
 
 # Install base system dependencies including libvips and AVIF support
 # hadolint ignore=DL3008
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     g++ \
     libpq-dev \
@@ -29,19 +32,24 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 FROM base AS development
 # Install additional dev packages
 # hadolint ignore=DL3008
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
     git \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Install dev tools first (stable cache)
-RUN pip install --no-cache-dir watchfiles==0.24.0
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-cache-dir watchfiles==0.24.0
 
 # Production stage
 FROM base AS production
 # Install additional production packages including git for setuptools-scm
 # hadolint ignore=DL3008
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
     git \
     ca-certificates \
     libwebp-dev \
@@ -58,7 +66,8 @@ COPY backend/pyproject.toml ./
 
 # Install dependencies only (not the package itself) to avoid setuptools-scm issues
 # hadolint ignore=DL3013,SC2046
-RUN if [ "$BUILD_TYPE" = "development" ]; then \
+RUN --mount=type=cache,target=/root/.cache/pip \
+    if [ "$BUILD_TYPE" = "development" ]; then \
         pip install --no-cache-dir $(python -c "import tomllib; data = tomllib.load(open('pyproject.toml', 'rb')); deps = data['project'].get('dependencies', []) + data.get('project', {}).get('optional-dependencies', {}).get('test', []); print(' '.join([d for d in deps if 'photography-portfolio' not in d]))"); \
     else \
         pip install --no-cache-dir $(python -c "import tomllib; data = tomllib.load(open('pyproject.toml', 'rb')); deps = data['project'].get('dependencies', []); print(' '.join([d for d in deps if 'photography-portfolio' not in d]))"); \
@@ -70,6 +79,7 @@ COPY backend/ .
 
 # Install the package itself with git context for proper setuptools-scm versioning
 RUN --mount=type=bind,source=.git,target=/app/.git \
+    --mount=type=cache,target=/root/.cache/pip \
     pip install --no-cache-dir --no-deps .
 
 # Create directories for uploads and compressed images
@@ -83,7 +93,6 @@ RUN cp docker-entrypoint.sh /docker-entrypoint.sh && \
     chmod +x /docker-entrypoint.sh
 
 # Set command based on build type
-ARG BUILD_TYPE=production
 RUN if [ "$BUILD_TYPE" = "development" ]; then \
         printf '#!/bin/bash\nexec uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload\n' > /start.sh && \
         chmod +x /start.sh; \

@@ -1,13 +1,14 @@
 # Development Dockerfile for frontend
 # hadolint ignore=DL3018
-# hadolint ignore=DL3018
 FROM node:20-slim
 
 WORKDIR /app
 
 # Install system dependencies for native builds
 # hadolint ignore=DL3008
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libcairo2-dev \
     libjpeg-dev \
@@ -20,7 +21,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install dependencies first for better caching
 COPY package*.json ./
-RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --legacy-peer-deps || npm install --legacy-peer-deps
 
 # Create node_modules volume mount point
 VOLUME ["/app/node_modules"]
