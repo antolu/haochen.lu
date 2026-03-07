@@ -288,8 +288,8 @@ const AdminLayoutContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="flex">
+    <div className="h-screen overflow-hidden bg-background">
+      <div className="flex h-full">
         {/* Desktop Sidebar */}
         <aside
           className={cn(
@@ -383,7 +383,7 @@ const AdminLayoutContent: React.FC = () => {
 const AdminLayout: React.FC = () => {
   return (
     <ThemeProvider defaultTheme="system" storageKey="admin-ui-theme">
-      <div className="min-h-screen bg-background text-foreground">
+      <div className="h-screen overflow-hidden bg-background text-foreground">
         <AdminLayoutContent />
       </div>
     </ThemeProvider>
