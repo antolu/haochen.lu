@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import typing
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_users.password import PasswordHelper
@@ -8,12 +10,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.email_utils import is_email
 from app.crud.user import get_user_by_email, get_user_by_username
 from app.database import get_session
-from app.users import auth_backend
+from app.models.user import User
+from app.schemas.user import UserRead
+from app.users import auth_backend, current_active_user
 
 router = APIRouter()
 
 # Module-level singletons for dependency injection
 _session_dependency = Depends(get_session)
+_current_user_dependency = Depends(current_active_user)
 
 
 @router.post("/login")
@@ -53,7 +58,23 @@ async def login(
         )
 
     # Generate token
-    strategy = auth_backend.get_strategy()
+    strategy: typing.Any = auth_backend.get_strategy()
     token = await strategy.write_token(user)
 
     return {"access_token": token, "token_type": "bearer"}  # nosec B105
+
+
+@router.post("/refresh")
+async def refresh(
+    user: User = _current_user_dependency,
+) -> dict[str, typing.Any]:
+    """Refresh JWT token for currently active user."""
+    strategy: typing.Any = auth_backend.get_strategy()
+    token = await strategy.write_token(user)
+
+    return {
+        "access_token": token,
+        "token_type": "bearer",  # nosec B105
+        "expires_in": 3600,  # 1 hour match for get_jwt_strategy
+        "user": UserRead.model_validate(user),
+    }

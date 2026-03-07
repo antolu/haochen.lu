@@ -37,119 +37,119 @@ interface FormField {
   description?: string;
 }
 
+// Field configurations based on equipment type
+const FIELD_CONFIGS: Record<EquipmentType, FormField[]> = {
+  cameras: [
+    {
+      key: "original_name",
+      label: "Original Name",
+      placeholder: "e.g., SONY ILCE-7RM3",
+      required: true,
+      description: "The exact camera name as it appears in photo EXIF data",
+    },
+    {
+      key: "display_name",
+      label: "Display Name",
+      placeholder: "e.g., Sony A7 RIII",
+      required: true,
+      description: "User-friendly name to display instead of the original",
+    },
+    {
+      key: "brand",
+      label: "Brand",
+      placeholder: "e.g., Sony",
+    },
+    {
+      key: "model",
+      label: "Model",
+      placeholder: "e.g., A7 RIII",
+    },
+    {
+      key: "notes",
+      label: "Notes",
+      placeholder: "Optional notes about this camera...",
+    },
+  ],
+  lenses: [
+    {
+      key: "original_name",
+      label: "Original Name",
+      placeholder: "e.g., FE 24-70mm F2.8 GM",
+      required: true,
+      description: "The exact lens name as it appears in photo EXIF data",
+    },
+    {
+      key: "display_name",
+      label: "Display Name",
+      placeholder: "e.g., Sony FE 24-70mm f/2.8 GM",
+      required: true,
+      description: "User-friendly name to display instead of the original",
+    },
+    {
+      key: "brand",
+      label: "Brand",
+      placeholder: "e.g., Sony",
+    },
+    {
+      key: "model",
+      label: "Model",
+      placeholder: "e.g., FE 24-70mm f/2.8 GM",
+    },
+    {
+      key: "mount_type",
+      label: "Mount Type",
+      placeholder: "e.g., Sony E-mount",
+    },
+    {
+      key: "focal_length",
+      label: "Focal Length",
+      placeholder: "e.g., 24-70mm",
+    },
+    {
+      key: "max_aperture",
+      label: "Max Aperture",
+      placeholder: "e.g., f/2.8",
+    },
+    {
+      key: "lens_type",
+      label: "Lens Type",
+      type: "select",
+      options: [
+        "",
+        "Prime",
+        "Zoom",
+        "Macro",
+        "Fisheye",
+        "Telephoto",
+        "Wide Angle",
+        "Standard",
+      ],
+      placeholder: "Select lens type...",
+    },
+    {
+      key: "notes",
+      label: "Notes",
+      placeholder: "Optional notes about this lens...",
+    },
+  ],
+};
+
 const EquipmentAliasForm: React.FC<EquipmentAliasFormProps> = ({
   alias,
   type,
   onSuccess,
   onCancel,
 }) => {
-  const [formData, setFormData] = useState<Record<string, string | boolean>>(
-    {},
-  );
+  const [formData, setFormData] = useState<Record<string, string | boolean>>({
+    is_active: true,
+  });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const cameraUpdateMutation = useUpdateCameraAlias();
   const lensUpdateMutation = useUpdateLensAlias();
 
-  // Field configurations based on equipment type
-  const fieldConfigs: Record<EquipmentType, FormField[]> = {
-    cameras: [
-      {
-        key: "original_name",
-        label: "Original Name",
-        placeholder: "e.g., SONY ILCE-7RM3",
-        required: true,
-        description: "The exact camera name as it appears in photo EXIF data",
-      },
-      {
-        key: "display_name",
-        label: "Display Name",
-        placeholder: "e.g., Sony A7 RIII",
-        required: true,
-        description: "User-friendly name to display instead of the original",
-      },
-      {
-        key: "brand",
-        label: "Brand",
-        placeholder: "e.g., Sony",
-      },
-      {
-        key: "model",
-        label: "Model",
-        placeholder: "e.g., A7 RIII",
-      },
-      {
-        key: "notes",
-        label: "Notes",
-        placeholder: "Optional notes about this camera...",
-      },
-    ],
-    lenses: [
-      {
-        key: "original_name",
-        label: "Original Name",
-        placeholder: "e.g., FE 24-70mm F2.8 GM",
-        required: true,
-        description: "The exact lens name as it appears in photo EXIF data",
-      },
-      {
-        key: "display_name",
-        label: "Display Name",
-        placeholder: "e.g., Sony FE 24-70mm f/2.8 GM",
-        required: true,
-        description: "User-friendly name to display instead of the original",
-      },
-      {
-        key: "brand",
-        label: "Brand",
-        placeholder: "e.g., Sony",
-      },
-      {
-        key: "model",
-        label: "Model",
-        placeholder: "e.g., FE 24-70mm f/2.8 GM",
-      },
-      {
-        key: "mount_type",
-        label: "Mount Type",
-        placeholder: "e.g., Sony E-mount",
-      },
-      {
-        key: "focal_length",
-        label: "Focal Length",
-        placeholder: "e.g., 24-70mm",
-      },
-      {
-        key: "max_aperture",
-        label: "Max Aperture",
-        placeholder: "e.g., f/2.8",
-      },
-      {
-        key: "lens_type",
-        label: "Lens Type",
-        type: "select",
-        options: [
-          "",
-          "Prime",
-          "Zoom",
-          "Macro",
-          "Fisheye",
-          "Telephoto",
-          "Wide Angle",
-          "Standard",
-        ],
-        placeholder: "Select lens type...",
-      },
-      {
-        key: "notes",
-        label: "Notes",
-        placeholder: "Optional notes about this lens...",
-      },
-    ],
-  };
-
-  const currentFields = fieldConfigs[type];
+  const currentFields = FIELD_CONFIGS[type];
 
   // Initialize form data when alias changes
   useEffect(() => {
@@ -318,7 +318,7 @@ const EquipmentAliasForm: React.FC<EquipmentAliasFormProps> = ({
 
               {field.type === "select" ? (
                 <select
-                  value={formData[field.key] as string}
+                  value={(formData[field.key] as string) ?? ""}
                   onChange={(e) => handleInputChange(field.key, e.target.value)}
                   className={`w-full px-3 py-2 border border-input rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring ${
                     errors[field.key] ? "border-destructive" : ""
@@ -332,7 +332,7 @@ const EquipmentAliasForm: React.FC<EquipmentAliasFormProps> = ({
                 </select>
               ) : field.key === "notes" ? (
                 <textarea
-                  value={formData[field.key] as string}
+                  value={(formData[field.key] as string) ?? ""}
                   onChange={(e) => handleInputChange(field.key, e.target.value)}
                   placeholder={field.placeholder}
                   rows={3}
@@ -342,7 +342,7 @@ const EquipmentAliasForm: React.FC<EquipmentAliasFormProps> = ({
                 />
               ) : (
                 <Input
-                  value={formData[field.key] as string}
+                  value={(formData[field.key] as string) ?? ""}
                   onChange={(e) => handleInputChange(field.key, e.target.value)}
                   placeholder={field.placeholder}
                   className={errors[field.key] ? "border-destructive" : ""}
