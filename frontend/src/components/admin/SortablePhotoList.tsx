@@ -16,7 +16,6 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import {
   GripVertical,
-  Menu,
   Star,
   Edit3,
   Trash2,
@@ -41,7 +40,6 @@ import { Badge } from "../ui/badge";
 interface SortablePhotoListProps {
   photos: Photo[];
   reorderEnabled: boolean;
-  viewMode: "grid" | "list";
   onReorder: (ordered: Photo[]) => void;
   onEdit: (photo: Photo) => void;
   onToggleFeatured: (photo: Photo) => void;
@@ -52,7 +50,6 @@ interface SortablePhotoListProps {
 const SortablePhotoList: React.FC<SortablePhotoListProps> = ({
   photos,
   reorderEnabled,
-  viewMode,
   onReorder,
   onEdit,
   onToggleFeatured,
@@ -130,7 +127,6 @@ const SortablePhotoList: React.FC<SortablePhotoListProps> = ({
                   photo={photo}
                   index={index}
                   reorderEnabled={reorderEnabled}
-                  viewMode={viewMode}
                   onEdit={onEdit}
                   onToggleFeatured={onToggleFeatured}
                   onDelete={onDelete}
@@ -148,7 +144,6 @@ interface SortableRowProps {
   photo: Photo;
   index: number;
   reorderEnabled: boolean;
-  viewMode: "grid" | "list";
   onEdit: (photo: Photo) => void;
   onToggleFeatured: (photo: Photo) => void;
   onDelete: (photo: Photo) => void;
@@ -158,7 +153,6 @@ const SortableRow: React.FC<SortableRowProps> = ({
   photo,
   index,
   reorderEnabled,
-  viewMode,
   onEdit,
   onToggleFeatured,
   onDelete,
@@ -218,11 +212,7 @@ const SortableRow: React.FC<SortableRowProps> = ({
               className="mx-auto flex h-8 w-8 items-center justify-center rounded-full border border-dashed border-border text-muted-foreground transition hover:border-primary hover:text-primary"
               aria-label="Drag to reorder"
             >
-              {viewMode === "list" ? (
-                <Menu className="h-4 w-4" />
-              ) : (
-                <GripVertical className="h-4 w-4" />
-              )}
+              <GripVertical className="h-4 w-4" />
             </motion.button>
           )}
         </AnimatePresence>

@@ -21,6 +21,8 @@ interface SortablePhotoGridProps {
   reorderEnabled?: boolean;
   disabled?: boolean;
   onPhotoClick?: (photo: Photo, index: number) => void;
+  onDelete?: (photo: Photo) => void;
+  onToggleFeatured?: (photo: Photo) => void;
 }
 
 const SortablePhotoGrid: React.FC<SortablePhotoGridProps> = ({
@@ -29,6 +31,8 @@ const SortablePhotoGrid: React.FC<SortablePhotoGridProps> = ({
   reorderEnabled = true,
   disabled = false,
   onPhotoClick,
+  onDelete,
+  onToggleFeatured,
 }) => {
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -75,6 +79,8 @@ const SortablePhotoGrid: React.FC<SortablePhotoGridProps> = ({
               reorderEnabled={reorderEnabled}
               disabled={disabled}
               onPhotoClick={onPhotoClick}
+              onDelete={onDelete}
+              onToggleFeatured={onToggleFeatured}
             />
           ))}
         </div>

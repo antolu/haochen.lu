@@ -13,6 +13,8 @@ import TagMultiSelect from "./TagMultiSelect";
 import { formatDateTime } from "../../utils/dateFormat";
 import { selectOptimalImage, ImageUseCase } from "../../utils/imageUtils";
 import { Button } from "../ui/button";
+import { Trash2, Star, X, Check } from "lucide-react";
+import { cn } from "../../lib/utils";
 // Remove direct import of MapPicker and lazy-load it instead
 const LazyMapPicker = lazy(() => import("../MapPicker"));
 
@@ -33,12 +35,16 @@ interface PhotoFormProps {
   photo: Photo;
   onSuccess?: (updated: Photo) => void;
   onCancel?: () => void;
+  onDelete?: (photo: Photo) => void;
+  onToggleFeatured?: (photo: Photo) => void;
 }
 
 const PhotoForm: React.FC<PhotoFormProps> = ({
   photo,
   onSuccess,
   onCancel,
+  onDelete,
+  onToggleFeatured,
 }) => {
   const updateMutation = useUpdatePhoto();
   const { data: distinctTags = [] } = usePhotoTags();
@@ -93,6 +99,12 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
       data: form,
     });
     onSuccess?.(updated);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+    if (e.key === "Enter" && !(e.target instanceof HTMLTextAreaElement)) {
+      e.preventDefault();
+    }
   };
 
   // Reverse geocode when coordinates change (debounced)
@@ -155,13 +167,14 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
         onSubmit={(e) => {
           void handleSubmit(e);
         }}
+        onKeyDown={handleKeyDown}
         className="space-y-8"
       >
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold">Edit Photo</h2>
-            <p className="text-base text-muted-foreground mt-2">
-              Update photo information and tags
+            <h2 className="text-3xl font-bold tracking-tight">Edit Photo</h2>
+            <p className="text-muted-foreground mt-2">
+              Update photo metadata and location settings
             </p>
           </div>
           <div className="flex gap-3">
@@ -171,7 +184,9 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
                 variant="outline"
                 size="lg"
                 onClick={onCancel}
+                className="rounded-full px-8"
               >
+                <X className="h-4 w-4 mr-2" />
                 Cancel
               </Button>
             )}
@@ -180,7 +195,9 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
               variant="gradient"
               size="lg"
               disabled={isSaving}
+              className="rounded-full px-8 shadow-lg shadow-primary/20"
             >
+              <Check className="h-4 w-4 mr-2" />
               {isSaving ? "Saving..." : "Save Changes"}
             </Button>
           </div>
@@ -460,6 +477,65 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Bottom Form Actions */}
+            <div className="flex items-center justify-between pt-6 border-t mt-8">
+              <div className="flex gap-3">
+                {onDelete && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="lg"
+                    onClick={() => onDelete(photo)}
+                    className="text-destructive hover:bg-destructive/10 rounded-full"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Photo
+                  </Button>
+                )}
+                {onToggleFeatured && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="lg"
+                    onClick={() => onToggleFeatured(photo)}
+                    className={cn(
+                      "rounded-full hover:bg-yellow-500/10",
+                      photo.featured &&
+                        "text-yellow-600 dark:text-yellow-500 bg-yellow-500/5 hover:bg-yellow-500/20",
+                    )}
+                  >
+                    <Star
+                      className={cn(
+                        "h-4 w-4 mr-2",
+                        photo.featured && "fill-current",
+                      )}
+                    />
+                    {photo.featured ? "Featured" : "Mark Featured"}
+                  </Button>
+                )}
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  type="button"
+                  onClick={onCancel}
+                  className="rounded-full"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="gradient"
+                  size="lg"
+                  type="submit"
+                  disabled={isSaving}
+                  className="rounded-full px-12 shadow-md"
+                >
+                  {isSaving ? "Saving..." : "Save Changes"}
+                </Button>
               </div>
             </div>
           </div>

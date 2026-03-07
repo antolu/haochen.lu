@@ -5,6 +5,7 @@ import PhotoPreview from "./PhotoPreview";
 import PhotoMetadataForm, { type PhotoMetadata } from "./PhotoMetadataForm";
 import { useUploadPhoto } from "../hooks/usePhotos";
 import { useUploadQueue, type QueuedUpload } from "../stores/uploadQueue";
+import { Button } from "./ui/button";
 import type { AxiosError } from "axios";
 
 interface PhotoUploadProps {
@@ -286,7 +287,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
       {hasFiles && (
         <div className="mt-6 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-semibold text-foreground">
               Photos ({uploadFiles.length})
             </h3>
           </div>
@@ -307,7 +308,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
       {/* Metadata Form - Only show if we have pending files */}
       {hasFiles && pendingFiles.length > 0 && !allCompleted && (
         <div className="mt-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <h3 className="text-lg font-semibold text-foreground mb-4">
             Photo Information
           </h3>
           <PhotoMetadataForm
@@ -322,31 +323,33 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
 
       {/* Completion State */}
       {allCompleted && (
-        <div className="mt-8 text-center">
-          <div className="text-green-600 text-lg font-medium mb-4">
+        <div className="mt-8 text-center bg-emerald-500/5 border border-emerald-500/20 py-8 rounded-xl">
+          <div className="text-emerald-500 dark:text-emerald-400 text-lg font-semibold mb-4 text-glow-sm">
             ✓ All photos uploaded successfully!
           </div>
-          <div className="text-sm text-gray-600 mb-4">
+          <div className="text-sm text-muted-foreground mb-6">
             {completedFiles.length} photo
-            {completedFiles.length !== 1 ? "s" : ""} ready
+            {completedFiles.length !== 1 ? "s" : ""} ready for management
           </div>
-          <button
+          <Button
             onClick={onComplete}
-            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            variant="default"
+            size="lg"
+            className="rounded-full px-12"
           >
             Done
-          </button>
+          </Button>
         </div>
       )}
 
       {/* Error Summary */}
       {errorFiles.length > 0 && (
-        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <div className="text-red-800 font-medium">
+        <div className="mt-4 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+          <div className="text-destructive font-medium">
             {errorFiles.length} photo{errorFiles.length !== 1 ? "s" : ""} failed
             to upload
           </div>
-          <div className="text-red-600 text-sm mt-1">
+          <div className="text-destructive/80 text-sm mt-1">
             Please check the errors above and try again
           </div>
         </div>

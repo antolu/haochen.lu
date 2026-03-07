@@ -176,7 +176,7 @@ const PhotoMetadataForm: React.FC<PhotoMetadataFormProps> = ({
             type="checkbox"
             id="featured"
             {...register("featured")}
-            className="w-4 h-4 text-blue-600 bg-muted border-input rounded focus:ring-ring focus:ring-2"
+            className="w-4 h-4 text-primary bg-muted border-input rounded focus:ring-primary focus:ring-2 accent-primary transition-colors"
           />
           <label
             htmlFor="featured"

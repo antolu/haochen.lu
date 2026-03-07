@@ -2,11 +2,12 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Move } from "lucide-react";
+import { GripVertical, Move, Star, Trash2 } from "lucide-react";
 import type { Photo } from "../types";
 import { cn } from "../lib/utils";
 import { formatDateSimple } from "../utils/dateFormat";
 import { selectOptimalImage, ImageUseCase } from "../utils/imageUtils";
+import { Button } from "./ui/button";
 
 interface SortablePhotoCardProps {
   photo: Photo;
@@ -14,6 +15,8 @@ interface SortablePhotoCardProps {
   reorderEnabled?: boolean;
   disabled?: boolean;
   onPhotoClick?: (photo: Photo, index: number) => void;
+  onDelete?: (photo: Photo) => void;
+  onToggleFeatured?: (photo: Photo) => void;
 }
 
 const SortablePhotoCard: React.FC<SortablePhotoCardProps> = ({
@@ -22,6 +25,8 @@ const SortablePhotoCard: React.FC<SortablePhotoCardProps> = ({
   reorderEnabled = true,
   disabled = false,
   onPhotoClick,
+  onDelete,
+  onToggleFeatured,
 }) => {
   const {
     attributes,
@@ -59,14 +64,14 @@ const SortablePhotoCard: React.FC<SortablePhotoCardProps> = ({
       ref={setNodeRef}
       style={style}
       animate={{
-        borderColor: reorderEnabled ? "rgb(251 191 36)" : "rgb(229 231 235)", // amber-400 : gray-200
+        borderColor: reorderEnabled ? "rgb(251 191 36)" : "var(--border)",
         boxShadow: reorderEnabled
           ? "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 0 0 1px rgb(251 191 36 / 0.2)"
           : "0 1px 2px 0 rgb(0 0 0 / 0.05)",
       }}
       transition={{ duration: 0.3, ease: "easeOut" }}
       className={cn(
-        "group relative overflow-hidden rounded-lg border bg-white transition-all duration-300",
+        "group relative overflow-hidden rounded-lg border bg-card transition-all duration-300",
         isDragging && "shadow-xl ring-2 ring-amber-400",
         disabled && "opacity-60",
         !reorderEnabled && onPhotoClick && "cursor-pointer",
@@ -84,7 +89,7 @@ const SortablePhotoCard: React.FC<SortablePhotoCardProps> = ({
             transition={{ duration: 0.2, ease: "easeOut", delay: index * 0.03 }}
             {...listeners}
             {...attributes}
-            className="absolute right-2 top-2 z-10 inline-flex items-center rounded-full bg-white/95 px-2 py-1 text-xs font-medium text-gray-600 shadow group-hover:bg-white"
+            className="absolute right-2 top-2 z-10 inline-flex items-center rounded-full bg-card/95 px-2 py-1 text-xs font-medium text-muted-foreground shadow group-hover:bg-card"
             aria-label="Drag to reorder"
           >
             <GripVertical className="mr-1 h-3 w-3" aria-hidden />
@@ -92,7 +97,51 @@ const SortablePhotoCard: React.FC<SortablePhotoCardProps> = ({
           </motion.button>
         )}
       </AnimatePresence>
-      <div className="relative h-48 w-full overflow-hidden bg-gray-100">
+
+      <AnimatePresence>
+        {!reorderEnabled && !isDragging && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute right-2 top-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            {onToggleFeatured && (
+              <Button
+                variant="secondary"
+                size="icon"
+                className={cn(
+                  "h-8 w-8 rounded-full bg-card/90 backdrop-blur-sm shadow-sm hover:bg-card",
+                  photo.featured && "text-yellow-500",
+                )}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleFeatured(photo);
+                }}
+              >
+                <Star
+                  className={cn("h-4 w-4", photo.featured && "fill-current")}
+                />
+              </Button>
+            )}
+            {onDelete && (
+              <Button
+                variant="destructive"
+                size="icon"
+                className="h-8 w-8 rounded-full bg-destructive/90 backdrop-blur-sm shadow-sm hover:bg-destructive"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(photo);
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="relative aspect-[3/2] w-full overflow-hidden bg-muted">
         <img
           src={optimalImage.url}
           srcSet={optimalImage.srcset}
@@ -103,19 +152,19 @@ const SortablePhotoCard: React.FC<SortablePhotoCardProps> = ({
         />
         <div className="absolute inset-0 bg-black/0 transition group-hover:bg-black/10" />
         {isDragging && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/80 text-sm font-semibold text-gray-700">
+          <div className="absolute inset-0 flex items-center justify-center bg-card/80 text-sm font-semibold text-foreground">
             <Move className="mr-2 h-4 w-4" />
             Moving...
           </div>
         )}
       </div>
       <div className="space-y-2 p-4">
-        <div className="text-sm font-semibold text-gray-900">
+        <div className="text-sm font-semibold text-card-foreground">
           <span className="truncate" title={photo.title ?? "Untitled"}>
             {photo.title ?? "Untitled"}
           </span>
         </div>
-        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
+        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           {photo.date_taken && (
             <span>{formatDateSimple(photo.date_taken)}</span>
           )}

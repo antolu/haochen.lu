@@ -173,22 +173,22 @@ const PhotoDropzone: React.FC<PhotoDropzoneProps> = ({
       {...getRootProps()}
       className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
         isDragActive
-          ? "border-blue-500 bg-blue-50"
-          : "border-gray-300 hover:border-gray-400 hover:bg-gray-50"
+          ? "border-primary bg-primary/10"
+          : "border-border hover:border-muted-foreground/60 hover:bg-muted/50"
       } ${disabled ? "opacity-50 cursor-not-allowed" : ""} ${className ?? ""}`}
     >
       <input {...getInputProps()} />
       <div className="space-y-3">
-        <div className="text-4xl text-gray-400">📸</div>
+        <div className="text-4xl text-muted-foreground/40">📸</div>
         {isDragActive ? (
-          <p className="text-blue-600 font-medium">Drop your photos here...</p>
+          <p className="text-primary font-medium">Drop your photos here...</p>
         ) : (
           <>
-            <p className="text-gray-600">
-              <span className="font-medium text-blue-600">Click to upload</span>{" "}
+            <p className="text-foreground/80">
+              <span className="font-medium text-primary">Click to upload</span>{" "}
               or drag and drop
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               PNG, JPG, WEBP up to {formatFileSize(maxFileSize)} • Max{" "}
               {maxFiles} {maxFiles === 1 ? "file" : "files"}
             </p>

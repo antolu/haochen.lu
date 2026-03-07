@@ -7,6 +7,8 @@ import {
   HardDrive,
   CheckSquare,
   Plus,
+  Trash2,
+  X,
 } from "lucide-react";
 import { Switch } from "../../components/ui/switch";
 import { Button } from "../../components/ui/button";
@@ -191,87 +193,67 @@ const AdminPhotos: React.FC = () => {
   return (
     <div>
       {/* Header */}
-      <div className="mb-10 space-y-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="space-y-3">
-            <h1 className="admin-page-title">Photos</h1>
-            <p className="text-muted-foreground text-xl">
-              Manage your photo collection
+      <div className="mb-12">
+        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between border-b pb-8">
+          <div className="space-y-2">
+            <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              Photos
+            </h1>
+            <p className="text-muted-foreground text-lg">
+              Manage and organize your visual portfolio
             </p>
           </div>
-          <div className="flex flex-col gap-3 md:flex-row md:items-center">
-            <div className="flex items-center gap-2">
-              <div className="flex bg-muted rounded-full p-1">
-                <button
-                  onClick={() => handleViewModeChange("grid")}
-                  className={cn(
-                    "px-4 py-1 text-sm font-medium rounded-full transition-colors",
-                    viewMode === "grid"
-                      ? "bg-background shadow-sm"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  Grid
-                </button>
-                <button
-                  onClick={() => handleViewModeChange("list")}
-                  className={cn(
-                    "px-4 py-1 text-sm font-medium rounded-full transition-colors",
-                    viewMode === "list"
-                      ? "bg-background shadow-sm"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  List
-                </button>
-              </div>
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-muted-foreground">
-                    Reorder Mode
-                  </span>
-                  <Switch
-                    checked={reorderEnabled}
-                    onCheckedChange={(checked) => {
-                      if (!photos.length && checked) {
-                        toast.error("Add some photos before reordering.");
-                        return;
-                      }
-                      setReorderEnabled(checked);
-                    }}
-                  />
-                </div>
-                {!reorderEnabled && (
-                  <span className="text-xs text-muted-foreground">
-                    Current order: Custom / Manual
-                  </span>
+
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex bg-muted/50 p-1 rounded-xl border border-border/50">
+              <button
+                onClick={() => handleViewModeChange("grid")}
+                className={cn(
+                  "px-6 py-2 text-sm font-semibold rounded-lg transition-all duration-200",
+                  viewMode === "grid"
+                    ? "bg-background text-foreground shadow-sm ring-1 ring-border/50"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/30",
                 )}
-              </div>
-              <AnimatePresence>
-                {reorderEnabled && (
-                  <motion.button
-                    type="button"
-                    initial={{ opacity: 0, scale: 0.95, x: -20 }}
-                    animate={{ opacity: 1, scale: 1, x: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, x: -20 }}
-                    transition={{ duration: 0.2 }}
-                    onClick={() => {
-                      void handleResetOrder();
-                    }}
-                    className="inline-flex items-center gap-2 rounded-full bg-muted/30 px-3 py-1 text-sm text-muted-foreground transition hover:bg-muted/50 hover:text-primary"
-                  >
-                    <RefreshCcw className="h-4 w-4" /> Reset to Upload Order
-                  </motion.button>
+              >
+                Grid
+              </button>
+              <button
+                onClick={() => handleViewModeChange("list")}
+                className={cn(
+                  "px-6 py-2 text-sm font-semibold rounded-lg transition-all duration-200",
+                  viewMode === "list"
+                    ? "bg-background text-foreground shadow-sm ring-1 ring-border/50"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/30",
                 )}
-              </AnimatePresence>
+              >
+                List
+              </button>
             </div>
 
-            {/* Upload Button */}
+            <div className="h-8 w-[1px] bg-border/60 hidden sm:block mx-2" />
+
+            <div className="flex items-center gap-3 bg-muted/30 px-4 py-2 rounded-xl border border-dashed border-border/60">
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
+                Reorder
+              </span>
+              <Switch
+                checked={reorderEnabled}
+                onCheckedChange={(checked) => {
+                  if (!photos.length && checked) {
+                    toast.error("Add some photos before reordering.");
+                    return;
+                  }
+                  setReorderEnabled(checked);
+                }}
+              />
+            </div>
+
             <Button
               variant="gradient"
               size="lg"
               onClick={() => setShowUpload(true)}
               disabled={showUpload || reorderEnabled || isReordering}
+              className="rounded-full px-8 shadow-xl shadow-primary/20"
             >
               <Plus className="h-5 w-5 mr-2" />
               Upload Photos
@@ -279,16 +261,40 @@ const AdminPhotos: React.FC = () => {
           </div>
         </div>
 
-        {/* Stats Cards - Collapsible */}
-        {!isLoadingStats && (
-          <div className="mt-6">
-            <button
-              onClick={() => setShowStats(!showStats)}
-              className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2 mb-3"
+        {/* Reorder Reset Button - Floating / Contextual */}
+        <AnimatePresence>
+          {reorderEnabled && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mt-4 flex justify-end"
             >
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void handleResetOrder()}
+                className="rounded-full bg-background/50 backdrop-blur-sm border-dashed border-primary/30 text-primary hover:bg-primary/5"
+              >
+                <RefreshCcw className="h-3.5 w-3.5 mr-2" />
+                Reset to Upload Order
+              </Button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Stats Cards - Collapsible */}
+      {!isLoadingStats && (
+        <div className="mb-10">
+          <button
+            onClick={() => setShowStats(!showStats)}
+            className="group flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-muted/50 group-hover:bg-muted">
               <svg
                 className={cn(
-                  "h-4 w-4 transition-transform",
+                  "h-3.5 w-3.5 transition-transform duration-300",
                   showStats && "rotate-90",
                 )}
                 fill="none"
@@ -298,116 +304,149 @@ const AdminPhotos: React.FC = () => {
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2}
+                  strokeWidth={2.5}
                   d="M9 5l7 7-7 7"
                 />
               </svg>
-              {showStats ? "Hide" : "Show"} detailed stats
-            </button>
+            </div>
+            {showStats ? "Hide library insights" : "Show library insights"}
+          </button>
+          <AnimatePresence>
             {showStats && (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="grid grid-cols-1 md:grid-cols-4 gap-4"
+                initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                animate={{ opacity: 1, height: "auto", marginBottom: 24 }}
+                exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="overflow-hidden"
               >
-                <StatCard
-                  title="Total Photos"
-                  value={stats.total_photos || photos.length}
-                  gradient="from-blue-500/20 to-blue-600/20"
-                  iconBg="bg-blue-50/50 dark:bg-blue-950/20"
-                  icon={
-                    <Camera className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                  }
-                />
-                <StatCard
-                  title="Featured"
-                  value={
-                    stats.featured_photos ||
-                    photos.filter((p) => p.featured).length
-                  }
-                  gradient="from-yellow-500/20 to-yellow-600/20"
-                  iconBg="bg-yellow-50/50 dark:bg-yellow-950/20"
-                  icon={
-                    <Star className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
-                  }
-                />
-                <StatCard
-                  title="Storage Used"
-                  value={formatFileSize(
-                    stats.total_size ||
-                      photos.reduce((sum, p) => sum + (p.file_size || 0), 0),
-                  )}
-                  gradient="from-green-500/20 to-green-600/20"
-                  iconBg="bg-green-50/50 dark:bg-green-950/20"
-                  icon={
-                    <HardDrive className="w-5 h-5 text-green-600 dark:text-green-400" />
-                  }
-                />
-                <StatCard
-                  title="Selected"
-                  value={selectedPhotos.size}
-                  gradient="from-purple-500/20 to-purple-600/20"
-                  iconBg="bg-purple-50/50 dark:bg-purple-950/20"
-                  icon={
-                    <CheckSquare className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                  }
-                />
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+                  <StatCard
+                    title="Total Photos"
+                    value={stats.total_photos || photos.length}
+                    gradient="from-blue-500/10 to-blue-600/10"
+                    iconBg="bg-blue-500/10"
+                    icon={
+                      <Camera className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    }
+                  />
+                  <StatCard
+                    title="Featured"
+                    value={
+                      stats.featured_photos ||
+                      photos.filter((p) => p.featured).length
+                    }
+                    gradient="from-yellow-500/10 to-yellow-600/10"
+                    iconBg="bg-yellow-500/10"
+                    icon={
+                      <Star className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+                    }
+                  />
+                  <StatCard
+                    title="Storage Used"
+                    value={formatFileSize(
+                      stats.total_size ||
+                        photos.reduce((sum, p) => sum + (p.file_size || 0), 0),
+                    )}
+                    gradient="from-emerald-500/10 to-emerald-600/10"
+                    iconBg="bg-emerald-500/10"
+                    icon={
+                      <HardDrive className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                    }
+                  />
+                  <StatCard
+                    title="Selected Items"
+                    value={selectedPhotos.size}
+                    gradient="from-purple-500/10 to-purple-600/10"
+                    iconBg="bg-purple-500/10"
+                    icon={
+                      <CheckSquare className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                    }
+                  />
+                </div>
               </motion.div>
             )}
-          </div>
-        )}
-      </div>
-
-      {/* Bulk Actions */}
-      {selectedPhotos.size > 0 && (
-        <div className="mb-6 p-4 bg-primary/10 rounded-xl">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-primary font-medium">
-              {selectedPhotos.size} photo{selectedPhotos.size > 1 ? "s" : ""}{" "}
-              selected
-            </div>
-            <div className="flex space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-yellow-700 border-yellow-300 hover:bg-yellow-50 dark:text-yellow-400 dark:border-yellow-700 dark:hover:bg-yellow-950/30"
-                onClick={() => {
-                  void handleBulkToggleFeatured(true);
-                }}
-              >
-                ⭐ Feature
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  void handleBulkToggleFeatured(false);
-                }}
-              >
-                Remove Feature
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-destructive border-destructive/30 hover:bg-destructive/10"
-                onClick={() => {
-                  void handleBulkDelete();
-                }}
-              >
-                🗑 Delete
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSelectedPhotos(new Set())}
-              >
-                Clear
-              </Button>
-            </div>
-          </div>
+          </AnimatePresence>
         </div>
       )}
+
+      {/* Bulk Actions */}
+      <AnimatePresence>
+        {selectedPhotos.size > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-40 w-full max-w-2xl px-4"
+          >
+            <div className="bg-card/90 backdrop-blur-md border border-primary/20 shadow-2xl rounded-2xl p-4 flex items-center justify-between gap-6">
+              <div className="flex items-center gap-4">
+                <div className="bg-primary/10 text-primary h-10 w-10 rounded-xl flex items-center justify-center font-bold">
+                  {selectedPhotos.size}
+                </div>
+                <div>
+                  <div className="font-bold text-sm">Photos selected</div>
+                  <div className="text-xs text-muted-foreground">
+                    Manage selection
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full border-yellow-500/30 hover:bg-yellow-500/5 text-yellow-600 dark:text-yellow-500"
+                  onClick={() => {
+                    void handleBulkToggleFeatured(true);
+                  }}
+                >
+                  <Star className="h-3.5 w-3.5 mr-2 fill-current" />
+                  Feature
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full"
+                  onClick={() => {
+                    void handleBulkToggleFeatured(false);
+                  }}
+                >
+                  Unhighlight
+                </Button>
+
+                <div className="h-6 w-[1px] bg-border mx-1" />
+
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="rounded-full"
+                  onClick={() => {
+                    const confirmed = window.confirm(
+                      `Really delete ${selectedPhotos.size} photos?`,
+                    );
+                    if (confirmed) void handleBulkDelete();
+                  }}
+                >
+                  <Trash2 className="h-3.5 w-3.5 mr-2" />
+                  Delete
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedPhotos(new Set())}
+                  className="rounded-full h-8 w-8 p-0"
+                  title="Clear selection"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Upload Modal */}
       <AnimatePresence>
@@ -486,6 +525,21 @@ const AdminPhotos: React.FC = () => {
               photo={editingPhoto}
               onCancel={() => setEditingPhoto(null)}
               onSuccess={() => setEditingPhoto(null)}
+              onDelete={(photo) => {
+                const confirmed = window.confirm(
+                  "Are you sure you want to delete this photo?",
+                );
+                if (confirmed) {
+                  void deleteMutation.mutateAsync(photo.id);
+                  setEditingPhoto(null);
+                }
+              }}
+              onToggleFeatured={(photo) => {
+                void toggleFeaturedMutation.mutateAsync({
+                  id: photo.id,
+                  featured: !photo.featured,
+                });
+              }}
             />
           ) : (
             <div className="min-h-[600px]">
@@ -495,6 +549,22 @@ const AdminPhotos: React.FC = () => {
                 onReorder={(items) => void handleReorder(items)}
                 disabled={isReordering}
                 onPhotoClick={handlePhotoClick}
+                onDelete={(photo) => {
+                  if (reorderEnabled) return;
+                  const confirmed = window.confirm(
+                    "Are you sure you want to delete this photo?",
+                  );
+                  if (confirmed) {
+                    void deleteMutation.mutateAsync(photo.id);
+                  }
+                }}
+                onToggleFeatured={(photo) => {
+                  if (reorderEnabled) return;
+                  void toggleFeaturedMutation.mutateAsync({
+                    id: photo.id,
+                    featured: !photo.featured,
+                  });
+                }}
               />
             </div>
           )
@@ -503,12 +573,26 @@ const AdminPhotos: React.FC = () => {
             photo={editingPhoto}
             onCancel={() => setEditingPhoto(null)}
             onSuccess={() => setEditingPhoto(null)}
+            onDelete={(photo) => {
+              const confirmed = window.confirm(
+                "Are you sure you want to delete this photo?",
+              );
+              if (confirmed) {
+                void deleteMutation.mutateAsync(photo.id);
+                setEditingPhoto(null);
+              }
+            }}
+            onToggleFeatured={(photo) => {
+              void toggleFeaturedMutation.mutateAsync({
+                id: photo.id,
+                featured: !photo.featured,
+              });
+            }}
           />
         ) : (
           <SortablePhotoList
             photos={photos}
             reorderEnabled={reorderEnabled}
-            viewMode={viewMode}
             onReorder={(ordered) => {
               void handleReorder(ordered);
             }}
@@ -525,7 +609,12 @@ const AdminPhotos: React.FC = () => {
             }}
             onDelete={(photo) => {
               if (reorderEnabled) return;
-              void deleteMutation.mutateAsync(photo.id);
+              const confirmed = window.confirm(
+                "Are you sure you want to delete this photo?",
+              );
+              if (confirmed) {
+                void deleteMutation.mutateAsync(photo.id);
+              }
             }}
             isLoading={isLoadingPhotos}
           />
