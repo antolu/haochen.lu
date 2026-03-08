@@ -415,13 +415,13 @@ const AdminEquipmentAliases: React.FC = () => {
             </div>
             <div className="space-y-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder={currentConfig.filters.searchPlaceholder}
                   value={currentSearchQuery}
                   onChange={(e) => setCurrentSearchQuery(e.target.value)}
-                  className="pl-10"
+                  style={{ paddingLeft: "2.5rem" }}
                 />
+                <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
               </div>
               {currentConfig.filters.additionalFilters}
             </div>
