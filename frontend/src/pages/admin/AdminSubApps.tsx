@@ -1,15 +1,13 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Layers, CheckCircle, XCircle, Puzzle } from "lucide-react";
+import { Plus, Puzzle } from "lucide-react";
 
 import SubAppForm from "../../components/SubAppForm";
 import SubAppList from "../../components/SubAppList";
-import StatCard from "../../components/admin/StatCard";
 import { Button } from "../../components/ui/button";
 import {
   useSubApps,
-  useSubAppStats,
   useCreateSubApp,
   useUpdateSubApp,
   useDeleteSubApp,
@@ -41,7 +39,6 @@ const AdminSubApps: React.FC = () => {
     isLoading: isLoadingSubApps,
     error: subappsError,
   } = useSubApps();
-  const { data: statsData, isLoading: isLoadingStats } = useSubAppStats();
 
   // Mutation hooks
   const createMutation = useCreateSubApp();
@@ -50,11 +47,6 @@ const AdminSubApps: React.FC = () => {
   const toggleEnabledMutation = useToggleSubAppEnabled();
 
   const subapps = subappsData?.subapps ?? [];
-  const stats = statsData ?? {
-    total_subapps: 0,
-    enabled_subapps: 0,
-    disabled_subapps: 0,
-  };
 
   const handleCreateSubApp = () => {
     setEditingSubApp(null);
@@ -165,39 +157,6 @@ const AdminSubApps: React.FC = () => {
             </Button>
           </div>
         </div>
-
-        {/* Stats Cards */}
-        {!isLoadingStats && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-            <StatCard
-              title="Total Sub-Apps"
-              value={stats.total_subapps}
-              gradient="from-blue-500/20 to-blue-600/20"
-              iconBg="bg-blue-50/50 dark:bg-blue-950/20"
-              icon={
-                <Layers className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              }
-            />
-            <StatCard
-              title="Enabled"
-              value={stats.enabled_subapps}
-              gradient="from-green-500/20 to-green-600/20"
-              iconBg="bg-green-50/50 dark:bg-green-950/20"
-              icon={
-                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-              }
-            />
-            <StatCard
-              title="Disabled"
-              value={stats.disabled_subapps}
-              gradient="from-orange-500/20 to-orange-600/20"
-              iconBg="bg-orange-50/50 dark:bg-orange-950/20"
-              icon={
-                <XCircle className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-              }
-            />
-          </div>
-        )}
       </div>
 
       {/* Form Modal */}

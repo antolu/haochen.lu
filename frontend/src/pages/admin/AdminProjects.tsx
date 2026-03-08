@@ -2,13 +2,11 @@ import React, { useState } from "react";
 import {
   useProjects,
   useDeleteProject,
-  useProjectStats,
   type Project,
   useReorderProjects,
 } from "../../hooks/useProjects";
 import SortableProjectList from "../../components/admin/SortableProjectList";
 import ProjectForm from "../../components/ProjectForm";
-import StatCard from "../../components/admin/StatCard";
 import {
   Select,
   SelectContent,
@@ -18,7 +16,7 @@ import {
 } from "../../components/ui/select";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
-import { Plus, Briefcase, Star, TrendingUp } from "lucide-react";
+import { Plus } from "lucide-react";
 
 type ViewMode = "list" | "create" | "edit";
 
@@ -52,7 +50,6 @@ const AdminProjects: React.FC = () => {
       return undefined;
     })(),
   });
-  const { data: stats } = useProjectStats();
   const reorderMutation = useReorderProjects();
   const deleteMutation = useDeleteProject();
 
@@ -114,7 +111,7 @@ const AdminProjects: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="space-y-8">
       {/* Header */}
       <div className="mb-10">
         <div className="flex items-center justify-between">
@@ -129,37 +126,6 @@ const AdminProjects: React.FC = () => {
             New Project
           </Button>
         </div>
-
-        {/* Stats */}
-        {stats && (
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <StatCard
-              title="Total Projects"
-              value={stats.total_projects}
-              gradient="from-primary/10 to-primary/20"
-              iconBg="bg-primary/10 dark:bg-primary/20"
-              icon={<Briefcase className="w-5 h-5 text-primary" />}
-            />
-            <StatCard
-              title="Featured"
-              value={stats.featured_projects}
-              gradient="from-yellow-500/20 to-yellow-600/20"
-              iconBg="bg-yellow-50/50 dark:bg-yellow-950/20"
-              icon={
-                <Star className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
-              }
-            />
-            <StatCard
-              title="Active"
-              value={projects.filter((p) => p.status === "active").length}
-              gradient="from-green-500/20 to-green-600/20"
-              iconBg="bg-green-50/50 dark:bg-green-950/20"
-              icon={
-                <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
-              }
-            />
-          </div>
-        )}
       </div>
 
       {/* Filters */}
