@@ -1,18 +1,16 @@
 import React, { useMemo, useState, useEffect } from "react";
 import type { Content, ContentCreate, ContentUpdate } from "../../types";
-import { Sheet, SheetContent } from "../ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "../ui/dialog";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
-import { Switch } from "../ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import MDEditor from "@uiw/react-md-editor";
 import ReactMarkdown from "react-markdown";
@@ -99,13 +97,13 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" widthClassName="w-full max-w-2xl">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogHeader>
+          <DialogTitle>
             {isEditing ? "Edit Content" : "Create Content"}
-          </h3>
-        </div>
+          </DialogTitle>
+        </DialogHeader>
 
         <div className="space-y-4">
           {!isEditing && (
@@ -120,67 +118,44 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
             </div>
           )}
 
-          <div>
-            <Label htmlFor="title">Title</Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Human-readable title"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label>Category</Label>
-              <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {(
-                    [
-                      "hero",
-                      "about",
-                      "contact",
-                      "navigation",
-                      "general",
-                    ] as const
-                  ).map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          {isEditing ? (
+            <div className="pb-2">
+              <Label className="text-muted-foreground text-xs uppercase tracking-wider">
+                Title
+              </Label>
+              <div className="text-lg font-medium">{title}</div>
             </div>
-
+          ) : (
             <div>
-              <Label>Content Type</Label>
-              <Select
-                value={contentType}
-                onValueChange={(v) => setContentType(v as EditorMode)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="text">text</SelectItem>
-                  <SelectItem value="html">html</SelectItem>
-                  <SelectItem value="markdown">markdown</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="title">Title</Label>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Human-readable title"
+              />
             </div>
-          </div>
+          )}
 
           {contentType === "text" && (
             <div>
-              <Label>Content</Label>
-              <Textarea
-                rows={10}
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-              />
+              <Label htmlFor="content">Content</Label>
+              {content.includes("\n") || content.length > 80 ? (
+                <Textarea
+                  id="content"
+                  rows={4}
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Enter text..."
+                />
+              ) : (
+                <Input
+                  id="content"
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Enter text..."
+                />
+              )}
             </div>
           )}
 
@@ -233,28 +208,17 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
             </Tabs>
           )}
 
-          <div className="flex items-center gap-2">
-            <Switch
-              id="is_active"
-              checked={isActive}
-              onCheckedChange={setIsActive}
-            />
-            <Label htmlFor="is_active" className="text-sm">
-              Active (content will be displayed on the website)
-            </Label>
-          </div>
-
-          <div className="flex items-center justify-end gap-2 pt-4">
+          <DialogFooter className="pt-4">
             <Button variant="ghost" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button onClick={handleSave} disabled={!canSubmit}>
               {isEditing ? "Update" : "Create"}
             </Button>
-          </div>
+          </DialogFooter>
         </div>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 };
 
