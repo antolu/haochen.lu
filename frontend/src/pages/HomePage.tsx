@@ -34,15 +34,8 @@ const HomePage: React.FC = () => {
       content.getByKeys([
         "hero.tagline",
         "hero.subtitle",
-        "about.title",
-        "about.description",
-        "about.interests_title",
-        "about.skills_title",
-        "photography.title",
         "photography.description",
-        "projects.title",
         "projects.description",
-        "contact.title",
         "contact.description",
         "social.linkedin_url",
         "social.google_scholar_url",
@@ -269,7 +262,7 @@ const HomePage: React.FC = () => {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-serif font-bold mb-4">
-              {homeContent?.["about.title"]?.content ?? "About Me"}
+              About Me
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               {homeContent?.["about.description"]?.content ??
@@ -358,8 +351,7 @@ const HomePage: React.FC = () => {
             className="text-center mb-12"
           >
             <h2 className="text-4xl font-serif font-bold text-gray-900 mb-4">
-              {homeContent?.["photography.title"]?.content ??
-                "Latest Photography"}
+              Latest Photography
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               {homeContent?.["photography.description"]?.content ??
@@ -486,7 +478,7 @@ const HomePage: React.FC = () => {
             className="text-center mb-12"
           >
             <h2 className="text-4xl font-serif font-bold text-gray-900 mb-4">
-              {homeContent?.["projects.title"]?.content ?? "Latest Projects"}
+              Latest Projects
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               {homeContent?.["projects.description"]?.content ??
@@ -608,7 +600,7 @@ const HomePage: React.FC = () => {
             className="text-center mb-24"
           >
             <h2 className="text-4xl md:text-5xl font-serif font-bold mb-4">
-              {homeContent?.["contact.title"]?.content ?? "Get In Touch"}
+              Get In Touch
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               {homeContent?.["contact.description"]?.content ??
