@@ -24,10 +24,6 @@ const BlogPostPage = lazy(() => import("./pages/BlogPostPage"));
 // Lazy-loaded Admin pages
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminPhotos = lazy(() => import("./pages/admin/AdminPhotos"));
-const AdminProfilePictures = lazy(
-  () => import("./pages/admin/AdminProfilePictures"),
-);
-const AdminHeroImages = lazy(() => import("./pages/admin/AdminHeroImages"));
 const AdminProjects = lazy(() => import("./pages/admin/AdminProjects"));
 const AdminBlog = lazy(() => import("./pages/admin/AdminBlog"));
 const AdminEquipmentAliases = lazy(
@@ -149,22 +145,6 @@ const AppContent: React.FC = () => {
               element={
                 <Suspense fallback={<AdminLoadingFallback />}>
                   <AdminPhotos />
-                </Suspense>
-              }
-            />
-            <Route
-              path="profile-pictures"
-              element={
-                <Suspense fallback={<AdminLoadingFallback />}>
-                  <AdminProfilePictures />
-                </Suspense>
-              }
-            />
-            <Route
-              path="hero-images"
-              element={
-                <Suspense fallback={<AdminLoadingFallback />}>
-                  <AdminHeroImages />
                 </Suspense>
               }
             />

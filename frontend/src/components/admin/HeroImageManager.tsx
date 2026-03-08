@@ -134,20 +134,16 @@ const HeroImageManager: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="mb-10">
-        <div className="flex items-center justify-between">
-          <div className="space-y-3">
-            <h1 className="admin-page-title">Hero Images</h1>
-            <p className="text-muted-foreground text-xl">
-              Manage homepage hero images and focal points
-            </p>
-          </div>
+      <div className="mb-8">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <h2 className="text-2xl font-semibold">Hero Images</h2>
           <Button
             variant="gradient"
             size="lg"
             onClick={() => setShowCreateForm(true)}
+            className="rounded-full shadow-lg shadow-primary/20"
           >
-            <Plus className="h-5 w-5 mr-2" />
+            <Plus className="h-4 w-4 mr-2" />
             Add Hero Image
           </Button>
         </div>

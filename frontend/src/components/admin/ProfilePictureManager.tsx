@@ -97,20 +97,16 @@ const ProfilePictureManager: React.FC = () => {
   return (
     <div>
       {/* Header */}
-      <div className="mb-10">
-        <div className="flex justify-between items-center">
-          <div className="space-y-3">
-            <h1 className="admin-page-title">Profile Pictures</h1>
-            <p className="text-muted-foreground text-xl">
-              Manage your profile pictures. Only one can be active at a time.
-            </p>
-          </div>
+      <div className="mb-8">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <h2 className="text-2xl font-semibold">Profile Pictures</h2>
           <Button
             variant="gradient"
             size="lg"
             onClick={() => setShowUpload(true)}
+            className="rounded-full shadow-lg shadow-primary/20"
           >
-            <Upload className="h-5 w-5 mr-2" />
+            <Upload className="h-4 w-4 mr-2" />
             Upload New Picture
           </Button>
         </div>

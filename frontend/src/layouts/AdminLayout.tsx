@@ -9,7 +9,6 @@ import {
   Layers,
   FileText,
   LogOut,
-  User,
   Menu,
   X,
   ChevronLeft,
@@ -17,7 +16,6 @@ import {
   Sun,
   Laptop,
   Settings,
-  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 
@@ -234,21 +232,9 @@ const AdminLayoutContent: React.FC = () => {
       badge: null,
     },
     {
-      name: "Profile Pictures",
-      href: "/admin/profile-pictures",
-      icon: User,
-      badge: null,
-    },
-    {
       name: "Projects",
       href: "/admin/projects",
       icon: FolderOpen,
-      badge: null,
-    },
-    {
-      name: "Hero Images",
-      href: "/admin/hero-images",
-      icon: Sparkles,
       badge: null,
     },
     {
