@@ -6,14 +6,13 @@ import {
   FolderOpen,
   PenTool,
   Eye,
-  Sparkles,
   Upload,
   Settings,
   FileText,
   ArrowUpRight,
 } from "lucide-react";
 
-import { photos, projects, blog, heroImages } from "../../api/client";
+import { photos, projects, blog } from "../../api/client";
 import { Link } from "react-router-dom";
 import type { PhotoStatsSummary, ProjectStatsSummary } from "../../types";
 import {
@@ -41,11 +40,6 @@ const AdminDashboard: React.FC = () => {
     queryFn: blog.getStats,
   });
 
-  const { data: heroImagesList } = useQuery({
-    queryKey: ["admin", "hero-images"],
-    queryFn: heroImages.list,
-  });
-
   const stats = [
     {
       name: "Total Photos",
@@ -63,16 +57,7 @@ const AdminDashboard: React.FC = () => {
       gradient: "from-emerald-500/10 via-teal-500/10 to-emerald-600/10",
       iconColor: "text-emerald-600 dark:text-emerald-400",
       bgColor: "bg-emerald-50 dark:bg-emerald-950/30",
-      borderGlow: "shadow-[0_0_15px_rgba(16,185,129,0.15)]",
-    },
-    {
-      name: "Hero Images",
-      stat: heroImagesList?.length ?? 0,
-      icon: Sparkles,
-      gradient: "from-amber-500/10 via-orange-500/10 to-amber-600/10",
-      iconColor: "text-amber-600 dark:text-amber-400",
-      bgColor: "bg-amber-50 dark:bg-amber-950/30",
-      borderGlow: "shadow-[0_0_15px_rgba(245,158,11,0.15)]",
+      borderGlow: "shadow-[0_0_15px_rgba(10,185,129,0.15)]",
     },
     {
       name: "Projects",
@@ -101,13 +86,6 @@ const AdminDashboard: React.FC = () => {
       icon: Upload,
       href: "/admin/photos",
       gradient: "from-blue-500/10 to-cyan-500/10",
-    },
-    {
-      title: "Hero Images",
-      description: "Manage homepage hero images",
-      icon: Sparkles,
-      href: "/admin/hero-images",
-      gradient: "from-indigo-500/10 to-purple-500/10",
     },
     {
       title: "Manage Projects",
@@ -154,7 +132,7 @@ const AdminDashboard: React.FC = () => {
       </motion.div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((item, index) => {
           const Icon = item.icon;
           return (
