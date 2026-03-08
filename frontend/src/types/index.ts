@@ -2,9 +2,7 @@ export interface Photo {
   id: string;
   title: string;
   description?: string;
-  category?: string;
   tags?: string;
-  comments?: string;
   filename: string;
   original_path: string;
   original_url?: string; // Secure API URL for original file

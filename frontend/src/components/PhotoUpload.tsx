@@ -13,7 +13,6 @@ interface PhotoUploadProps {
   onCancel?: () => void;
   maxFiles?: number;
   maxFileSize?: number;
-  category?: string;
 }
 
 const PhotoUpload: React.FC<PhotoUploadProps> = ({
@@ -21,15 +20,12 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
   onCancel,
   maxFiles = 10,
   maxFileSize = 50 * 1024 * 1024, // 50MB
-  category = "",
 }) => {
   const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([]);
   const [metadata, setMetadata] = useState<PhotoMetadata>({
     title: "",
     description: "",
-    category: category ?? "",
     tags: "",
-    comments: "",
     featured: false,
   });
   const [useQueue] = useState(true); // Enable queue by default
@@ -109,9 +105,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
         metadata: {
           title: metadata.title || file.file.name.replace(/\.[^/.]+$/, ""),
           description: metadata.description,
-          category: metadata.category,
           tags: metadata.tags,
-          comments: metadata.comments,
           featured: metadata.featured,
         },
       },
@@ -229,9 +223,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
               title:
                 newMetadata.title ?? file.file.name.replace(/\.[^/.]+$/, ""),
               description: newMetadata.description ?? "",
-              category: newMetadata.category ?? "",
               tags: newMetadata.tags ?? "",
-              comments: newMetadata.comments ?? "",
               featured: newMetadata.featured,
             },
             createdAt: Date.now(),

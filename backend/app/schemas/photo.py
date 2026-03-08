@@ -11,9 +11,7 @@ from app.types.access_control import AccessLevel
 class PhotoBase(BaseModel):
     title: str | None = None
     description: str | None = None
-    category: str | None = None
     tags: str | None = None
-    comments: str | None = None
     featured: bool = False
     access_level: AccessLevel = AccessLevel.PUBLIC
 
@@ -25,9 +23,7 @@ class PhotoCreate(PhotoBase):
 class PhotoUpdate(BaseModel):
     title: str | None = None
     description: str | None = None
-    category: str | None = None
     tags: str | None = None
-    comments: str | None = None
     featured: bool | None = None
     access_level: AccessLevel | None = None
 

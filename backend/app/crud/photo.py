@@ -16,7 +16,6 @@ async def get_photos(
     db: AsyncSession,
     skip: int = 0,
     limit: int = 20,
-    category: str | None = None,
     *,
     featured: bool | None = None,
     has_location: bool | None = None,
@@ -27,9 +26,6 @@ async def get_photos(
     exclude_photo_ids: set[UUID] | None = None,
 ) -> list[Photo]:
     query = select(Photo)
-
-    if category:
-        query = query.where(Photo.category == category)
 
     if featured is not None:
         query = query.where(Photo.featured == featured)
@@ -80,7 +76,6 @@ async def get_photos(
 
 async def get_photo_count(
     db: AsyncSession,
-    category: str | None = None,
     *,
     featured: bool | None = None,
     has_location: bool | None = None,
@@ -90,9 +85,6 @@ async def get_photo_count(
     exclude_photo_ids: set[UUID] | None = None,
 ) -> int:
     query = select(func.count(Photo.id))
-
-    if category:
-        query = query.where(Photo.category == category)
 
     if featured is not None:
         query = query.where(Photo.featured == featured)

@@ -21,9 +21,7 @@ const LazyMapPicker = lazy(() => import("../MapPicker"));
 interface PhotoFormData {
   title: string;
   description: string;
-  category: string;
   tags: string;
-  comments: string;
   featured: boolean;
   location_lat?: number;
   location_lon?: number;
@@ -52,9 +50,7 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
   const [form, setForm] = useState<PhotoFormData>({
     title: photo.title ?? "",
     description: photo.description ?? "",
-    category: photo.category ?? "",
     tags: photo.tags ?? "",
-    comments: photo.comments ?? "",
     featured: !!photo.featured,
     // Location
     location_lat:
@@ -70,9 +66,7 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
       setForm({
         title: photo.title ?? "",
         description: photo.description ?? "",
-        category: photo.category ?? "",
         tags: photo.tags ?? "",
-        comments: photo.comments ?? "",
         featured: !!photo.featured,
         // Location
         location_lat:
@@ -282,29 +276,6 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
                     setForm((f) => ({ ...f, description: e.target.value }))
                   }
                 />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium">Category</label>
-                  <input
-                    className="mt-1 w-full border border-input bg-background text-foreground rounded px-3 py-2"
-                    value={form.category}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, category: e.target.value }))
-                    }
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium">Comments</label>
-                  <input
-                    className="mt-1 w-full border border-input bg-background text-foreground rounded px-3 py-2"
-                    value={form.comments}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, comments: e.target.value }))
-                    }
-                  />
-                </div>
               </div>
 
               <div>

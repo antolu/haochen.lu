@@ -21,13 +21,6 @@ export const generateCaptionHtml = (photo: Photo): string => {
     );
   }
 
-  // Comments (if any)
-  if (photo.comments?.trim()) {
-    parts.push(
-      `<div class="lg-caption-comments"><p>${escapeHtml(photo.comments)}</p></div>`,
-    );
-  }
-
   return `<div class="lg-caption-container">${parts.join("")}</div>`;
 };
 

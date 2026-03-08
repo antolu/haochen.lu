@@ -16,9 +16,7 @@ class Photo(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     title = Column(String(200), nullable=False)
     description = Column(Text)
-    category = Column(String(50))
     tags = Column(String(500))  # JSON string of tags
-    comments = Column(Text)
 
     # File paths
     filename = Column(String(255), nullable=False)

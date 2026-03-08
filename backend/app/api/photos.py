@@ -217,7 +217,6 @@ def populate_photo_urls(photo_dict: dict, photo_id: str) -> dict:
 async def list_photos(
     page: int = Query(1, ge=1, description="Page number"),
     per_page: int = Query(20, ge=1, le=100, description="Items per page"),
-    category: str | None = Query(None, max_length=100),
     *,
     featured: bool | None = None,
     has_location: bool | None = None,
@@ -255,7 +254,6 @@ async def list_photos(
         db,
         skip=skip,
         limit=per_page,
-        category=category,
         featured=featured,
         has_location=has_location,
         near_lat=near_lat,
@@ -267,7 +265,6 @@ async def list_photos(
 
     total = await get_photo_count(
         db,
-        category=category,
         featured=featured,
         has_location=has_location,
         near_lat=near_lat,
@@ -451,9 +448,7 @@ async def upload_photo(
     file: UploadFile = _image_file_dependency,
     title: typing.Annotated[str, Form(max_length=200)] = "",
     description: typing.Annotated[str, Form(max_length=2000)] = "",
-    category: typing.Annotated[str, Form(max_length=100)] = "",
     tags: typing.Annotated[str, Form(max_length=500)] = "",
-    comments: typing.Annotated[str, Form(max_length=2000)] = "",
     *,
     featured: typing.Annotated[bool, Form()] = False,
     db: AsyncSession = _session_dependency,
@@ -513,9 +508,7 @@ async def upload_photo(
             photo_data = PhotoCreate(
                 title=normalized_title or default_title,
                 description=description or None,
-                category=category or None,
                 tags=tags or None,
-                comments=comments or None,
                 featured=featured,
             )
 
