@@ -93,6 +93,12 @@ const LocationSearch: React.FC<{
           value={query}
           onChange={handleInputChange}
           onFocus={() => setIsOpen(true)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+          }}
           placeholder="Search for a location..."
           className="w-full pl-10 pr-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent"
         />
@@ -119,6 +125,7 @@ const LocationSearch: React.FC<{
             results.map((result, index) => (
               <button
                 key={index}
+                type="button"
                 className="w-full px-3 py-2 text-left hover:bg-gray-50 focus:bg-gray-50 focus:outline-none first:rounded-t-lg last:rounded-b-lg"
                 onClick={() => handleResultClick(result)}
               >
@@ -188,6 +195,14 @@ const MapPicker: React.FC<MapPickerProps> = ({
     [onLocationSelect, onLocationChange],
   );
 
+  // Keep a stable ref so the map click handler always calls the latest version
+  // without being a dep of the init effect (which would destroy/recreate the map)
+  const handleLocationSelectRef =
+    useRef<(lat: number, lng: number) => void>(handleLocationSelect);
+  useEffect(() => {
+    handleLocationSelectRef.current = handleLocationSelect;
+  }, [handleLocationSelect]);
+
   const handleSearchLocationSelect = useCallback(
     (lat: number, lng: number) => {
       handleLocationSelect(lat, lng);
@@ -195,14 +210,22 @@ const MapPicker: React.FC<MapPickerProps> = ({
     [handleLocationSelect],
   );
 
+  const initialLatRef = useRef(currentLat);
+  const initialLngRef = useRef(currentLng);
+  const initialZoomRef = useRef(zoom);
+  const disabledRef = useRef(disabled);
+  useEffect(() => {
+    disabledRef.current = disabled;
+  }, [disabled]);
+
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
     const map = new maplibregl.Map({
       container: containerRef.current,
       style: DEFAULT_STYLE_URL,
-      center: [currentLng, currentLat],
-      zoom,
+      center: [initialLngRef.current, initialLatRef.current],
+      zoom: initialZoomRef.current,
       attributionControl: false,
     });
     mapRef.current = map;
@@ -225,15 +248,15 @@ const MapPicker: React.FC<MapPickerProps> = ({
     });
 
     const marker = new maplibregl.Marker({ color: "#2563eb" })
-      .setLngLat([currentLng, currentLat])
+      .setLngLat([initialLngRef.current, initialLatRef.current])
       .addTo(map);
     markerRef.current = marker;
 
     map.on("click", (e) => {
-      if (disabled) return;
+      if (disabledRef.current) return;
       const { lng, lat } = e.lngLat;
       marker.setLngLat([lng, lat]);
-      handleLocationSelect(lat, lng);
+      handleLocationSelectRef.current(lat, lng);
     });
 
     return () => {
@@ -241,15 +264,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
       mapRef.current = null;
       markerRef.current = null;
     };
-  }, [
-    DEFAULT_STYLE_URL,
-    FALLBACK_STYLE_URL,
-    currentLat,
-    currentLng,
-    disabled,
-    handleLocationSelect,
-    zoom,
-  ]);
+  }, [DEFAULT_STYLE_URL, FALLBACK_STYLE_URL]);
 
   // Sync view/marker when state changes
   useEffect(() => {

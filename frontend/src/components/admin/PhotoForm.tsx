@@ -62,6 +62,7 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
   });
 
   useEffect(() => {
+    // Only reset form if the photo ID has changed to prevent flickers during refetches
     const timer = setTimeout(() => {
       setForm({
         title: photo.title ?? "",
@@ -82,7 +83,8 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
       });
     }, 0);
     return () => clearTimeout(timer);
-  }, [photo]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [photo.id]); // ONLY change on ID, not identity
 
   const isSaving = updateMutation.isPending;
 
@@ -291,19 +293,6 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
                   }
                   placeholder="Search or create tags..."
                 />
-              </div>
-
-              <div>
-                <label className="inline-flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={form.featured}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, featured: e.target.checked }))
-                    }
-                  />
-                  <span className="text-sm">Featured</span>
-                </label>
               </div>
 
               {/* Location Section */}
