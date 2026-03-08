@@ -1,10 +1,8 @@
 import React from "react";
 import type { Content } from "../../types";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { formatDateTime } from "../../utils/dateFormat";
-import { cn } from "../../lib/utils";
 import { Pencil } from "lucide-react";
 
 interface ContentCardProps {
@@ -12,14 +10,6 @@ interface ContentCardProps {
   onEdit: (item: Content) => void;
   variant?: "default" | "compact";
 }
-
-const typeToBadge: Record<string, string> = {
-  text: "bg-secondary text-secondary-foreground",
-  html: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
-  markdown:
-    "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300",
-};
-
 // Smart preview that respects word boundaries
 const getSmartPreview = (text: string, maxLength: number = 140): string => {
   if (text.length <= maxLength) return text;
@@ -47,26 +37,15 @@ export const ContentCard: React.FC<ContentCardProps> = ({
 
   if (variant === "compact") {
     return (
-      <Card className="border-l-4 border-l-primary/20 hover:border-l-primary/40 transition-colors">
+      <Card
+        className="border-l-4 border-l-primary/20 hover:border-l-primary/40 transition-all cursor-pointer hover:bg-accent/5 group"
+        onClick={() => onEdit(item)}
+      >
         <CardContent className="p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <h4 className="text-sm font-medium truncate">{item.title}</h4>
-                <Badge
-                  className={cn(
-                    "text-[10px] px-1.5 py-0.5",
-                    typeToBadge[item.content_type] ?? typeToBadge.text,
-                  )}
-                >
-                  {item.content_type}
-                </Badge>
-              </div>
+              <h4 className="text-sm font-medium truncate">{item.title}</h4>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
-                <code className="rounded bg-muted px-1 py-0.5 text-[10px]">
-                  {item.key}
-                </code>
-                <span>•</span>
                 <span title={item.updated_at}>
                   {formatDateTime(item.updated_at)}
                 </span>
@@ -78,8 +57,11 @@ export const ContentCard: React.FC<ContentCardProps> = ({
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6"
-              onClick={() => onEdit(item)}
+              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(item);
+              }}
               aria-label="Edit content"
             >
               <Pencil className="h-3 w-3" />
@@ -91,14 +73,15 @@ export const ContentCard: React.FC<ContentCardProps> = ({
   }
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card
+      className="h-full flex flex-col cursor-pointer hover:bg-accent/5 hover:border-primary/20 transition-all group"
+      onClick={() => onEdit(item)}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <CardTitle className="text-base truncate">{item.title}</CardTitle>
             <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-              <code className="rounded bg-muted px-1.5 py-0.5">{item.key}</code>
-              <span>•</span>
               <span className="capitalize">{item.category}</span>
               <span>•</span>
               <span title={item.updated_at}>
@@ -107,18 +90,14 @@ export const ContentCard: React.FC<ContentCardProps> = ({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Badge
-              className={cn(
-                "text-xs",
-                typeToBadge[item.content_type] ?? typeToBadge.text,
-              )}
-            >
-              {item.content_type}
-            </Badge>
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => onEdit(item)}
+              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(item);
+              }}
               aria-label="Edit content"
             >
               <Pencil className="h-4 w-4" />
