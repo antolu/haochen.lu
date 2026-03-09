@@ -2,9 +2,15 @@ import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { cn } from "../../lib/utils";
 
-export const Sheet = DialogPrimitive.Root;
-export const SheetTrigger = DialogPrimitive.Trigger;
-export const SheetClose = DialogPrimitive.Close;
+export const Sheet = (
+  props: React.ComponentProps<typeof DialogPrimitive.Root>,
+) => <DialogPrimitive.Root {...props} />;
+export const SheetTrigger = (
+  props: React.ComponentProps<typeof DialogPrimitive.Trigger>,
+) => <DialogPrimitive.Trigger {...props} />;
+export const SheetClose = (
+  props: React.ComponentProps<typeof DialogPrimitive.Close>,
+) => <DialogPrimitive.Close {...props} />;
 
 export const SheetContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,

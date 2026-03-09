@@ -354,7 +354,6 @@ const HeroImageManager: React.FC = () => {
                   <div className="mb-6">
                     <SimplePhotoUpload
                       maxFiles={1}
-                      category="hero"
                       onComplete={handlePhotoUploadComplete}
                       onCancel={() => {
                         setShowCreateForm(false);

@@ -319,11 +319,6 @@ const SortableRow: React.FC<SortableRowProps> = ({
               Featured
             </Badge>
           )}
-          {photo.category && (
-            <Badge variant="outline" className="text-xs">
-              {photo.category}
-            </Badge>
-          )}
         </div>
       </TableCell>
       <TableCell className="text-right">

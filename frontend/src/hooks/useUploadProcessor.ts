@@ -79,9 +79,7 @@ export const useUploadProcessor = () => {
             title:
               upload.metadata.title || upload.fileName.replace(/\.[^/.]+$/, ""),
             description: upload.metadata.description,
-            category: upload.metadata.category,
             tags: upload.metadata.tags,
-            comments: upload.metadata.comments,
             featured: upload.metadata.featured,
           },
         },
@@ -110,9 +108,12 @@ export const useUploadProcessor = () => {
             } else if (axiosError.response?.status === 415) {
               errorMessage = "Unsupported file type";
             } else if (axiosError.response?.status === 422) {
-              const detail = (axiosError.response?.data as { detail?: string })
-                ?.detail;
-              errorMessage = detail ?? "Invalid image data";
+              const detail = (
+                axiosError.response?.data as { detail?: string | string[] }
+              )?.detail;
+              errorMessage = Array.isArray(detail)
+                ? detail.join(", ")
+                : (detail ?? "Invalid image data");
             } else if (axiosError.response?.status === 500) {
               errorMessage = "Server error during processing";
             } else if (
@@ -126,8 +127,11 @@ export const useUploadProcessor = () => {
             ) {
               errorMessage = "Network error";
             } else {
+              const detail = (
+                axiosError.response?.data as { detail?: string | string[] }
+              )?.detail;
               errorMessage =
-                (axiosError.response?.data as { detail?: string })?.detail ??
+                (Array.isArray(detail) ? detail.join(", ") : detail) ??
                 error.message ??
                 "Upload failed";
             }

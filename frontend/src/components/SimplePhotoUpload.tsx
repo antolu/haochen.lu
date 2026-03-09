@@ -12,7 +12,6 @@ interface SimplePhotoUploadProps {
   onCancel?: () => void;
   maxFiles?: number;
   maxFileSize?: number;
-  category?: string;
   autoUpload?: boolean;
   customUpload?: (file: File) => Promise<unknown>;
 }
@@ -22,7 +21,6 @@ const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
   onCancel,
   maxFiles = 1,
   maxFileSize = 50 * 1024 * 1024, // 50MB
-  category = "hero",
   autoUpload = true,
   customUpload,
 }) => {
@@ -81,7 +79,6 @@ const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
           metadata: {
             title: file.file.name.replace(/\.[^/.]+$/, ""), // Remove file extension
             description: "",
-            category,
             tags: "",
             featured: false,
           },
@@ -121,7 +118,7 @@ const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
         },
       );
     },
-    [uploadMutation, category, setUploadFiles, setUploadedPhotos, customUpload],
+    [uploadMutation, setUploadFiles, setUploadedPhotos, customUpload],
   );
 
   // Auto-upload files when they're added (if enabled)

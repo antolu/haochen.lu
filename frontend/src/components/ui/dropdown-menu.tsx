@@ -3,8 +3,12 @@ import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { Check, ChevronRight } from "lucide-react";
 import { cn } from "../../lib/utils";
 
-export const DropdownMenu = DropdownMenuPrimitive.Root;
-export const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger;
+export const DropdownMenu = (
+  props: React.ComponentProps<typeof DropdownMenuPrimitive.Root>,
+) => <DropdownMenuPrimitive.Root {...props} />;
+export const DropdownMenuTrigger = (
+  props: React.ComponentProps<typeof DropdownMenuPrimitive.Trigger>,
+) => <DropdownMenuPrimitive.Trigger {...props} />;
 export const DropdownMenuContent = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content>
@@ -74,7 +78,9 @@ export const DropdownMenuCheckboxItem = React.forwardRef<
 DropdownMenuCheckboxItem.displayName =
   DropdownMenuPrimitive.CheckboxItem.displayName;
 
-export const DropdownMenuSub = DropdownMenuPrimitive.Sub;
+export const DropdownMenuSub = (
+  props: React.ComponentProps<typeof DropdownMenuPrimitive.Sub>,
+) => <DropdownMenuPrimitive.Sub {...props} />;
 export const DropdownMenuSubTrigger = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.SubTrigger>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubTrigger> & {

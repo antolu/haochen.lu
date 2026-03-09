@@ -224,7 +224,6 @@ export const photos = {
     params: {
       page?: number;
       per_page?: number;
-      category?: string;
       featured?: boolean;
       order_by?: string;
     } = {},
@@ -264,9 +263,7 @@ export const photos = {
     metadata: {
       title?: string;
       description?: string;
-      category?: string;
       tags?: string;
-      comments?: string;
       featured?: boolean;
     },
     options?: { uploadId?: string },

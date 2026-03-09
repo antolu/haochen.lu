@@ -153,7 +153,6 @@ export const useOptimizedPhotos = (
 // Hook to get photos with infinite scrolling for large galleries
 export const useInfinitePhotos = (
   params: {
-    category?: string;
     featured?: boolean;
     order_by?: string;
   } = {},
@@ -225,9 +224,7 @@ export const useUploadPhoto = () => {
       metadata: {
         title?: string;
         description?: string;
-        category?: string;
         tags?: string;
-        comments?: string;
         featured?: boolean;
       };
     }) => {
@@ -305,7 +302,6 @@ export const useUploadPhoto = () => {
             id: `temp-${Date.now()}`,
             title: metadata.title ?? file.name,
             description: metadata.description,
-            category: metadata.category,
             tags: metadata.tags,
             featured: metadata.featured ?? false,
             filename: file.name,
