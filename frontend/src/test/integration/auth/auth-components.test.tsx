@@ -151,14 +151,16 @@ describe("Auth Components Integration Tests", () => {
       );
 
       // Should show login page initially
-      expect(screen.getByText(/sign in to admin panel/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/sign in to admin panel|admin gateway/i),
+      ).toBeInTheDocument();
 
       // Fill and submit login form
       const usernameInput = screen.getByLabelText(/username/i);
       const passwordInput = screen.getByLabelText(/password/i);
       const rememberMeCheckbox = screen.getByLabelText(/keep me logged in/i);
       const loginButton = screen.getByRole("button", {
-        name: /sign (in|ing in)/i,
+        name: /login|sign (in|ing in)|unlock access/i,
       });
 
       await user.type(usernameInput, "testuser");
@@ -194,7 +196,7 @@ describe("Auth Components Integration Tests", () => {
       const usernameInput = screen.getByLabelText(/username/i);
       const passwordInput = screen.getByLabelText(/password/i);
       const loginButton = screen.getByRole("button", {
-        name: /sign (in|ing in)/i,
+        name: /login|sign (in|ing in)|unlock access/i,
       });
 
       await user.type(usernameInput, "testuser");
@@ -229,7 +231,7 @@ describe("Auth Components Integration Tests", () => {
       const usernameInput = screen.getByLabelText(/username/i);
       const passwordInput = screen.getByLabelText(/password/i);
       const loginButton = screen.getByRole("button", {
-        name: /sign (in|ing in)/i,
+        name: /login|sign (in|ing in)|unlock access/i,
       });
 
       await user.type(usernameInput, "testuser");
@@ -237,12 +239,16 @@ describe("Auth Components Integration Tests", () => {
       await user.click(loginButton);
 
       // Should show loading state
-      expect(screen.getByText(/signing in/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/signing in|authenticating/i),
+      ).toBeInTheDocument();
       expect(loginButton).toBeDisabled();
 
       // Wait for completion
       await waitFor(() => {
-        expect(screen.queryByText(/signing in.../i)).not.toBeInTheDocument();
+        expect(
+          screen.queryByText(/signing in...|authenticating.../i),
+        ).not.toBeInTheDocument();
       });
     });
 
@@ -260,7 +266,7 @@ describe("Auth Components Integration Tests", () => {
       const passwordInput = screen.getByLabelText(/password/i);
       const rememberMeCheckbox = screen.getByLabelText(/keep me logged in/i);
       const loginButton = screen.getByRole("button", {
-        name: /sign (in|ing in)/i,
+        name: /login|sign (in|ing in)|unlock access/i,
       });
 
       await user.type(usernameInput, "testuser");
@@ -430,7 +436,9 @@ describe("Auth Components Integration Tests", () => {
       );
 
       // Should redirect to login page
-      expect(screen.getByText(/sign in to admin panel/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/sign in to admin panel|admin gateway/i),
+      ).toBeInTheDocument();
       expect(screen.queryByText("Dashboard")).not.toBeInTheDocument();
     });
 
@@ -475,7 +483,9 @@ describe("Auth Components Integration Tests", () => {
 
       // Should redirect to login
       await waitFor(() => {
-        expect(screen.getByText(/sign in to admin panel/i)).toBeInTheDocument();
+        expect(
+          screen.getByText(/sign in to admin panel|admin gateway/i),
+        ).toBeInTheDocument();
         expect(screen.queryByText("Dashboard")).not.toBeInTheDocument();
       });
     });
@@ -494,12 +504,16 @@ describe("Auth Components Integration Tests", () => {
       );
 
       // Should start at login (redirected from protected route)
-      expect(screen.getByText(/sign in to admin panel/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/sign in to admin panel|admin gateway/i),
+      ).toBeInTheDocument();
 
       // Login
       const usernameInput = screen.getByLabelText(/username/i);
       const passwordInput = screen.getByLabelText(/password/i);
-      const loginButton = screen.getByRole("button", { name: /sign in/i });
+      const loginButton = screen.getByRole("button", {
+        name: /login|sign in|unlock access/i,
+      });
 
       await user.type(usernameInput, "testuser");
       await user.type(passwordInput, "password123");
@@ -516,7 +530,9 @@ describe("Auth Components Integration Tests", () => {
 
       // Should return to login
       await waitFor(() => {
-        expect(screen.getByText(/sign in to admin panel/i)).toBeInTheDocument();
+        expect(
+          screen.getByText(/sign in to admin panel|admin gateway/i),
+        ).toBeInTheDocument();
       });
     });
 
@@ -587,7 +603,9 @@ describe("Auth Components Integration Tests", () => {
 
       const usernameInput = screen.getByLabelText(/username/i);
       const passwordInput = screen.getByLabelText(/password/i);
-      const loginButton = screen.getByRole("button", { name: /sign in/i });
+      const loginButton = screen.getByRole("button", {
+        name: /login|sign in|unlock access/i,
+      });
 
       await user.type(usernameInput, "testuser");
       await user.type(passwordInput, "password123");
@@ -619,7 +637,9 @@ describe("Auth Components Integration Tests", () => {
 
       const usernameInput = screen.getByLabelText(/username/i);
       const passwordInput = screen.getByLabelText(/password/i);
-      const loginButton = screen.getByRole("button", { name: /sign in/i });
+      const loginButton = screen.getByRole("button", {
+        name: /login|sign in|unlock access/i,
+      });
 
       await user.type(usernameInput, "testuser");
       await user.type(passwordInput, "password123");
@@ -647,7 +667,9 @@ describe("Auth Components Integration Tests", () => {
 
       const usernameInput = screen.getByLabelText(/username/i);
       const passwordInput = screen.getByLabelText(/password/i);
-      const loginButton = screen.getByRole("button", { name: /sign in/i });
+      const loginButton = screen.getByRole("button", {
+        name: /login|sign in|unlock access/i,
+      });
 
       // Submit invalid credentials
       await user.type(usernameInput, "testuser");

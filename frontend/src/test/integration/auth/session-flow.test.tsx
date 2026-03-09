@@ -97,7 +97,9 @@ describe("Session Flow Integration Tests", () => {
       const usernameInput = screen.getByLabelText(/username/i);
       const passwordInput = screen.getByLabelText(/password/i);
       const rememberMeCheckbox = screen.getByLabelText(/keep me logged in/i);
-      const loginButton = screen.getByRole("button", { name: /sign in/i });
+      const loginButton = screen.getByRole("button", {
+        name: /login|sign in|unlock access/i,
+      });
 
       await user.type(usernameInput, "testuser");
       await user.type(passwordInput, "password123");
@@ -133,7 +135,9 @@ describe("Session Flow Integration Tests", () => {
 
       const usernameInput = screen.getByLabelText(/username/i);
       const passwordInput = screen.getByLabelText(/password/i);
-      const loginButton = screen.getByRole("button", { name: /sign in/i });
+      const loginButton = screen.getByRole("button", {
+        name: /login|sign in|unlock access/i,
+      });
 
       await user.type(usernameInput, "testuser");
       await user.type(passwordInput, "password123");
@@ -165,7 +169,7 @@ describe("Session Flow Integration Tests", () => {
       const usernameInput = screen.getByLabelText(/username/i);
       const passwordInput = screen.getByLabelText(/password/i);
       const loginButton = screen.getByRole("button", {
-        name: /sign (in|ing in)/i,
+        name: /login|sign (in|ing in)|unlock access/i,
       });
 
       await user.type(usernameInput, "testuser");
@@ -510,7 +514,9 @@ describe("Session Flow Integration Tests", () => {
 
       const usernameInput = screen.getByLabelText(/username/i);
       const passwordInput = screen.getByLabelText(/password/i);
-      const loginButton = screen.getByRole("button", { name: /sign in/i });
+      const loginButton = screen.getByRole("button", {
+        name: /login|sign in|unlock access/i,
+      });
 
       await user.type(usernameInput, "testuser");
       await user.type(passwordInput, "password123");
@@ -572,7 +578,9 @@ describe("Session Flow Integration Tests", () => {
 
       const usernameInput = screen.getByLabelText(/username/i);
       const passwordInput = screen.getByLabelText(/password/i);
-      const loginButton = screen.getByRole("button", { name: /sign in/i });
+      const loginButton = screen.getByRole("button", {
+        name: /login|sign in|unlock access/i,
+      });
 
       await user.type(usernameInput, "testuser");
       await user.type(passwordInput, "password123");
