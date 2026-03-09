@@ -165,9 +165,6 @@ describe("PhotoUpload Component Tests", () => {
 
       expect(screen.getByLabelText(/title/i)).toHaveValue("");
       expect(screen.getByLabelText(/description/i)).toHaveValue("");
-      expect(
-        screen.getByRole("combobox", { name: /category/i }),
-      ).toBeInTheDocument();
       expect(screen.getByLabelText(/tags/i)).toHaveValue("");
       expect(
         screen.getByLabelText(/mark as featured photo/i),
@@ -289,9 +286,7 @@ describe("PhotoUpload Component Tests", () => {
             metadata: {
               title: "test",
               description: "",
-              category: "",
               tags: "",
-              comments: "",
               featured: false,
             },
           }),
@@ -324,9 +319,7 @@ describe("PhotoUpload Component Tests", () => {
             metadata: expect.objectContaining({
               title: "My Custom Title",
               description: "",
-              category: "",
               tags: "",
-              comments: "",
               featured: false,
             }),
           }),
@@ -358,9 +351,7 @@ describe("PhotoUpload Component Tests", () => {
             metadata: expect.objectContaining({
               title: "Partial Title",
               description: "",
-              category: "",
               tags: "",
-              comments: "",
               featured: true,
             }),
           }),
@@ -391,9 +382,7 @@ describe("PhotoUpload Component Tests", () => {
             metadata: expect.objectContaining({
               title: "test",
               description: "\t\n  ",
-              category: "",
               tags: "",
-              comments: "",
               featured: false,
             }),
           }),
@@ -551,7 +540,6 @@ describe("PhotoUpload Component Tests", () => {
             metadata: expect.objectContaining({
               title: "Batch Title",
               description: "Batch upload test",
-              category: "",
             }),
           }),
         );
@@ -562,7 +550,6 @@ describe("PhotoUpload Component Tests", () => {
             metadata: expect.objectContaining({
               title: "Batch Title",
               description: "Batch upload test",
-              category: "",
             }),
           }),
         );
@@ -573,7 +560,6 @@ describe("PhotoUpload Component Tests", () => {
             metadata: expect.objectContaining({
               title: "Batch Title",
               description: "Batch upload test",
-              category: "",
             }),
           }),
         );

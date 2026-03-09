@@ -12,6 +12,7 @@ interface TagMultiSelectProps {
   onChange: (values: string[]) => void;
   onBlur?: () => void;
   name?: string;
+  id?: string;
   placeholder?: string;
 }
 
@@ -23,6 +24,7 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
   onChange,
   onBlur,
   name,
+  id,
   placeholder = "Search or create tags...",
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -97,6 +99,7 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
         onBlur={onBlur}
         inputProps={{
           name,
+          id,
           autoComplete: "off",
           list: DATALIST_ID,
         }}

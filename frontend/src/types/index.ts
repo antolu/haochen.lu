@@ -43,8 +43,6 @@ export interface Photo {
   shutter_speed?: string;
   focal_length?: number;
   date_taken?: string;
-  category?: string;
-  comments?: string;
 
   // Flexible metadata
   custom_metadata?: Record<string, unknown>;

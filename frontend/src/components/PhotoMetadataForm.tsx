@@ -113,6 +113,7 @@ const PhotoMetadataForm: React.FC<PhotoMetadataFormProps> = ({
             control={control}
             render={({ field }) => (
               <TagMultiSelect
+                id="tags"
                 value={
                   typeof field.value === "string"
                     ? field.value.split(",").filter(Boolean)
