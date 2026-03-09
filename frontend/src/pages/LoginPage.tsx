@@ -4,8 +4,9 @@ import type { AxiosError } from "axios";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
-import { ArrowLeft, Loader2, LogIn } from "lucide-react";
+import { ArrowLeft, Check, Loader2, LogIn } from "lucide-react";
 
+import { ThemeProvider } from "../components/theme-provider";
 import { useAuthStore } from "../stores/authStore";
 import type { LoginRequest } from "../types";
 import { Input } from "../components/ui/input";
@@ -101,153 +102,158 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 py-12 px-4 sm:px-6 lg:px-8">
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="max-w-md w-full"
-      >
-        <Card className="glass border-border/40 shadow-2xl overflow-hidden">
-          <CardHeader className="space-y-1 pb-6 pt-10 text-center">
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-              className="mx-auto bg-primary/10 w-16 h-16 rounded-2xl flex items-center justify-center mb-4 border border-primary/20"
-            >
-              <LogIn className="w-8 h-8 text-primary shadow-glow-sm" />
-            </motion.div>
-            <CardTitle className="text-3xl font-serif font-bold tracking-tight text-foreground">
-              Admin Gateway
-            </CardTitle>
-            <CardDescription className="text-muted-foreground/80 font-medium">
-              Enter your credentials to manage your portfolio
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent>
-            <form
-              className="space-y-6"
-              onSubmit={(e) => {
-                void handleSubmit((d) => onSubmit(d))(e);
-              }}
-            >
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="username">Username</Label>
-                  <Input
-                    id="username"
-                    type="text"
-                    autoComplete="username"
-                    placeholder="e.g. administrator"
-                    {...register("username", {
-                      required: "Username is required",
-                    })}
-                    className={
-                      errors.username
-                        ? "border-destructive focus-visible:border-destructive"
-                        : ""
-                    }
-                  />
-                  {errors.username && (
-                    <p className="text-xs text-destructive font-medium animate-in fade-in slide-in-from-top-1">
-                      {errors.username.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    autoComplete="current-password"
-                    placeholder="••••••••"
-                    {...register("password", {
-                      required: "Password is required",
-                    })}
-                    className={
-                      errors.password
-                        ? "border-destructive focus-visible:border-destructive"
-                        : ""
-                    }
-                  />
-                  {errors.password && (
-                    <p className="text-xs text-destructive font-medium animate-in fade-in slide-in-from-top-1">
-                      {errors.password.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <input
-                  id="rememberMe"
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-border/50 bg-background text-primary ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-colors cursor-pointer accent-primary"
-                  {...register("rememberMe")}
-                />
-                <Label
-                  htmlFor="rememberMe"
-                  className="text-sm font-medium leading-none cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Keep me logged in for 30 days
-                </Label>
-              </div>
-
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  className="rounded-lg bg-destructive/10 p-3 border border-destructive/20"
-                >
-                  <p className="text-sm text-destructive font-medium text-center">
-                    {error}
-                  </p>
-                </motion.div>
-              )}
-
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full h-11 text-base font-semibold transition-all duration-300 shadow-glow-sm hover:shadow-glow"
-                variant="gradient"
+    <ThemeProvider defaultTheme="system" storageKey="admin-ui-theme">
+      <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8 text-foreground transition-colors duration-300">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="max-w-md w-full"
+        >
+          <Card className="glass border-border/40 shadow-2xl overflow-hidden">
+            <CardHeader className="space-y-1 pb-6 pt-10 text-center">
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+                className="mx-auto bg-primary/10 w-16 h-16 rounded-2xl flex items-center justify-center mb-4 border border-primary/20"
               >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Authenticating...
-                  </>
-                ) : (
-                  "Login"
-                )}
-              </Button>
-            </form>
-          </CardContent>
+                <LogIn className="w-8 h-8 text-primary shadow-glow-sm" />
+              </motion.div>
+              <CardTitle className="text-3xl font-serif font-bold tracking-tight text-foreground">
+                Admin Gateway
+              </CardTitle>
+              <CardDescription className="text-muted-foreground/80 font-medium">
+                Enter your credentials to manage your portfolio
+              </CardDescription>
+            </CardHeader>
 
-          <CardFooter className="flex flex-col space-y-4 pb-10 pt-4">
-            <div className="relative w-full">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-border/40" />
+            <CardContent>
+              <form
+                className="space-y-6"
+                onSubmit={(e) => {
+                  void handleSubmit((d) => onSubmit(d))(e);
+                }}
+              >
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="username">Username</Label>
+                    <Input
+                      id="username"
+                      type="text"
+                      autoComplete="username"
+                      placeholder="e.g. administrator"
+                      {...register("username", {
+                        required: "Username is required",
+                      })}
+                      className={
+                        errors.username
+                          ? "border-destructive focus-visible:border-destructive"
+                          : ""
+                      }
+                    />
+                    {errors.username && (
+                      <p className="text-xs text-destructive font-medium animate-in fade-in slide-in-from-top-1">
+                        {errors.username.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      autoComplete="current-password"
+                      placeholder="••••••••"
+                      {...register("password", {
+                        required: "Password is required",
+                      })}
+                      className={
+                        errors.password
+                          ? "border-destructive focus-visible:border-destructive"
+                          : ""
+                      }
+                    />
+                    {errors.password && (
+                      <p className="text-xs text-destructive font-medium animate-in fade-in slide-in-from-top-1">
+                        {errors.password.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <div className="relative flex items-center justify-center">
+                    <input
+                      id="rememberMe"
+                      type="checkbox"
+                      className="peer h-4 w-4 shrink-0 rounded border border-border/50 bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 checked:bg-primary checked:border-primary appearance-none transition-all cursor-pointer"
+                      {...register("rememberMe")}
+                    />
+                    <Check className="absolute h-3 w-3 text-primary-foreground opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" />
+                  </div>
+                  <Label
+                    htmlFor="rememberMe"
+                    className="text-sm font-medium leading-none cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Keep me logged in for 30 days
+                  </Label>
+                </div>
+
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="rounded-lg bg-destructive/10 p-3 border border-destructive/20"
+                  >
+                    <p className="text-sm text-destructive font-medium text-center">
+                      {error}
+                    </p>
+                  </motion.div>
+                )}
+
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full h-11 text-base font-semibold transition-all duration-300 shadow-glow-sm hover:shadow-glow"
+                  variant="gradient"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Authenticating...
+                    </>
+                  ) : (
+                    "Login"
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+
+            <CardFooter className="flex flex-col space-y-4 pb-10 pt-4">
+              <div className="relative w-full">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border/40" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground/60 font-semibold tracking-wider">
+                    Navigation
+                  </span>
+                </div>
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground/60 font-semibold tracking-wider">
-                  Navigation
-                </span>
-              </div>
-            </div>
-            <Link
-              to="/"
-              className="group flex items-center justify-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors gap-2"
-            >
-              <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-              Return to Gallery
-            </Link>
-          </CardFooter>
-        </Card>
-      </motion.div>
-    </div>
+              <Link
+                to="/"
+                className="group flex items-center justify-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors gap-2"
+              >
+                <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+                Return to Gallery
+              </Link>
+            </CardFooter>
+          </Card>
+        </motion.div>
+      </div>
+    </ThemeProvider>
   );
 };
 

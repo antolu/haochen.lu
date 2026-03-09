@@ -1,9 +1,11 @@
 import React from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
 import { Label } from "./ui/label";
+import TagMultiSelect from "./admin/TagMultiSelect";
+import { usePhotoTags } from "../hooks/usePhotos";
 
 export interface PhotoMetadata {
   title: string;
@@ -47,15 +49,25 @@ const PhotoMetadataForm: React.FC<PhotoMetadataFormProps> = ({
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<PhotoMetadata>({
     defaultValues,
     mode: "onBlur",
   });
 
+  const { data: distinctTags = [] } = usePhotoTags();
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+    if (e.key === "Enter" && !(e.target instanceof HTMLTextAreaElement)) {
+      e.preventDefault();
+    }
+  };
+
   return (
     <form
       onSubmit={(e) => void handleSubmit(onSubmit)(e)}
+      onKeyDown={handleKeyDown}
       className="space-y-4"
     >
       {/* Title Field */}
@@ -96,14 +108,28 @@ const PhotoMetadataForm: React.FC<PhotoMetadataFormProps> = ({
       {fields.showTags && (
         <div className="space-y-2">
           <Label htmlFor="tags">Tags</Label>
-          <Input
-            id="tags"
-            type="text"
-            {...register("tags")}
-            placeholder="landscape, sunset, mountain (comma-separated)"
+          <Controller
+            name="tags"
+            control={control}
+            render={({ field }) => (
+              <TagMultiSelect
+                value={
+                  typeof field.value === "string"
+                    ? field.value.split(",").filter(Boolean)
+                    : []
+                }
+                options={distinctTags}
+                onChange={(values: string[]) =>
+                  field.onChange(values.join(","))
+                }
+                onBlur={field.onBlur}
+                name={field.name}
+                placeholder="Add tags... (Enter, Comma, or Space)"
+              />
+            )}
           />
           <p className="text-xs text-muted-foreground">
-            Separate tags with commas
+            Press Enter, Comma, or Space to create a tag
           </p>
         </div>
       )}
