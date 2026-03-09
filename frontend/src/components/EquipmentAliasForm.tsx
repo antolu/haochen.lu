@@ -16,6 +16,7 @@ import { Badge } from "./ui/badge";
 import { Card, CardContent } from "./ui/card";
 import { Switch } from "./ui/switch";
 import { Camera, Settings, AlertCircle } from "lucide-react";
+import { cn } from "../lib/utils";
 
 type EquipmentType = "cameras" | "lenses";
 type AliasType = CameraAlias | LensAlias;
@@ -341,12 +342,28 @@ const EquipmentAliasForm: React.FC<EquipmentAliasFormProps> = ({
                   }`}
                 />
               ) : (
-                <Input
-                  value={(formData[field.key] as string) ?? ""}
-                  onChange={(e) => handleInputChange(field.key, e.target.value)}
-                  placeholder={field.placeholder}
-                  className={errors[field.key] ? "border-destructive" : ""}
-                />
+                <div
+                  className={cn(field.key === "original_name" && "cursor-help")}
+                  title={
+                    field.key === "original_name"
+                      ? "Original name is immutable to ensure unique matching with photo EXIF data."
+                      : undefined
+                  }
+                >
+                  <Input
+                    value={(formData[field.key] as string) ?? ""}
+                    onChange={(e) =>
+                      handleInputChange(field.key, e.target.value)
+                    }
+                    placeholder={field.placeholder}
+                    className={cn(
+                      errors[field.key] ? "border-destructive" : "",
+                      field.key === "original_name" &&
+                        "bg-muted/50 font-mono text-xs",
+                    )}
+                    readOnly={field.key === "original_name"}
+                  />
+                </div>
               )}
 
               {errors[field.key] && (

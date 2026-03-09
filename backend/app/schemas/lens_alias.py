@@ -26,7 +26,6 @@ class LensAliasCreate(LensAliasBase):
 
 
 class LensAliasUpdate(BaseModel):
-    original_name: str | None = None
     display_name: str | None = None
     brand: str | None = None
     model: str | None = None

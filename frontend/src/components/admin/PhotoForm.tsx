@@ -15,6 +15,8 @@ import { selectOptimalImage, ImageUseCase } from "../../utils/imageUtils";
 import { Button } from "../ui/button";
 import { Trash2, Star, X, Check } from "lucide-react";
 import { cn } from "../../lib/utils";
+import { useCameraAliases } from "../../hooks/useCameraAliases";
+import { useLensAliases } from "../../hooks/useLensAliases";
 // Remove direct import of MapPicker and lazy-load it instead
 const LazyMapPicker = lazy(() => import("../MapPicker"));
 
@@ -27,6 +29,15 @@ interface PhotoFormData {
   location_lon?: number;
   location_name: string;
   location_address: string;
+  // Technical
+  camera_make?: string;
+  camera_model?: string;
+  lens?: string;
+  iso?: number;
+  aperture?: number;
+  shutter_speed?: string;
+  focal_length?: number;
+  date_taken?: string;
 }
 
 interface PhotoFormProps {
@@ -59,7 +70,21 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
       typeof photo.location_lon === "number" ? photo.location_lon : undefined,
     location_name: photo.location_name ?? "",
     location_address: photo.location_address ?? "",
+    // Technical
+    camera_make: photo.camera_make ?? "",
+    camera_model: photo.camera_model ?? "",
+    lens: photo.lens ?? "",
+    iso: photo.iso ?? undefined,
+    aperture: photo.aperture ?? undefined,
+    shutter_speed: photo.shutter_speed ?? "",
+    focal_length: photo.focal_length ?? undefined,
+    date_taken: photo.date_taken ?? "",
   });
+
+  const { data: cameraAliasesData } = useCameraAliases({ per_page: 100 });
+  const { data: lensAliasesData } = useLensAliases({ per_page: 100 });
+  const cameraAliases = cameraAliasesData?.aliases ?? [];
+  const lensAliases = lensAliasesData?.aliases ?? [];
 
   useEffect(() => {
     // Only reset form if the photo ID has changed to prevent flickers during refetches
@@ -80,6 +105,15 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
             : undefined,
         location_name: photo.location_name ?? "",
         location_address: photo.location_address ?? "",
+        // Technical
+        camera_make: photo.camera_make ?? "",
+        camera_model: photo.camera_model ?? "",
+        lens: photo.lens ?? "",
+        iso: photo.iso ?? undefined,
+        aperture: photo.aperture ?? undefined,
+        shutter_speed: photo.shutter_speed ?? "",
+        focal_length: photo.focal_length ?? undefined,
+        date_taken: photo.date_taken ?? "",
       });
     }, 0);
     return () => clearTimeout(timer);
@@ -231,21 +265,137 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
                   aria-label="Open full image"
                 />
               </div>
-              <div className="mt-3 text-xs text-muted-foreground space-y-1">
-                <div className="truncate">
-                  <span className="font-medium text-foreground">Filename:</span>{" "}
-                  {photo.filename}
+              <div className="mt-4 text-xs text-muted-foreground space-y-2">
+                <div className="flex justify-between items-center gap-2">
+                  <span className="font-semibold text-foreground/70 uppercase tracking-tight text-[10px]">
+                    Filename
+                  </span>
+                  <span
+                    className="truncate max-w-[150px]"
+                    title={photo.filename}
+                  >
+                    {photo.filename}
+                  </span>
                 </div>
-                <div>
-                  <span className="font-medium text-foreground">Size:</span>{" "}
-                  {photo.width}×{photo.height}
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold text-foreground/70 uppercase tracking-tight text-[10px]">
+                    Dimensions
+                  </span>
+                  <span>
+                    {photo.width} × {photo.height}
+                  </span>
                 </div>
                 {photo.date_taken && (
-                  <div>
-                    <span className="font-medium text-foreground">Taken:</span>{" "}
-                    {formatDateTime(photo.date_taken)}
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold text-foreground/70 uppercase tracking-tight text-[10px]">
+                      Captured
+                    </span>
+                    <span>{formatDateTime(photo.date_taken)}</span>
                   </div>
                 )}
+
+                {/* Technical Info Grid (Read-only) */}
+                <div className="pt-2 border-t border-border/40 grid grid-cols-2 gap-y-2 gap-x-4">
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-foreground/70 uppercase tracking-tight text-[10px] mb-0.5">
+                      ISO
+                    </span>
+                    <span className="text-sm font-medium">
+                      {form.iso ?? "—"}
+                    </span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-foreground/70 uppercase tracking-tight text-[10px] mb-0.5">
+                      Aperture
+                    </span>
+                    <span className="text-sm font-medium">
+                      {form.aperture ? `ƒ/${form.aperture}` : "—"}
+                    </span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-foreground/70 uppercase tracking-tight text-[10px] mb-0.5">
+                      Shutter
+                    </span>
+                    <span className="text-sm font-medium">
+                      {form.shutter_speed ?? "—"}
+                    </span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-foreground/70 uppercase tracking-tight text-[10px] mb-0.5">
+                      Focal Length
+                    </span>
+                    <span className="text-sm font-medium">
+                      {form.focal_length ? `${form.focal_length}mm` : "—"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Equipment Selection (Editable) */}
+                <div className="pt-2 border-t border-border/40 space-y-3">
+                  <div>
+                    <label className="font-semibold text-foreground/70 uppercase tracking-tight text-[10px] mb-1.5 block">
+                      Camera
+                    </label>
+                    <select
+                      className="w-full bg-muted/20 border border-border/40 rounded-lg px-2 py-1.5 text-[13px] focus:ring-1 focus:ring-primary outline-none transition-all"
+                      value={`${form.camera_make}|${form.camera_model}`}
+                      onChange={(e) => {
+                        const [make, model] = e.target.value.split("|");
+                        setForm((f) => ({
+                          ...f,
+                          camera_make: make,
+                          camera_model: model,
+                        }));
+                      }}
+                    >
+                      <option value="|">Select camera...</option>
+                      {cameraAliases.map((alias) => (
+                        <option
+                          key={alias.id}
+                          value={`${alias.brand}|${alias.model}`}
+                        >
+                          {alias.display_name}
+                        </option>
+                      ))}
+                      {form.camera_make &&
+                        !cameraAliases.find(
+                          (a) =>
+                            a.brand === form.camera_make &&
+                            a.model === form.camera_model,
+                        ) && (
+                          <option
+                            value={`${form.camera_make}|${form.camera_model}`}
+                          >
+                            {form.camera_make} {form.camera_model}
+                          </option>
+                        )}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="font-semibold text-foreground/70 uppercase tracking-tight text-[10px] mb-1.5 block">
+                      Lens
+                    </label>
+                    <select
+                      className="w-full bg-muted/20 border border-border/40 rounded-lg px-2 py-1.5 text-[13px] focus:ring-1 focus:ring-primary outline-none transition-all"
+                      value={form.lens}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, lens: e.target.value }))
+                      }
+                    >
+                      <option value="">Select lens...</option>
+                      {lensAliases.map((alias) => (
+                        <option key={alias.id} value={alias.original_name}>
+                          {alias.display_name}
+                        </option>
+                      ))}
+                      {form.lens &&
+                        !lensAliases.find(
+                          (a) => a.original_name === form.lens,
+                        ) && <option value={form.lens}>{form.lens}</option>}
+                    </select>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

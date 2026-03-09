@@ -20,7 +20,6 @@ class CameraAliasCreate(CameraAliasBase):
 
 
 class CameraAliasUpdate(BaseModel):
-    original_name: str | None = None
     display_name: str | None = None
     brand: str | None = None
     model: str | None = None
