@@ -218,10 +218,18 @@ Object.defineProperty(window.URL, "revokeObjectURL", {
   result: string | ArrayBuffer | null = null;
 } as any;
 
-// Mock crypto.randomUUID
+// Mock crypto.randomUUID and getRandomValues
 Object.defineProperty(window, "crypto", {
   value: {
     randomUUID: vi.fn(() => "mock-uuid-1234-5678-9abc-def0"),
+    getRandomValues: vi.fn((buffer) => {
+      // For Node.js/Vitest environment
+      if (typeof Buffer !== "undefined" && typeof require === "function") {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        return require("node:crypto").webcrypto.getRandomValues(buffer);
+      }
+      return buffer;
+    }),
   },
 });
 

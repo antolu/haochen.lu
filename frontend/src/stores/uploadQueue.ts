@@ -14,6 +14,8 @@ export interface QueuedUpload {
     title: string;
     description: string;
     tags: string;
+    category?: string;
+    comments?: string;
     featured: boolean;
   };
   createdAt: number;

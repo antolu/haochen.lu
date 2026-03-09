@@ -1,5 +1,5 @@
 import React, { useMemo, useCallback, useRef } from "react";
-import { TagInput, type Tag } from "emblor";
+import { Tag, TagInput } from "emblor-maintained";
 
 interface SharedTag {
   id: string;
@@ -77,6 +77,7 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
         setTags={handleSetTags}
         placeholder={placeholder}
         enableAutocomplete={false}
+        delimiters={[",", "Enter"]}
         maxTags={50}
         showCount={false}
         className="text-sm border-none shadow-none focus-visible:ring-0"

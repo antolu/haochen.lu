@@ -177,7 +177,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
   // Handle form submission
   const onSubmit = async (data: FormData) => {
     try {
-      const technologies = data.technologies
+      const technologies = (data.technologies || "")
         .split(",")
         .map((tech) => tech.trim())
         .filter(Boolean);
@@ -340,7 +340,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
               <div className="md:col-span-2">
                 <Label>Technologies</Label>
                 <TagMultiSelect
-                  value={technologiesInput
+                  value={(technologiesInput || "")
                     .split(",")
                     .map((t) => t.trim())
                     .filter(Boolean)}

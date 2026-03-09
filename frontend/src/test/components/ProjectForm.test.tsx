@@ -428,9 +428,10 @@ describe("ProjectForm", () => {
       const techInput = screen.getByPlaceholderText(
         "Search or create technologies...",
       );
-      await user.type(techInput, "Vue.js, JavaScript");
-
-      expect(techInput).toHaveValue("Vue.js, JavaScript");
+      await user.type(techInput, "Vue.js");
+      await waitFor(() => {
+        expect(techInput).toHaveValue("Vue.js");
+      });
     });
   });
 
