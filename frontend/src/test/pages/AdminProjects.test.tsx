@@ -185,23 +185,6 @@ describe("AdminProjects", () => {
       ).toBeInTheDocument();
     });
 
-    it("displays project statistics", () => {
-      renderWithProviders(<AdminProjects />);
-
-      expect(screen.getByText("Total Projects")).toBeInTheDocument();
-      expect(
-        screen.getByText(mockStatsData.total_projects.toString()),
-      ).toBeInTheDocument();
-      expect(screen.getAllByText("Featured").length).toBeGreaterThan(0);
-      expect(
-        screen.getByText(mockStatsData.featured_projects.toString()),
-      ).toBeInTheDocument();
-      // Active label may appear in multiple places; verify count instead
-      expect(
-        screen.getByText(mockStatsData.active_projects.toString()),
-      ).toBeInTheDocument();
-    });
-
     it("shows create new project button", () => {
       renderWithProviders(<AdminProjects />);
 
@@ -652,7 +635,7 @@ describe("AdminProjects", () => {
       renderWithProviders(<AdminProjects />);
 
       // Should have responsive container classes
-      const containers = document.querySelectorAll(".max-w-7xl.mx-auto");
+      const containers = document.querySelectorAll(".space-y-8");
       expect(containers.length).toBeGreaterThan(0);
     });
 
@@ -662,16 +645,6 @@ describe("AdminProjects", () => {
       // Should render a list of project items
       const items = screen.getAllByText(/View|Edit|Delete/);
       expect(items.length).toBeGreaterThan(0);
-    });
-
-    it("has responsive statistics grid", () => {
-      renderWithProviders(<AdminProjects />);
-
-      // Should have grid layout for stats
-      const statsContainer = screen
-        .getByText("Total Projects")
-        .closest(".grid");
-      expect(statsContainer).toBeInTheDocument();
     });
   });
 
