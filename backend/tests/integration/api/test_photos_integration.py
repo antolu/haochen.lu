@@ -26,7 +26,6 @@ async def test_upload_photo_with_exif_extracts_metadata(
         data = {
             "title": "San Francisco Test Photo",
             "description": "Photo with EXIF data",
-            "category": "test",
         }
 
         response = await integration_client.post(
@@ -42,7 +41,6 @@ async def test_upload_photo_with_exif_extracts_metadata(
     # Verify basic fields
     assert photo["title"] == "San Francisco Test Photo"
     assert photo["description"] == "Photo with EXIF data"
-    assert photo["category"] == "test"
 
     # Verify EXIF metadata was extracted
     assert "camera_make" in photo
@@ -65,7 +63,7 @@ async def test_upload_photo_generates_multiple_sizes(
     """Test photo upload generates multiple size variants."""
     with open(sample_image_path, "rb") as f:
         files = {"file": ("test-photo.jpg", f, "image/jpeg")}
-        data = {"title": "Multi-size Test", "category": "test"}
+        data = {"title": "Multi-size Test"}
 
         response = await integration_client.post(
             "/api/photos",
@@ -115,24 +113,6 @@ async def test_list_photos_with_pagination(
     assert data["page"] == 1
     assert data["per_page"] == 5
     assert len(data["photos"]) <= 5
-
-
-@pytest.mark.integration
-async def test_list_photos_filters_by_category(
-    integration_client: AsyncClient,
-):
-    """Test filtering photos by category."""
-    response = await integration_client.get("/api/photos?category=landscape")
-
-    assert response.status_code == 200
-    data = response.json()
-
-    assert "photos" in data
-    # Should have landscape photos from seeded data
-    assert len(data["photos"]) > 0
-
-    for photo in data["photos"]:
-        assert photo["category"] == "landscape"
 
 
 @pytest.mark.integration
@@ -292,7 +272,7 @@ async def test_upload_invalid_file_type_fails(
     fake_file = io.BytesIO(b"This is not an image file")
 
     files = {"file": ("test.txt", fake_file, "text/plain")}
-    data = {"title": "Invalid File", "category": "test"}
+    data = {"title": "Invalid File"}
 
     response = await integration_client.post(
         "/api/photos",

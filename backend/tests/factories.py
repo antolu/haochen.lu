@@ -72,10 +72,6 @@ class PhotoFactory(AsyncSQLAlchemyModelFactory):
     id = factory.LazyFunction(uuid.uuid4)
     title = Faker("sentence", nb_words=3)
     description = Faker("paragraph", nb_sentences=2)
-    category = Faker(
-        "random_element", elements=("landscape", "portrait", "street", "wildlife")
-    )
-
     # Store as comma-separated string to match DB String column and API expectations
     tags = LazyFunction(
         lambda: ", ".join(
@@ -97,8 +93,6 @@ class PhotoFactory(AsyncSQLAlchemyModelFactory):
             )
         )
     )
-    comments = Faker("paragraph", nb_sentences=1)
-
     # File paths
     filename = LazyAttribute(lambda obj: f"{obj.id}.jpg")
     original_path = LazyAttribute(lambda obj: f"uploads/{obj.filename}")
@@ -343,9 +337,7 @@ class SecurityTestFactory:
         return {
             "title": '<script>alert("XSS")</script>',
             "description": '"><img src=x onerror=alert("XSS")>',
-            "category": "'; DROP TABLE photos; --",
             "tags": '<iframe src="javascript:alert(1)"></iframe>',
-            "comments": 'javascript:alert("XSS")',
         }
 
     @staticmethod

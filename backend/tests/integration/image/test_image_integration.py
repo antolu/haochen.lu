@@ -48,7 +48,6 @@ async def test_upload_image_creates_photo_record(
         data = {
             "title": "Test Upload",
             "description": "Integration test image",
-            "category": "test",
         }
 
         response = await async_client.post(
@@ -61,7 +60,6 @@ async def test_upload_image_creates_photo_record(
     # Verify photo record was created
     assert "id" in photo_data
     assert photo_data["title"] == "Test Upload"
-    assert photo_data["category"] == "test"
 
     # Verify image dimensions were extracted
     assert photo_data.get("width") == 800
@@ -369,7 +367,7 @@ async def test_image_update_preserves_files(
     try:
         with open(temp_file_path, "rb") as img_file:
             files = {"file": ("update_test.jpg", img_file, "image/jpeg")}
-            data = {"title": "Original Title", "category": "original"}
+            data = {"title": "Original Title"}
 
             upload_response = await async_client.post(
                 "/api/photos", headers=headers, files=files, data=data
@@ -387,7 +385,6 @@ async def test_image_update_preserves_files(
         update_data = {
             "title": "Updated Title",
             "description": "Updated description",
-            "category": "updated",
         }
 
         update_response = await async_client.put(
@@ -399,7 +396,6 @@ async def test_image_update_preserves_files(
 
         # Metadata should be updated
         assert updated_data["title"] == "Updated Title"
-        assert updated_data["category"] == "updated"
 
         # File URLs/structure should remain the same
         assert updated_data["original_url"] == original_url

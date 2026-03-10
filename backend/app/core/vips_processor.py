@@ -176,8 +176,8 @@ class VipsImageProcessor:
                     gps_data["location_lat"], gps_data["location_lon"]
                 )
                 if location_info:
-                    data["location_name"] = location_info["location_name"]
-                    data["location_address"] = location_info["location_address"]
+                    data["location_name"] = location_info.location_name
+                    data["location_address"] = location_info.location_address
 
         return data
 
@@ -221,7 +221,11 @@ class VipsImageProcessor:
                 and piexif.GPSIFD.GPSLatitudeRef in gps_info
             ):
                 lat_dms = gps_info[piexif.GPSIFD.GPSLatitude]
-                lat_ref = gps_info[piexif.GPSIFD.GPSLatitudeRef].decode()
+                lat_ref = gps_info[piexif.GPSIFD.GPSLatitudeRef]
+                if isinstance(lat_ref, bytes):
+                    lat_ref = lat_ref.decode().strip()
+                else:
+                    lat_ref = str(lat_ref).strip()
 
                 lat_decimal = convert_dms_to_decimal(lat_dms)
                 if lat_decimal is not None:
@@ -235,7 +239,11 @@ class VipsImageProcessor:
                 and piexif.GPSIFD.GPSLongitudeRef in gps_info
             ):
                 lon_dms = gps_info[piexif.GPSIFD.GPSLongitude]
-                lon_ref = gps_info[piexif.GPSIFD.GPSLongitudeRef].decode()
+                lon_ref = gps_info[piexif.GPSIFD.GPSLongitudeRef]
+                if isinstance(lon_ref, bytes):
+                    lon_ref = lon_ref.decode().strip()
+                else:
+                    lon_ref = str(lon_ref).strip()
 
                 lon_decimal = convert_dms_to_decimal(lon_dms)
                 if lon_decimal is not None:

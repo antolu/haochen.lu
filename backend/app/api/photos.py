@@ -451,6 +451,9 @@ async def upload_photo(
     tags: typing.Annotated[str, Form(max_length=500)] = "",
     *,
     featured: typing.Annotated[bool, Form()] = False,
+    location_lat: typing.Annotated[float | None, Form()] = None,
+    location_lon: typing.Annotated[float | None, Form()] = None,
+    location_name: typing.Annotated[str | None, Form(max_length=200)] = None,
     db: AsyncSession = _session_dependency,
     current_user: User = _current_admin_user_dependency,
     request: Request,
@@ -499,6 +502,14 @@ async def upload_photo(
                         await asyncio.sleep(0.5 * (attempt + 1))
 
             valid_processed_data = _ensure_success(processed_data, processing_error)
+
+            # Apply location overrides if provided
+            if location_lat is not None:
+                valid_processed_data["location_lat"] = location_lat
+            if location_lon is not None:
+                valid_processed_data["location_lon"] = location_lon
+            if location_name is not None:
+                valid_processed_data["location_name"] = location_name
 
             # Compute default title from filename stem if empty
             default_title = (file.filename or "image").rsplit(".", 1)[0]

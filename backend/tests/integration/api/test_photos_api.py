@@ -54,27 +54,6 @@ async def test_get_photos_returns_paginated_results(
 
 @pytest.mark.integration
 @pytest.mark.api
-async def test_get_photos_with_category_filter(
-    async_client: AsyncClient, test_session: AsyncSession
-):
-    """Test GET /api/photos with category filtering."""
-    # Create photos with different categories
-    await PhotoFactory.create_batch_async(test_session, 5, category="landscape")
-    await PhotoFactory.create_batch_async(test_session, 3, category="portrait")
-
-    # Filter by landscape category
-    response = await async_client.get("/api/photos?category=landscape")
-
-    assert response.status_code == 200
-    data = response.json()
-
-    assert len(data["photos"]) == 5
-    for photo in data["photos"]:
-        assert photo["category"] == "landscape"
-
-
-@pytest.mark.integration
-@pytest.mark.api
 async def test_get_photos_with_tags_filter(
     async_client: AsyncClient, test_session: AsyncSession
 ):
@@ -171,7 +150,6 @@ async def test_get_photo_by_id_returns_photo(
 
     assert data["id"] == str(photo.id)
     assert data["title"] == photo.title
-    assert data["category"] == photo.category
 
 
 @pytest.mark.integration
@@ -207,7 +185,6 @@ async def test_upload_photo_creates_new_photo(
             data = {
                 "title": "API Upload Test",
                 "description": "Test photo upload via API",
-                "category": "test",
                 "tags": "test,api",  # Tags are comma-separated string
             }
 
@@ -220,7 +197,6 @@ async def test_upload_photo_creates_new_photo(
 
         assert "id" in photo_data
         assert photo_data["title"] == "API Upload Test"
-        assert photo_data["category"] == "test"
         # Tags in response are comma-separated string
         assert set(photo_data["tags"].split(",")) == {"test", "api"}
         assert photo_data["width"] == 800
@@ -315,9 +291,7 @@ async def test_upload_photo_with_empty_title_succeeds(
             data = {
                 "title": "",  # Empty title
                 "description": "Test with empty title",
-                "category": "test",
                 "tags": "test,empty",
-                "comments": "Testing empty title behavior",
                 "featured": "false",
             }
 
@@ -331,7 +305,6 @@ async def test_upload_photo_with_empty_title_succeeds(
         # Should use filename stem as title when title is empty
         assert photo_data["title"] == "empty_title_test"
         assert photo_data["description"] == "Test with empty title"
-        assert photo_data["category"] == "test"
         assert "test" in photo_data["tags"]
         assert "empty" in photo_data["tags"]
 
@@ -359,7 +332,6 @@ async def test_upload_photo_with_empty_description_succeeds(
             data = {
                 "title": "Empty Description Test",
                 "description": "",  # Empty description
-                "category": "test",
                 "tags": "test,empty",
                 "featured": "false",
             }
@@ -373,47 +345,6 @@ async def test_upload_photo_with_empty_description_succeeds(
 
         assert photo_data["title"] == "Empty Description Test"
         assert not photo_data["description"]  # Should remain empty
-        assert photo_data["category"] == "test"
-
-    finally:
-        if os.path.exists(temp_file_path):
-            os.unlink(temp_file_path)
-
-
-@pytest.mark.integration
-@pytest.mark.api
-async def test_upload_photo_with_empty_category_gets_default(
-    async_client: AsyncClient, admin_token: str, test_session: AsyncSession
-):
-    """Test POST /api/photos with empty category should get default category."""
-    headers = {"Authorization": f"Bearer {admin_token}"}
-
-    img = Image.new("RGB", (400, 300), color="yellow")
-    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
-        img.save(temp_file, format="JPEG")
-        temp_file_path = temp_file.name
-
-    try:
-        with open(temp_file_path, "rb") as img_file:
-            files = {"file": ("empty_category_test.jpg", img_file, "image/jpeg")}
-            data = {
-                "title": "Empty Category Test",
-                "description": "Testing empty category",
-                "category": "",  # Empty category
-                "tags": "test,empty",
-                "featured": "false",
-            }
-
-            response = await async_client.post(
-                "/api/photos", headers=headers, files=files, data=data
-            )
-
-        assert response.status_code == 201
-        photo_data = response.json()
-
-        assert photo_data["title"] == "Empty Category Test"
-        # Empty category becomes None
-        assert photo_data["category"] is None
 
     finally:
         if os.path.exists(temp_file_path):
@@ -439,7 +370,6 @@ async def test_upload_photo_with_empty_tags_succeeds(
             data = {
                 "title": "Empty Tags Test",
                 "description": "Testing empty tags",
-                "category": "test",
                 "tags": "",  # Empty tags
                 "featured": "false",
             }
@@ -479,9 +409,7 @@ async def test_upload_photo_with_whitespace_only_fields(
             data = {
                 "title": "   ",  # Whitespace-only title
                 "description": "\t\n  \r  ",  # Various whitespace
-                "category": "  test  ",  # Category with surrounding whitespace
                 "tags": "  tag1  ,  tag2  ,   ",  # Tags with whitespace
-                "comments": "   ",  # Whitespace-only comments
                 "featured": "false",
             }
 
@@ -496,8 +424,6 @@ async def test_upload_photo_with_whitespace_only_fields(
         assert photo_data["title"] == "whitespace_test"
         # Description is preserved as-is (API doesn't trim whitespace)
         assert photo_data["description"] == "\t\n  \r  "
-        # Category is preserved with surrounding whitespace (API doesn't trim)
-        assert photo_data["category"] == "  test  "
         # Tags are preserved as-is (API doesn't clean or trim tags)
         assert photo_data["tags"] == "  tag1  ,  tag2  ,   "
 
@@ -525,9 +451,7 @@ async def test_upload_photo_with_all_empty_metadata_succeeds(
             data = {
                 "title": "",
                 "description": "",
-                "category": "",
                 "tags": "",
-                "comments": "",
                 "featured": "false",
             }
 
@@ -544,8 +468,6 @@ async def test_upload_photo_with_all_empty_metadata_succeeds(
         assert photo_data["description"] is None
         assert photo_data["tags"] is None
         assert photo_data["featured"] is False
-        # Category becomes None when empty
-        assert photo_data["category"] is None
 
     finally:
         if os.path.exists(temp_file_path):
@@ -581,7 +503,6 @@ async def test_upload_photo_with_no_metadata_at_all(
         assert photo_data["title"] == "no_metadata_test"
         # Should have sensible defaults for all fields
         assert "description" in photo_data
-        assert "category" in photo_data
         assert "tags" in photo_data
         # Tags are string or None, not a list
         assert isinstance(photo_data["tags"], (str, type(None)))
@@ -612,7 +533,6 @@ async def test_upload_photo_handles_malformed_tags(
             data = {
                 "title": "Malformed Tags Test",
                 "description": "Testing malformed tag strings",
-                "category": "test",
                 "tags": ",,,,tag1,,,tag2,,,,tag3,,,",  # Multiple commas and empty segments
                 "featured": "false",
             }
@@ -652,7 +572,6 @@ async def test_upload_photo_with_special_characters_in_empty_fields(
             data = {
                 "title": "\u200b\u200c\u200d",  # Zero-width characters
                 "description": "\n\r\t",  # Control characters
-                "category": "\u00a0",  # Non-breaking space
                 "tags": "\u2000,\u2001,\u2002",  # En/em spaces
                 "featured": "false",
             }
@@ -690,13 +609,11 @@ async def test_update_photo_modifies_metadata(
         test_session,
         title="Original Title",
         description="Original description",
-        category="original",
     )
 
     update_data = {
         "title": "Updated Title",
         "description": "Updated description with more details",
-        "category": "updated",
         "tags": "updated,modified",  # Tags should be comma-separated string
     }
 
@@ -709,14 +626,12 @@ async def test_update_photo_modifies_metadata(
 
     assert updated_photo["title"] == "Updated Title"
     assert updated_photo["description"] == "Updated description with more details"
-    assert updated_photo["category"] == "updated"
     # Split tags string for comparison
     assert set(updated_photo["tags"].split(",")) == {"updated", "modified"}
 
     # Verify changes persisted to database
     await test_session.refresh(photo)
     assert photo.title == "Updated Title"
-    assert photo.category == "updated"
 
 
 @pytest.mark.integration
@@ -919,29 +834,21 @@ async def test_photo_search_performance(
 ):
     """Test search performance with filters."""
 
-    # Create photos with various attributes for search
-    for i in range(50):
-        await PhotoFactory.create_async(
-            test_session,
-            title=f"Photo {i}",
-            category="landscape" if i % 2 == 0 else "portrait",
-            tags="nature" if i % 3 == 0 else "urban",  # Tags should be string
-        )
+    # Create many photos
+    await PhotoFactory.create_batch_async(test_session, 50)
 
-    # Test search performance - API supports category but not tags filtering
+    # Test search performance - API does not filter by tags
     start_time = time.time()
-    response = await async_client.get("/api/photos?category=landscape")
+    response = await async_client.get("/api/photos?order_by=title&per_page=100")
     end_time = time.time()
 
     response_time = end_time - start_time
 
     assert response.status_code == 200
-    assert response_time < 1.0  # Should be fast even with filters
+    assert response_time < 1.0  # Should be fast
 
     data = response.json()
-    # Should return filtered results
-    for photo in data["photos"]:
-        assert photo["category"] == "landscape"
+    assert len(data["photos"]) >= 50
 
 
 @pytest.mark.integration
