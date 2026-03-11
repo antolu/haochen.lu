@@ -28,7 +28,7 @@ repos:
 
   # Python linting and formatting
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.4
+    rev: v0.15.5
     hooks:
       - id: ruff-check
         args: [--fix, --exit-non-zero-on-fix, --unsafe-fixes, --preview, --config=backend/pyproject.toml]
@@ -60,7 +60,7 @@ repos:
 
   # ESLint for TypeScript/JavaScript linting
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v10.0.2
+    rev: v10.0.3
     hooks:
       - id: eslint
         files: ^frontend/.*\.(ts|tsx|js|jsx)$  # Explicitly match TypeScript and JavaScript files
@@ -77,8 +77,8 @@ repos:
           - 'typescript@5.9.3'
 
   # Prettier for code formatting
-  - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v4.0.0-alpha.8
+  - repo: https://github.com/mirrors-prettier/mirrors-prettier
+    rev: v4.0.0-alpha.13
     hooks:
       - id: prettier
         files: ^frontend/.*\.(js|jsx|ts|tsx|json|css|scss|md|yaml|yml)$
