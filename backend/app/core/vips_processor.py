@@ -9,8 +9,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, BinaryIO
 
-import piexif  # type: ignore[import-not-found, unused-ignore]
-import pyvips  # type: ignore[import-not-found]
+import piexif  # type: ignore[import-untyped, import-not-found, unused-ignore]
+import pyvips  # type: ignore[import-untyped, import-not-found]
 
 from app.config import settings
 from app.core.location_service import location_service

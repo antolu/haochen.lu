@@ -19,6 +19,7 @@ import {
   useAttachProjectImage,
   useRemoveProjectImage,
   useReorderProjectImages,
+  useUpdateProjectImage,
 } from "../../hooks/useProjects";
 import SimplePhotoUpload from "../SimplePhotoUpload";
 
@@ -39,11 +40,28 @@ type ProjectImagesManagerProps = {
 type ProjectImageItemProps = {
   item: ProjectImage;
   onRemove: (id: string) => void;
+  isEditing: boolean;
+  onEdit: () => void;
+  onSave: (title: string, altText: string) => Promise<void>;
+  onCancel: () => void;
 };
 
-const SortableItem: React.FC<ProjectImageItemProps> = ({ item, onRemove }) => {
+const SortableItem: React.FC<ProjectImageItemProps> = ({
+  item,
+  onRemove,
+  isEditing,
+  onEdit,
+  onSave,
+  onCancel,
+}) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: item.id });
+    useSortable({
+      id: item.id,
+      disabled: isEditing,
+    });
+  const [tempTitle, setTempTitle] = React.useState(item.title ?? "");
+  const [tempAlt, setTempAlt] = React.useState(item.alt_text ?? "");
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -52,13 +70,14 @@ const SortableItem: React.FC<ProjectImageItemProps> = ({ item, onRemove }) => {
     item.photo?.variants?.thumbnail?.url ??
     item.photo?.variants?.small?.url ??
     item.photo?.original_url;
+
   return (
     <li
       ref={setNodeRef}
       style={style}
       {...attributes}
       {...listeners}
-      className="flex items-center gap-3 py-3"
+      className={`flex items-center gap-3 py-3 ${isEditing ? "bg-muted/20" : ""}`}
     >
       <div className="w-16 h-16 rounded overflow-hidden bg-muted flex-shrink-0">
         {thumbUrl ? (
@@ -71,25 +90,89 @@ const SortableItem: React.FC<ProjectImageItemProps> = ({ item, onRemove }) => {
           <div className="w-full h-full" />
         )}
       </div>
-      <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium truncate">
-          {item.title ?? "Untitled image"}
-        </div>
-        <div className="text-xs text-muted-foreground truncate">
-          {item.alt_text ?? ""}
-        </div>
+      <div className="flex-1 min-w-0 space-y-1">
+        {isEditing ? (
+          <div className="space-y-2 pr-4">
+            <input
+              type="text"
+              value={tempTitle}
+              onChange={(e) => setTempTitle(e.target.value)}
+              placeholder="Title"
+              className="w-full text-sm font-medium bg-background border rounded px-2 py-1"
+              autoFocus
+            />
+            <input
+              type="text"
+              value={tempAlt}
+              onChange={(e) => setTempAlt(e.target.value)}
+              placeholder="Alt text"
+              className="w-full text-xs bg-background border rounded px-2 py-1"
+            />
+          </div>
+        ) : (
+          <>
+            <div className="text-sm font-medium truncate">
+              {item.title ?? "Untitled image"}
+            </div>
+            <div className="text-xs text-muted-foreground truncate">
+              {item.alt_text ?? ""}
+            </div>
+          </>
+        )}
       </div>
-      <button
-        type="button"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          onRemove(item.id);
-        }}
-        className="inline-flex items-center px-3 py-1 border border-destructive text-sm font-medium rounded-md text-destructive bg-background hover:bg-destructive/10"
-      >
-        Remove
-      </button>
+      <div className="flex gap-2">
+        {isEditing ? (
+          <>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                void onSave(tempTitle, tempAlt);
+              }}
+              className="inline-flex items-center px-3 py-1 border border-primary text-sm font-medium rounded-md text-primary bg-background hover:bg-primary/10"
+            >
+              Save
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onCancel();
+              }}
+              className="inline-flex items-center px-3 py-1 border border-border text-sm font-medium rounded-md text-muted-foreground bg-background hover:bg-muted"
+            >
+              Cancel
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onEdit();
+              }}
+              className="inline-flex items-center px-3 py-1 border border-border text-sm font-medium rounded-md text-foreground bg-background hover:bg-muted"
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onRemove(item.id);
+              }}
+              className="inline-flex items-center px-3 py-1 border border-destructive text-sm font-medium rounded-md text-destructive bg-background hover:bg-destructive/10"
+            >
+              Remove
+            </button>
+          </>
+        )}
+      </div>
     </li>
   );
 };
@@ -101,6 +184,9 @@ const ProjectImagesManager: React.FC<ProjectImagesManagerProps> = ({
   const attachMutation = useAttachProjectImage(projectId);
   const removeMutation = useRemoveProjectImage(projectId);
   const reorderMutation = useReorderProjectImages(projectId);
+  const updateMutation = useUpdateProjectImage(projectId);
+
+  const [editingId, setEditingId] = React.useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -170,6 +256,17 @@ const ProjectImagesManager: React.FC<ProjectImagesManagerProps> = ({
                     <SortableItem
                       key={img.id}
                       item={img}
+                      isEditing={editingId === img.id}
+                      onEdit={() => setEditingId(img.id)}
+                      onCancel={() => setEditingId(null)}
+                      onSave={async (title, altText) => {
+                        await updateMutation.mutateAsync({
+                          projectImageId: img.id,
+                          title,
+                          alt_text: altText,
+                        });
+                        setEditingId(null);
+                      }}
                       onRemove={(id) => {
                         void removeMutation.mutate(id, {
                           onSuccess: () => void refetch(),

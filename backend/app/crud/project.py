@@ -270,6 +270,24 @@ async def remove_project_image(db: AsyncSession, project_image_id: UUID) -> bool
     return True
 
 
+async def update_project_image(
+    db: AsyncSession, project_image_id: UUID, title: str | None, alt_text: str | None
+) -> ProjectImage | None:
+    res = await db.execute(
+        select(ProjectImage).where(ProjectImage.id == project_image_id)
+    )
+    pi = res.scalar_one_or_none()
+    if not pi:
+        return None
+    if title is not None:
+        pi.title = title
+    if alt_text is not None:
+        pi.alt_text = alt_text
+    await db.commit()
+    await db.refresh(pi)
+    return pi
+
+
 async def reorder_project_images(
     db: AsyncSession, project_id: UUID, items: list[dict], *, normalize: bool = True
 ) -> None:

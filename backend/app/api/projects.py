@@ -26,6 +26,7 @@ from app.crud.project import (
     remove_project_image,
     reorder_project_images,
     update_project,
+    update_project_image,
     update_project_readme,
 )
 from app.dependencies import (
@@ -41,6 +42,7 @@ from app.schemas.project import (
     ProjectImageAttach,
     ProjectImageReorderRequest,
     ProjectImageResponse,
+    ProjectImageUpdate,
     ProjectListResponse,
     ProjectPreviewResponse,
     ProjectReorderRequest,
@@ -415,6 +417,30 @@ async def delete_project_image(
     if not ok:
         raise HTTPException(status_code=404, detail="Project image not found")
     return {"message": "Deleted"}
+
+
+@router.put("/images/{project_image_id}", response_model=ProjectImageResponse)
+async def update_project_image_endpoint(
+    project_image_id: UUID,
+    payload: ProjectImageUpdate,
+    db: AsyncSession = _session_dependency,
+    current_user: User = _current_admin_user_dependency,
+) -> ProjectImageResponse:
+    pi = await update_project_image(
+        db, project_image_id, payload.title, payload.alt_text
+    )
+    if not pi:
+        raise HTTPException(status_code=404, detail="Project image not found")
+
+    # Shape response with URLs
+    img_dict = ProjectImageResponse.model_validate(pi).model_dump()
+    photo_like = {
+        "id": str(pi.id),
+        "variants": pi.variants or {},
+        "original_url": pi.original_path,
+    }
+    img_dict["photo"] = _populate_project_image_urls(str(pi.id), photo_like)
+    return ProjectImageResponse.model_validate(img_dict)
 
 
 @router.post("/{project_id}/images/reorder")

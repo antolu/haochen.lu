@@ -429,6 +429,27 @@ export function useReorderProjectImages(projectId: string) {
   });
 }
 
+export function useUpdateProjectImage(projectId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      projectImageId,
+      title,
+      alt_text,
+    }: {
+      projectImageId: string;
+      title?: string;
+      alt_text?: string;
+    }) =>
+      apiClient.put(`/projects/images/${projectImageId}`, { title, alt_text }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: projectKeys.images(projectId),
+      });
+    },
+  });
+}
+
 /**
  * Hook for fetching README preview (admin use)
  */

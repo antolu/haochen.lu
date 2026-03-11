@@ -41,6 +41,11 @@ class ProjectUpdate(BaseModel):
     status: str | None = None
 
 
+class ProjectImageUpdate(BaseModel):
+    title: str | None = None
+    alt_text: str | None = None
+
+
 class ProjectResponse(ProjectBase):
     id: str | UUID
     slug: str
