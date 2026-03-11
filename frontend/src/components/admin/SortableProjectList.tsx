@@ -108,7 +108,10 @@ const SortableRow: React.FC<RowProps> = ({
   onDelete,
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: project.id, disabled: !reorderEnabled });
+    useSortable({
+      id: project.id,
+      disabled: !reorderEnabled,
+    });
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
