@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import piexif
+import piexif  # type: ignore[import-untyped]
 from PIL import Image, ImageDraw
 
 

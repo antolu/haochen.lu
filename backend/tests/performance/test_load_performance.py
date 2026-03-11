@@ -14,7 +14,7 @@ import tempfile
 import time
 from typing import Any
 
-import psutil
+import psutil  # type: ignore[import-untyped]
 import pytest
 from httpx import AsyncClient
 from PIL import Image
@@ -225,9 +225,9 @@ async def test_memory_usage_during_batch_operations(
 
     finally:
         # Cleanup
-        for temp_file in temp_files:
-            if os.path.exists(temp_file):
-                os.unlink(temp_file)
+        for tf_path in temp_files:
+            if os.path.exists(tf_path):
+                os.unlink(tf_path)
 
 
 @pytest.mark.performance
@@ -412,9 +412,9 @@ async def test_concurrent_image_processing_performance(
 
     finally:
         # Cleanup
-        for temp_file in temp_files:
-            if os.path.exists(temp_file):
-                os.unlink(temp_file)
+        for tf_path in temp_files:
+            if os.path.exists(tf_path):
+                os.unlink(tf_path)
 
 
 @pytest.mark.performance

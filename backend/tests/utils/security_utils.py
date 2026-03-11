@@ -125,7 +125,7 @@ class SecurityTestUtils:
     def validate_security_headers(response: Response) -> dict[str, Any]:
         """Validate security headers in HTTP response."""
         headers = response.headers
-        security_checks = {}
+        security_checks: dict[str, Any] = {}
 
         # Check for security headers
         security_headers: dict[str, Any] = {
@@ -281,7 +281,7 @@ class SecurityTestUtils:
             ],
         }
 
-        disclosures = {}
+        disclosures: dict[str, dict[str, Any]] = {}
 
         for category, patterns in disclosure_patterns.items():
             found_patterns = [pattern for pattern in patterns if pattern in content]
@@ -300,7 +300,7 @@ class SecurityTestUtils:
                 header_disclosures[header] = headers[header]
 
         total_disclosures = sum(
-            len(disclosure["patterns"]) for disclosure in disclosures.values()
+            int(disclosure["count"]) for disclosure in disclosures.values()
         )
 
         return {
@@ -346,9 +346,11 @@ class SecurityTestUtils:
 
         # Analyze results
         rate_limited_responses = [r for r in responses if r.get("rate_limited")]
-        successful_responses = [
-            r for r in responses if r.get("status_code") and r["status_code"] < 400
-        ]
+        successful_responses = []
+        for r in responses:
+            sc = r.get("status_code")
+            if isinstance(sc, int) and sc < 400:
+                successful_responses.append(r)
 
         return {
             "total_requests": len(responses),
@@ -509,7 +511,7 @@ class SecurityTestUtils:
                 "user_agent",
             ]
 
-        security_checks = {}
+        security_checks: dict[str, Any] = {}
 
         # Check required attributes
         for attr in required_attributes:

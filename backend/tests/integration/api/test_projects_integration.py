@@ -10,6 +10,10 @@ from datetime import datetime
 
 import pytest
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
+from tests.factories import PhotoFactory, ProjectFactory
+
+from app.models.project_image import ProjectImage
 
 
 @pytest.mark.integration
@@ -248,7 +252,57 @@ async def test_project_with_github_integration(
         headers=admin_auth_headers,
     )
 
-    # Current API accepts the value and stores it as provided
     assert response.status_code in [200, 201]
     data = response.json()
     assert data["github_url"] == "invalid-url"
+
+
+@pytest.mark.integration
+async def test_update_project_image_with_auth_succeeds(
+    authenticated_client: AsyncClient,
+    db_session: AsyncSession,
+):
+    """Test updating a project image with authentication succeeds."""
+    # 1. Create a project and an image manually since we can't rely on seeded data
+    project = await ProjectFactory.create_async(db_session)
+    photo = await PhotoFactory.create_async(db_session)
+
+    project_image = ProjectImage(
+        project_id=project.id,
+        photo_id=photo.id,
+        title="Original Title",
+        alt_text="Original Alt",
+        order=1,
+    )
+    db_session.add(project_image)
+    await db_session.commit()
+    await db_session.refresh(project_image)
+
+    project_image_id = str(project_image.id)
+
+    # 3. Update the image
+    update_data = {
+        "title": "Renamed Test Image Title",
+        "alt_text": "Updated Alt Text",
+    }
+    response = await authenticated_client.put(
+        f"/api/projects/images/{project_image_id}",
+        json=update_data,
+    )
+
+    assert response.status_code == 200
+    updated_image = response.json()
+    assert updated_image["title"] == "Renamed Test Image Title"
+    assert updated_image["alt_text"] == "Updated Alt Text"
+
+    # 4. Verify it persists
+    check_response = await authenticated_client.get(
+        f"/api/projects/{project.id}/images"
+    )
+    images = check_response.json()
+    assert any(
+        img["id"] == project_image_id
+        and img["title"] == "Renamed Test Image Title"
+        and img["alt_text"] == "Updated Alt Text"
+        for img in images
+    )

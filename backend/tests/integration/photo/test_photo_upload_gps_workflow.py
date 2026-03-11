@@ -3,14 +3,16 @@ from __future__ import annotations
 import tempfile
 from io import BytesIO
 from unittest.mock import AsyncMock, patch
+from uuid import UUID
 
-import piexif
+import piexif  # type: ignore[import-untyped]
 import pytest
 from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.image_processor import ImageProcessor
 from app.crud.photo import create_photo, get_photo
+from app.schemas.photo import PhotoCreate
 
 
 @pytest.fixture
@@ -165,8 +167,6 @@ async def test_complete_gps_upload_workflow(
             "focal_length": result.get("focal_length"),
             "date_taken": result.get("date_taken"),
         }
-
-        from app.schemas.photo import PhotoCreate  # noqa: PLC0415
 
         photo_create = PhotoCreate(
             title=photo_data["title"],
@@ -639,8 +639,6 @@ async def test_end_to_end_workflow_with_database(
         assert str(photo_id) in [str(pid) for pid in photo_ids]
 
         # 5. Verify database record directly
-        from uuid import UUID  # noqa: PLC0415
-
         db_photo = await get_photo(db_session, UUID(photo_id))
         assert db_photo is not None
         assert db_photo.location_lat is not None

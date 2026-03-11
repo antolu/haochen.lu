@@ -12,7 +12,7 @@ import pytest
 class MockRedis:
     """Mock Redis client that stores data in memory."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.data: dict[str, Any] = {}
         self.expires: dict[str, float] = {}
         self._connected = True

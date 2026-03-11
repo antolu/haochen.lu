@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import piexif
+import piexif  # type: ignore[import-untyped]
 import pytest
 
 from app.core.image_processor import ImageProcessor

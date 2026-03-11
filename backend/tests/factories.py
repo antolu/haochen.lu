@@ -245,8 +245,8 @@ class SubAppFactory(AsyncSQLAlchemyModelFactory):
 class AdminUserFactory(UserFactory):
     """Factory for admin users."""
 
-    username = "admin"
-    email = "admin@example.com"
+    username = "admin"  # type: ignore[assignment]
+    email = "admin@example.com"  # type: ignore[assignment]
     is_admin = True
     is_superuser = True
     is_verified = True
@@ -263,7 +263,7 @@ class DraftBlogPostFactory(BlogPostFactory):
     """Factory for draft blog posts."""
 
     published = False
-    published_at = None
+    published_at = None  # type: ignore[assignment]
 
 
 class ExternalSubAppFactory(SubAppFactory):

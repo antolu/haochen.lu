@@ -11,6 +11,7 @@ import socket
 import tempfile
 from collections.abc import AsyncGenerator, Generator
 from datetime import datetime, timedelta
+from typing import Any
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 from urllib.parse import urlparse
@@ -155,7 +156,9 @@ def override_get_session(test_session_maker):
 
 # HTTP client fixtures
 @pytest.fixture
-def test_client(test_settings, override_get_session) -> TestClient:
+def test_client(
+    test_settings, override_get_session
+) -> Generator[TestClient, None, None]:
     """Create a test client with database override."""
     app.dependency_overrides[get_session] = override_get_session
     with TestClient(app) as client:
@@ -257,7 +260,9 @@ async def regular_user(test_session: AsyncSession) -> User:
 
 def create_access_token_for_user(user: User, settings: Settings) -> str:
     """Create JWT access token for a user - replacement for old security function."""
-    to_encode = {"sub": str(user.id)}  # fastapi-users uses UUID as string
+    to_encode: dict[str, Any] = {
+        "sub": str(user.id)
+    }  # fastapi-users uses UUID as string
     now = datetime.utcnow()
     expire = now + timedelta(minutes=settings.access_token_expire_minutes)
 

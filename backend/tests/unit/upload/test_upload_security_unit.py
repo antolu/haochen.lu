@@ -8,10 +8,17 @@ uploads that could compromise the system.
 
 from __future__ import annotations
 
+import os
+import re
+import shutil
 import tempfile
+import threading
+import uuid
 from pathlib import Path
 from unittest.mock import patch
+from urllib.parse import unquote
 
+import psutil  # type: ignore[import-untyped]
 import pytest
 from PIL import Image
 
@@ -253,10 +260,6 @@ def _is_valid_file_size(file_size: int, max_size: int) -> bool:
 
 def _get_memory_usage() -> int:
     """Helper to get current memory usage."""
-    import os  # noqa: PLC0415
-
-    import psutil  # noqa: PLC0415
-
     process = psutil.Process(os.getpid())
     return process.memory_info().rss
 
@@ -276,8 +279,6 @@ def _process_file_streaming(filepath: str) -> bool:
 
 def _has_sufficient_disk_space(required_bytes: int) -> bool:
     """Helper to check disk space."""
-    import shutil  # noqa: PLC0415
-
     _total, _used, free = shutil.disk_usage(".")
     return free > required_bytes
 
@@ -362,8 +363,6 @@ def test_streaming_upload_for_large_files(image_processor):
 def test_concurrent_upload_resource_management(image_processor):
     """Test resource management during concurrent uploads."""
     # This would test that concurrent uploads don't exceed memory limits
-    import threading  # noqa: PLC0415
-
     results = []
     errors = []
 
@@ -427,10 +426,6 @@ def test_disk_space_checking_before_upload(image_processor):
 # Helper methods (moved from TestFilenameSanitization)
 def _complex_sanitize_filename(filename: str) -> str:
     """Helper to sanitize filename (placeholder implementation)."""
-    import re  # noqa: PLC0415
-    import uuid  # noqa: PLC0415
-    from urllib.parse import unquote  # noqa: PLC0415
-
     if not filename or filename.isspace():
         return f"file_{uuid.uuid4().hex[:8]}.jpg"
 
@@ -468,8 +463,6 @@ def _complex_sanitize_filename(filename: str) -> str:
 
 def _generate_unique_filename(original_name: str) -> str:
     """Helper to generate unique filename."""
-    import uuid  # noqa: PLC0415
-
     name, ext = (
         original_name.rsplit(".", 1) if "." in original_name else (original_name, "")
     )

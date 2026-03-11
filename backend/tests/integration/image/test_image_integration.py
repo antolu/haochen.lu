@@ -10,9 +10,12 @@ from __future__ import annotations
 import asyncio
 import os
 import tempfile
+import time
 
+import piexif  # type: ignore[import-untyped]
+import psutil  # type: ignore[import-untyped]
 import pytest
-from httpx import AsyncClient
+from httpx import AsyncClient, Response
 from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -114,8 +117,6 @@ async def test_exif_data_extraction_and_storage(
 
     with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
         try:
-            import piexif  # noqa: PLC0415
-
             exif_dict = {
                 "0th": {
                     piexif.ImageIFD.Make: "Canon",
@@ -279,17 +280,19 @@ async def test_concurrent_image_uploads_handle_safely(
         successful_uploads = 0
         failed_responses = []
         for i, response in enumerate(responses):
-            if isinstance(response, Exception):
+            if isinstance(response, BaseException):
                 failed_responses.append(f"Upload {i}: {response}")
-            else:
-                # Type assertion for mypy
-                http_response = response  # type: ignore[assignment]
-                if http_response.status_code != 201:
+            elif isinstance(response, Response):
+                if response.status_code != 201:
                     failed_responses.append(
-                        f"Upload {i}: HTTP {http_response.status_code} - {http_response.text}"
+                        f"Upload {i}: HTTP {response.status_code} - {response.text}"
                     )
                 else:
                     successful_uploads += 1
+            else:
+                failed_responses.append(
+                    f"Upload {i}: Unexpected response type {type(response)}"
+                )
 
         assert successful_uploads == len(temp_files), (
             f"Expected {len(temp_files)} successful uploads, got {successful_uploads}. Failures: {failed_responses}"
@@ -417,8 +420,6 @@ async def test_large_image_processing_performance(
     admin_token: str, async_client: AsyncClient
 ):
     """Test processing of large images completes within reasonable time."""
-    import time  # noqa: PLC0415
-
     # Create a large image (simulating high-resolution camera output)
     large_img = Image.new("RGB", (6000, 4000), color="red")
 
@@ -461,10 +462,6 @@ async def test_memory_usage_during_batch_processing(
     admin_token: str, async_client: AsyncClient
 ):
     """Test memory usage remains reasonable during batch processing."""
-    import os  # noqa: PLC0415
-
-    import psutil  # noqa: PLC0415
-
     # Get initial memory usage
     process = psutil.Process(os.getpid())
     initial_memory = process.memory_info().rss / 1024 / 1024  # MB
