@@ -48,15 +48,15 @@ repos:
         exclude: ^backend/(tests/.*|alembic/.*|app/_version\.py)$
         args: [--config-file=backend/pyproject.toml]
         additional_dependencies:
-          - 'pydantic>=2.11'
-          - 'pydantic-settings>=2.10'
-          - 'sqlalchemy[mypy]>=2.0'
+          - 'pydantic>=2.12.5'
+          - 'pydantic-settings>=2.13.1'
+          - 'sqlalchemy[mypy]>=2.0.48'
           - 'types-PyYAML'
-          - 'types-redis>=4.6'
-          - 'httpx>=0.28'
-          - 'fastapi>=0.117'
-          - 'starlette>=0.41'
-          - 'bcrypt>=4.1'
+          - 'types-redis>=4.6.0.20241004'
+          - 'httpx>=0.28.1'
+          - 'fastapi>=0.135.1'
+          - 'starlette>=0.52.1'
+          - 'bcrypt>=5.0.0'
 
   # ESLint for TypeScript/JavaScript linting
   - repo: https://github.com/pre-commit/mirrors-eslint
@@ -68,10 +68,10 @@ repos:
         types: [file]
         args: [--fix, --config, frontend/eslint.config.js]
         additional_dependencies:
-          - eslint@10.0.2
+          - eslint@10.0.3
           - '@eslint/js@10.0.1'
-          - 'typescript-eslint@8.56.1'
-          - 'eslint-plugin-react-hooks@7.0.0'
+          - 'typescript-eslint@8.57.0'
+          - 'eslint-plugin-react-hooks@7.0.1'
           - 'eslint-plugin-react-refresh@0.5.2'
           - 'globals@17.4.0'
           - 'typescript@5.9.3'
