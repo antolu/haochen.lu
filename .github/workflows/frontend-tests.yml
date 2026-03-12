@@ -150,6 +150,7 @@ jobs:
           --tags wcag2a,wcag2aa \
           --chromedriver-path "${{ steps.setup-chrome.outputs.chromedriver-path }}" \
           --chrome-path "${{ steps.setup-chrome.outputs.chrome-path }}" \
+          --chrome-options="--no-sandbox,--disable-dev-shm-usage,--headless=new,--disable-gpu" \
           --save axe-results.json
 
     - name: Run Lighthouse accessibility audit
