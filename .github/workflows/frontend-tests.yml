@@ -149,6 +149,7 @@ jobs:
         axe http://127.0.0.1:3000 \
           --tags wcag2a,wcag2aa \
           --chromedriver-path "${{ steps.setup-chrome.outputs.chromedriver-path }}" \
+          --browser-path "${{ steps.setup-chrome.outputs.chrome-path }}" \
           --save axe-results.json
 
     - name: Run Lighthouse accessibility audit
