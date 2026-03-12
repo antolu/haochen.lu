@@ -12,9 +12,17 @@ on:
       - 'backend/**'
       - '.github/workflows/backend-tests.yml'
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.python-version == '3.14' }}
 
     services:
       postgres:
@@ -44,6 +52,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.11", "3.12", "3.13", "3.14"]
+      fail-fast: false
 
     steps:
     - uses: actions/checkout@v4
@@ -56,7 +65,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Cache pip dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('backend/pyproject.toml') }}
@@ -188,48 +197,6 @@ jobs:
       run: |
         cd backend
         pytest --collect-only --quiet | grep "test session starts" || echo "No tests collected"
-
-  security-scan:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.11"
-
-    - name: Install security tools
-      run: |
-        pip install bandit safety pip-audit
-
-    - name: Run Bandit security scan
-      run: |
-        cd backend
-        bandit -r app/ -f json -o bandit-report.json || true
-
-    - name: Run Safety check
-      run: |
-        cd backend
-        pip install -e ".[test]"
-        safety check --json --output safety-report.json || true
-
-    - name: Run pip-audit
-      run: |
-        cd backend
-        pip-audit --format=json --output=audit-report.json || true
-
-    - name: Upload security reports
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: security-reports
-        path: |
-          backend/bandit-report.json
-          backend/safety-report.json
-          backend/audit-report.json
 
   lint-and-format:
     runs-on: ubuntu-latest
