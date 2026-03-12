@@ -10,12 +10,15 @@ env:
   IMAGE_FRONTEND: antonlu/arcadia-frontend
   IMAGE_BACKEND: antonlu/arcadia-backend
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
 
     steps:
       - name: Checkout repository

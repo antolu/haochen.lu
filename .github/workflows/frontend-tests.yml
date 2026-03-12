@@ -12,6 +12,13 @@ on:
       - 'frontend/**'
       - '.github/workflows/frontend-tests.yml'
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -352,7 +359,7 @@ jobs:
         # netlify deploy --dir=frontend/dist --auth=$NETLIFY_AUTH_TOKEN --site=$NETLIFY_SITE_ID
 
     - name: Comment PR with preview link
-      uses: actions/github-script@v6
+      uses: actions/github-script@v7
       with:
         script: |
           github.rest.issues.createComment({
