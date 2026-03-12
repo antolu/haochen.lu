@@ -5,7 +5,7 @@
 ARG BUILD_TYPE=production
 
 # Base stage with common dependencies
-FROM python:3.11-slim AS base
+FROM python:3.14-slim AS base
 
 # Set working directory
 WORKDIR /app
