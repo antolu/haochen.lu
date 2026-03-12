@@ -22,10 +22,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: "3.11"
 
@@ -75,7 +75,7 @@ jobs:
         grep -r -E "postgresql://[^:]+:[^@]+@" app/ >> secrets-check.txt || echo "No DB credentials found"
 
     - name: Upload backend security reports
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: backend-security-reports
@@ -90,10 +90,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Use Node.js 20
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: 20
         cache: 'npm'
@@ -160,7 +160,7 @@ jobs:
         kill $SERVER_PID || true
 
     - name: Upload frontend security reports
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: frontend-security-reports
@@ -179,7 +179,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Build backend Docker image
       run: |
@@ -190,7 +190,7 @@ jobs:
         docker build -f frontend/Dockerfile -t portfolio-frontend:security-scan frontend
 
     - name: Run Trivy vulnerability scanner on backend
-      uses: aquasecurity/trivy-action@0.30.0
+      uses: aquasecurity/trivy-action@0.35.0
       with:
         image-ref: 'portfolio-backend:security-scan'
         format: 'json'
@@ -198,7 +198,7 @@ jobs:
       continue-on-error: true
 
     - name: Run Trivy vulnerability scanner on frontend
-      uses: aquasecurity/trivy-action@0.30.0
+      uses: aquasecurity/trivy-action@0.35.0
       with:
         image-ref: 'portfolio-frontend:security-scan'
         format: 'json'
@@ -224,7 +224,7 @@ jobs:
         ./hadolint frontend/Dockerfile > frontend-dockerfile-check.txt 2>&1 || true
 
     - name: Upload container security reports
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: container-security-reports
@@ -240,7 +240,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Check Docker Compose security
       run: |
@@ -283,7 +283,7 @@ jobs:
         find . -name "*.bak" -o -name "*.backup" -o -name "*~" | head -10 >> sensitive-files-check.txt || echo "No backup files found"
 
     - name: Upload infrastructure security reports
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: infrastructure-security-reports
@@ -298,15 +298,15 @@ jobs:
     if: always()
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: "3.11"
 
     - name: Download all security reports
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
       with:
         path: security-reports
 
@@ -318,7 +318,7 @@ jobs:
         echo "has_actionable=$([ $? -eq 1 ] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
 
     - name: Upload security summary
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: security-summary
@@ -328,7 +328,7 @@ jobs:
 
     - name: Create security issue on critical findings
       if: github.event_name == 'schedule' && steps.parse.outputs.has_actionable == 'true'
-      uses: actions/github-script@v7
+      uses: actions/github-script@v8
       with:
         script: |
           const fs = require('fs');
