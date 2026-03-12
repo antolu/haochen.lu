@@ -41,7 +41,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 # Install dev tools first (stable cache)
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install --no-cache-dir watchfiles==0.24.0
+    pip install --no-cache-dir watchfiles==1.1.1
 
 # Production stage
 FROM base AS production
