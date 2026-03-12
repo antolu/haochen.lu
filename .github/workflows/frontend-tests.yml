@@ -109,15 +109,12 @@ jobs:
         cd frontend
         npm run build
 
-    - name: Install accessibility tools
-      run: |
-        npm install -g @axe-core/cli lighthouse browser-driver-manager
+    - name: Setup Chrome
+      uses: browser-actions/setup-chrome@v1
+      id: setup-chrome
 
-    - name: Install matching Chrome and ChromeDriver
-      run: |
-        npx browser-driver-manager install chrome
-        echo "CHROMEDRIVER_PATH=$(npx browser-driver-manager which chromedriver)" >> "$GITHUB_ENV"
-        echo "CHROME_BIN=$(npx browser-driver-manager which chrome)" >> "$GITHUB_ENV"
+    - name: Install accessibility tools
+      run: npm install -g @axe-core/cli lighthouse
 
     - name: Serve application
       run: |
@@ -147,16 +144,14 @@ jobs:
 
     - name: Run axe accessibility tests
       run: |
-        axe http://127.0.0.1:3000 --tags wcag2a,wcag2aa --chromedriver-path "$CHROMEDRIVER_PATH" --save axe-results.json
+        axe http://127.0.0.1:3000 \
+          --tags wcag2a,wcag2aa \
+          --chromedriver-path "${{ steps.setup-chrome.outputs.chromedriver-path }}" \
+          --save axe-results.json
 
     - name: Run Lighthouse accessibility audit
       continue-on-error: true
       run: |
-        if [ -z "$CHROME_BIN" ]; then
-          echo "No Chrome binary found, skipping Lighthouse"
-          exit 0
-        fi
-        # Warm up: ensure the page is responsive right before Lighthouse hits it
         curl -fsS http://127.0.0.1:3000 > /dev/null
         lighthouse http://127.0.0.1:3000 \
           --only-categories=accessibility \
@@ -165,7 +160,7 @@ jobs:
           --max-wait-for-load=60000 \
           --throttling-method=provided \
           --emulated-form-factor=desktop \
-          --chrome-path="$CHROME_BIN" \
+          --chrome-path="${{ steps.setup-chrome.outputs.chrome-path }}" \
           --chrome-flags="--headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --window-size=1920,1080"
 
     - name: Upload accessibility reports
