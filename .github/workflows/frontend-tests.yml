@@ -29,10 +29,10 @@ jobs:
       fail-fast: false
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
@@ -82,7 +82,7 @@ jobs:
         npm run build
 
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: frontend-build-${{ matrix.node-version }}
         path: frontend/dist
@@ -90,10 +90,10 @@ jobs:
   accessibility-tests:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Use Node.js 20
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: 20
         cache: 'npm'
@@ -168,7 +168,7 @@ jobs:
           --chrome-flags="--headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --window-size=1920,1080"
 
     - name: Upload accessibility reports
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: accessibility-reports
@@ -181,10 +181,10 @@ jobs:
     needs: [test]
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Use Node.js 20
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: 20
         cache: 'npm'
@@ -274,7 +274,7 @@ jobs:
         "
 
     - name: Upload performance reports
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: performance-reports
