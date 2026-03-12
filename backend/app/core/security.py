@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import typing
 import uuid
 
@@ -23,7 +24,14 @@ def get_password_hash(password: str) -> str:
     if not password:
         msg = "Password must not be empty"
         raise ValueError(msg)
-    hashed_bytes: bytes = hashpw(password.encode("utf-8"), gensalt())
+
+    # Bcrypt has a 72-byte input limit. To safely support longer passwords while
+    # retaining verification compatibility, pre-hash the password using SHA-256
+    # and pass the fixed-size digest to bcrypt. This avoids silent truncation and
+    # preserves entropy for long inputs.
+    password_bytes = password.encode("utf-8")
+    prehashed = hashlib.sha256(password_bytes).digest()
+    hashed_bytes: bytes = hashpw(prehashed, gensalt())
     return hashed_bytes.decode("utf-8")
 
 
@@ -37,9 +45,10 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     Returns:
         True if password matches, False otherwise
     """
-    result: bool = checkpw(
-        plain_password.encode("utf-8"), hashed_password.encode("utf-8")
-    )
+    # Use same pre-hashing strategy as get_password_hash so verification works
+    # for arbitrarily long passwords.
+    prehashed = hashlib.sha256(plain_password.encode("utf-8")).digest()
+    result: bool = checkpw(prehashed, hashed_password.encode("utf-8"))
     return result
 
 
