@@ -15,6 +15,7 @@ except ImportError:
     REDIS_AVAILABLE = False
     redis_module = typing.cast(typing.Any, None)
 
+import inspect
 from urllib.parse import urlparse
 
 from app.config import settings
@@ -24,6 +25,21 @@ logger = logging.getLogger(__name__)
 
 class RedisClient:
     """Redis client wrapper for session management"""
+
+    @staticmethod
+    async def _await_if_necessary(
+        value: object,
+    ) -> typing.Any:
+        """Await the value if it's awaitable, otherwise return it directly.
+
+        Some redis async clients expose methods that may be synchronous in
+        certain test/mocking scenarios. This helper normalizes the call so the
+        implementation can `await` safely without mypy complaining about
+        union types like `Awaitable[bool] | bool`.
+        """
+        if inspect.isawaitable(value):
+            return await typing.cast(typing.Awaitable[typing.Any], value)  # type: ignore[redundant-cast]
+        return value
 
     def __init__(self) -> None:
         self._redis: typing.Any | None = None
@@ -62,8 +78,9 @@ class RedisClient:
                 health_check_interval=30,
             )
 
-            # Test connection
-            await self._redis.ping()
+            # Test connection (some clients return a bool synchronously while
+            # others provide an awaitable). Normalize with helper.
+            await self._await_if_necessary(self._redis.ping())
             logger.info("Connected to Redis successfully")
         except Exception as e:
             logger.warning(f"Failed to connect to Redis: {e}")
@@ -75,7 +92,7 @@ class RedisClient:
     async def disconnect(self) -> None:
         """Close Redis connection"""
         if self._redis:
-            await self._redis.close()
+            await self._await_if_necessary(self._redis.close())
             self._redis = None
 
     async def is_connected(self) -> bool:
@@ -84,7 +101,7 @@ class RedisClient:
             return False
 
         try:
-            await self._redis.ping()
+            await self._await_if_necessary(self._redis.ping())
         except Exception:
             return False
         else:
@@ -96,7 +113,7 @@ class RedisClient:
             return False
 
         try:
-            await self._redis.set(key, value, ex=ex)
+            await self._await_if_necessary(self._redis.set(key, value, ex=ex))
         except Exception:
             logger.exception("Redis SET failed")
             return False
@@ -113,7 +130,7 @@ class RedisClient:
             return None
 
         try:
-            value = await self._redis.get(key)
+            value = await self._await_if_necessary(self._redis.get(key))
             # Ensure string return for tests even if backend returns bytes
             if isinstance(value, bytes):
                 try:
@@ -132,7 +149,7 @@ class RedisClient:
             return 0
 
         try:
-            return int(await self._redis.delete(*keys))
+            return int(await self._await_if_necessary(self._redis.delete(*keys)))
         except Exception:
             logger.exception("Redis DELETE failed")
             return 0
@@ -143,7 +160,8 @@ class RedisClient:
             return []
 
         try:
-            return [str(k) for k in await self._redis.keys(pattern)]
+            keys = await self._await_if_necessary(self._redis.keys(pattern))
+            return [str(k) for k in keys]
         except Exception:
             logger.exception("Redis KEYS failed")
             return []
@@ -154,7 +172,7 @@ class RedisClient:
             return False
 
         try:
-            return bool(await self._redis.exists(key))
+            return bool(await self._await_if_necessary(self._redis.exists(key)))
         except Exception:
             logger.exception("Redis EXISTS failed")
             return False
@@ -165,7 +183,7 @@ class RedisClient:
             return -1
 
         try:
-            return int(await self._redis.ttl(key))
+            return int(await self._await_if_necessary(self._redis.ttl(key)))
         except Exception:
             logger.exception("Redis TTL failed")
             return -1
