@@ -1,6 +1,8 @@
 import React, { memo } from "react";
 import { Link } from "react-router-dom";
 import { parseTechnologies, type Project } from "../hooks/useProjects";
+import ProgressiveImage from "./ProgressiveImage";
+import { ImageUseCase } from "../utils/imageUtils";
 
 interface ProjectCardProps {
   project: Project;
@@ -45,11 +47,15 @@ const ProjectCard: React.FC<ProjectCardProps> = memo(
           {/* Project Image */}
           <div className="relative aspect-video bg-gray-100 overflow-hidden">
             {project.cover_image_url ? (
-              <img
-                src={project.cover_image_url}
+              <ProgressiveImage
+                photo={{
+                  filename: project.title,
+                  original_url: project.cover_image_url ?? undefined,
+                  variants: project.cover_image_variants,
+                }}
+                useCase={ImageUseCase.GALLERY}
                 alt={project.title}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                loading="lazy"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
