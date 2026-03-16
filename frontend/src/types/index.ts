@@ -76,6 +76,7 @@ export interface Project {
   demo_url?: string;
   image_url?: string;
   cover_image_url?: string;
+  cover_image_variants?: Record<string, { url: string; width: number }>;
   technologies?: string;
   featured: boolean;
   status: string;
