@@ -55,6 +55,7 @@ class ProjectResponse(ProjectBase):
     updated_at: datetime
     order: int | None = 0
     cover_image_url: str | None = None
+    cover_image_variants: dict | None = None
 
     @field_validator("id", mode="before")
     @classmethod
