@@ -114,16 +114,16 @@ pytest --cov=app tests/unit/
 **Integration tests (full stack):**
 ```bash
 # Run all integration tests (recommended)
-./test-integration.sh
+./.github/scripts/test-integration.sh
 
-# Run with verbose output
-./test-integration.sh -v
+# Run via Docker Compose directly (most reliable)
+docker compose -f docker-compose.test.yml run --rm backend pytest
 
 # Run specific test file
-./test-integration.sh backend/tests/integration/api/test_photos_integration.py
+docker compose -f docker-compose.test.yml run --rm backend pytest tests/integration/api/test_photos_integration.py
 
 # Clean up test containers
-./test-integration.sh --clean
+docker compose -f docker-compose.test.yml down -v
 ```
 
 Integration tests run in Docker Compose with:
