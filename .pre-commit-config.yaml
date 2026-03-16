@@ -28,7 +28,7 @@ repos:
 
   # Python linting and formatting
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.5
+    rev: v0.15.6
     hooks:
       - id: ruff-check
         args: [--fix, --exit-non-zero-on-fix, --unsafe-fixes, --preview, --config=backend/pyproject.toml]
@@ -78,7 +78,7 @@ repos:
 
   # Prettier for code formatting
   - repo: https://github.com/mirrors-prettier/mirrors-prettier
-    rev: v4.0.0-alpha.13
+    rev: a3011012bb1a030c39a4b848778fb6f502cc417c
     hooks:
       - id: prettier
         files: ^frontend/.*\.(js|jsx|ts|tsx|json|css|scss|md|yaml|yml)$
