@@ -186,8 +186,45 @@ export const calculateTargetSize = (
     targetSize = Math.max(containerSize.width, containerSize.height);
   }
 
-  // Apply device pixel ratio multiplier
-  return Math.ceil(targetSize * devicePixelRatio);
+  // Apply device pixel ratio multiplier (cap at 2.0x for performance)
+  const effectiveDPR = Math.min(devicePixelRatio, 2.0);
+  return Math.ceil(targetSize * effectiveDPR);
+};
+
+/**
+ * Selects a placeholder variant suitable for initial "blur-up" display
+ */
+export const selectPlaceholderVariant = (
+  useCase: ImageUseCase,
+  variants: Record<string, ImageVariant>,
+): { variant: string; url: string } => {
+  // For large images, we want a slightly higher res placeholder (e.g. tablet size)
+  // For small images, a tiny thumbnail is enough.
+  const isLarge =
+    useCase === ImageUseCase.HERO || useCase === ImageUseCase.LIGHTBOX;
+
+  if (isLarge) {
+    // Try medium or small for a reasonably sharp initial impression on hero sections
+    if (variants.medium?.url)
+      return { variant: "medium", url: variants.medium.url };
+    if (variants.small?.url)
+      return { variant: "small", url: variants.small.url };
+  } else {
+    // Try micro or thumbnail for general grid items
+    if (variants.micro?.url)
+      return { variant: "micro", url: variants.micro.url };
+    if (variants.thumbnail?.url)
+      return { variant: "thumbnail", url: variants.thumbnail.url };
+  }
+
+  // Fallback to whatever is available
+  const entries = Object.entries(variants);
+  if (entries.length > 0) {
+    const smallest = entries.sort(([, a], [, b]) => a.width - b.width)[0];
+    return { variant: smallest[0], url: smallest[1].url ?? "" };
+  }
+
+  return { variant: "original", url: "" };
 };
 
 /**
