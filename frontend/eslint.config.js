@@ -4,6 +4,7 @@ import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 import { globalIgnores } from "eslint/config";
+import security from "eslint-plugin-security";
 
 export default tseslint.config([
   globalIgnores(["dist", "build", "coverage", "node_modules"]),
@@ -19,6 +20,7 @@ export default tseslint.config([
       js.configs.recommended,
       tseslint.configs.recommended,
       tseslint.configs.recommendedTypeChecked,
+      security.configs.recommended,
       // Manually merge recommended-latest to avoid legacy plugins array
       {
         plugins: {

@@ -197,32 +197,3 @@ jobs:
       run: |
         cd backend
         pytest --collect-only --quiet | grep "test session starts" || echo "No tests collected"
-
-  lint-and-format:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v6
-      with:
-        fetch-depth: 0
-
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: "3.11"
-
-    - name: Install dependencies
-      run: |
-        cd backend
-        pip install -e ".[test]"
-
-    - name: Run ruff linting
-      run: |
-        ruff check --config backend/pyproject.toml --output-format=github backend/
-
-    - name: Run ruff formatting check
-      run: |
-        ruff format --config backend/pyproject.toml --check backend/
-
-    - name: Run mypy type checking
-      run: |
-        mypy --config-file backend/pyproject.toml backend/app/

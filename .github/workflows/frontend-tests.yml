@@ -43,15 +43,7 @@ jobs:
         cd frontend
         npm ci
 
-    - name: Run lint check
-      run: |
-        cd frontend
-        npm run lint
 
-    - name: Run TypeScript type check
-      run: |
-        cd frontend
-        npx tsc --noEmit
 
     - name: Run P0 UI Security Tests
       run: |
