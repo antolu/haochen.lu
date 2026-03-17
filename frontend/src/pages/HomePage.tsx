@@ -7,6 +7,7 @@ import { photos, projects, content, heroImages } from "../api/client";
 import type { Photo } from "../types";
 import { formatDate } from "../utils/dateFormat";
 import { selectOptimalImage, ImageUseCase } from "../utils/imageUtils";
+import ProgressiveImage from "../components/ProgressiveImage";
 import ProfilePictureDisplay from "../components/ProfilePictureDisplay";
 
 const HomePage: React.FC = () => {
@@ -127,15 +128,11 @@ const HomePage: React.FC = () => {
               imageSrcSet={heroMemo.optimalImage.srcset}
               imageSizes={heroMemo.optimalImage.sizes}
             />
-            <img
-              src={heroMemo.optimalImage.url}
-              srcSet={heroMemo.optimalImage.srcset}
-              sizes={heroMemo.optimalImage.sizes}
-              alt={activeHeroImage?.photo.title ?? "Hero image"}
+            <ProgressiveImage
+              photo={activeHeroImage!.photo}
+              useCase={ImageUseCase.HERO}
+              alt={activeHeroImage!.photo.title ?? "Hero image"}
               className="w-full h-full object-cover dynamic-hero-focal-point"
-              loading="eager"
-              decoding="async"
-              fetchPriority="high"
             />
           </div>
         ) : (
@@ -420,19 +417,12 @@ const HomePage: React.FC = () => {
                   >
                     <div className="aspect-square rounded-lg overflow-hidden bg-gray-200">
                       {(() => {
-                        // Use DPI-aware selection for hero/gallery display
-                        const optimalImage = selectOptimalImage(
-                          photo,
-                          ImageUseCase.HERO,
-                        );
                         return (
-                          <img
-                            src={optimalImage.url}
-                            srcSet={optimalImage.srcset}
-                            sizes={optimalImage.sizes}
+                          <ProgressiveImage
+                            photo={photo}
+                            useCase={ImageUseCase.GALLERY}
                             alt=""
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            loading="lazy"
                           />
                         );
                       })()}
@@ -500,8 +490,13 @@ const HomePage: React.FC = () => {
                   {project.cover_image_url && (
                     <Link to={`/projects/${project.slug}`} className="block">
                       <div className="h-48 bg-gray-200">
-                        <img
-                          src={project.cover_image_url}
+                        <ProgressiveImage
+                          photo={{
+                            filename: project.title,
+                            original_url: project.cover_image_url ?? undefined,
+                            variants: project.cover_image_variants,
+                          }}
+                          useCase={ImageUseCase.GALLERY}
                           alt={project.title}
                           className="w-full h-full object-cover hover:opacity-90 transition-opacity"
                         />

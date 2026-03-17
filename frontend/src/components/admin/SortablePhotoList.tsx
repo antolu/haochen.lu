@@ -25,7 +25,8 @@ import {
 
 import type { Photo } from "../../types";
 import { formatDateSimple } from "../../utils/dateFormat";
-import { selectOptimalImage, ImageUseCase } from "../../utils/imageUtils";
+import { ImageUseCase } from "../../utils/imageUtils";
+import ProgressiveImage from "../ProgressiveImage";
 import { cn } from "../../lib/utils";
 import {
   Table,
@@ -269,11 +270,11 @@ const SortableRow: React.FC<SortableRowProps> = ({
       </TableCell>
       <TableCell className="w-24">
         <div className="relative h-14 w-20 overflow-hidden rounded-md">
-          <img
-            src={selectOptimalImage(photo, ImageUseCase.THUMBNAIL).url}
+          <ProgressiveImage
+            photo={photo}
+            useCase={ImageUseCase.THUMBNAIL}
             alt={photo.title || "Photo"}
             className="h-full w-full object-cover"
-            loading="lazy"
           />
           {photo.featured && (
             <span className="absolute top-1 right-1 inline-flex items-center rounded bg-yellow-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-yellow-600 dark:text-yellow-400 shadow-sm border border-yellow-500/20 backdrop-blur-sm">

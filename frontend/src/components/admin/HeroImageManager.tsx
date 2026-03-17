@@ -3,7 +3,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { heroImages, photos } from "../../api/client";
 import type { HeroImage, Photo, HeroImageCreate } from "../../types";
-import { selectOptimalImage, ImageUseCase } from "../../utils/imageUtils";
+import { ImageUseCase } from "../../utils/imageUtils";
+import ProgressiveImage from "../ProgressiveImage";
 import { Plus } from "lucide-react";
 import FocalPointEditor from "./FocalPointEditor";
 import SimplePhotoUpload from "../SimplePhotoUpload";
@@ -155,14 +156,11 @@ const HeroImageManager: React.FC = () => {
         {(() => {
           const activeHero = heroImagesList?.find((h) => h.is_active);
           if (activeHero) {
-            const optimalImage = selectOptimalImage(
-              activeHero.photo,
-              ImageUseCase.THUMBNAIL,
-            );
             return (
               <div className="flex items-center space-x-4">
-                <img
-                  src={optimalImage.url}
+                <ProgressiveImage
+                  photo={activeHero.photo}
+                  useCase={ImageUseCase.THUMBNAIL}
                   alt={activeHero.title}
                   className="w-16 h-16 object-cover rounded-lg"
                 />
@@ -201,10 +199,6 @@ const HeroImageManager: React.FC = () => {
       {/* Hero Images Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {heroImagesList?.map((heroImage) => {
-          const optimalImage = selectOptimalImage(
-            heroImage.photo,
-            ImageUseCase.ADMIN,
-          );
           return (
             <motion.div
               key={heroImage.id}
@@ -216,10 +210,9 @@ const HeroImageManager: React.FC = () => {
             >
               {/* Image Preview */}
               <div className="relative aspect-video">
-                <img
-                  src={optimalImage.url}
-                  srcSet={optimalImage.srcset}
-                  sizes={optimalImage.sizes}
+                <ProgressiveImage
+                  photo={heroImage.photo}
+                  useCase={ImageUseCase.ADMIN}
                   alt={heroImage.title}
                   className="w-full h-full object-cover"
                   style={{
@@ -433,10 +426,6 @@ const HeroImageManager: React.FC = () => {
 
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6 max-h-96 overflow-y-auto">
                           {photosData?.photos.map((photo) => {
-                            const optimalImage = selectOptimalImage(
-                              photo,
-                              ImageUseCase.THUMBNAIL,
-                            );
                             return (
                               <button
                                 key={photo.id}
@@ -447,8 +436,9 @@ const HeroImageManager: React.FC = () => {
                                     : "hover:ring-2 hover:ring-muted"
                                 }`}
                               >
-                                <img
-                                  src={optimalImage.url}
+                                <ProgressiveImage
+                                  photo={photo}
+                                  useCase={ImageUseCase.THUMBNAIL}
                                   alt={photo.title}
                                   className="w-full h-full object-cover"
                                 />
@@ -470,13 +460,9 @@ const HeroImageManager: React.FC = () => {
                               Selected Photo
                             </h4>
                             <div className="flex items-center space-x-4">
-                              <img
-                                src={
-                                  selectOptimalImage(
-                                    selectedPhoto,
-                                    ImageUseCase.THUMBNAIL,
-                                  ).url
-                                }
+                              <ProgressiveImage
+                                photo={selectedPhoto}
+                                useCase={ImageUseCase.THUMBNAIL}
                                 alt={selectedPhoto.title}
                                 className="w-16 h-16 object-cover rounded-lg"
                               />

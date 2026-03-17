@@ -107,6 +107,7 @@ async def list_projects(
             variants: dict = {}
             if isinstance(photo_like.get("variants"), dict):
                 variants = photo_like.get("variants")  # type: ignore[assignment]
+            resp["cover_image_variants"] = variants
             resp["cover_image_url"] = (
                 variants.get("medium", {}).get("url")
                 or variants.get("large", {}).get("url")
@@ -138,6 +139,7 @@ async def list_featured_projects(
             variants: dict = {}
             if isinstance(photo_like.get("variants"), dict):
                 variants = photo_like.get("variants")  # type: ignore[assignment]
+            resp["cover_image_variants"] = variants
             resp["cover_image_url"] = (
                 variants.get("medium", {}).get("url")
                 or variants.get("large", {}).get("url")
@@ -279,6 +281,7 @@ async def get_project_detail(
         variants: dict = {}
         if isinstance(photo_like.get("variants"), dict):
             variants = photo_like.get("variants")  # type: ignore[assignment]
+        resp["cover_image_variants"] = variants
         resp["cover_image_url"] = (
             variants.get("medium", {}).get("url")
             or variants.get("large", {}).get("url")

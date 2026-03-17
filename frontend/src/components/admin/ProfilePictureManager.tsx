@@ -9,7 +9,8 @@ import {
   useActivateProfilePicture,
   useDeleteProfilePicture,
 } from "../../hooks/useProfilePictures";
-import { selectOptimalImage, ImageUseCase } from "../../utils/imageUtils";
+import { ImageUseCase } from "../../utils/imageUtils";
+import ProgressiveImage from "../ProgressiveImage";
 import type { ProfilePicture } from "../../types";
 import { Button } from "../ui/button";
 
@@ -174,17 +175,6 @@ const ProfilePictureManager: React.FC = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {profilePictures.map((profilePicture) => {
-                const optimalImage = selectOptimalImage(
-                  {
-                    filename: profilePicture.filename,
-                    original_url: profilePicture.original_url,
-                    variants: profilePicture.variants as Record<
-                      string,
-                      { url?: string; width: number }
-                    >,
-                  },
-                  ImageUseCase.THUMBNAIL,
-                );
                 const isActive = profilePicture.id === activeProfilePicture?.id;
 
                 return (
@@ -205,8 +195,16 @@ const ProfilePictureManager: React.FC = () => {
 
                     {/* Image */}
                     <div className="aspect-square bg-muted">
-                      <img
-                        src={optimalImage.url}
+                      <ProgressiveImage
+                        photo={{
+                          filename: profilePicture.filename,
+                          original_url: profilePicture.original_url,
+                          variants: profilePicture.variants as Record<
+                            string,
+                            { url?: string; width: number }
+                          >,
+                        }}
+                        useCase={ImageUseCase.THUMBNAIL}
                         alt={profilePicture.title ?? "Profile Picture"}
                         className="w-full h-full object-cover"
                       />

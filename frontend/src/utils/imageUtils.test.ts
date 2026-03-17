@@ -312,9 +312,11 @@ describe("Mobile Device Behavior", () => {
       ImageUseCase.GALLERY,
     );
 
-    // Should select at least medium due to 3x DPI
+    // Should select at least small/medium due to 2x capped DPI
     expect(
-      ["medium", "large", "xlarge"].includes(gallerySelection.selectedVariant),
+      ["small", "medium", "large", "xlarge"].includes(
+        gallerySelection.selectedVariant,
+      ),
     ).toBe(true);
   });
 });
