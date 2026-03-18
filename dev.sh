@@ -232,28 +232,33 @@ run_tests() {
 
 # Function to show help
 show_help() {
-    echo "Development Environment Management"
-    echo ""
-    echo "Usage: $0 [COMMAND]"
-    echo ""
-    echo "Commands:"
-    echo "  start, dev          Start development environment with live reload"
-    echo "  stop               Stop development environment"
-    echo "  restart            Restart development environment"
-    echo "  logs [service] [-f] Show logs (optionally for specific service, -f to follow)"
-    echo "  prod               Start production environment"
-    echo "  prod-stop          Stop production environment"
-    echo "  build              Build frontend"
-    echo "  test               Run tests"
-    echo "  help               Show this help message"
-    echo ""
-    echo "Development URLs:"
-    echo "  Frontend: http://localhost:3000"
-    echo "  Backend:  http://localhost:8000"
-    echo "  API:      http://localhost:8000/api"
-    echo ""
-    echo "Production URLs:"
-    echo "  Application: http://localhost"
+    cat <<EOF
+Development Environment Management
+
+Usage: $0 [COMMAND]
+
+Commands:
+  start, dev          Start development environment with live reload
+  stop               Stop development environment
+  restart            Restart development environment
+  logs [service] [-f] Show logs (optionally for specific service, -f to follow)
+  prod               Start production environment
+  prod-stop          Stop production environment
+  build              Build frontend
+  test               Run tests
+  help               Show this help message
+
+Development URLs (via nginx):
+  Application: http://localhost
+  API:         http://localhost/api
+
+Direct Debugging (bypass proxy):
+  Frontend: http://localhost:3000
+  Backend:  http://localhost:8000
+
+Production URLs:
+  Application: http://localhost
+EOF
 }
 
 # Main script logic
