@@ -13,9 +13,6 @@ import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import MDEditor from "@uiw/react-md-editor";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import rehypeHighlight from "rehype-highlight";
 
 type EditorMode = "text" | "html" | "markdown";
 
@@ -98,7 +95,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[1000px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? "Edit Content" : "Create Content"}
@@ -182,30 +179,21 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
           )}
 
           {contentType === "markdown" && (
-            <Tabs defaultValue="edit">
-              <TabsList>
-                <TabsTrigger value="edit">Edit</TabsTrigger>
-                <TabsTrigger value="preview">Preview</TabsTrigger>
-              </TabsList>
-              <TabsContent value="edit">
+            <div className="space-y-2">
+              <Label htmlFor="markdown-editor">Content (Markdown)</Label>
+              <div
+                data-color-mode="light"
+                className="border rounded-md overflow-hidden"
+              >
                 <MDEditor
+                  id="markdown-editor"
                   value={content}
                   onChange={(v) => setContent(v ?? "")}
-                  height={320}
-                  preview="edit"
+                  height={500}
+                  preview="live"
                 />
-              </TabsContent>
-              <TabsContent value="preview">
-                <div className="prose dark:prose-invert max-w-none">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    rehypePlugins={[rehypeHighlight]}
-                  >
-                    {content}
-                  </ReactMarkdown>
-                </div>
-              </TabsContent>
-            </Tabs>
+              </div>
+            </div>
           )}
 
           <DialogFooter className="pt-4">
