@@ -28,7 +28,7 @@ repos:
 
   # Python linting and formatting
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.5
+    rev: v0.15.6
     hooks:
       - id: ruff-check
         args: [--fix, --exit-non-zero-on-fix, --unsafe-fixes, --preview, --config=backend/pyproject.toml]
@@ -70,7 +70,7 @@ repos:
         additional_dependencies:
           - eslint@10.0.3
           - '@eslint/js@10.0.1'
-          - 'typescript-eslint@8.57.0'
+          - 'typescript-eslint@8.57.1'
           - 'eslint-plugin-react-hooks@7.0.1'
           - 'eslint-plugin-react-refresh@0.5.2'
           - 'globals@17.4.0'
