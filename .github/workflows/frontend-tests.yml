@@ -142,7 +142,7 @@ jobs:
           --tags wcag2a,wcag2aa \
           --chromedriver-path "${{ steps.setup-chrome.outputs.chromedriver-path }}" \
           --chrome-path "${{ steps.setup-chrome.outputs.chrome-path }}" \
-          --chrome-options="--no-sandbox,--disable-dev-shm-usage,--headless=new,--disable-gpu" \
+          --chrome-options="--no-sandbox,--disable-dev-shm-usage,--headless,--disable-gpu" \
           --save axe-results.json
 
     - name: Run Lighthouse accessibility audit
@@ -157,7 +157,7 @@ jobs:
           --throttling-method=provided \
           --emulated-form-factor=desktop \
           --chrome-path="${{ steps.setup-chrome.outputs.chrome-path }}" \
-          --chrome-flags="--headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu --window-size=1920,1080"
+          --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage --disable-gpu --window-size=1920,1080"
 
     - name: Upload accessibility reports
       uses: actions/upload-artifact@v7

@@ -15,6 +15,9 @@ updates:
     groups:
       npm-dependencies:
         patterns: ["*"]
+    ignore:
+      - dependency-name: "*"
+        versions: ["alpha", "beta", "rc", "dev", "canary", "next", "nightly"]
 
   - package-ecosystem: "pip"
     directory: "/backend"
