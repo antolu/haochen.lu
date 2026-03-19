@@ -17,7 +17,13 @@ updates:
         patterns: ["*"]
     ignore:
       - dependency-name: "*"
-        update-types: ["version-update:semver-prerelease"]
+        versions:
+          - "*-alpha*"
+          - "*-beta*"
+          - "*-rc*"
+          - "*-pre*"
+          - "*-preview*"
+          - "*-dev*"
 
   - package-ecosystem: "pip"
     directory: "/backend"
