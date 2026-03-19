@@ -7,15 +7,6 @@ updates:
     groups:
       actions:
         patterns: ["*"]
-    ignore:
-      - dependency-name: "*"
-        versions:
-          - "*-alpha*"
-          - "*-beta*"
-          - "*-rc*"
-          - "*-pre*"
-          - "*-preview*"
-          - "*-dev*"
 
   - package-ecosystem: "npm"
     directory: "/frontend"
@@ -26,13 +17,7 @@ updates:
         patterns: ["*"]
     ignore:
       - dependency-name: "*"
-        versions:
-          - "*-alpha*"
-          - "*-beta*"
-          - "*-rc*"
-          - "*-pre*"
-          - "*-preview*"
-          - "*-dev*"
+        update-types: ["version-update:semver-prerelease"]
 
   - package-ecosystem: "pip"
     directory: "/backend"
@@ -41,43 +26,16 @@ updates:
     groups:
       pip-dependencies:
         patterns: ["*"]
-    ignore:
-      - dependency-name: "*"
-        versions:
-          - "*-alpha*"
-          - "*-beta*"
-          - "*-rc*"
-          - "*-pre*"
-          - "*-preview*"
-          - "*-dev*"
 
   - package-ecosystem: "docker"
     directory: "/backend"
     schedule:
       interval: "weekly"
-    ignore:
-      - dependency-name: "*"
-        versions:
-          - "*-alpha*"
-          - "*-beta*"
-          - "*-rc*"
-          - "*-pre*"
-          - "*-preview*"
-          - "*-dev*"
 
   - package-ecosystem: "docker"
     directory: "/frontend"
     schedule:
       interval: "weekly"
-    ignore:
-      - dependency-name: "*"
-        versions:
-          - "*-alpha*"
-          - "*-beta*"
-          - "*-rc*"
-          - "*-pre*"
-          - "*-preview*"
-          - "*-dev*"
 
   - package-ecosystem: "pre-commit"
     directory: "/"
@@ -86,12 +44,3 @@ updates:
     groups:
       pre-commit-hooks:
         patterns: ["*"]
-    ignore:
-      - dependency-name: "*"
-        versions:
-          - "*-alpha*"
-          - "*-beta*"
-          - "*-rc*"
-          - "*-pre*"
-          - "*-preview*"
-          - "*-dev*"
