@@ -17,13 +17,7 @@ updates:
         patterns: ["*"]
     ignore:
       - dependency-name: "*"
-        versions:
-          - "*-alpha*"
-          - "*-beta*"
-          - "*-rc*"
-          - "*-pre*"
-          - "*-preview*"
-          - "*-dev*"
+        versions: ["alpha", "beta", "rc", "dev", "canary", "next", "nightly"]
 
   - package-ecosystem: "pip"
     directory: "/backend"
