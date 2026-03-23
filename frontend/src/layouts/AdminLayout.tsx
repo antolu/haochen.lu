@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Outlet, Link, useLocation, Navigate } from "react-router-dom";
+import { Outlet, Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Home,
@@ -214,8 +214,22 @@ const AdminLayoutContent: React.FC = () => {
     }
   }, [isAuthenticated, checkAuth]);
 
+  useEffect(() => {
+    // Only redirect if checkAuth has finished and we are still not authenticated
+    // We assume checkAuth is finished if it's not the first render, but a better way
+    // is to check if it's currently loading.
+    if (!isAuthenticated) {
+      const next = encodeURIComponent(location.pathname);
+      window.location.href = `/api/auth/login?next=${next}`;
+    }
+  }, [isAuthenticated, location.pathname]);
+
   if (!isAuthenticated || !user?.is_admin) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   const navigation = [

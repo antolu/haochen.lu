@@ -162,12 +162,9 @@ apiClient.interceptors.response.use(
         const isAuthRefresh =
           originalRequest?.url?.includes("/auth/refresh") ?? false;
 
-        if (
-          window.location.pathname !== "/login" &&
-          !isPublicPage &&
-          !isAuthRefresh
-        ) {
-          window.location.href = "/login";
+        if (!isPublicPage && !isAuthRefresh) {
+          const next = encodeURIComponent(window.location.pathname);
+          window.location.href = `/api/auth/login?next=${next}`;
         }
 
         return Promise.reject(new Error("Refresh failed"));

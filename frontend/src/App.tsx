@@ -1,5 +1,10 @@
 import { useEffect, lazy, Suspense } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
 
@@ -11,7 +16,6 @@ import { useUploadProcessor } from "./hooks/useUploadProcessor";
 
 // Public pages
 import HomePage from "./pages/HomePage";
-import LoginPage from "./pages/LoginPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
 // Lazy-loaded public pages (heavy components)
@@ -128,7 +132,8 @@ const AppContent: React.FC = () => {
           />
 
           {/* Auth routes */}
-          <Route path="/login" element={<LoginPage />} />
+          {/* Redirect /login to /admin which now handles the Casdoor jump */}
+          <Route path="/login" element={<Navigate to="/admin" replace />} />
 
           {/* Admin routes */}
           <Route path="/admin" element={<AdminLayout />}>
