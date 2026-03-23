@@ -132,3 +132,7 @@ docker compose up -d
 ```
 
 For TrueNAS Scale deployment, see [docs/TRUENAS_DEPLOYMENT.md](./docs/TRUENAS_DEPLOYMENT.md).
+
+## License
+
+This project is released under the MIT License. See `LICENSE.md` for details.
