@@ -126,6 +126,17 @@ class Settings(BaseSettings):
     # User agent for external API calls
     user_agent: str = os.getenv("USER_AGENT", "photography-portfolio/1.0")
 
+    # Casdoor setup
+    casdoor_endpoint: str = os.getenv("CASDOOR_ENDPOINT", "http://localhost:8008")
+    casdoor_client_id: str = os.getenv("CASDOOR_CLIENT_ID", "")
+    casdoor_client_secret: str = os.getenv("CASDOOR_CLIENT_SECRET", "")
+    casdoor_organization: str = os.getenv("CASDOOR_ORGANIZATION", "built-in")
+    casdoor_application: str = os.getenv("CASDOOR_APPLICATION", "app-built-in")
+    casdoor_redirect_uri: str = os.getenv(
+        "CASDOOR_REDIRECT_URI",
+        "http://localhost:8000/api/auth/callback",
+    )
+
     # External API timeouts (in seconds)
     repository_request_timeout: int = int(os.getenv("REPOSITORY_TIMEOUT", "10"))
 
