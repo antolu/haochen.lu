@@ -19,12 +19,10 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # Drop category and comments columns from photos table
     op.drop_column("photos", "category")
     op.drop_column("photos", "comments")
 
 
 def downgrade() -> None:
-    # Add category and comments columns back to photos table
     op.add_column("photos", sa.Column("category", sa.String(length=50), nullable=True))
     op.add_column("photos", sa.Column("comments", sa.Text(), nullable=True))

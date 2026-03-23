@@ -33,10 +33,7 @@ def upgrade() -> None:
     op.alter_column("users", "is_verified", nullable=False)
     op.alter_column("users", "is_superuser", nullable=False)
 
-    # Note: email field already exists and is nullable, which is fine for fastapi-users
-    # Note: hashed_password field already exists, which is what fastapi-users expects
-    # Note: is_active field already exists, which is what fastapi-users expects
-    # Note: id field is already UUID, which matches SQLAlchemyBaseUserTableUUID
+    # The migration adds verification and superuser flags required by fastapi-users.
 
 
 def downgrade() -> None:

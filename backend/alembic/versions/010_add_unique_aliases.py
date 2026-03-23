@@ -18,7 +18,6 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # Add unique constraints to original_name columns
     op.create_unique_constraint(
         "uq_camera_aliases_original_name", "camera_aliases", ["original_name"]
     )
@@ -28,7 +27,6 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    # Remove unique constraints
     op.drop_constraint("uq_lens_aliases_original_name", "lens_aliases", type_="unique")
     op.drop_constraint(
         "uq_camera_aliases_original_name", "camera_aliases", type_="unique"

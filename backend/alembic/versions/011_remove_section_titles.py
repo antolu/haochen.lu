@@ -18,7 +18,6 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # Delete the content items that are now hardcoded in the frontend
     op.execute(
         "DELETE FROM content WHERE key IN ("
         "'about.title', "
@@ -30,6 +29,4 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    # We could theoretically re-insert them, but they'll have default values
-    # For now, we don't need to re-insert as they're hardcoded in the frontend now
     pass
