@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from typing import Any
 
-from sqlalchemy import Boolean, Column, DateTime, Float, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, Float, Integer, String, Text
 from sqlalchemy.dialects.postgresql import ENUM, JSON, UUID
-from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
 
@@ -13,54 +14,51 @@ from app.database import Base
 class Photo(Base):
     __tablename__ = "photos"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    title = Column(String(200), nullable=False)
-    description = Column(Text)
-    tags = Column(String(500))  # JSON string of tags
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text)
+    tags: Mapped[str | None] = mapped_column(String(500))
 
-    # File paths
-    filename = Column(String(255), nullable=False)
-    original_path = Column(String(500), nullable=False)
+    filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    original_path: Mapped[str] = mapped_column(String(500), nullable=False)
 
-    # Responsive image variants (JSON: {size_name: {path, width, height, size_bytes, format}})
-    variants = Column(JSON, nullable=False)
+    variants: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
 
-    # EXIF data
-    location_lat = Column(Float)
-    location_lon = Column(Float)
-    location_name = Column(String(200))
-    location_address = Column(Text)  # Full geocoded address
-    altitude = Column(Float)  # GPS altitude in meters
-    timezone = Column(String(50))  # Timezone offset or name
-    camera_make = Column(String(100))
-    camera_model = Column(String(100))
-    lens = Column(String(100))
-    iso = Column(Integer)
-    aperture = Column(Float)
-    shutter_speed = Column(String(50))
-    focal_length = Column(Integer)
-    date_taken = Column(DateTime)
+    location_lat: Mapped[float | None] = mapped_column(Float)
+    location_lon: Mapped[float | None] = mapped_column(Float)
+    location_name: Mapped[str | None] = mapped_column(String(200))
+    location_address: Mapped[str | None] = mapped_column(Text)
+    altitude: Mapped[float | None] = mapped_column(Float)
+    timezone: Mapped[str | None] = mapped_column(String(50))
+    camera_make: Mapped[str | None] = mapped_column(String(100))
+    camera_model: Mapped[str | None] = mapped_column(String(100))
+    lens: Mapped[str | None] = mapped_column(String(100))
+    iso: Mapped[int | None] = mapped_column(Integer)
+    aperture: Mapped[float | None] = mapped_column(Float)
+    shutter_speed: Mapped[str | None] = mapped_column(String(50))
+    focal_length: Mapped[int | None] = mapped_column(Integer)
+    date_taken: Mapped[datetime | None] = mapped_column(DateTime)
 
-    # Flexible metadata storage
-    custom_metadata = Column(JSON)  # Additional custom metadata fields
+    custom_metadata: Mapped[dict[str, Any] | None] = mapped_column(JSON)
 
-    # Access control
-    access_level: Mapped[str] = Column(
+    access_level: Mapped[str] = mapped_column(
         ENUM(
             "public", "authenticated", "private", name="accesslevel", create_type=False
         ),
         default="public",
         nullable=False,
-    )  # type: ignore[assignment]
+    )
 
-    # Metadata
-    file_size = Column(Integer)
-    width = Column(Integer)
-    height = Column(Integer)
-    featured = Column(Boolean, default=False)
-    order = Column(Integer, default=0)
-    view_count: Mapped[int] = Column(Integer, default=0)  # type: ignore[assignment]
+    file_size: Mapped[int | None] = mapped_column(Integer)
+    width: Mapped[int | None] = mapped_column(Integer)
+    height: Mapped[int | None] = mapped_column(Integer)
+    featured: Mapped[bool] = mapped_column(Boolean, default=False)
+    order: Mapped[int] = mapped_column(Integer, default=0)
+    view_count: Mapped[int] = mapped_column(Integer, default=0)
 
-    # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )

@@ -242,6 +242,7 @@ preview = true
 
 [tool.mypy]
 python_version = "3.11"
+plugins = ["sqlalchemy.ext.mypy.plugin"]
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
