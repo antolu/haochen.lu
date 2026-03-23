@@ -37,27 +37,12 @@ export const useAuthStore = create<AuthState>()(
       tokenExpiry: null,
       isRefreshing: false,
 
-      login: async (credentials: LoginRequest, rememberMe = false) => {
+      login: async (credentials: LoginRequest, _rememberMe = false) => {
         set({ isLoading: true, error: null });
 
         try {
-          const tokenResponse = await auth.login({
+          await auth.login({
             ...credentials,
-            remember_me: rememberMe,
-          });
-
-          set({
-            accessToken: tokenResponse.access_token,
-            tokenExpiry: Date.now() + tokenResponse.expires_in * 1000,
-          });
-
-          // Get user info
-          const user = await auth.getMe();
-          set({
-            user,
-            isAuthenticated: true,
-            isLoading: false,
-            error: null,
           });
         } catch (error: unknown) {
           let errorMessage = "Login failed";

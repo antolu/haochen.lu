@@ -13,11 +13,13 @@ import {
   useDeleteSubApp,
   useToggleSubAppEnabled,
 } from "../../hooks/useSubApps";
+import { subapps as subappsApi } from "../../api/client";
 import type { SubApp } from "../../types";
 
 interface SubAppFormData {
   name: string;
   url: string;
+  admin_url?: string;
   description?: string;
   icon?: string;
   color?: string;
@@ -96,6 +98,22 @@ const AdminSubApps: React.FC = () => {
     } catch (error) {
       // Error handling is done in the mutation hook
       console.error("Toggle enabled error:", error);
+    }
+  };
+
+  const handleOpenSubApp = async (subapp: SubApp, target: "app" | "admin") => {
+    try {
+      if (subapp.requires_auth) {
+        const { url } = await subappsApi.getJumpUrl(subapp.slug, target);
+        window.open(url, subapp.is_external ? "_blank" : "_self");
+        return;
+      }
+
+      const destination =
+        target === "admin" ? (subapp.admin_url ?? subapp.url) : subapp.url;
+      window.open(destination, subapp.is_external ? "_blank" : "_self");
+    } catch (error) {
+      console.error("Open sub-app error:", error);
     }
   };
 
@@ -230,6 +248,12 @@ const AdminSubApps: React.FC = () => {
         <SubAppList
           subapps={subapps}
           onEdit={handleEditSubApp}
+          onOpen={(subapp) => {
+            void handleOpenSubApp(subapp, "app");
+          }}
+          onOpenAdmin={(subapp) => {
+            void handleOpenSubApp(subapp, "admin");
+          }}
           onDelete={(id) => {
             void handleDeleteSubApp(id);
           }}

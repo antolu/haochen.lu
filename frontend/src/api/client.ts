@@ -180,23 +180,29 @@ apiClient.interceptors.response.use(
 
 // Auth API
 export const auth = {
-  login: async (
-    credentials: LoginRequest & { remember_me?: boolean },
-  ): Promise<TokenResponse> => {
-    const formData = new URLSearchParams();
-    formData.append("username", credentials.username);
-    formData.append("password", credentials.password);
-
-    const response = await apiClient.post<TokenResponse>(
-      "/auth/login",
-      formData,
-      {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-      },
-    );
+  getLoginUrl: async (params: LoginRequest = {}): Promise<{ url: string }> => {
+    const response = await apiClient.get<{ url: string }>("/auth/login", {
+      params,
+    });
     return response.data;
+  },
+
+  login: async (params: LoginRequest = {}): Promise<void> => {
+    const { url } = await auth.getLoginUrl(params);
+    window.location.assign(url);
+  },
+
+  getMe: async (): Promise<User> => {
+    const response = await apiClient.get<User>("/auth/me");
+    return response.data;
+  },
+
+  logout: async (): Promise<void> => {
+    await apiClient.post("/auth/logout");
+  },
+
+  revokeAllSessions: async (): Promise<void> => {
+    await apiClient.post("/auth/revoke-all-sessions");
   },
 
   refresh: async (): Promise<TokenResponse> => {
@@ -204,17 +210,16 @@ export const auth = {
     return response.data;
   },
 
-  getMe: async (): Promise<User> => {
-    const response = await apiClient.get<User>("/users/me");
+  authorize: async (params: {
+    client_id: string;
+    redirect_uri: string;
+    response_type: string;
+    state: string;
+  }): Promise<{ url: string }> => {
+    const response = await apiClient.get<{ url: string }>("/auth/authorize", {
+      params,
+    });
     return response.data;
-  },
-
-  logout: async (): Promise<void> => {
-    await apiClient.post("/auth/jwt/logout");
-  },
-
-  revokeAllSessions: async (): Promise<void> => {
-    await apiClient.post("/auth/revoke-all-sessions");
   },
 };
 
@@ -594,6 +599,19 @@ export const subapps = {
   getStats: async (): Promise<SubAppStatsSummary> => {
     const response = await apiClient.get<SubAppStatsSummary>(
       "/subapps/stats/summary",
+    );
+    return response.data;
+  },
+
+  getJumpUrl: async (
+    slug: string,
+    target: "app" | "admin" = "app",
+  ): Promise<{ url: string }> => {
+    const response = await apiClient.get<{ url: string }>(
+      `/auth/jump/${slug}`,
+      {
+        params: { target },
+      },
     );
     return response.data;
   },

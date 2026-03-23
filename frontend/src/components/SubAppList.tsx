@@ -8,6 +8,8 @@ interface SubAppListProps {
   onEdit: (subapp: SubApp) => void;
   onDelete: (subappId: string) => void;
   onToggleEnabled: (subappId: string, enabled: boolean) => void;
+  onOpen: (subapp: SubApp) => void;
+  onOpenAdmin: (subapp: SubApp) => void;
   isLoading?: boolean;
 }
 
@@ -16,6 +18,8 @@ const SubAppList: React.FC<SubAppListProps> = ({
   onEdit,
   onDelete,
   onToggleEnabled,
+  onOpen,
+  onOpenAdmin,
   isLoading = false,
 }) => {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
@@ -250,6 +254,24 @@ const SubAppList: React.FC<SubAppListProps> = ({
 
                   {/* Actions */}
                   <div className="flex items-center space-x-2 ml-4">
+                    <button
+                      onClick={() => onOpen(subapp)}
+                      className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-100 hover:bg-emerald-200 rounded transition-colors"
+                      title="Open App"
+                    >
+                      Open
+                    </button>
+
+                    {subapp.admin_url && (
+                      <button
+                        onClick={() => onOpenAdmin(subapp)}
+                        className="px-3 py-1.5 text-xs font-medium text-violet-700 bg-violet-100 hover:bg-violet-200 rounded transition-colors"
+                        title="Open Admin"
+                      >
+                        Admin
+                      </button>
+                    )}
+
                     {/* Toggle Enable/Disable */}
                     <button
                       onClick={() =>

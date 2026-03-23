@@ -68,6 +68,25 @@ const MainLayout: React.FC = () => {
 
   const navPadding = isScrolled ? "py-2" : "py-3 md:py-4";
 
+  const handleSubAppNavigation = async (app: {
+    slug: string;
+    url: string;
+    requires_auth: boolean;
+    is_external: boolean;
+  }) => {
+    if (!app.requires_auth) {
+      window.open(app.url, app.is_external ? "_blank" : "_self");
+      return;
+    }
+
+    try {
+      const { url } = await subapps.getJumpUrl(app.slug, "app");
+      window.open(url, app.is_external ? "_blank" : "_self");
+    } catch (error) {
+      console.error("Failed to open sub-app", error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white mobile-safe">
       {/* Header */}
@@ -119,34 +138,35 @@ const MainLayout: React.FC = () => {
                   </button>
                   <div className="absolute left-0 mt-2 w-56 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                     <div className="py-1">
-                      {subAppsData.subapps.map((app) => (
-                        <a
-                          key={app.id}
-                          href={app.is_external ? app.url : `${app.url}`}
-                          target={app.is_external ? "_blank" : "_self"}
-                          rel={
-                            app.is_external ? "noopener noreferrer" : undefined
-                          }
-                          className="flex items-center px-4 py-2 text-sm text-foreground hover:bg-gray-50 hover:text-primary transition-colors duration-200"
-                        >
-                          {app.icon && (
-                            <span
-                              className="mr-3 text-lg"
-                              style={{ color: app.color ?? undefined }}
-                            >
-                              {app.icon}
-                            </span>
-                          )}
-                          <div>
-                            <div className="font-medium">{app.name}</div>
-                            {app.description && (
-                              <div className="text-xs text-muted-foreground">
-                                {app.description}
-                              </div>
+                      {subAppsData.subapps.map((app) => {
+                        return (
+                          <button
+                            key={app.id}
+                            type="button"
+                            onClick={() => {
+                              void handleSubAppNavigation(app);
+                            }}
+                            className="flex w-full items-center px-4 py-2 text-sm text-foreground hover:bg-gray-50 hover:text-primary transition-colors duration-200"
+                          >
+                            {app.icon && (
+                              <span
+                                className="mr-3 text-lg"
+                                style={{ color: app.color ?? undefined }}
+                              >
+                                {app.icon}
+                              </span>
                             )}
-                          </div>
-                        </a>
-                      ))}
+                            <div>
+                              <div className="font-medium">{app.name}</div>
+                              {app.description && (
+                                <div className="text-xs text-muted-foreground">
+                                  {app.description}
+                                </div>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -229,28 +249,29 @@ const MainLayout: React.FC = () => {
                     <div className="px-3 py-2 text-sm font-medium text-muted-foreground uppercase tracking-wider">
                       Applications
                     </div>
-                    {subAppsData.subapps.map((app) => (
-                      <a
-                        key={app.id}
-                        href={app.is_external ? app.url : `${app.url}`}
-                        target={app.is_external ? "_blank" : "_self"}
-                        rel={
-                          app.is_external ? "noopener noreferrer" : undefined
-                        }
-                        className="flex items-center px-3 py-2 rounded-md text-base font-medium text-foreground hover:text-primary hover:bg-gray-50 transition-colors duration-200"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        {app.icon && (
-                          <span
-                            className="mr-3"
-                            style={{ color: app.color ?? undefined }}
-                          >
-                            {app.icon}
-                          </span>
-                        )}
-                        {app.name}
-                      </a>
-                    ))}
+                    {subAppsData.subapps.map((app) => {
+                      return (
+                        <button
+                          key={app.id}
+                          type="button"
+                          className="flex w-full items-center px-3 py-2 rounded-md text-base font-medium text-foreground hover:text-primary hover:bg-gray-50 transition-colors duration-200"
+                          onClick={() => {
+                            void handleSubAppNavigation(app);
+                            setMobileMenuOpen(false);
+                          }}
+                        >
+                          {app.icon && (
+                            <span
+                              className="mr-3"
+                              style={{ color: app.color ?? undefined }}
+                            >
+                              {app.icon}
+                            </span>
+                          )}
+                          {app.name}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
