@@ -132,3 +132,8 @@ docker compose up -d
 ```
 
 For TrueNAS Scale deployment, see [docs/TRUENAS_DEPLOYMENT.md](./docs/TRUENAS_DEPLOYMENT.md).
+
+## License
+
+This project is licensed under the PolyForm Noncommercial License 1.0.0. See
+`LICENSE.md` for the full text and terms.

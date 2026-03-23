@@ -7,6 +7,7 @@ name = "photography-portfolio"
 dynamic = ["version", "readme"]
 description = "Modern photography portfolio with FastAPI backend"
 requires-python = ">=3.11"
+license = { file = "LICENSE.md" }
 classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
@@ -14,6 +15,7 @@ classifiers = [
   "Operating System :: POSIX :: Linux",
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.11",
+  "License :: Other/Proprietary License",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
