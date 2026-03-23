@@ -135,4 +135,5 @@ For TrueNAS Scale deployment, see [docs/TRUENAS_DEPLOYMENT.md](./docs/TRUENAS_DE
 
 ## License
 
-This project is released under the MIT License. See `LICENSE.md` for details.
+This project is licensed under the PolyForm Noncommercial License 1.0.0. See
+`LICENSE.md` for the full text and terms.
