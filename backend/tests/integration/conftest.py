@@ -14,7 +14,11 @@ from pathlib import Path
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+from app.core.security import create_access_token
+from app.models.user import User
 
 # Test fixture paths
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"
@@ -98,50 +102,30 @@ async def integration_client() -> AsyncGenerator[AsyncClient, None]:
 
 
 @pytest_asyncio.fixture
-async def admin_auth_headers(integration_client: AsyncClient) -> dict[str, str]:
-    """
-    Get authentication headers for admin user.
-
-    Logs in as the integration admin user and returns the auth headers.
-    """
-    login_data = {
-        "username": "integration_admin",
-        "password": "TestPassword123!",  # Matches UserFactory default
-    }
-
-    response = await integration_client.post("/api/auth/login", data=login_data)
-
-    if response.status_code != 200:
-        msg = f"Failed to login admin user: {response.status_code} - {response.text}"
+async def admin_auth_headers(integration_session: AsyncSession) -> dict[str, str]:
+    result = await integration_session.execute(
+        select(User).where(User.username == "integration_admin")
+    )
+    admin_user = result.scalar_one_or_none()
+    if admin_user is None:
+        msg = "Integration admin user not found"
         raise RuntimeError(msg)
 
-    data = response.json()
-    access_token = data["access_token"]
-
+    access_token = create_access_token({"sub": str(admin_user.id)})
     return {"Authorization": f"Bearer {access_token}"}
 
 
 @pytest_asyncio.fixture
-async def user_auth_headers(integration_client: AsyncClient) -> dict[str, str]:
-    """
-    Get authentication headers for regular user.
-
-    Logs in as the integration regular user and returns the auth headers.
-    """
-    login_data = {
-        "username": "integration_user",
-        "password": "TestPassword123!",  # Matches UserFactory default
-    }
-
-    response = await integration_client.post("/api/auth/login", data=login_data)
-
-    if response.status_code != 200:
-        msg = f"Failed to login regular user: {response.status_code} - {response.text}"
+async def user_auth_headers(integration_session: AsyncSession) -> dict[str, str]:
+    result = await integration_session.execute(
+        select(User).where(User.username == "integration_user")
+    )
+    regular_user = result.scalar_one_or_none()
+    if regular_user is None:
+        msg = "Integration regular user not found"
         raise RuntimeError(msg)
 
-    data = response.json()
-    access_token = data["access_token"]
-
+    access_token = create_access_token({"sub": str(regular_user.id)})
     return {"Authorization": f"Bearer {access_token}"}
 
 

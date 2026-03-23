@@ -5,11 +5,11 @@ Factory classes for creating test data.
 from __future__ import annotations
 
 import random
+import secrets
 import uuid
 from typing import Any
 
 import factory
-from bcrypt import gensalt, hashpw
 from factory import Faker, LazyAttribute, LazyFunction
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -50,15 +50,10 @@ class UserFactory(AsyncSQLAlchemyModelFactory):
         model = User
 
     id = factory.LazyFunction(uuid.uuid4)
+    casdoor_id = factory.LazyFunction(lambda: f"casdoor-{secrets.token_hex(8)}")
     username = factory.Sequence(lambda n: f"user_{n}")
     email = factory.Sequence(lambda n: f"user_{n}@example.com")
-    hashed_password = LazyAttribute(
-        lambda obj: hashpw(b"TestPassword123!", gensalt()).decode("utf-8")
-    )
-    is_active = True
-    is_verified = True  # Required by fastapi-users
     is_admin = False
-    is_superuser = False  # Alias for is_admin in fastapi-users
     created_at = Faker("date_time_this_year")
     updated_at = LazyAttribute(lambda obj: obj.created_at)
 
@@ -233,6 +228,9 @@ class SubAppFactory(AsyncSQLAlchemyModelFactory):
 
     requires_auth = True
     admin_only = False
+    client_id = factory.LazyFunction(lambda: secrets.token_urlsafe(12))
+    client_secret = factory.LazyFunction(lambda: secrets.token_urlsafe(24))
+    redirect_uris = LazyAttribute(lambda obj: f"{obj.url}/callback")
     show_in_menu = True
     enabled = True
     order = Faker("random_int", min=0, max=100)
@@ -248,8 +246,6 @@ class AdminUserFactory(UserFactory):
     username = "admin"  # type: ignore[assignment]
     email = "admin@example.com"  # type: ignore[assignment]
     is_admin = True
-    is_superuser = True
-    is_verified = True
 
 
 class FeaturedPhotoFactory(PhotoFactory):

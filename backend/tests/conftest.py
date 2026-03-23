@@ -245,33 +245,28 @@ def pytest_collection_modifyitems(config, items):
 @pytest_asyncio.fixture
 async def admin_user(test_session: AsyncSession) -> User:
     """Create an admin user for testing."""
-    return await UserFactory.create_async(
-        test_session, username="admin", is_superuser=True, is_active=True
-    )
+    return await UserFactory.create_async(test_session, username="admin", is_admin=True)
 
 
 @pytest_asyncio.fixture
 async def regular_user(test_session: AsyncSession) -> User:
     """Create a regular user for testing."""
     return await UserFactory.create_async(
-        test_session, username="testuser", is_admin=False, is_active=True
+        test_session, username="testuser", is_admin=False
     )
 
 
 def create_access_token_for_user(user: User, settings: Settings) -> str:
     """Create JWT access token for a user - replacement for old security function."""
-    to_encode: dict[str, Any] = {
-        "sub": str(user.id)
-    }  # fastapi-users uses UUID as string
+    to_encode: dict[str, Any] = {"sub": str(user.id), "type": "access"}
     now = datetime.utcnow()
     expire = now + timedelta(minutes=settings.access_token_expire_minutes)
 
     to_encode.update({
         "exp": calendar.timegm(expire.utctimetuple()),
         "iat": calendar.timegm(now.utctimetuple()),
-        "aud": ["fastapi-users:auth"],  # Required by fastapi-users
     })
-    return jwt.encode(to_encode, settings.secret_key, algorithm="HS256")
+    return jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
 
 
 @pytest.fixture
@@ -280,15 +275,10 @@ def admin_token(admin_user: User, test_settings: Settings) -> str:
     return create_access_token_for_user(admin_user, test_settings)
 
 
-@pytest_asyncio.fixture
-async def admin_token_via_login(async_client: AsyncClient, admin_user: User) -> str:
-    """Get a real admin token by logging in through the API."""
-    login_data = {"username": admin_user.username, "password": "TestPassword123!"}
-    response = await async_client.post("/api/auth/login", data=login_data)
-    if response.status_code != 200:
-        msg = f"Failed to login admin user: {response.status_code} - {response.text}"
-        raise RuntimeError(msg)
-    return response.json()["access_token"]
+@pytest.fixture
+def admin_token_via_login(admin_user: User) -> str:
+    """Get a real admin token by logging in through the API (sync helper)."""
+    return create_access_token_for_user(admin_user, app_config.settings)
 
 
 @pytest.fixture
