@@ -11,11 +11,12 @@ This guide provides step-by-step instructions for deploying the Portfolio applic
 
 ## 🏗️ Architecture Overview
 
-The application consists of 4 separate services:
+The application consists of 5 separate services:
 1. **PostgreSQL Database** (port 5432) - *Generic database server for multiple applications*
 2. **Redis Cache/Session Store** (port 6379) - *Generic cache/session store for multiple applications*
-3. **Backend API Service** (port 8000) - *Portfolio app backend*
-4. **Frontend Web Service** (port 80/443) - *Portfolio app frontend*
+3. **Casdoor SSO Service** (port 8000) - *Identity provider and SSO broker*
+4. **Backend API Service** (port 8000) - *Portfolio app backend*
+5. **Frontend Web Service** (port 80/443) - *Portfolio app frontend*
 
 ## 📂 Storage Requirements
 
@@ -119,7 +120,46 @@ Mount this at `/usr/local/etc/redis/redis.conf` and add `redis-server /usr/local
 - 📊 **Database Separation**: Each application can use a different database number (e.g., photography app uses DB 0, another app uses DB 1)
 - 🚀 **Shared Cache**: Multiple applications can share the same Redis instance for caching and sessions
 
-## 🔧 Step 3: Deploy Backend API Service
+## 🔑 Step 3: Deploy Casdoor SSO Service
+
+### Service Configuration
+- **Application Name**: `casdoor-server`
+- **Image**: `casbin/casdoor:latest`
+- **Restart Policy**: `Always`
+
+### Environment Variables
+```
+RUNNING_IN_DOCKER=true
+origin=http://auth.yourdomain.com
+driverName=postgres
+dataSourceName=user=postgres password=your_secure_db_password_here host=<TRUENAS_IP> port=5432 sslmode=disable dbname=casdoor
+```
+
+### Port Configuration
+- **Container Port**: `8000`
+- **Host Port**: `8008` (or proxied via 80/443)
+- **Protocol**: `TCP`
+
+## 🔑 Step 3.1: Casdoor Initial Configuration
+
+After starting the Casdoor service, you must configure it to integrate with the Portfolio app:
+
+1.  **Access UI**: Open `http://<TRUENAS_IP>:8008` in your browser.
+2.  **Login**: Use default credentials: `admin` / `123456`.
+3.  **Application Configuration**:
+    - Go to **Applications** and select `app-built-in` (or create a new one).
+    - **Redirect URIs**: Add `http://<TRUENAS_IP>/api/auth/callback` (or your public domain).
+    - **Token Format**: Ensure it's set to `JWT`.
+4.  **Retrieve Credentials**: Copy the **Client ID** and **Client Secret**.
+5.  **Update Backend**: Use these values in the `portfolio-backend` environment variables (`CASDOOR_CLIENT_ID` and `CASDOOR_CLIENT_SECRET`).
+
+> [!NOTE]
+> **Who manages these credentials?**
+> - **Casdoor** is the source of truth; it generates the Client ID and Secret when you create an application.
+> - **System Admin** (you) must manually copy these into the Backend's environment variables.
+> - **In Production**: For professional deployments, these should be stored in a **Secret Manager** or handled via **Infrastructure-as-Code** (IaC) like Terraform or Ansible to automate the bridging between Casdoor and your app.
+
+## 🔧 Step 4: Deploy Backend API Service
 
 ### Build Requirements
 First, ensure your backend Docker image is built with the correct Dockerfile from the project.
@@ -142,10 +182,17 @@ REDIS_URL=redis://<TRUENAS_IP>:6379/0
 
 # Application Configuration
 ENVIRONMENT=production
-CORS_ORIGINS=http://<TRUENAS_IP>,https://<TRUENAS_IP>,http://<TRUENAS_IP>:80,https://<TRUENAS_IP>:443
+CORS_ORIGINS=http://<TRUENAS_IP>,https://<TRUENAS_IP>,http://auth.yourdomain.com
 COOKIE_SECURE=false
-COOKIE_HTTPONLY=true
-COOKIE_SAMESITE=lax
+
+# Casdoor SSO Configuration
+CASDOOR_ENDPOINT=http://casdoor-server:8000
+CASDOOR_PUBLIC_ENDPOINT=http://auth.yourdomain.com
+CASDOOR_CLIENT_ID=your_casdoor_client_id
+CASDOOR_CLIENT_SECRET=your_casdoor_client_secret
+CASDOOR_ORGANIZATION=built-in
+CASDOOR_APPLICATION=app-built-in
+CASDOOR_REDIRECT_URI=http://yourdomain.com/api/auth/callback
 ```
 
 ### 🔐 **Critical Security Note**
@@ -299,13 +346,12 @@ Deploy services in this order to ensure proper dependencies:
 2. **Redis**: `redis-cli -h <TRUENAS_IP> -p 6379 ping`
 3. **Backend**: `curl http://<TRUENAS_IP>:8000/health`
 4. **Frontend**: `curl http://<TRUENAS_IP>/`
+5. **Casdoor**: `curl http://<TRUENAS_IP>:8008/` (or your proxied auth URL)
 
 ### Application Access
-1. Open `http://<TRUENAS_IP>` in browser
-2. Navigate to login page
-3. Login with:
-   - Username: `admin`  
-   - Password: `<ADMIN_PASSWORD_VALUE>`
+1. Open `http://<TRUENAS_IP>` in browser.
+2. The page should automatically redirect to the Casdoor login page at `http://auth.yourdomain.com` (or your configured public endpoint).
+3. Login with your Casdoor credentials.
 
 ## 🛠️ Troubleshooting
 

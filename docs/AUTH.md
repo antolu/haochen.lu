@@ -11,6 +11,20 @@
 - Sub-apps exchange codes through their own backend using `client_secret`.
 - Sub-apps validate access tokens by calling `haochen.lu /api/auth/me`.
 
+## 🔐 The "Hub and Spoke" Model
+
+It's important to differentiate between the two types of credentials:
+
+1.  **Broker -> Casdoor (The "Hub")**:
+    - This is the single connection between `haochen.lu` and Casdoor.
+    - You only need **one** set of `CASDOOR_CLIENT_ID/SECRET` for the entire platform.
+    - All sub-apps inherit this connection. You **do not** need to register every individual sub-app in Casdoor.
+
+2.  **Sub-app -> Broker (The "Spokes")**:
+    - Each sub-app (e.g., `moviedb-manager`) gets its own `client_id` and `client_secret` **from `haochen.lu`**.
+    - These are used to authenticate the sub-app with the `haochen.lu` broker.
+    - `haochen.lu` manages these internally in its sub-app registry.
+
 ## Sub-app registration
 
 Each sub-app in the registry can define:

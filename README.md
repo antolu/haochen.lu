@@ -70,7 +70,14 @@ Optional variables (defaults shown):
 ENVIRONMENT=development
 POSTGRES_DB=portfolio
 POSTGRES_PASSWORD=portfolio_password
-CORS_ORIGINS=http://localhost
+CORS_ORIGINS=http://localhost,http://auth.localhost
+
+# Casdoor SSO (for local development via subdomain proxy)
+CASDOOR_ENDPOINT=http://casdoor:8000
+CASDOOR_PUBLIC_ENDPOINT=http://auth.localhost
+CASDOOR_CLIENT_ID=your_casdoor_client_id
+CASDOOR_CLIENT_SECRET=your_casdoor_client_secret
+CASDOOR_REDIRECT_URI=http://localhost/api/auth/callback
 ```
 
 Start everything:
