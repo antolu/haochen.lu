@@ -128,6 +128,9 @@ class Settings(BaseSettings):
 
     # Casdoor setup
     casdoor_endpoint: str = os.getenv("CASDOOR_ENDPOINT", "http://localhost:8008")
+    casdoor_public_endpoint: str = os.getenv(
+        "CASDOOR_PUBLIC_ENDPOINT", "http://localhost/casdoor"
+    )
     casdoor_client_id: str = os.getenv("CASDOOR_CLIENT_ID", "")
     casdoor_client_secret: str = os.getenv("CASDOOR_CLIENT_SECRET", "")
     casdoor_organization: str = os.getenv("CASDOOR_ORGANIZATION", "built-in")

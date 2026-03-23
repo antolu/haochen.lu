@@ -383,7 +383,7 @@ async def login_redirect(
         "state": state_token,
     })
     return LoginUrlResponse(
-        url=f"{settings.casdoor_endpoint}/login/oauth/authorize?{query}"
+        url=f"{settings.casdoor_public_endpoint}/login/oauth/authorize?{query}"
     )
 
 

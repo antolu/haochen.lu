@@ -37,9 +37,10 @@ services:
       - THUMBNAIL_SIZE=${THUMBNAIL_SIZE:-400}
       - MAX_FILE_SIZE=${MAX_FILE_SIZE:-52428800}
       - CASDOOR_ENDPOINT=${CASDOOR_ENDPOINT:-http://casdoor:8000}
+      - CASDOOR_PUBLIC_ENDPOINT=${CASDOOR_PUBLIC_ENDPOINT:-http://localhost/casdoor}
       - CASDOOR_CLIENT_ID=${CASDOOR_CLIENT_ID:-}
       - CASDOOR_CLIENT_SECRET=${CASDOOR_CLIENT_SECRET:-}
-      - CASDOOR_REDIRECT_URI=${CASDOOR_REDIRECT_URI:-http://localhost:8000/api/auth/callback}
+      - CASDOOR_REDIRECT_URI=${CASDOOR_REDIRECT_URI:-http://localhost/api/auth/callback}
     volumes:
       - ./uploads:/app/uploads
       - ./compressed:/app/compressed
