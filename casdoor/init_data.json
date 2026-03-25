@@ -34,10 +34,7 @@
       "refreshExpireInHours": 720,
       "formCss": "<style>.login-panel,.ant-card{border-radius:16px!important;box-shadow:0 10px 25px -5px rgba(0,0,0,0.1),0 8px 10px -6px rgba(0,0,0,0.1)!important;border:1px solid rgba(255,255,255,0.7)!important;backdrop-filter:blur(8px);background:rgba(255,255,255,0.9)!important;}.ant-btn-primary{background:#5734d3!important;border-color:#5734d3!important;height:48px!important;border-radius:8px!important;font-weight:600!important;box-shadow:0 4px 6px -1px rgba(87, 52, 211, 0.2)!important;}.ant-btn-primary:hover{background:#a487ed!important;border-color:#a487ed!important;transform:translateY(-1px);}.casdoor-logo,.casdoor-footer{display:none!important;}.login-panel::before{content:'';display:block;width:120px;height:40px;margin:0 auto 24px;background:url('http://localhost/logo.png') no-repeat center;background-size:contain;}</style>",
       "signinMethods": [
-        { "name": "Password", "displayName": "Password", "rule": "All" },
-        { "name": "Verification code", "displayName": "Verification code", "rule": "None" },
-        { "name": "WebAuthn", "displayName": "WebAuthn", "rule": "None" },
-        { "name": "Face ID", "displayName": "Face ID", "rule": "None" }
+        { "name": "Password", "displayName": "Password", "rule": "All" }
       ],
       "grantTypes": ["authorization_code", "refresh_token"]
     }
