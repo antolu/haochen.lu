@@ -171,13 +171,13 @@ describe("API Integration Tests", () => {
         writable: true,
       });
       mockAdapter.onGet("/auth/login").reply(200, {
-        url: "https://casdoor.example/login?next=/admin",
+        url: "https://auth.example.com/login?next=/admin",
       });
 
       await expect(auth.login(mockLoginRequest)).resolves.toBeUndefined();
 
       expect(window.location.assign).toHaveBeenCalledWith(
-        "https://casdoor.example/login?next=/admin",
+        "https://auth.example.com/login?next=/admin",
       );
       expect(mockAdapter.history.get[0]?.url).toBe("/auth/login");
       expect(mockAdapter.history.get[0]?.params).toMatchObject({

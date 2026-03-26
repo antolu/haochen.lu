@@ -24,30 +24,32 @@ async def test_callback_creates_local_session_and_redirects(
 ) -> None:
     async def fake_fetch_token(code: str) -> str:
         await asyncio.sleep(0)
-        assert code == "casdoor-code"
-        return "casdoor-access-token"
+        assert code == "oidc-code"
+        return "oidc-access-token"
 
     async def fake_fetch_profile(access_token: str) -> dict[str, object]:
         await asyncio.sleep(0)
-        assert access_token == "casdoor-access-token"
+        assert access_token == "oidc-access-token"
         return {
-            "sub": "casdoor-user-1",
+            "sub": "oidc-user-1",
             "email": "sso@example.com",
-            "name": "sso-user",
-            "roles": ["admin"],
+            "preferred_username": "sso-user",
+            "groups": ["admins"],
         }
 
-    monkeypatch.setattr(auth_api, "_fetch_casdoor_token", fake_fetch_token)
-    monkeypatch.setattr(auth_api, "_fetch_casdoor_profile", fake_fetch_profile)
+    monkeypatch.setattr(auth_api, "_fetch_oidc_token", fake_fetch_token)
+    monkeypatch.setattr(auth_api, "_fetch_oidc_profile", fake_fetch_profile)
 
     login_response = await async_client.get(
-        "/api/auth/login", params={"next": "/admin"}
+        "/api/auth/login",
+        params={"next": "/admin"},
+        headers={"Accept": "application/json"},
     )
     state = parse_qs(urlparse(login_response.json()["url"]).query)["state"][0]
 
     response = await async_client.get(
         "/api/auth/callback",
-        params={"code": "casdoor-code", "state": state},
+        params={"code": "oidc-code", "state": state},
         follow_redirects=False,
     )
 
@@ -56,7 +58,7 @@ async def test_callback_creates_local_session_and_redirects(
     assert response.cookies.get("refresh_token")
 
     result = await test_session.execute(
-        select(User).where(User.casdoor_id == "casdoor-user-1")
+        select(User).where(User.oidc_id == "oidc-user-1")
     )
     user = result.scalar_one()
     assert user.email == "sso@example.com"
@@ -82,21 +84,21 @@ async def test_callback_redirects_back_to_first_party_subapp(
 
     async def fake_fetch_token(code: str) -> str:
         await asyncio.sleep(0)
-        assert code == "casdoor-code"
-        return "casdoor-access-token"
+        assert code == "oidc-code"
+        return "oidc-access-token"
 
     async def fake_fetch_profile(access_token: str) -> dict[str, object]:
         await asyncio.sleep(0)
-        assert access_token == "casdoor-access-token"
+        assert access_token == "oidc-access-token"
         return {
-            "sub": "casdoor-user-2",
+            "sub": "oidc-user-2",
             "email": "moviedb@example.com",
-            "name": "moviedb-user",
-            "roles": [],
+            "preferred_username": "moviedb-user",
+            "groups": [],
         }
 
-    monkeypatch.setattr(auth_api, "_fetch_casdoor_token", fake_fetch_token)
-    monkeypatch.setattr(auth_api, "_fetch_casdoor_profile", fake_fetch_profile)
+    monkeypatch.setattr(auth_api, "_fetch_oidc_token", fake_fetch_token)
+    monkeypatch.setattr(auth_api, "_fetch_oidc_profile", fake_fetch_profile)
 
     login_response = await async_client.get(
         "/api/auth/login",
@@ -106,12 +108,13 @@ async def test_callback_redirects_back_to_first_party_subapp(
             "response_type": "code",
             "state": "moviedb-state",
         },
+        headers={"Accept": "application/json"},
     )
     state = parse_qs(urlparse(login_response.json()["url"]).query)["state"][0]
 
     callback_response = await async_client.get(
         "/api/auth/callback",
-        params={"code": "casdoor-code", "state": state},
+        params={"code": "oidc-code", "state": state},
         follow_redirects=False,
     )
 
@@ -227,21 +230,21 @@ async def test_mock_first_party_subapp_contract_flow(
 
     async def fake_fetch_token(code: str) -> str:
         await asyncio.sleep(0)
-        assert code == "casdoor-code"
-        return "casdoor-access-token"
+        assert code == "oidc-code"
+        return "oidc-access-token"
 
     async def fake_fetch_profile(access_token: str) -> dict[str, object]:
         await asyncio.sleep(0)
-        assert access_token == "casdoor-access-token"
+        assert access_token == "oidc-access-token"
         return {
-            "sub": "casdoor-subapp-user",
+            "sub": "oidc-subapp-user",
             "email": "subapp@example.com",
-            "name": "subapp-user",
-            "roles": ["admin"],
+            "preferred_username": "subapp-user",
+            "groups": ["admins"],
         }
 
-    monkeypatch.setattr(auth_api, "_fetch_casdoor_token", fake_fetch_token)
-    monkeypatch.setattr(auth_api, "_fetch_casdoor_profile", fake_fetch_profile)
+    monkeypatch.setattr(auth_api, "_fetch_oidc_token", fake_fetch_token)
+    monkeypatch.setattr(auth_api, "_fetch_oidc_profile", fake_fetch_profile)
 
     login_response = await async_client.get(
         "/api/auth/login",
@@ -251,12 +254,13 @@ async def test_mock_first_party_subapp_contract_flow(
             "response_type": "code",
             "state": "mock-state",
         },
+        headers={"Accept": "application/json"},
     )
-    casdoor_state = parse_qs(urlparse(login_response.json()["url"]).query)["state"][0]
+    authelia_state = parse_qs(urlparse(login_response.json()["url"]).query)["state"][0]
 
     callback_response = await async_client.get(
         "/api/auth/callback",
-        params={"code": "casdoor-code", "state": casdoor_state},
+        params={"code": "oidc-code", "state": authelia_state},
         follow_redirects=False,
     )
 

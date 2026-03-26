@@ -50,7 +50,7 @@ class UserFactory(AsyncSQLAlchemyModelFactory):
         model = User
 
     id = factory.LazyFunction(uuid.uuid4)
-    casdoor_id = factory.LazyFunction(lambda: f"casdoor-{secrets.token_hex(8)}")
+    oidc_id = factory.Sequence(lambda n: f"oidc-{n}")
     username = factory.Sequence(lambda n: f"user_{n}")
     email = factory.Sequence(lambda n: f"user_{n}@example.com")
     is_admin = False

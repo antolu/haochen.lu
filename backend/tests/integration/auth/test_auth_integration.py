@@ -14,17 +14,21 @@ from app.models import User
 
 @pytest.mark.integration
 @pytest.mark.auth
-async def test_login_returns_casdoor_authorize_url(async_client: AsyncClient) -> None:
-    response = await async_client.get("/api/auth/login", params={"next": "/admin"})
+async def test_login_returns_oidc_authorize_url(async_client: AsyncClient) -> None:
+    response = await async_client.get(
+        "/api/auth/login",
+        params={"next": "/admin"},
+        headers={"Accept": "application/json"},
+    )
 
     assert response.status_code == status.HTTP_200_OK
     login_url = response.json()["url"]
     parsed = urlparse(login_url)
     query = parse_qs(parsed.query)
 
-    assert parsed.path.endswith("/login/oauth/authorize")
+    assert parsed.path.endswith("/api/oidc/authorization")
     assert query["response_type"] == ["code"]
-    assert query["scope"] == ["openid profile email"]
+    assert query["scope"] == ["openid profile email groups"]
     assert query["state"]
 
 
@@ -36,7 +40,7 @@ async def test_login_rejects_invalid_oauth_parameters(
     response = await async_client.get(
         "/api/auth/login",
         params={
-            "client_id": "subapp-client",
+            "oidc_id": "test-oidc-id",
             "redirect_uri": "https://sub.example.com/callback",
             "response_type": "token",
             "state": "state-1",
