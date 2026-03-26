@@ -8,6 +8,7 @@ from urllib.parse import urlencode, urlparse
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,8 +18,8 @@ from app.core.security import create_access_token, create_refresh_token, decode_
 from app.crud.subapp import get_subapp_by_client_id, get_subapp_by_slug
 from app.crud.user import (
     create_user,
-    get_user_by_casdoor_id,
     get_user_by_id,
+    get_user_by_oidc_id,
     update_user,
 )
 from app.database import get_session
@@ -33,10 +34,6 @@ _current_user_dependency = Depends(current_active_user)
 
 LOGIN_STATE_TTL_SECONDS = 600
 AUTH_CODE_TTL_SECONDS = 300
-
-
-class LoginUrlResponse(BaseModel):
-    url: str
 
 
 class OAuthTokenResponse(BaseModel):
@@ -79,8 +76,6 @@ def _set_refresh_cookie(response: Response, refresh_token: str) -> None:
         max_age=_refresh_token_ttl_seconds(),
         httponly=settings.cookie_httponly,
         secure=settings.cookie_secure,
-        # mypy's Response.set_cookie expects Literal['lax','strict','none'] | None
-        # settings.cookie_samesite is a string validated in Settings; cast to Any
         samesite=typing.cast(typing.Any, settings.cookie_samesite),
         domain=settings.cookie_domain,
         path="/",
@@ -138,7 +133,6 @@ def _relative_target(url: str) -> str:
 
 
 def _encode_subapp_state(next_url: typing.Any) -> str:
-    # next_url may be a SQLAlchemy Column at type-check time; coerce to str
     url_str = str(next_url)
     payload = json.dumps({"next": _relative_target(url_str)}, separators=(",", ":"))
     return urlsafe_b64encode(payload.encode("utf-8")).decode("utf-8").rstrip("=")
@@ -206,88 +200,86 @@ async def _consume_authorization_code(code: str) -> dict[str, str]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_grant"
         )
-    # Ensure keys and values are strings
     result: dict[str, str] = {str(k): str(v) for k, v in payload.items()}
     return result
 
 
-async def _fetch_casdoor_token(code: str) -> str:
+async def _fetch_oidc_token(code: str) -> str:
     async with httpx.AsyncClient(timeout=10.0) as client:
+        # Authelia OIDC token endpoint is typically /api/oidc/token
         response = await client.post(
-            f"{settings.casdoor_endpoint}/api/login/oauth/access_token",
+            f"{settings.oidc_endpoint}/api/oidc/token",
             data={
                 "grant_type": "authorization_code",
-                "client_id": settings.casdoor_client_id,
-                "client_secret": settings.casdoor_client_secret,
+                "client_id": settings.oidc_client_id,
+                "client_secret": settings.oidc_client_secret,
                 "code": code,
-                "redirect_uri": settings.casdoor_redirect_uri,
+                "redirect_uri": settings.oidc_redirect_uri,
             },
         )
 
     if response.status_code != status.HTTP_200_OK:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed to exchange Casdoor code",
+            detail=f"Failed to exchange OIDC code: {response.text}",
         )
 
     access_token = response.json().get("access_token")
     if not isinstance(access_token, str) or not access_token:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Casdoor token missing",
+            detail="OIDC token missing",
         )
     return access_token
 
 
-async def _fetch_casdoor_profile(access_token: str) -> dict[str, object]:
+async def _fetch_oidc_profile(access_token: str) -> dict[str, object]:
     async with httpx.AsyncClient(timeout=10.0) as client:
+        # Authelia OIDC userinfo endpoint is typically /api/oidc/userinfo
         response = await client.get(
-            f"{settings.casdoor_endpoint}/api/userinfo",
-            params={"access_token": access_token},
+            f"{settings.oidc_endpoint}/api/oidc/userinfo",
+            headers={"Authorization": f"Bearer {access_token}"},
         )
 
     if response.status_code != status.HTTP_200_OK:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed to fetch Casdoor profile",
+            detail=f"Failed to fetch OIDC profile: {response.text}",
         )
 
     payload = response.json()
     if not isinstance(payload, dict):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid Casdoor profile",
+            detail="Invalid OIDC profile",
         )
     return payload
 
 
-async def _sync_user(session: AsyncSession, casdoor_profile: dict[str, object]) -> User:
-    casdoor_id = str(casdoor_profile.get("sub") or casdoor_profile.get("id") or "")
-    email = str(casdoor_profile.get("email") or "")
+async def _sync_user(session: AsyncSession, oidc_profile: dict[str, object]) -> User:
+    oidc_id = str(oidc_profile.get("sub") or "")
+    email = str(oidc_profile.get("email") or "")
     username = str(
-        casdoor_profile.get("preferred_username")
-        or casdoor_profile.get("name")
-        or casdoor_profile.get("displayName")
+        oidc_profile.get("preferred_username")
+        or oidc_profile.get("name")
         or email.split("@", maxsplit=1)[0]
-        or casdoor_id
+        or oidc_id
     )
-    roles = casdoor_profile.get("roles") or []
-    is_admin = bool(casdoor_profile.get("isAdmin")) or (
-        isinstance(roles, list) and "admin" in roles
-    )
+    groups = oidc_profile.get("groups") or []
+    is_admin = isinstance(groups, list) and "admins" in groups
 
-    if not casdoor_id or not email:
+    if not oidc_id or not email:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Casdoor profile missing required fields",
+            detail="OIDC profile missing required fields",
         )
 
-    existing_user = await get_user_by_casdoor_id(session, casdoor_id)
+    existing_user = await get_user_by_oidc_id(session, oidc_id)
     if existing_user is None:
         return await create_user(
             session,
             UserCreate(
-                casdoor_id=casdoor_id,
+                oidc_id=oidc_id,
                 email=email,
                 username=username,
                 is_admin=is_admin,
@@ -338,15 +330,16 @@ async def _issue_session_tokens(user: User) -> tuple[str, str, str]:
     return access_token, refresh_token, refresh_jti
 
 
-@router.get("/login", response_model=LoginUrlResponse)
+@router.get("/login", response_model=None)
 async def login_redirect(
+    request: Request,
     next_path: str = Query("/admin", alias="next"),
     client_id: str | None = None,
     redirect_uri: str | None = None,
     response_type: str | None = None,
     state: str | None = None,
     session: AsyncSession = _session_dependency,
-) -> LoginUrlResponse:
+) -> RedirectResponse | AuthorizeResponse:
     context = SessionContext(
         next=_normalize_next(next_path),
         client_id=client_id,
@@ -376,15 +369,22 @@ async def login_redirect(
 
     state_token = await _store_login_state(context)
     query = urlencode({
-        "client_id": settings.casdoor_client_id,
+        "client_id": settings.oidc_client_id,
         "response_type": "code",
-        "redirect_uri": settings.casdoor_redirect_uri,
-        "scope": "openid profile email",
+        "redirect_uri": settings.oidc_redirect_uri,
+        "scope": "openid profile email groups",
         "state": state_token,
     })
-    return LoginUrlResponse(
-        url=f"{settings.casdoor_public_endpoint}/login/oauth/authorize?{query}"
-    )
+    url = f"{settings.oidc_public_endpoint}/api/oidc/authorization?{query}"
+
+    # Return JSON for the frontend/tests, or redirect for direct browser access
+    if (
+        request.headers.get("accept") == "application/json"
+        or request.headers.get("x-requested-with") == "XMLHttpRequest"
+    ):
+        return AuthorizeResponse(url=url)
+
+    return RedirectResponse(url=url)
 
 
 @router.get("/callback")
@@ -394,9 +394,9 @@ async def auth_callback(
     session: AsyncSession = _session_dependency,
 ) -> Response:
     context = await _consume_login_state(state)
-    casdoor_access_token = await _fetch_casdoor_token(code)
-    casdoor_profile = await _fetch_casdoor_profile(casdoor_access_token)
-    user = await _sync_user(session, casdoor_profile)
+    oidc_access_token = await _fetch_oidc_token(code)
+    oidc_profile = await _fetch_oidc_profile(oidc_access_token)
+    user = await _sync_user(session, oidc_profile)
     _, refresh_token, _ = await _issue_session_tokens(user)
 
     redirect_target = context.next
