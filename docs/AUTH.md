@@ -4,8 +4,8 @@
 
 ## Main pieces
 
-- Casdoor handles the user login.
-- `haochen.lu` syncs the Casdoor user into its local `users` table.
+- Authelia handles the user login.
+- `haochen.lu` syncs the OIDC user into its local `users` table.
 - `haochen.lu` issues short-lived auth codes and access tokens for registered
   first-party apps.
 - Sub-apps exchange codes through their own backend using `client_secret`.
@@ -15,10 +15,10 @@
 
 It's important to differentiate between the two types of credentials:
 
-1.  **Broker -> Casdoor (The "Hub")**:
-    - This is the single connection between `haochen.lu` and Casdoor.
-    - You only need **one** set of `CASDOOR_CLIENT_ID/SECRET` for the entire platform.
-    - All sub-apps inherit this connection. You **do not** need to register every individual sub-app in Casdoor.
+1.  **Broker -> Authelia (The "Hub")**:
+    - This is the single connection between `haochen.lu` and Authelia.
+    - You only need **one** set of `OIDC_CLIENT_ID/SECRET` for the entire platform.
+    - All sub-apps inherit this connection. You **do not** need to register every individual sub-app in Authelia.
 
 2.  **Sub-app -> Broker (The "Spokes")**:
     - Each sub-app (e.g., `moviedb-manager`) gets its own `client_id` and `client_secret` **from `haochen.lu`**.
@@ -52,8 +52,8 @@ Override `redirect_uris` if the callback lives somewhere else.
 /login?client_id=...&redirect_uri=...&response_type=code&state=...
 ```
 
-2. `haochen.lu` sends the user to Casdoor.
-3. Casdoor sends the browser back to `haochen.lu /api/auth/callback`.
+2. `haochen.lu` sends the user to Authelia.
+3. Authelia sends the browser back to `haochen.lu /api/auth/callback`.
 4. `haochen.lu` creates a local session and redirects to the sub-app callback:
 
 ```text
@@ -84,10 +84,10 @@ registered `admin_url`.
 
 `haochen.lu`:
 
-- `CASDOOR_ENDPOINT`
-- `CASDOOR_CLIENT_ID`
-- `CASDOOR_CLIENT_SECRET`
-- `CASDOOR_REDIRECT_URI`
+- `OIDC_ENDPOINT`
+- `OIDC_CLIENT_ID`
+- `OIDC_CLIENT_SECRET`
+- `OIDC_REDIRECT_URI`
 - `SECRET_KEY`
 - `SESSION_SECRET_KEY`
 

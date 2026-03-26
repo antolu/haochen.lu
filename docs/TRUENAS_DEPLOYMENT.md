@@ -14,7 +14,7 @@ This guide provides step-by-step instructions for deploying the Portfolio applic
 The application consists of 5 separate services:
 1. **PostgreSQL Database** (port 5432) - *Generic database server for multiple applications*
 2. **Redis Cache/Session Store** (port 6379) - *Generic cache/session store for multiple applications*
-3. **Casdoor SSO Service** (port 8000) - *Identity provider and SSO broker*
+3. **Authelia SSO Service** (port 9091) - *Full-featured OIDC provider and SSO broker*
 4. **Backend API Service** (port 8000) - *Portfolio app backend*
 5. **Frontend Web Service** (port 80/443) - *Portfolio app frontend*
 
@@ -120,44 +120,56 @@ Mount this at `/usr/local/etc/redis/redis.conf` and add `redis-server /usr/local
 - 📊 **Database Separation**: Each application can use a different database number (e.g., photography app uses DB 0, another app uses DB 1)
 - 🚀 **Shared Cache**: Multiple applications can share the same Redis instance for caching and sessions
 
-## 🔑 Step 3: Deploy Casdoor SSO Service
+## 🔑 Step 3: Deploy Authelia SSO Service
 
 ### Service Configuration
-- **Application Name**: `casdoor-server`
-- **Image**: `casbin/casdoor:latest`
+- **Application Name**: `authelia-server`
+- **Image**: `authelia/authelia:latest`
 - **Restart Policy**: `Always`
 
 ### Environment Variables
 ```
-RUNNING_IN_DOCKER=true
-origin=http://auth.yourdomain.com
-driverName=postgres
-dataSourceName=user=postgres password=your_secure_db_password_here host=<TRUENAS_IP> port=5432 sslmode=disable dbname=casdoor
+TZ=Europe/Vienna
+AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE=/config/secrets/jwt
+AUTHELIA_SESSION_SECRET_FILE=/config/secrets/session
+AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE=/config/secrets/storage
+```
+
+### Volume Mounts
+```
+Host Path: /mnt/pool/apps/portfolio/authelia/config
+Mount Path: /config
 ```
 
 ### Port Configuration
-- **Container Port**: `8000`
-- **Host Port**: `8008` (or proxied via 80/443)
+- **Container Port**: `9091`
+- **Host Port**: `9091` (or proxied via 80/443)
 - **Protocol**: `TCP`
 
-## 🔑 Step 3.1: Casdoor Initial Configuration
+## 🔑 Step 3.1: Authelia Initial Configuration
 
-After starting the Casdoor service, you must configure it to integrate with the Portfolio app:
+Authelia is configuration-file based. Ensure your `configuration.yml` has the OIDC client defined:
 
-1.  **Access UI**: Open `http://<TRUENAS_IP>:8008` in your browser.
-2.  **Login**: Use default credentials: `admin` / `123456`.
-3.  **Application Configuration**:
-    - Go to **Applications** and select `app-built-in` (or create a new one).
-    - **Redirect URIs**: Add `http://<TRUENAS_IP>/api/auth/callback` (or your public domain).
-    - **Token Format**: Ensure it's set to `JWT`.
-4.  **Retrieve Credentials**: Copy the **Client ID** and **Client Secret**.
-5.  **Update Backend**: Use these values in the `portfolio-backend` environment variables (`CASDOOR_CLIENT_ID` and `CASDOOR_CLIENT_SECRET`).
+```yaml
+identity_providers:
+  oidc:
+    clients:
+      - client_id: 'arcadia-client'
+        client_secret: '$argon2id$v=19$m=65536,t=3,p=4$...' # Your hashed secret
+        public: false
+        authorization_policy: 'one_factor'
+        redirect_uris:
+          - 'https://yourdomain.com/api/auth/callback'
+        scopes:
+          - 'openid'
+          - 'profile'
+          - 'email'
+          - 'groups'
+```
 
 > [!NOTE]
-> **Who manages these credentials?**
-> - **Casdoor** is the source of truth; it generates the Client ID and Secret when you create an application.
-> - **System Admin** (you) must manually copy these into the Backend's environment variables.
-> - **In Production**: For professional deployments, these should be stored in a **Secret Manager** or handled via **Infrastructure-as-Code** (IaC) like Terraform or Ansible to automate the bridging between Casdoor and your app.
+> **Authelia Configuration**
+> Unlike Casdoor, Authelia does not have a web UI for configuration. All settings must be edited in `/config/configuration.yml` and `/config/users_database.yml`.
 
 ## 🔧 Step 4: Deploy Backend API Service
 
@@ -185,14 +197,9 @@ ENVIRONMENT=production
 CORS_ORIGINS=http://<TRUENAS_IP>,https://<TRUENAS_IP>,http://auth.yourdomain.com
 COOKIE_SECURE=false
 
-# Casdoor SSO Configuration
-CASDOOR_ENDPOINT=http://casdoor-server:8000
-CASDOOR_PUBLIC_ENDPOINT=http://auth.yourdomain.com
-CASDOOR_CLIENT_ID=your_casdoor_client_id
-CASDOOR_CLIENT_SECRET=your_casdoor_client_secret
-CASDOOR_ORGANIZATION=built-in
-CASDOOR_APPLICATION=app-built-in
-CASDOOR_REDIRECT_URI=http://yourdomain.com/api/auth/callback
+OIDC_CLIENT_ID=your_oidc_client_id
+OIDC_CLIENT_SECRET=your_oidc_client_secret
+OIDC_REDIRECT_URI=http://yourdomain.com/api/auth/callback
 ```
 
 ### 🔐 **Critical Security Note**
@@ -350,8 +357,8 @@ Deploy services in this order to ensure proper dependencies:
 
 ### Application Access
 1. Open `http://<TRUENAS_IP>` in browser.
-2. The page should automatically redirect to the Casdoor login page at `http://auth.yourdomain.com` (or your configured public endpoint).
-3. Login with your Casdoor credentials.
+2. The page should automatically redirect to the Authelia login page at `https://auth.yourdomain.com`.
+3. Login with your Authelia credentials.
 
 ## 🛠️ Troubleshooting
 

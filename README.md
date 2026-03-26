@@ -72,12 +72,13 @@ POSTGRES_DB=portfolio
 POSTGRES_PASSWORD=portfolio_password
 CORS_ORIGINS=http://localhost,http://auth.localhost
 
-# Casdoor SSO (for local development via subdomain proxy)
-CASDOOR_ENDPOINT=http://casdoor:8000
-CASDOOR_PUBLIC_ENDPOINT=http://auth.localhost
-CASDOOR_CLIENT_ID=your_casdoor_client_id
-CASDOOR_CLIENT_SECRET=your_casdoor_client_secret
-CASDOOR_REDIRECT_URI=http://localhost/api/auth/callback
+# Authelia/OIDC SSO (for local development via subdomain proxy)
+# Authelia manages the SSO session and OIDC flow.
+# OIDC_ENDPOINT=http://authelia:9091
+# OIDC_PUBLIC_ENDPOINT=http://auth.localhost
+# OIDC_CLIENT_ID=your_oidc_client_id
+# OIDC_CLIENT_SECRET=your_oidc_client_secret
+# OIDC_REDIRECT_URI=http://localhost/api/auth/callback
 ```
 
 Start everything:
@@ -128,7 +129,7 @@ Full interactive documentation available at `/api/docs` when running.
 
 - The browser is redirected to `/login` on `haochen.lu` with `client_id`,
   `redirect_uri`, `response_type=code`, and `state`.
-- After Casdoor login, `haochen.lu` returns the browser to the sub-app callback
+- After Authelia login, `haochen.lu` returns the browser to the sub-app callback
   with a short-lived auth code.
 - The sub-app backend exchanges that code at `/api/auth/oauth/token` using its
   own `client_secret`.
