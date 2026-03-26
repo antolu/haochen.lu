@@ -132,7 +132,7 @@ const AppContent: React.FC = () => {
           />
 
           {/* Auth routes */}
-          {/* Redirect /login to /admin which now handles the Casdoor jump */}
+          {/* Redirect /login to /admin which now handles the Authelia jump */}
           <Route path="/login" element={<Navigate to="/admin" replace />} />
 
           {/* Admin routes */}
