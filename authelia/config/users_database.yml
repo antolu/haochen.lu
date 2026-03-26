@@ -1,0 +1,8 @@
+users:
+  anton:
+    disabled: false
+    displayname: "Anton"
+    email: anton@yourdomain.com
+    groups:
+      - admins
+    password: "$argon2id$v=19$m=65536,t=3,p=4$wWhrY1fvWpEB2P21/8F/DA$kNKF2X+SLsOSWFgiWY9Z6ZBBpXsOcNt2Ar0UhlCbrjo"

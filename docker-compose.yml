@@ -36,11 +36,11 @@ services:
       - WEBP_QUALITY=${WEBP_QUALITY:-85}
       - THUMBNAIL_SIZE=${THUMBNAIL_SIZE:-400}
       - MAX_FILE_SIZE=${MAX_FILE_SIZE:-52428800}
-      - CASDOOR_ENDPOINT=${CASDOOR_ENDPOINT:-http://casdoor:8000}
-      - CASDOOR_PUBLIC_ENDPOINT=${CASDOOR_PUBLIC_ENDPOINT:-http://localhost/casdoor}
-      - CASDOOR_CLIENT_ID=${CASDOOR_CLIENT_ID:-}
-      - CASDOOR_CLIENT_SECRET=${CASDOOR_CLIENT_SECRET:-}
-      - CASDOOR_REDIRECT_URI=${CASDOOR_REDIRECT_URI:-http://localhost/api/auth/callback}
+      - OIDC_ENDPOINT=${OIDC_ENDPOINT:-http://authelia:9091}
+      - OIDC_PUBLIC_ENDPOINT=${OIDC_PUBLIC_ENDPOINT:-https://auth.example.com}
+      - OIDC_CLIENT_ID=${OIDC_CLIENT_ID:-}
+      - OIDC_CLIENT_SECRET=${OIDC_CLIENT_SECRET:-}
+      - OIDC_REDIRECT_URI=${OIDC_REDIRECT_URI:-https://example.com/api/auth/callback}
     volumes:
       - ./uploads:/app/uploads
       - ./compressed:/app/compressed
@@ -60,6 +60,26 @@ services:
       retries: 3
     expose:
       - "8000"
+
+  authelia:
+    image: authelia/authelia:latest
+    container_name: authelia
+    restart: unless-stopped
+    environment:
+      TZ: "Europe/Vienna"
+      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: /config/secrets/jwt
+      AUTHELIA_SESSION_SECRET_FILE: /config/secrets/session
+      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /config/secrets/storage
+    volumes:
+      - ./authelia/config:/config
+    networks:
+      - portfolio-network
+      - first-party-auth-network
+    healthcheck:
+      test: ["CMD", "authelia", "healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   db:
     image: postgres:15-alpine

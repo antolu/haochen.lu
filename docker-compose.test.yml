@@ -103,21 +103,7 @@ services:
       - test-network
     entrypoint: []  # Override the default entrypoint from Dockerfile
     command: >
-      sh -c "
-        echo 'Waiting for backend to be fully ready...' &&
-        sleep 2 &&
-        echo 'Running integration tests...' &&
-        pytest tests/integration/ \
-          -v \
-          --tb=short \
-          --junit-xml=test-results/junit.xml \
-          --cov=app \
-          --cov-report=html:test-results/htmlcov \
-          --cov-report=term-missing \
-          --durations=10 \
-          -m 'integration' \
-          || exit 1
-      "
+      sh -c "echo 'Waiting for backend to be fully ready...' && sleep 2 && echo 'Running integration tests...' && pytest tests/integration/ -v --tb=short --junit-xml=test-results/junit.xml --cov=app --cov-report=html:test-results/htmlcov --cov-report=term-missing --durations=10 -m 'integration'"
 
 networks:
   test-network:

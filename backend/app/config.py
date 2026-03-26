@@ -126,17 +126,15 @@ class Settings(BaseSettings):
     # User agent for external API calls
     user_agent: str = os.getenv("USER_AGENT", "photography-portfolio/1.0")
 
-    # Casdoor setup
-    casdoor_endpoint: str = os.getenv("CASDOOR_ENDPOINT", "http://localhost:8008")
-    casdoor_public_endpoint: str = os.getenv(
-        "CASDOOR_PUBLIC_ENDPOINT", "http://localhost/casdoor"
+    # OIDC setup (Authelia)
+    oidc_endpoint: str = os.getenv("OIDC_ENDPOINT", "http://localhost:9091")
+    oidc_public_endpoint: str = os.getenv(
+        "OIDC_PUBLIC_ENDPOINT", "http://auth.localhost"
     )
-    casdoor_client_id: str = os.getenv("CASDOOR_CLIENT_ID", "")
-    casdoor_client_secret: str = os.getenv("CASDOOR_CLIENT_SECRET", "")
-    casdoor_organization: str = os.getenv("CASDOOR_ORGANIZATION", "built-in")
-    casdoor_application: str = os.getenv("CASDOOR_APPLICATION", "app-built-in")
-    casdoor_redirect_uri: str = os.getenv(
-        "CASDOOR_REDIRECT_URI",
+    oidc_client_id: str = os.getenv("OIDC_CLIENT_ID", "")
+    oidc_client_secret: str = os.getenv("OIDC_CLIENT_SECRET", "")
+    oidc_redirect_uri: str = os.getenv(
+        "OIDC_REDIRECT_URI",
         "http://localhost:8000/api/auth/callback",
     )
 

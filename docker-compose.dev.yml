@@ -15,7 +15,7 @@ services:
     depends_on:
       - backend
       - frontend
-      - casdoor
+      - authelia
     networks:
       - portfolio-network
 
@@ -49,11 +49,11 @@ services:
       - WEBP_QUALITY=85
       - THUMBNAIL_SIZE=400
       - MAX_FILE_SIZE=52428800
-      - CASDOOR_ENDPOINT=http://casdoor:8000
-      - CASDOOR_PUBLIC_ENDPOINT=http://auth.localhost
-      - CASDOOR_CLIENT_ID=${CASDOOR_CLIENT_ID:-}
-      - CASDOOR_CLIENT_SECRET=${CASDOOR_CLIENT_SECRET:-}
-      - CASDOOR_REDIRECT_URI=http://localhost/api/auth/callback
+      - OIDC_ENDPOINT=http://authelia:9091
+      - OIDC_PUBLIC_ENDPOINT=http://auth.localhost
+      - OIDC_CLIENT_ID=arcadia-client
+      - OIDC_CLIENT_SECRET=arcadia-secret
+      - OIDC_REDIRECT_URI=http://localhost/api/auth/callback
     command:
       - "uvicorn"
       - "app.main:app"
@@ -136,21 +136,21 @@ services:
       timeout: 5s
       retries: 5
 
-  casdoor:
-    image: casbin/casdoor:v1.659.0
-    command: /server --createDatabase=true
+  authelia:
+    image: authelia/authelia:latest
+    container_name: authelia
+    restart: unless-stopped
     environment:
-      RUNNING_IN_DOCKER: "true"
-      origin: "http://auth.localhost"
-      driverName: postgres
-      dataSourceName: "user=${POSTGRES_USER:-postgres} password=${POSTGRES_PASSWORD:-password} host=db port=5432 sslmode=disable dbname=casdoor"
-    ports:
-      - "8008:8000"
-    depends_on:
-      db:
-        condition: service_healthy
+      TZ: "Europe/Vienna"
+      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: /config/secrets/jwt
+      AUTHELIA_SESSION_SECRET_FILE: /config/secrets/session
+      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /config/secrets/storage
+    volumes:
+      - ./authelia/config:/config
     networks:
       - portfolio-network
+    ports:
+      - "9091:9091"
 
 volumes:
   db_data:
