@@ -17,7 +17,7 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     """User schema for creation (e.g. on first login sync)"""
 
-    casdoor_id: str
+    oidc_id: str
 
 
 class UserUpdate(BaseModel):
@@ -30,7 +30,7 @@ class UserRead(UserBase):
     """User schema for responses"""
 
     id: uuid.UUID
-    casdoor_id: str
+    oidc_id: str
     created_at: datetime
     updated_at: datetime | None
 

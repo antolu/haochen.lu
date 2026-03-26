@@ -16,7 +16,7 @@ class User(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
-    casdoor_id: Mapped[str] = mapped_column(
+    oidc_id: Mapped[str] = mapped_column(
         String(255), unique=True, index=True, nullable=False
     )
     email: Mapped[str] = mapped_column(

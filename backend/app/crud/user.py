@@ -26,8 +26,8 @@ async def get_user_by_id(db: AsyncSession, user_id: str | uuid.UUID) -> User | N
     return result.scalar_one_or_none()
 
 
-async def get_user_by_casdoor_id(db: AsyncSession, casdoor_id: str) -> User | None:
-    result = await db.execute(select(User).where(User.casdoor_id == casdoor_id))
+async def get_user_by_oidc_id(db: AsyncSession, oidc_id: str) -> User | None:
+    result = await db.execute(select(User).where(User.oidc_id == oidc_id))
     return result.scalar_one_or_none()
 
 
