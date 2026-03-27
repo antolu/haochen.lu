@@ -70,7 +70,11 @@ async def test_login_response_security_headers(
     async_client: AsyncClient, test_session, admin_user: User
 ):
     """Test that login responses include appropriate security headers."""
-    response = await async_client.get("/api/auth/login", params={"next": "/admin"})
+    response = await async_client.get(
+        "/api/auth/login",
+        params={"next": "/admin"},
+        headers={"Accept": "application/json"},
+    )
 
     # Check for security headers (implementation dependent)
     headers = response.headers

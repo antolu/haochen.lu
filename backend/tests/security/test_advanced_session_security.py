@@ -22,7 +22,11 @@ async def test_authentication_response_headers(
     async_client: AsyncClient, test_session, admin_user: User
 ):
     """Test security headers in authentication responses."""
-    response = await async_client.get("/api/auth/login", params={"next": "/admin"})
+    response = await async_client.get(
+        "/api/auth/login",
+        params={"next": "/admin"},
+        headers={"Accept": "application/json"},
+    )
 
     # Validate security headers
     SecurityTestUtils.validate_security_headers(response)
@@ -112,6 +116,7 @@ async def test_response_timing_consistency(
         await async_client.get(
             "/api/auth/login",
             params={"next": "/admin"},
+            headers={"Accept": "application/json"},
         )
         timings["valid"].append(time.time() - start)
 
