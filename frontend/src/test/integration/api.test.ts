@@ -4,7 +4,7 @@
  * Integration tests for API client and service layer including:
  * - HTTP client configuration and interceptors
  * - Authentication flow and token handling
- * - CRUD operations for all resources (projects, photos, blog, subapps)
+ * - CRUD operations for all resources (projects, photos, blog, applications)
  * - Error handling and response transformation
  * - Request/response interceptors and retry logic
  * - API endpoint integration with backend
@@ -16,7 +16,7 @@ import apiClient, {
   projects,
   photos,
   blog,
-  subapps,
+  applications,
   auth,
 } from "../../api/client";
 import {
@@ -30,8 +30,8 @@ import type {
   PhotoListResponse,
   BlogPost,
   BlogPostListResponse,
-  SubApp,
-  SubAppListResponse,
+  Application,
+  ApplicationListResponse,
   User,
   LoginRequest,
 } from "../../types";
@@ -557,118 +557,128 @@ describe("API Integration Tests", () => {
     });
   });
 
-  describe("Sub-apps API", () => {
-    const mockSubApp: SubApp = {
-      id: "subapp-1",
-      name: "Test SubApp",
-      slug: "test-subapp",
-      description: "A test sub-application",
-      url: "https://subapp.example.com",
+  describe("Applications API", () => {
+    const mockApplication: Application = {
+      id: "application-1",
+      name: "Test Application",
+      slug: "test-application",
+      description: "A test application",
+      url: "https://application.example.com",
       icon: "test-icon",
       enabled: true,
       show_in_menu: true,
-      require_auth: false,
-      order_index: 1,
+      requires_auth: false,
+      is_external: true,
+      admin_only: false,
+      order: 1,
       created_at: "2023-01-15T10:00:00Z",
       updated_at: "2023-01-15T10:00:00Z",
     };
 
-    it("fetches public sub-apps for menu", async () => {
-      const subappListResponse: SubAppListResponse = {
-        subapps: [mockSubApp],
+    it("fetches public applications for menu", async () => {
+      const applicationListResponse: ApplicationListResponse = {
+        applications: [mockApplication],
         total: 1,
       };
 
-      mockAdapter.onGet("/subapps").reply(200, subappListResponse);
+      mockAdapter.onGet("/applications").reply(200, applicationListResponse);
 
-      const result = await subapps.list(true);
+      const result = await applications.list(true);
 
-      expect(result).toEqual(subappListResponse);
+      expect(result).toEqual(applicationListResponse);
       expect(mockAdapter.history.get[0].params).toEqual({ menu_only: true });
     });
 
-    it("handles sub-apps API errors gracefully", async () => {
-      mockAdapter.onGet("/subapps").reply(500, { message: "Server error" });
+    it("handles applications API errors gracefully", async () => {
+      mockAdapter
+        .onGet("/applications")
+        .reply(500, { message: "Server error" });
 
-      const result = await subapps.list();
+      const result = await applications.list();
 
-      expect(result).toEqual({ subapps: [], total: 0 }); // Should return empty response on error
+      expect(result).toEqual({ applications: [], total: 0 }); // Should return empty response on error
     });
 
-    it("fetches authenticated sub-apps", async () => {
-      const authSubappResponse: SubAppListResponse = {
-        subapps: [{ ...mockSubApp, require_auth: true }],
+    it("fetches authenticated applications", async () => {
+      const authApplicationResponse: ApplicationListResponse = {
+        applications: [{ ...mockApplication, requires_auth: true }],
         total: 1,
       };
 
       mockAdapter
-        .onGet("/subapps/authenticated")
-        .reply(200, authSubappResponse);
+        .onGet("/applications/authenticated")
+        .reply(200, authApplicationResponse);
 
-      const result = await subapps.listAuthenticated();
+      const result = await applications.listAuthenticated();
 
-      expect(result).toEqual(authSubappResponse);
+      expect(result).toEqual(authApplicationResponse);
     });
 
-    it("fetches all sub-apps for admin", async () => {
-      const allSubappsResponse: SubAppListResponse = {
-        subapps: [mockSubApp],
+    it("fetches all applications for admin", async () => {
+      const allApplicationsResponse: ApplicationListResponse = {
+        applications: [mockApplication],
         total: 1,
       };
 
-      mockAdapter.onGet("/subapps/admin").reply(200, allSubappsResponse);
+      mockAdapter
+        .onGet("/applications/admin")
+        .reply(200, allApplicationsResponse);
 
-      const result = await subapps.listAll();
+      const result = await applications.listAll();
 
-      expect(result).toEqual(allSubappsResponse);
+      expect(result).toEqual(allApplicationsResponse);
     });
 
-    it("fetches single sub-app by ID or slug", async () => {
-      mockAdapter.onGet("/subapps/test-subapp").reply(200, mockSubApp);
+    it("fetches single application by ID or slug", async () => {
+      mockAdapter
+        .onGet("/applications/test-application")
+        .reply(200, mockApplication);
 
-      const result = await subapps.getByIdOrSlug("test-subapp");
+      const result = await applications.getByIdOrSlug("test-application");
 
-      expect(result).toEqual(mockSubApp);
+      expect(result).toEqual(mockApplication);
     });
 
-    it("creates new sub-app", async () => {
-      const newSubApp = { ...mockSubApp };
-      delete (newSubApp as Record<string, unknown>).id;
-      delete (newSubApp as Record<string, unknown>).slug;
-      delete (newSubApp as Record<string, unknown>).created_at;
-      delete (newSubApp as Record<string, unknown>).updated_at;
+    it("creates new application", async () => {
+      const newApplication = { ...mockApplication };
+      delete (newApplication as Record<string, unknown>).id;
+      delete (newApplication as Record<string, unknown>).slug;
+      delete (newApplication as Record<string, unknown>).created_at;
+      delete (newApplication as Record<string, unknown>).updated_at;
 
-      mockAdapter.onPost("/subapps").reply(201, mockSubApp);
+      mockAdapter.onPost("/applications").reply(201, mockApplication);
 
-      const result = await subapps.create(newSubApp);
+      const result = await applications.create(newApplication);
 
-      expect(result).toEqual(mockSubApp);
+      expect(result).toEqual(mockApplication);
     });
 
-    it("updates sub-app", async () => {
-      const updates = { name: "Updated SubApp", enabled: false };
-      const updatedSubApp = { ...mockSubApp, ...updates };
+    it("updates application", async () => {
+      const updates = { name: "Updated Application", enabled: false };
+      const updatedApplication = { ...mockApplication, ...updates };
 
-      mockAdapter.onPut("/subapps/subapp-1").reply(200, updatedSubApp);
+      mockAdapter
+        .onPut("/applications/application-1")
+        .reply(200, updatedApplication);
 
-      const result = await subapps.update("subapp-1", updates);
+      const result = await applications.update("application-1", updates);
 
-      expect(result).toEqual(updatedSubApp);
+      expect(result).toEqual(updatedApplication);
     });
 
-    it("deletes sub-app", async () => {
-      mockAdapter.onDelete("/subapps/subapp-1").reply(204);
+    it("deletes application", async () => {
+      mockAdapter.onDelete("/applications/application-1").reply(204);
 
-      await subapps.delete("subapp-1");
+      await applications.delete("application-1");
 
       expect(mockAdapter.history.delete).toHaveLength(1);
     });
 
-    it("fetches sub-app statistics", async () => {
+    it("fetches application statistics", async () => {
       const stats = { total: 5, enabled: 4, public: 3 };
-      mockAdapter.onGet("/subapps/stats/summary").reply(200, stats);
+      mockAdapter.onGet("/applications/stats/summary").reply(200, stats);
 
-      const result = await subapps.getStats();
+      const result = await applications.getStats();
 
       expect(result).toEqual(stats);
     });

@@ -518,4 +518,4 @@ async def test_admin_jump_requires_admin_url(
     )
 
     assert response.status_code == 400
-    assert response.json()["detail"] == "SubApp admin URL not configured"
+    assert response.json()["detail"] == "Application admin URL not configured"

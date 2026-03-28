@@ -115,7 +115,7 @@ const HomePage: React.FC = () => {
       {/* Hero Section - Account for header height to fit perfectly in viewport */}
       <section className="relative h-[calc(100vh-5rem)] md:h-[calc(100vh-6rem)] flex items-center justify-center overflow-hidden">
         {/* Dynamic Hero Background Image */}
-        {heroMemo ? (
+        {heroMemo && activeHeroImage ? (
           <div
             ref={heroContainerRef}
             className="absolute inset-0 w-full h-full hero-image-container"
@@ -129,9 +129,9 @@ const HomePage: React.FC = () => {
               imageSizes={heroMemo.optimalImage.sizes}
             />
             <ProgressiveImage
-              photo={activeHeroImage!.photo}
+              photo={activeHeroImage.photo}
               useCase={ImageUseCase.HERO}
-              alt={activeHeroImage!.photo.title ?? "Hero image"}
+              alt={activeHeroImage.photo.title ?? "Hero image"}
               className="w-full h-full object-cover dynamic-hero-focal-point"
             />
           </div>

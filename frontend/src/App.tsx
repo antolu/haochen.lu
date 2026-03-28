@@ -33,10 +33,8 @@ const AdminBlog = lazy(() => import("./pages/admin/AdminBlog"));
 const AdminEquipmentAliases = lazy(
   () => import("./pages/admin/AdminEquipmentAliases"),
 );
-const AdminSubApps = lazy(() => import("./pages/admin/AdminSubApps"));
-const AdminSubAppIntegration = lazy(
-  () => import("./pages/admin/AdminSubAppIntegration"),
-);
+const AdminApplications = lazy(() => import("./pages/admin/AdminApplications"));
+const AdminAppImport = lazy(() => import("./pages/admin/AdminAppImport"));
 const AdminContent = lazy(() => import("./pages/admin/AdminContent"));
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 
@@ -203,18 +201,18 @@ const AppContent: React.FC = () => {
               }
             />
             <Route
-              path="subapps"
+              path="applications"
               element={
                 <Suspense fallback={<AdminLoadingFallback />}>
-                  <AdminSubApps />
+                  <AdminApplications />
                 </Suspense>
               }
             />
             <Route
-              path="subapps/integrate"
+              path="applications/import"
               element={
                 <Suspense fallback={<AdminLoadingFallback />}>
-                  <AdminSubAppIntegration />
+                  <AdminAppImport />
                 </Suspense>
               }
             />

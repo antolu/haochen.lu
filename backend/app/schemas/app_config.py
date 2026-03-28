@@ -3,11 +3,11 @@ from __future__ import annotations
 from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 
-class SubAppMeta(BaseModel):
-    name: str = Field(..., description="Human-readable name of the subapp")
+class AppMeta(BaseModel):
+    name: str = Field(..., description="Human-readable name of the application")
     slug: str = Field(..., description="URL-safe identifier", pattern=r"^[a-z0-9-]+$")
-    description: str = Field(..., description="Brief description of the subapp")
-    version: str = Field(..., description="Version of the subapp")
+    description: str = Field(..., description="Brief description of the application")
+    version: str = Field(..., description="Version of the application")
 
     @field_validator("slug")
     @classmethod
@@ -18,12 +18,12 @@ class SubAppMeta(BaseModel):
         return v
 
 
-class SubAppUI(BaseModel):
+class AppUI(BaseModel):
     icon: str = Field(..., description="Emoji or icon identifier")
     color: str = Field(..., description="Hex color code", pattern=r"^#[0-9A-Fa-f]{6}$")
 
 
-class SubAppIntegration(BaseModel):
+class AppIntegration(BaseModel):
     frontend_path: str = Field(
         ..., description="Frontend route path", pattern=r"^/[a-z0-9-/]*$"
     )
@@ -42,7 +42,7 @@ class SubAppIntegration(BaseModel):
     admin_title: str = Field(default="", description="Admin section title")
 
 
-class SubAppDockerEnvironment(BaseModel):
+class AppDockerEnvironment(BaseModel):
     environment: list[str] = Field(
         default_factory=list, description="Environment variables"
     )
@@ -52,7 +52,7 @@ class SubAppDockerEnvironment(BaseModel):
     )
 
 
-class SubAppDocker(BaseModel):
+class AppDocker(BaseModel):
     backend_image: str = Field(..., description="Docker image for backend")
     frontend_image: str = Field(..., description="Docker image for frontend")
     backend_port: int = Field(
@@ -64,35 +64,35 @@ class SubAppDocker(BaseModel):
     depends_on: list[str] = Field(default_factory=list)
 
 
-class SubAppRouteConfig(BaseModel):
+class AppRouteConfig(BaseModel):
     location: str = Field(..., description="Nginx location pattern")
     proxy_pass: str = Field(..., description="Proxy target")
 
 
-class SubAppRouting(BaseModel):
-    frontend: SubAppRouteConfig
-    api: SubAppRouteConfig
-    admin: SubAppRouteConfig | None = None
+class AppRouting(BaseModel):
+    frontend: AppRouteConfig
+    api: AppRouteConfig
+    admin: AppRouteConfig | None = None
 
 
-class SubAppDatabase(BaseModel):
+class AppDatabase(BaseModel):
     db_schema: str | None = Field(None, description="Database schema name")
     migrations: bool = Field(default=False, description="Has migrations")
 
 
-class SubAppConfig(BaseModel):
-    meta: SubAppMeta
-    ui: SubAppUI
-    integration: SubAppIntegration
-    docker: SubAppDocker
-    routing: SubAppRouting
-    database: SubAppDatabase | None = None
+class AppConfig(BaseModel):
+    meta: AppMeta
+    ui: AppUI
+    integration: AppIntegration
+    docker: AppDocker
+    routing: AppRouting
+    database: AppDatabase | None = None
 
     @field_validator("integration")
     @classmethod
     def validate_integration_paths(
-        cls, v: SubAppIntegration, info: ValidationInfo
-    ) -> SubAppIntegration:
+        cls, v: AppIntegration, info: ValidationInfo
+    ) -> AppIntegration:
         """Validate that paths are consistent with meta.slug"""
         if hasattr(info.data, "get") and info.data.get("meta"):
             slug = info.data["meta"].slug
@@ -111,8 +111,8 @@ class SubAppConfig(BaseModel):
     @field_validator("routing")
     @classmethod
     def validate_routing_consistency(
-        cls, v: SubAppRouting, info: ValidationInfo
-    ) -> SubAppRouting:
+        cls, v: AppRouting, info: ValidationInfo
+    ) -> AppRouting:
         """Validate that routing matches integration paths"""
         if hasattr(info.data, "get") and info.data.get("integration"):
             integration = info.data["integration"]
@@ -130,21 +130,21 @@ class SubAppConfig(BaseModel):
         return v
 
 
-class SubAppConfigValidationResponse(BaseModel):
+class AppConfigValidationResponse(BaseModel):
     valid: bool
     errors: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
-    config: SubAppConfig | None = None
+    config: AppConfig | None = None
 
 
-class SubAppIntegrationRequest(BaseModel):
+class AppIntegrationRequest(BaseModel):
     yaml_content: str = Field(..., description="Raw YAML configuration")
     validate_only: bool = Field(
         default=False, description="Only validate, don't integrate"
     )
 
 
-class SubAppIntegrationResponse(BaseModel):
+class AppIntegrationResponse(BaseModel):
     success: bool
     message: str
     slug: str

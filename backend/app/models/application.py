@@ -10,7 +10,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.database import Base
 
 
-class SubApp(Base):
+class Application(Base):
     __tablename__ = "subapps"
 
     id: Mapped[uuid.UUID] = mapped_column(

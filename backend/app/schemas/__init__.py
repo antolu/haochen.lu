@@ -1,5 +1,13 @@
 from __future__ import annotations
 
+# Application schemas
+from app.schemas.application import (
+    ApplicationCreate,
+    ApplicationListResponse,
+    ApplicationResponse,
+    ApplicationUpdate,
+)
+
 # Blog schemas
 from app.schemas.blog import (
     BlogPostCreate,
@@ -46,18 +54,15 @@ from app.schemas.project import (
     ReadmeResponse,
 )
 
-# SubApp schemas
-from app.schemas.subapp import (
-    SubAppCreate,
-    SubAppListResponse,
-    SubAppResponse,
-    SubAppUpdate,
-)
-
 # User schemas (fastapi-users)
 from app.schemas.user import UserCreate, UserRead, UserUpdate
 
 __all__ = [
+    # Application
+    "ApplicationCreate",
+    "ApplicationListResponse",
+    "ApplicationResponse",
+    "ApplicationUpdate",
     # Blog
     "BlogPostCreate",
     "BlogPostListResponse",
@@ -89,11 +94,6 @@ __all__ = [
     "ProjectResponse",
     "ProjectUpdate",
     "ReadmeResponse",
-    # SubApp
-    "SubAppCreate",
-    "SubAppListResponse",
-    "SubAppResponse",
-    "SubAppUpdate",
     # User
     "UserCreate",
     "UserRead",

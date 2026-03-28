@@ -105,12 +105,12 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         keywords: ["avatar", "user", "profile"],
       },
       {
-        id: "nav-subapps",
-        title: "Sub-Apps",
-        description: "Manage sub-applications",
+        id: "nav-applications",
+        title: "Applications",
+        description: "Manage applications",
         icon: Layers,
         action: () => {
-          goTo("/admin/subapps");
+          goTo("/admin/applications");
         },
         keywords: ["apps", "integrations", "settings"],
       },

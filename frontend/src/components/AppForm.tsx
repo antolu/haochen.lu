@@ -1,9 +1,9 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
-import type { SubApp } from "../types";
+import type { Application } from "../types";
 
-interface SubAppFormData {
+interface AppFormData {
   name: string;
   url: string;
   admin_url?: string;
@@ -16,47 +16,50 @@ interface SubAppFormData {
   show_in_menu: boolean;
   enabled: boolean;
   order: number;
+  redirect_uris?: string;
 }
 
-interface SubAppFormProps {
-  subapp?: SubApp;
-  onSubmit: (data: SubAppFormData) => Promise<void>;
+interface AppFormProps {
+  application?: Application;
+  onSubmit: (data: AppFormData) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
 }
 
-const SubAppForm: React.FC<SubAppFormProps> = ({
-  subapp,
+const AppForm: React.FC<AppFormProps> = ({
+  application,
   onSubmit,
   onCancel,
   isLoading = false,
 }) => {
-  const isEditing = !!subapp;
+  const isEditing = !!application;
 
   const {
     register,
     handleSubmit,
     watch,
     formState: { errors },
-  } = useForm<SubAppFormData>({
+  } = useForm<AppFormData>({
     defaultValues: {
-      name: subapp?.name ?? "",
-      url: subapp?.url ?? "",
-      admin_url: subapp?.admin_url ?? "",
-      description: subapp?.description ?? "",
-      icon: subapp?.icon ?? "",
-      color: subapp?.color ?? "#3B82F6",
-      is_external: subapp?.is_external ?? true,
-      requires_auth: subapp?.requires_auth ?? false,
-      admin_only: subapp?.admin_only ?? false,
-      show_in_menu: subapp?.show_in_menu ?? true,
-      enabled: subapp?.enabled ?? true,
-      order: subapp?.order ?? 0,
+      name: application?.name ?? "",
+      url: application?.url ?? "",
+      admin_url: application?.admin_url ?? "",
+      description: application?.description ?? "",
+      icon: application?.icon ?? "",
+      color: application?.color ?? "#3B82F6",
+      is_external: application?.is_external ?? true,
+      requires_auth: application?.requires_auth ?? false,
+      admin_only: application?.admin_only ?? false,
+      show_in_menu: application?.show_in_menu ?? true,
+      enabled: application?.enabled ?? true,
+      order: application?.order ?? 0,
+      redirect_uris: application?.redirect_uris ?? "",
     },
   });
 
   const watchUrl = watch("url");
   const watchColor = watch("color");
+  const watchRequiresAuth = watch("requires_auth");
 
   const validateUrl = (value: string) => {
     try {
@@ -67,7 +70,7 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
     }
   };
 
-  const handleFormSubmit = async (data: SubAppFormData) => {
+  const handleFormSubmit = async (data: AppFormData) => {
     try {
       await onSubmit(data);
     } catch (error) {
@@ -100,8 +103,8 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
             <input
               id="name"
               type="text"
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.name ? "border-red-300" : "border-gray-300"
+              className={`w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                errors.name ? "border-red-300" : "border-border"
               }`}
               placeholder="My Awesome App"
               {...register("name", {
@@ -128,8 +131,8 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
             <input
               id="url"
               type="url"
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.url ? "border-red-300" : "border-gray-300"
+              className={`w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                errors.url ? "border-red-300" : "border-border"
               }`}
               placeholder="https://example.com/app"
               {...register("url", {
@@ -141,7 +144,7 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
               <p className="mt-1 text-sm text-red-600">{errors.url.message}</p>
             )}
             {watchUrl && !errors.url && (
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Preview:{" "}
                 <a
                   href={watchUrl}
@@ -165,8 +168,8 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
             <input
               id="admin_url"
               type="url"
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.admin_url ? "border-red-300" : "border-gray-300"
+              className={`w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                errors.admin_url ? "border-red-300" : "border-border"
               }`}
               placeholder="https://example.com/admin"
               {...register("admin_url", {
@@ -196,8 +199,8 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
             <textarea
               id="description"
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Brief description of the sub-application"
+              className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Brief description of the application"
               {...register("description")}
             />
           </div>
@@ -213,7 +216,7 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
             <input
               id="icon"
               type="text"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="🚀 or https://example.com/icon.svg"
               {...register("icon")}
             />
@@ -231,14 +234,16 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
               <input
                 id="color"
                 type="color"
-                className="h-10 w-20 border border-gray-300 rounded-lg cursor-pointer"
+                className="h-10 w-20 border border-border rounded-lg cursor-pointer"
                 {...register("color")}
               />
               <div
-                className="h-10 w-10 rounded-lg border border-gray-300"
+                className="h-10 w-10 rounded-lg border border-border"
                 style={{ backgroundColor: watchColor }}
               />
-              <span className="text-sm text-gray-500">{watchColor}</span>
+              <span className="text-sm text-muted-foreground">
+                {watchColor}
+              </span>
             </div>
           </div>
 
@@ -253,7 +258,7 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
             <input
               id="order"
               type="number"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="0"
               {...register("order", {
                 valueAsNumber: true,
@@ -270,7 +275,7 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
 
         {/* Settings Section */}
         <div className="border-t pt-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Settings</h3>
+          <h3 className="text-lg font-medium text-foreground mb-4">Settings</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* External App Toggle */}
             <label className="flex items-center space-x-3 cursor-pointer">
@@ -280,10 +285,12 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
                 {...register("is_external")}
               />
               <div>
-                <span className="text-sm font-medium text-gray-900">
+                <span className="text-sm font-medium text-foreground">
                   External Application
                 </span>
-                <p className="text-xs text-gray-500">Opens in new tab/window</p>
+                <p className="text-xs text-muted-foreground">
+                  Opens in new tab/window
+                </p>
               </div>
             </label>
 
@@ -295,10 +302,12 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
                 {...register("requires_auth")}
               />
               <div>
-                <span className="text-sm font-medium text-gray-900">
+                <span className="text-sm font-medium text-foreground">
                   Requires Authentication
                 </span>
-                <p className="text-xs text-gray-500">User must be logged in</p>
+                <p className="text-xs text-muted-foreground">
+                  User must be logged in
+                </p>
               </div>
             </label>
 
@@ -310,10 +319,12 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
                 {...register("admin_only")}
               />
               <div>
-                <span className="text-sm font-medium text-gray-900">
+                <span className="text-sm font-medium text-foreground">
                   Admin Only
                 </span>
-                <p className="text-xs text-gray-500">Only admins can access</p>
+                <p className="text-xs text-muted-foreground">
+                  Only admins can access
+                </p>
               </div>
             </label>
 
@@ -325,10 +336,12 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
                 {...register("show_in_menu")}
               />
               <div>
-                <span className="text-sm font-medium text-gray-900">
+                <span className="text-sm font-medium text-foreground">
                   Show in Menu
                 </span>
-                <p className="text-xs text-gray-500">Display in navigation</p>
+                <p className="text-xs text-muted-foreground">
+                  Display in navigation
+                </p>
               </div>
             </label>
 
@@ -340,10 +353,10 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
                 {...register("enabled")}
               />
               <div>
-                <span className="text-sm font-medium text-gray-900">
+                <span className="text-sm font-medium text-foreground">
                   Enabled
                 </span>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   App is active and accessible
                 </p>
               </div>
@@ -351,12 +364,106 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
           </div>
         </div>
 
+        {/* OIDC Section */}
+        {watchRequiresAuth && (
+          <div className="border-t pt-6">
+            <h3 className="text-lg font-medium text-foreground mb-1">
+              OIDC Integration
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              These credentials are used to register this app with Authelia.
+              Client ID and secret are auto-generated on creation.
+            </p>
+            <div className="space-y-4">
+              {isEditing && application?.client_id && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1">
+                      Client ID
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        readOnly
+                        value={application.client_id}
+                        className="w-full px-3 py-2 border border-border rounded-lg bg-muted text-foreground font-mono text-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void navigator.clipboard.writeText(
+                            application.client_id ?? "",
+                          );
+                        }}
+                        className="px-2 py-2 text-xs text-muted-foreground hover:text-foreground border border-border rounded-lg transition-colors"
+                        title="Copy"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1">
+                      Client Secret
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        readOnly
+                        value={application.client_secret ?? ""}
+                        className="w-full px-3 py-2 border border-border rounded-lg bg-muted text-foreground font-mono text-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void navigator.clipboard.writeText(
+                            application.client_secret ?? "",
+                          );
+                        }}
+                        className="px-2 py-2 text-xs text-muted-foreground hover:text-foreground border border-border rounded-lg transition-colors"
+                        title="Copy"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {!isEditing && (
+                <p className="text-sm text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
+                  Client ID and secret will be generated automatically when the
+                  app is created.
+                </p>
+              )}
+              <div>
+                <label
+                  htmlFor="redirect_uris"
+                  className="block text-sm font-medium text-foreground mb-1"
+                >
+                  Redirect URIs
+                </label>
+                <textarea
+                  id="redirect_uris"
+                  rows={2}
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="https://yourapp.example.com/auth/callback"
+                  {...register("redirect_uris")}
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  One URI per line. Used by Authelia to validate OAuth
+                  callbacks.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Form Actions */}
         <div className="flex justify-end space-x-3 pt-6 border-t">
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            className="px-4 py-2 text-sm font-medium text-foreground bg-muted hover:bg-muted/80 rounded-lg transition-colors"
           >
             Cancel
           </button>
@@ -371,9 +478,9 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
                 {isEditing ? "Updating..." : "Creating..."}
               </div>
             ) : isEditing ? (
-              "Update Sub-App"
+              "Update Application"
             ) : (
-              "Create Sub-App"
+              "Create Application"
             )}
           </button>
         </div>
@@ -382,4 +489,4 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
   );
 };
 
-export default SubAppForm;
+export default AppForm;

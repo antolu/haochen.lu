@@ -113,7 +113,7 @@ export const syncAuthState = (queryClient: QueryClient) => {
         predicate: (query) => {
           // Invalidate queries that might need authentication
           const queryKey = query.queryKey[0] as string;
-          return ["projects", "photos", "blog", "subapps"].some((key) =>
+          return ["projects", "photos", "blog", "applications"].some((key) =>
             queryKey?.includes(key),
           );
         },

@@ -6,11 +6,11 @@ import type {
   ProjectListResponse,
   BlogPost,
   BlogPostListResponse,
-  SubApp,
-  SubAppListResponse,
+  Application,
+  ApplicationListResponse,
   PhotoStatsSummary,
   ProjectStatsSummary,
-  SubAppStatsSummary,
+  ApplicationStatsSummary,
   User,
   LoginRequest,
   TokenResponse,
@@ -538,24 +538,12 @@ export const blog = {
   },
 };
 
-// Sub-apps API
-export const subapps = {
-  list: async (menuOnly = true): Promise<SubAppListResponse> => {
+// Applications API
+export const applications = {
+  list: async (menuOnly = true): Promise<ApplicationListResponse> => {
     try {
-      const response = await apiClient.get<SubAppListResponse>("/subapps", {
-        params: { menu_only: menuOnly },
-      });
-      return response.data;
-    } catch {
-      // Return empty response as fallback
-      return { subapps: [], total: 0 };
-    }
-  },
-
-  listAuthenticated: async (menuOnly = true): Promise<SubAppListResponse> => {
-    try {
-      const response = await apiClient.get<SubAppListResponse>(
-        "/subapps/authenticated",
+      const response = await apiClient.get<ApplicationListResponse>(
+        "/applications",
         {
           params: { menu_only: menuOnly },
         },
@@ -563,39 +551,69 @@ export const subapps = {
       return response.data;
     } catch {
       // Return empty response as fallback
-      return { subapps: [], total: 0 };
+      return { applications: [], total: 0 };
     }
   },
 
-  listAll: async (): Promise<SubAppListResponse> => {
-    const response = await apiClient.get<SubAppListResponse>("/subapps/admin");
+  listAuthenticated: async (
+    menuOnly = true,
+  ): Promise<ApplicationListResponse> => {
+    try {
+      const response = await apiClient.get<ApplicationListResponse>(
+        "/applications/authenticated",
+        {
+          params: { menu_only: menuOnly },
+        },
+      );
+      return response.data;
+    } catch {
+      // Return empty response as fallback
+      return { applications: [], total: 0 };
+    }
+  },
+
+  listAll: async (): Promise<ApplicationListResponse> => {
+    const response = await apiClient.get<ApplicationListResponse>(
+      "/applications/admin",
+    );
     return response.data;
   },
 
-  getByIdOrSlug: async (identifier: string): Promise<SubApp> => {
-    const response = await apiClient.get<SubApp>(`/subapps/${identifier}`);
+  getByIdOrSlug: async (identifier: string): Promise<Application> => {
+    const response = await apiClient.get<Application>(
+      `/applications/${identifier}`,
+    );
     return response.data;
   },
 
   create: async (
-    subapp: Omit<SubApp, "id" | "slug" | "created_at" | "updated_at">,
-  ): Promise<SubApp> => {
-    const response = await apiClient.post<SubApp>("/subapps", subapp);
+    application: Omit<Application, "id" | "slug" | "created_at" | "updated_at">,
+  ): Promise<Application> => {
+    const response = await apiClient.post<Application>(
+      "/applications",
+      application,
+    );
     return response.data;
   },
 
-  update: async (id: string, updates: Partial<SubApp>): Promise<SubApp> => {
-    const response = await apiClient.put<SubApp>(`/subapps/${id}`, updates);
+  update: async (
+    id: string,
+    updates: Partial<Application>,
+  ): Promise<Application> => {
+    const response = await apiClient.put<Application>(
+      `/applications/${id}`,
+      updates,
+    );
     return response.data;
   },
 
   delete: async (id: string): Promise<void> => {
-    await apiClient.delete(`/subapps/${id}`);
+    await apiClient.delete(`/applications/${id}`);
   },
 
-  getStats: async (): Promise<SubAppStatsSummary> => {
-    const response = await apiClient.get<SubAppStatsSummary>(
-      "/subapps/stats/summary",
+  getStats: async (): Promise<ApplicationStatsSummary> => {
+    const response = await apiClient.get<ApplicationStatsSummary>(
+      "/applications/stats/summary",
     );
     return response.data;
   },
@@ -611,6 +629,18 @@ export const subapps = {
       },
     );
     return response.data;
+  },
+
+  exportYaml: async (id: string, slug: string): Promise<void> => {
+    const response = await apiClient.get<Blob>(`/applications/${id}/export`, {
+      responseType: "blob",
+    });
+    const url = URL.createObjectURL(response.data);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${slug}.yml`;
+    a.click();
+    URL.revokeObjectURL(url);
   },
 };
 
