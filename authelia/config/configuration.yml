@@ -16,12 +16,9 @@ authentication_backend:
       algorithm: argon2id
 
 access_control:
-  ## Default 2FA method.
-  ## Options are 'totp', 'webauthn', 'mobile_push'.
-  default_2fa_method: ""
   default_policy: deny
   rules:
-    - domain: "auth.localhost"
+    - domain: "*.localhost"
       policy: bypass
     - domain: "localhost"
       policy: two_factor
@@ -30,8 +27,8 @@ access_control:
 
 session:
   cookies:
-    - domain: 'localhost'
-      authelia_url: 'http://auth.localhost'
+    - domain: 'localhost.localdomain'
+      authelia_url: 'https://localhost.localdomain'
       expiration: 12h
       inactivity: 45m
 
@@ -45,14 +42,14 @@ notifier:
 
 identity_providers:
   oidc:
-    hmac_secret_file: /config/secrets/oidc_hmac
-    issuer_private_key_file: /config/secrets/oidc_issuer_key.pem
+    hmac_secret: '$pbkdf2-sha512$310000$j.vliqBxrp1BBOzN12KAMg$svpTE4gtX2vmmn7w3YVAS5OpXxkz56wM8P723iMrZifH02GCl5ztfUnhWM0rPZxPTJkX7kAx3pQuSpmooOlgug'
+    jwks:
+      - key: {{ secret "/config/secrets/oidc_issuer_key.pem" | mindent 10 "|" | msquote }}
+        algorithm: RS256
     clients:
       - client_id: arcadia-client
-        client_name: "Arcadia"
+        client_name: Arcadia
         client_secret: '$pbkdf2-sha512$310000$j.vliqBxrp1BBOzN12KAMg$svpTE4gtX2vmmn7w3YVAS5OpXxkz56wM8P723iMrZifH02GCl5ztfUnhWM0rPZxPTJkX7kAx3pQuSpmooOlgug'
-        # Authelia OIDC client secrets can be plaintext if they don't start with $ digest.
-        # Actually, let's use a simple one for now.
         authorization_policy: two_factor
         redirect_uris:
           - http://localhost/api/auth/callback

@@ -12,6 +12,8 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    volumes:
+      - ./authelia/certs:/etc/nginx/certs:ro
     depends_on:
       - backend
       - frontend
@@ -50,7 +52,7 @@ services:
       - THUMBNAIL_SIZE=400
       - MAX_FILE_SIZE=52428800
       - OIDC_ENDPOINT=http://authelia:9091
-      - OIDC_PUBLIC_ENDPOINT=http://auth.localhost
+      - OIDC_PUBLIC_ENDPOINT=http://localhost.localdomain:9091
       - OIDC_CLIENT_ID=arcadia-client
       - OIDC_CLIENT_SECRET=arcadia-secret
       - OIDC_REDIRECT_URI=http://localhost/api/auth/callback
@@ -142,6 +144,7 @@ services:
     restart: unless-stopped
     environment:
       TZ: "Europe/Vienna"
+      X_AUTHELIA_CONFIG_FILTERS: template
       AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: /config/secrets/jwt
       AUTHELIA_SESSION_SECRET_FILE: /config/secrets/session
       AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /config/secrets/storage

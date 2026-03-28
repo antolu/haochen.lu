@@ -117,6 +117,22 @@ VITE_AUTH_BASE_URL=http://localhost
 VITE_AUTH_REDIRECT_URI=http://localhost:6001/auth/callback
 ```
 
+## Deploying Authelia behind a reverse proxy
+
+Authelia requires `authelia_url` to use `https://`. In production this is fine — your outer nginx terminates TLS and users hit Authelia over HTTPS.
+
+For this to work correctly, the reverse proxy must forward these headers to Authelia:
+
+```nginx
+proxy_set_header X-Forwarded-Proto https;
+proxy_set_header X-Forwarded-Host $host;
+proxy_set_header X-Forwarded-Port 443;
+```
+
+Without `X-Forwarded-Proto: https`, Authelia may reject or misbehave even if the user connected over TLS.
+
+In development, a self-signed cert is used for `localhost.localdomain` so the same nginx-terminates-TLS pattern is preserved locally.
+
 ## Notes
 
 - This is a first-party trust model, not a public multi-tenant OAuth platform.
