@@ -22,7 +22,7 @@ access_control:
     - domain: "*.localhost"
       policy: bypass
     - domain: "localhost"
-      policy: two_factor
+      policy: one_factor
       subject:
         - "group:admins"
 
@@ -51,7 +51,8 @@ identity_providers:
       - client_id: arcadia-client
         client_name: Arcadia
         client_secret: '$pbkdf2-sha512$310000$j.vliqBxrp1BBOzN12KAMg$svpTE4gtX2vmmn7w3YVAS5OpXxkz56wM8P723iMrZifH02GCl5ztfUnhWM0rPZxPTJkX7kAx3pQuSpmooOlgug'
-        authorization_policy: two_factor
+        authorization_policy: one_factor
+        token_endpoint_auth_method: client_secret_post
         redirect_uris:
           - http://localhost/api/auth/callback
         scopes:
