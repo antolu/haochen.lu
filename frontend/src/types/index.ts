@@ -124,12 +124,16 @@ export interface SubApp {
   icon?: string;
   color?: string;
   url: string;
+  admin_url?: string;
   is_external: boolean;
   requires_auth: boolean;
   admin_only: boolean;
   show_in_menu: boolean;
   enabled: boolean;
   order: number;
+  client_id?: string;
+  client_secret?: string;
+  redirect_uris?: string;
   created_at: string;
   updated_at: string;
 }
@@ -164,8 +168,11 @@ export interface User {
 }
 
 export interface LoginRequest {
-  username: string;
-  password: string;
+  next?: string;
+  client_id?: string;
+  redirect_uri?: string;
+  response_type?: string;
+  state?: string;
 }
 
 export interface TokenResponse {

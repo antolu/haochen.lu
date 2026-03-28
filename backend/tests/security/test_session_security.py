@@ -10,28 +10,18 @@ import time
 
 import jwt
 import pytest
-from fastapi import status
 from httpx import AsyncClient
 
 from app.config import settings
+from app.core.security import create_access_token
 from app.models import User
 
 
 @pytest.mark.security
 @pytest.mark.auth
-async def test_token_expiry_enforcement(
-    async_client: AsyncClient, test_session, admin_user: User
-):
+def test_token_expiry_enforcement(test_session, admin_user: User):
     """Test that token expiry times are properly enforced."""
-    login_data = {
-        "username": admin_user.username,
-        "password": "TestPassword123!",
-    }
-
-    response = await async_client.post("/api/auth/login", data=login_data)
-    assert response.status_code == status.HTTP_200_OK
-
-    access_token = response.json()["access_token"]
+    access_token = create_access_token({"sub": str(admin_user.id)})
 
     # Decode token and check expiry (without verification for testing)
     payload = jwt.decode(
@@ -45,131 +35,8 @@ async def test_token_expiry_enforcement(
     token_exp = payload.get("exp", 0)
     time_diff = token_exp - current_time
 
-    # Token should expire in 1 hour (3600 seconds) with reasonable tolerance
-    assert 3500 <= time_diff <= 3700
-
-
-@pytest.mark.security
-@pytest.mark.auth
-async def test_consistent_login_response_time(
-    async_client: AsyncClient, test_session, admin_user: User
-):
-    """Test that login response time is consistent for valid/invalid users."""
-    # Valid user login
-    valid_login_data = {
-        "username": admin_user.username,
-        "password": "TestPassword123!",
-    }
-
-    start_time = time.time()
-    valid_response = await async_client.post("/api/auth/login", data=valid_login_data)
-    valid_duration = time.time() - start_time
-
-    # Invalid user login
-    invalid_login_data = {
-        "username": "nonexistent_user",
-        "password": "any_password",
-    }
-
-    start_time = time.time()
-    invalid_response = await async_client.post(
-        "/api/auth/login", data=invalid_login_data
-    )
-    invalid_duration = time.time() - start_time
-
-    # Response times should be similar (within reasonable bounds)
-    time_difference = abs(valid_duration - invalid_duration)
-
-    # Allow for some variance but prevent obvious timing attacks
-    # (This is a basic check - real timing attack prevention requires more sophisticated measures)
-    assert time_difference < 1.0  # Less than 1 second difference
-
-    assert valid_response.status_code == status.HTTP_200_OK
-    assert invalid_response.status_code == status.HTTP_400_BAD_REQUEST
-
-
-@pytest.mark.security
-@pytest.mark.auth
-async def test_consistent_password_validation_time(
-    async_client: AsyncClient, test_session, admin_user: User
-):
-    """Test that password validation time is consistent."""
-    # Correct password
-    correct_login_data = {
-        "username": admin_user.username,
-        "password": "TestPassword123!",
-    }
-
-    start_time = time.time()
-    correct_response = await async_client.post(
-        "/api/auth/login", data=correct_login_data
-    )
-    correct_duration = time.time() - start_time
-
-    # Wrong password
-    wrong_login_data = {
-        "username": admin_user.username,
-        "password": "wrongpassword",
-    }
-
-    start_time = time.time()
-    wrong_response = await async_client.post("/api/auth/login", data=wrong_login_data)
-    wrong_duration = time.time() - start_time
-
-    # Times should be similar
-    time_difference = abs(correct_duration - wrong_duration)
-    assert time_difference < 1.0
-
-    assert correct_response.status_code == status.HTTP_200_OK
-    assert wrong_response.status_code == status.HTTP_400_BAD_REQUEST
-
-
-@pytest.mark.security
-@pytest.mark.auth
-async def test_login_error_messages_dont_reveal_user_existence(
-    async_client: AsyncClient, test_session, admin_user: User
-):
-    """Test that login errors don't reveal whether users exist."""
-    # Invalid user
-    invalid_user_response = await async_client.post(
-        "/api/auth/login",
-        data={
-            "username": "nonexistent_user",
-            "password": "any_password",
-        },
-    )
-
-    # Valid user, wrong password
-    wrong_password_response = await async_client.post(
-        "/api/auth/login",
-        data={
-            "username": admin_user.username,
-            "password": "wrong_password",
-        },
-    )
-
-    assert invalid_user_response.status_code == 400
-    assert wrong_password_response.status_code == 400
-
-    # Error messages should be similar and not reveal user existence
-    invalid_error = invalid_user_response.json().get("detail", "")
-    wrong_pass_error = wrong_password_response.json().get("detail", "")
-
-    # Should use generic error messages
-    assert (
-        "invalid" in invalid_error.lower()
-        or "incorrect" in invalid_error.lower()
-        or "credentials" in invalid_error.lower()
-    )
-    assert (
-        "invalid" in wrong_pass_error.lower()
-        or "incorrect" in wrong_pass_error.lower()
-        or "credentials" in wrong_pass_error.lower()
-    )
-
-    # Should not contain specific details about user existence
-    assert "user not found" not in invalid_error.lower()
-    assert "does not exist" not in invalid_error.lower()
+    expected_lifetime = settings.access_token_expire_minutes * 60
+    assert expected_lifetime - 100 <= time_diff <= expected_lifetime + 100
 
 
 @pytest.mark.security
@@ -185,7 +52,7 @@ async def test_token_errors_dont_leak_information(async_client: AsyncClient):
 
     for token in malformed_tokens:
         headers = {"Authorization": token}
-        response = await async_client.get("/api/users/me", headers=headers)
+        response = await async_client.get("/api/auth/me", headers=headers)
 
         # Should return generic 401
         assert response.status_code == 401
@@ -203,12 +70,11 @@ async def test_login_response_security_headers(
     async_client: AsyncClient, test_session, admin_user: User
 ):
     """Test that login responses include appropriate security headers."""
-    login_data = {
-        "username": admin_user.username,
-        "password": "TestPassword123!",
-    }
-
-    response = await async_client.post("/api/auth/login", data=login_data)
+    response = await async_client.get(
+        "/api/auth/login",
+        params={"next": "/admin"},
+        headers={"Accept": "application/json"},
+    )
 
     # Check for security headers (implementation dependent)
     headers = response.headers
@@ -228,14 +94,7 @@ async def test_sensitive_endpoints_not_cached(
     async_client: AsyncClient, test_session, admin_user: User
 ):
     """Test that sensitive endpoints have proper cache control."""
-    # Login and get token
-    login_data = {
-        "username": admin_user.username,
-        "password": "TestPassword123!",
-    }
-
-    login_response = await async_client.post("/api/auth/login", data=login_data)
-    token = login_response.json()["access_token"]
+    token = create_access_token({"sub": str(admin_user.id)})
     headers = {"Authorization": f"Bearer {token}"}
 
     # Test /me endpoint

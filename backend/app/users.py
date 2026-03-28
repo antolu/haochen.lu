@@ -1,75 +1,56 @@
 from __future__ import annotations
 
-import typing
-import uuid
-
-from fastapi import Depends, Request
-from fastapi_users import BaseUserManager, FastAPIUsers, UUIDIDMixin
-from fastapi_users.authentication import (
-    AuthenticationBackend,
-    BearerTransport,
-    JWTStrategy,
-)
-from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config import settings
+from app.core.security import decode_token
+from app.crud.user import get_user_by_id
 from app.database import get_session
 from app.models.user import User
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/refresh")
 
-async def get_user_db(  # noqa: RUF029
-    session: AsyncSession = Depends(get_session),  # noqa: B008
-) -> typing.AsyncGenerator[SQLAlchemyUserDatabase[User, uuid.UUID], None]:
-    yield SQLAlchemyUserDatabase(session, User)
-
-
-class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
-    reset_password_token_secret = settings.secret_key
-    verification_token_secret = settings.secret_key
-
-    async def on_after_register(
-        self, user: User, request: Request | None = None
-    ) -> None:
-        pass
-
-    async def on_after_forgot_password(
-        self, user: User, token: str, request: Request | None = None
-    ) -> None:
-        pass
-
-    async def on_after_request_verify(
-        self, user: User, token: str, request: Request | None = None
-    ) -> None:
-        pass
+# Module-level dependency objects to avoid calling Depends() in function defaults
+_token_dependency = Depends(oauth2_scheme)
+_session_dependency = Depends(get_session)
+# Deliberately create _current_user_dependency after current_active_user is defined
+_current_user_dependency = Depends(lambda: None)  # placeholder; redefined below
 
 
-async def get_user_manager(  # noqa: RUF029
-    user_db: SQLAlchemyUserDatabase[User, uuid.UUID] = Depends(get_user_db),  # noqa: B008
-) -> typing.AsyncGenerator[UserManager, None]:
-    yield UserManager(user_db)
+async def current_active_user(
+    token: str = _token_dependency,
+    session: AsyncSession = _session_dependency,
+) -> User:
+    payload = decode_token(token, expected_type="access")
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+        )
+
+    user_id = payload.get("sub")
+    if not isinstance(user_id, str):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+        )
+
+    user = await get_user_by_id(session, user_id)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
+        )
+
+    return user
 
 
-bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
+# Now that current_active_user is defined, set proper dependency
+_current_user_dependency = Depends(current_active_user)
 
 
-def get_jwt_strategy() -> JWTStrategy:
-    return JWTStrategy(secret=settings.secret_key, lifetime_seconds=3600)
-
-
-auth_backend = AuthenticationBackend(
-    name="jwt",
-    transport=bearer_transport,
-    get_strategy=get_jwt_strategy,
-)
-
-fastapi_users = FastAPIUsers[User, uuid.UUID](
-    typing.cast(
-        typing.Any,
-        get_user_manager,
-    ),
-    [auth_backend],
-)
-
-current_active_user = fastapi_users.current_user(active=True)
-current_superuser = fastapi_users.current_user(active=True, superuser=True)
+def current_superuser(user: User = _current_user_dependency) -> User:
+    if not user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough privileges",
+        )
+    return user

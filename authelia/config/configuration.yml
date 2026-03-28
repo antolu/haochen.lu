@@ -1,0 +1,67 @@
+server:
+  address: 'tcp://0.0.0.0:9091/'
+  asset_path: '/assets'
+
+log:
+  level: info
+
+theme: dark
+
+totp:
+  issuer: homelab
+
+authentication_backend:
+  file:
+    path: /config/users_database.yml
+    password:
+      algorithm: argon2id
+
+access_control:
+  default_policy: deny
+  rules:
+    - domain: "*.localhost"
+      policy: bypass
+    - domain: "localhost"
+      policy: one_factor
+      subject:
+        - "group:admins"
+
+session:
+  cookies:
+    - domain: 'localhost.localdomain'
+      authelia_url: 'https://localhost.localdomain'
+      expiration: 12h
+      inactivity: 45m
+
+storage:
+  local:
+    path: /config/db.sqlite3
+
+notifier:
+  filesystem:
+    filename: /config/notification.txt
+
+identity_providers:
+  oidc:
+    hmac_secret: '$pbkdf2-sha512$310000$j.vliqBxrp1BBOzN12KAMg$svpTE4gtX2vmmn7w3YVAS5OpXxkz56wM8P723iMrZifH02GCl5ztfUnhWM0rPZxPTJkX7kAx3pQuSpmooOlgug'
+    jwks:
+      - key: {{ secret "/config/secrets/oidc_issuer_key.pem" | mindent 10 "|" | msquote }}
+        algorithm: RS256
+    clients:
+      - client_id: arcadia-client
+        client_name: Arcadia
+        client_secret: '$pbkdf2-sha512$310000$j.vliqBxrp1BBOzN12KAMg$svpTE4gtX2vmmn7w3YVAS5OpXxkz56wM8P723iMrZifH02GCl5ztfUnhWM0rPZxPTJkX7kAx3pQuSpmooOlgug'
+        authorization_policy: one_factor
+        token_endpoint_auth_method: client_secret_post
+        redirect_uris:
+          - http://localhost/api/auth/callback
+        scopes:
+          - openid
+          - profile
+          - email
+          - groups
+        grant_types:
+          - authorization_code
+          - refresh_token
+        response_types:
+          - code

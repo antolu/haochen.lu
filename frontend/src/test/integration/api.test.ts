@@ -34,7 +34,6 @@ import type {
   SubAppListResponse,
   User,
   LoginRequest,
-  TokenResponse,
 } from "../../types";
 
 // Create mock adapter
@@ -151,40 +150,43 @@ describe("API Integration Tests", () => {
 
   describe("Authentication API", () => {
     const mockLoginRequest: LoginRequest = {
-      username: "admin",
-      password: "admin",
-    };
-
-    const mockTokenResponse: TokenResponse = {
-      access_token: "mock-access-token",
-      token_type: "bearer",
-      expires_in: 3600,
+      next: "/admin",
     };
 
     const mockUser: User = {
       id: "user-1",
       username: "admin",
       email: "admin@example.com",
-      is_active: true,
-      created_at: "2023-01-01T00:00:00Z",
-      updated_at: "2023-01-01T00:00:00Z",
+      is_admin: true,
     };
 
     it("logs in user successfully", async () => {
-      mockAdapter.onPost("/auth/login").reply(200, mockTokenResponse);
+      Object.defineProperty(window, "location", {
+        value: {
+          href: "http://localhost:3000",
+          assign: vi.fn(),
+          replace: vi.fn(),
+          reload: vi.fn(),
+        },
+        writable: true,
+      });
+      mockAdapter.onGet("/auth/login").reply(200, {
+        url: "https://auth.example.com/login?next=/admin",
+      });
 
-      const result = await auth.login(mockLoginRequest);
+      await expect(auth.login(mockLoginRequest)).resolves.toBeUndefined();
 
-      expect(result).toEqual(mockTokenResponse);
-      const payload = new URLSearchParams(
-        mockAdapter.history.post[0].data as string,
+      expect(window.location.assign).toHaveBeenCalledWith(
+        "https://auth.example.com/login?next=/admin",
       );
-      expect(payload.get("username")).toBe(mockLoginRequest.username);
-      expect(payload.get("password")).toBe(mockLoginRequest.password);
+      expect(mockAdapter.history.get[0]?.url).toBe("/auth/login");
+      expect(mockAdapter.history.get[0]?.params).toMatchObject({
+        next: "/admin",
+      });
     });
 
     it("gets current user info", async () => {
-      mockAdapter.onGet("/users/me").reply(200, mockUser);
+      mockAdapter.onGet("/auth/me").reply(200, mockUser);
 
       const result = await auth.getMe();
 
@@ -192,18 +194,16 @@ describe("API Integration Tests", () => {
     });
 
     it("logs out user successfully", async () => {
-      mockAdapter.onPost("/auth/jwt/logout").reply(200, {});
+      mockAdapter.onPost("/auth/logout").reply(200, {});
 
       await expect(auth.logout()).resolves.toBeUndefined();
       expect(
-        mockAdapter.history.post.some((req) => req.url === "/auth/jwt/logout"),
+        mockAdapter.history.post.some((req) => req.url === "/auth/logout"),
       ).toBe(true);
     });
 
     it("handles login errors", async () => {
-      mockAdapter
-        .onPost("/auth/login")
-        .reply(401, { detail: "Invalid credentials" });
+      mockAdapter.onGet("/auth/login").reply(401, { detail: "Invalid login" });
 
       await expect(auth.login(mockLoginRequest)).rejects.toBeTruthy();
     });

@@ -3,13 +3,18 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
+from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, String
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, String
 from sqlalchemy.dialects.postgresql import JSON, UUID
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from app.database import Base
+
+if TYPE_CHECKING:
+    from app.models.photo import Photo
 
 
 class HeroImage(Base):
@@ -17,30 +22,31 @@ class HeroImage(Base):
 
     __tablename__ = "hero_images"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    title = Column(String(200), nullable=False)
-    photo_id = Column(
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    photo_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("photos.id", ondelete="CASCADE"), nullable=False
     )
 
-    # Focal point coordinates (0-100 percentages)
-    focal_point_x = Column(Float, nullable=False, default=50.0)
-    focal_point_y = Column(Float, nullable=False, default=50.0)
+    focal_point_x: Mapped[float] = mapped_column(Float, nullable=False, default=50.0)
+    focal_point_y: Mapped[float] = mapped_column(Float, nullable=False, default=50.0)
 
-    # Responsive focal points for different devices
-    # JSON format: {"mobile": {"x": 70, "y": 50}, "tablet": {"x": 60, "y": 50}, "desktop": {"x": 55, "y": 50}}
-    focal_points_responsive = Column(JSON, nullable=True)
+    focal_points_responsive: Mapped[dict[str, dict[str, Any]] | None] = mapped_column(
+        JSON, nullable=True
+    )
 
-    # Only one hero image can be active at a time
-    is_active = Column(Boolean, nullable=False, default=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
-    # Relationships
-    photo = relationship("Photo", lazy="select")
+    photo: Mapped[Photo] = relationship("Photo", lazy="select")
 
     def __repr__(self) -> str:
         return f"<HeroImage(title='{self.title}', active={self.is_active})>"

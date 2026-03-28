@@ -170,6 +170,7 @@ lib-cov
 # Coverage directory used by tools like istanbul
 coverage
 *.lcov
+backend/test-results/
 
 # nyc test coverage
 .nyc_output
@@ -534,3 +535,6 @@ backend/app/_version.py
 
 .agent/*.local.md
 .agent/**/*.local.md
+authelia/certs/
+authelia/config/notification.txt
+authelia/config/secrets/jwks.json

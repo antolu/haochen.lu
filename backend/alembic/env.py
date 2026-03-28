@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 # Import your models here
 from app.config import normalize_async_database_url
 from app.database import Base
+from app.models import *  # noqa: F403
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

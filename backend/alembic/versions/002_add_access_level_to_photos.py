@@ -20,13 +20,11 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # Create enum type for access levels
     access_level_enum = postgresql.ENUM(
         "public", "authenticated", "private", name="accesslevel"
     )
     access_level_enum.create(op.get_bind())
 
-    # Add access_level column to photos table
     op.add_column(
         "photos",
         sa.Column(
@@ -36,10 +34,8 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    # Remove access_level column
     op.drop_column("photos", "access_level")
 
-    # Drop enum type
     access_level_enum = postgresql.ENUM(
         "public", "authenticated", "private", name="accesslevel"
     )

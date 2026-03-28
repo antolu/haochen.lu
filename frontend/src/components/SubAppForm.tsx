@@ -6,6 +6,7 @@ import type { SubApp } from "../types";
 interface SubAppFormData {
   name: string;
   url: string;
+  admin_url?: string;
   description?: string;
   icon?: string;
   color?: string;
@@ -41,6 +42,7 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
     defaultValues: {
       name: subapp?.name ?? "",
       url: subapp?.url ?? "",
+      admin_url: subapp?.admin_url ?? "",
       description: subapp?.description ?? "",
       icon: subapp?.icon ?? "",
       color: subapp?.color ?? "#3B82F6",
@@ -149,6 +151,36 @@ const SubAppForm: React.FC<SubAppFormProps> = ({
                 >
                   {watchUrl}
                 </a>
+              </p>
+            )}
+          </div>
+
+          <div className="md:col-span-2">
+            <label
+              htmlFor="admin_url"
+              className="block text-sm font-medium text-foreground mb-2"
+            >
+              Admin URL
+            </label>
+            <input
+              id="admin_url"
+              type="url"
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                errors.admin_url ? "border-red-300" : "border-gray-300"
+              }`}
+              placeholder="https://example.com/admin"
+              {...register("admin_url", {
+                validate: (value) => {
+                  if (!value) {
+                    return true;
+                  }
+                  return validateUrl(value);
+                },
+              })}
+            />
+            {errors.admin_url && (
+              <p className="mt-1 text-sm text-red-600">
+                {errors.admin_url.message}
               </p>
             )}
           </div>

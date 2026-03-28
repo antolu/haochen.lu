@@ -3,8 +3,9 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
 
@@ -12,28 +13,34 @@ from app.database import Base
 class SubApp(Base):
     __tablename__ = "subapps"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = Column(String(100), nullable=False)
-    slug = Column(String(100), unique=True, nullable=False)
-    description = Column(Text)
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    slug: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+    description: Mapped[str | None] = mapped_column(Text)
 
-    # Display
-    icon = Column(String(100))  # Icon class or URL
-    color = Column(String(7))  # Hex color
+    icon: Mapped[str | None] = mapped_column(String(100))
+    color: Mapped[str | None] = mapped_column(String(7))
 
-    # URLs
-    url = Column(String(500), nullable=False)
-    is_external = Column(Boolean, default=False)
+    url: Mapped[str] = mapped_column(String(500), nullable=False)
+    admin_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    is_external: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    # Access control
-    requires_auth = Column(Boolean, default=True)
-    admin_only = Column(Boolean, default=False)
+    requires_auth: Mapped[bool] = mapped_column(Boolean, default=True)
+    admin_only: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    # Display settings
-    order = Column(Integer, default=0)
-    enabled = Column(Boolean, default=True)
-    show_in_menu = Column(Boolean, default=True)
+    client_id: Mapped[str | None] = mapped_column(
+        String(100), unique=True, nullable=True
+    )
+    client_secret: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    redirect_uris: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    order: Mapped[int] = mapped_column(Integer, default=0)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    show_in_menu: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )

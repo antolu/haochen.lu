@@ -385,9 +385,10 @@ async def get_photo_locations(
     # Convert to location response format
     locations = []
     for photo in photos:
-        # Use secure API URLs for thumbnail
+        if photo.location_lat is None or photo.location_lon is None:
+            continue
         thumbnail_url = None
-        variants = typing.cast(dict[str, typing.Any], photo.variants)
+        variants = photo.variants
         if variants and isinstance(variants, dict):
             if "thumbnail" in variants:
                 thumbnail_url = f"/api/photos/{photo.id}/file/thumbnail"

@@ -3,8 +3,9 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
 
@@ -12,28 +13,27 @@ from app.database import Base
 class BlogPost(Base):
     __tablename__ = "blog_posts"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    title = Column(String(200), nullable=False)
-    slug = Column(String(200), unique=True, nullable=False)
-    excerpt = Column(String(500))
-    content = Column(Text, nullable=False)
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    slug: Mapped[str] = mapped_column(String(200), unique=True, nullable=False)
+    excerpt: Mapped[str | None] = mapped_column(String(500))
+    content: Mapped[str] = mapped_column(Text, nullable=False)
 
-    # Publishing
-    published = Column(Boolean, default=False)
-    published_at = Column(DateTime)
+    published: Mapped[bool] = mapped_column(Boolean, default=False)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime)
 
-    # SEO
-    meta_description = Column(String(160))
-    featured_image = Column(String(500))
+    meta_description: Mapped[str | None] = mapped_column(String(160))
+    featured_image: Mapped[str | None] = mapped_column(String(500))
 
-    # Tags and categories
-    tags = Column(Text)  # JSON string
-    category = Column(String(100))
+    tags: Mapped[str | None] = mapped_column(Text)
+    category: Mapped[str | None] = mapped_column(String(100))
 
-    # Stats
-    view_count = Column(Integer, default=0)
-    read_time = Column(Integer)  # minutes
+    view_count: Mapped[int] = mapped_column(Integer, default=0)
+    read_time: Mapped[int | None] = mapped_column(Integer)
 
-    # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )

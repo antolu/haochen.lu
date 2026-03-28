@@ -12,6 +12,7 @@ import pytest
 from httpx import AsyncClient
 from tests.utils.security_utils import SecurityTestUtils
 
+from app.core.security import create_access_token
 from app.models import User
 
 
@@ -21,15 +22,17 @@ async def test_authentication_response_headers(
     async_client: AsyncClient, test_session, admin_user: User
 ):
     """Test security headers in authentication responses."""
-    login_data = {"username": admin_user.username, "password": "TestPassword123!"}
-
-    response = await async_client.post("/api/auth/login", data=login_data)
+    response = await async_client.get(
+        "/api/auth/login",
+        params={"next": "/admin"},
+        headers={"Accept": "application/json"},
+    )
 
     # Validate security headers
     SecurityTestUtils.validate_security_headers(response)
 
     # Should have basic security headers
-    assert response.headers.get("content-type") == "application/json"
+    assert "application/json" in response.headers.get("content-type", "")
 
     # Cache control for sensitive endpoints
     cache_control = response.headers.get("cache-control", "").lower()
@@ -46,17 +49,36 @@ async def test_error_response_information_disclosure(
 ):
     """Test that error responses don't disclose sensitive information."""
     error_scenarios = [
-        {"username": "nonexistent", "password": "any"},
-        {"username": "admin", "password": "wrong"},
-        {"username": "", "password": ""},
-        {"username": "admin' OR '1'='1", "password": "injection"},
+        {
+            "client_id": "missing-client",
+            "redirect_uri": "https://sub.example.com/callback",
+            "response_type": "code",
+            "state": "state-1",
+        },
+        {
+            "client_id": "missing-client",
+            "redirect_uri": "https://sub.example.com/callback",
+            "response_type": "token",
+            "state": "state-2",
+        },
+        {
+            "client_id": "",
+            "redirect_uri": "",
+            "response_type": "code",
+            "state": "",
+        },
+        {
+            "client_id": "admin' OR '1'='1",
+            "redirect_uri": "https://sub.example.com/callback",
+            "response_type": "code",
+            "state": "state-3",
+        },
     ]
 
     for scenario in error_scenarios:
-        response = await async_client.post("/api/auth/login", data=scenario)
+        response = await async_client.get("/api/auth/login", params=scenario)
 
-        # Should return 400, 401, or 422 for all scenarios
-        assert response.status_code in [400, 401, 422]
+        assert response.status_code in [400, 422]
 
         # Check for information disclosure
         disclosure_analysis = SecurityTestUtils.detect_information_disclosure(response)
@@ -82,51 +104,52 @@ async def test_error_response_information_disclosure(
 async def test_response_timing_consistency(
     async_client: AsyncClient, test_session, admin_user: User
 ):
-    """Test that response timing doesn't leak information."""
+    """Test that login bootstrap timing doesn't vary dramatically."""
     timings: dict[str, list[float]] = {
         "valid": [],
-        "invalid_user": [],
-        "invalid_password": [],
+        "invalid_client": [],
+        "invalid_response_type": [],
     }
 
-    # Test valid login
     for _ in range(5):
         start = time.time()
-        await async_client.post(
+        await async_client.get(
             "/api/auth/login",
-            data={
-                "username": admin_user.username,
-                "password": "TestPassword123!",
-            },
+            params={"next": "/admin"},
+            headers={"Accept": "application/json"},
         )
         timings["valid"].append(time.time() - start)
 
-    # Test invalid user
     for _ in range(5):
         start = time.time()
-        await async_client.post(
+        await async_client.get(
             "/api/auth/login",
-            data={"username": "nonexistent_user_xyz", "password": "any"},
-        )
-        timings["invalid_user"].append(time.time() - start)
-
-    # Test invalid password
-    for _ in range(5):
-        start = time.time()
-        await async_client.post(
-            "/api/auth/login",
-            data={
-                "username": admin_user.username,
-                "password": "wrongpassword",
+            params={
+                "client_id": "nonexistent_user_xyz",
+                "redirect_uri": "https://sub.example.com/callback",
+                "response_type": "code",
+                "state": "state-1",
             },
         )
-        timings["invalid_password"].append(time.time() - start)
+        timings["invalid_client"].append(time.time() - start)
 
-    # Calculate average timings
+    for _ in range(5):
+        start = time.time()
+        await async_client.get(
+            "/api/auth/login",
+            params={
+                "client_id": "nonexistent_user_xyz",
+                "redirect_uri": "https://sub.example.com/callback",
+                "response_type": "token",
+                "state": "state-2",
+            },
+        )
+        timings["invalid_response_type"].append(time.time() - start)
+
     avg_valid = sum(timings["valid"]) / len(timings["valid"])
-    avg_invalid_user = sum(timings["invalid_user"]) / len(timings["invalid_user"])
-    avg_invalid_pass = sum(timings["invalid_password"]) / len(
-        timings["invalid_password"]
+    avg_invalid_user = sum(timings["invalid_client"]) / len(timings["invalid_client"])
+    avg_invalid_pass = sum(timings["invalid_response_type"]) / len(
+        timings["invalid_response_type"]
     )
 
     # Timing differences should be reasonable (< 200% difference)
@@ -146,15 +169,7 @@ async def test_token_validation_performance(
     async_client: AsyncClient, test_session, admin_user: User
 ):
     """Test token validation performance."""
-    # Login to get valid token
-    login_response = await async_client.post(
-        "/api/auth/login",
-        data={
-            "username": admin_user.username,
-            "password": "TestPassword123!",
-        },
-    )
-    token = login_response.json()["access_token"]
+    token = create_access_token({"sub": str(admin_user.id)})
 
     # Measure token validation time
     validation_times = []

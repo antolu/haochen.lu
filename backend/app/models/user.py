@@ -1,20 +1,30 @@
 from __future__ import annotations
 
+import uuid
 from datetime import datetime
 
-from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTableUUID
 from sqlalchemy import Boolean, DateTime, String
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
 
 
-class User(SQLAlchemyBaseUserTableUUID, Base):
+class User(Base):
     __tablename__ = "users"
 
-    # Custom fields beyond fastapi-users base
-    username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    oidc_id: Mapped[str] = mapped_column(
+        String(255), unique=True, index=True, nullable=False
+    )
+    email: Mapped[str] = mapped_column(
+        String(255), unique=True, index=True, nullable=False
+    )
+    username: Mapped[str | None] = mapped_column(String(50), nullable=True)
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
+
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime | None] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow

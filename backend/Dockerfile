@@ -17,6 +17,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     g++ \
+    libssl-dev \
+    libffi-dev \
     libpq-dev \
     curl \
     libvips-dev \
@@ -67,6 +69,7 @@ COPY backend/pyproject.toml ./
 # Install dependencies only (not the package itself) to avoid setuptools-scm issues
 # hadolint ignore=DL3013,SC2046
 RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-cache-dir --upgrade pip && \
     if [ "$BUILD_TYPE" = "development" ]; then \
         pip install --no-cache-dir $(python -c "import tomllib; data = tomllib.load(open('pyproject.toml', 'rb')); deps = data['project'].get('dependencies', []) + data.get('project', {}).get('optional-dependencies', {}).get('test', []); print(' '.join([d for d in deps if 'photography-portfolio' not in d]))"); \
     else \

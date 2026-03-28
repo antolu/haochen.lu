@@ -11,11 +11,12 @@ This guide provides step-by-step instructions for deploying the Portfolio applic
 
 ## 🏗️ Architecture Overview
 
-The application consists of 4 separate services:
+The application consists of 5 separate services:
 1. **PostgreSQL Database** (port 5432) - *Generic database server for multiple applications*
 2. **Redis Cache/Session Store** (port 6379) - *Generic cache/session store for multiple applications*
-3. **Backend API Service** (port 8000) - *Portfolio app backend*
-4. **Frontend Web Service** (port 80/443) - *Portfolio app frontend*
+3. **Authelia SSO Service** (port 9091) - *Full-featured OIDC provider and SSO broker*
+4. **Backend API Service** (port 8000) - *Portfolio app backend*
+5. **Frontend Web Service** (port 80/443) - *Portfolio app frontend*
 
 ## 📂 Storage Requirements
 
@@ -119,7 +120,58 @@ Mount this at `/usr/local/etc/redis/redis.conf` and add `redis-server /usr/local
 - 📊 **Database Separation**: Each application can use a different database number (e.g., photography app uses DB 0, another app uses DB 1)
 - 🚀 **Shared Cache**: Multiple applications can share the same Redis instance for caching and sessions
 
-## 🔧 Step 3: Deploy Backend API Service
+## 🔑 Step 3: Deploy Authelia SSO Service
+
+### Service Configuration
+- **Application Name**: `authelia-server`
+- **Image**: `authelia/authelia:latest`
+- **Restart Policy**: `Always`
+
+### Environment Variables
+```
+TZ=Europe/Vienna
+AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE=/config/secrets/jwt
+AUTHELIA_SESSION_SECRET_FILE=/config/secrets/session
+AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE=/config/secrets/storage
+```
+
+### Volume Mounts
+```
+Host Path: /mnt/pool/apps/portfolio/authelia/config
+Mount Path: /config
+```
+
+### Port Configuration
+- **Container Port**: `9091`
+- **Host Port**: `9091` (or proxied via 80/443)
+- **Protocol**: `TCP`
+
+## 🔑 Step 3.1: Authelia Initial Configuration
+
+Authelia is configuration-file based. Ensure your `configuration.yml` has the OIDC client defined:
+
+```yaml
+identity_providers:
+  oidc:
+    clients:
+      - client_id: 'arcadia-client'
+        client_secret: '$argon2id$v=19$m=65536,t=3,p=4$...' # Your hashed secret
+        public: false
+        authorization_policy: 'one_factor'
+        redirect_uris:
+          - 'https://yourdomain.com/api/auth/callback'
+        scopes:
+          - 'openid'
+          - 'profile'
+          - 'email'
+          - 'groups'
+```
+
+> [!NOTE]
+> **Authelia Configuration**
+> Unlike Casdoor, Authelia does not have a web UI for configuration. All settings must be edited in `/config/configuration.yml` and `/config/users_database.yml`.
+
+## 🔧 Step 4: Deploy Backend API Service
 
 ### Build Requirements
 First, ensure your backend Docker image is built with the correct Dockerfile from the project.
@@ -142,10 +194,12 @@ REDIS_URL=redis://<TRUENAS_IP>:6379/0
 
 # Application Configuration
 ENVIRONMENT=production
-CORS_ORIGINS=http://<TRUENAS_IP>,https://<TRUENAS_IP>,http://<TRUENAS_IP>:80,https://<TRUENAS_IP>:443
+CORS_ORIGINS=http://<TRUENAS_IP>,https://<TRUENAS_IP>,http://auth.yourdomain.com
 COOKIE_SECURE=false
-COOKIE_HTTPONLY=true
-COOKIE_SAMESITE=lax
+
+OIDC_CLIENT_ID=your_oidc_client_id
+OIDC_CLIENT_SECRET=your_oidc_client_secret
+OIDC_REDIRECT_URI=http://yourdomain.com/api/auth/callback
 ```
 
 ### 🔐 **Critical Security Note**
@@ -299,13 +353,12 @@ Deploy services in this order to ensure proper dependencies:
 2. **Redis**: `redis-cli -h <TRUENAS_IP> -p 6379 ping`
 3. **Backend**: `curl http://<TRUENAS_IP>:8000/health`
 4. **Frontend**: `curl http://<TRUENAS_IP>/`
+5. **Casdoor**: `curl http://<TRUENAS_IP>:8008/` (or your proxied auth URL)
 
 ### Application Access
-1. Open `http://<TRUENAS_IP>` in browser
-2. Navigate to login page
-3. Login with:
-   - Username: `admin`  
-   - Password: `<ADMIN_PASSWORD_VALUE>`
+1. Open `http://<TRUENAS_IP>` in browser.
+2. The page should automatically redirect to the Authelia login page at `https://auth.yourdomain.com`.
+3. Login with your Authelia credentials.
 
 ## 🛠️ Troubleshooting
 

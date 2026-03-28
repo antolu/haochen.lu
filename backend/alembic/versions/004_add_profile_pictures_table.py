@@ -20,7 +20,6 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # Create profile_pictures table
     op.create_table(
         "profile_pictures",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
@@ -36,13 +35,10 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(), nullable=False),
     )
 
-    # Create index for active profile picture
     op.create_index("ix_profile_pictures_is_active", "profile_pictures", ["is_active"])
 
 
 def downgrade() -> None:
-    # Drop the index
     op.drop_index("ix_profile_pictures_is_active", table_name="profile_pictures")
 
-    # Drop the table
     op.drop_table("profile_pictures")

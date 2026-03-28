@@ -12,9 +12,12 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    volumes:
+      - ./authelia/certs:/etc/nginx/certs:ro
     depends_on:
       - backend
       - frontend
+      - authelia
     networks:
       - portfolio-network
 
@@ -42,12 +45,17 @@ services:
       - SECRET_KEY=${SECRET_KEY}
       - SESSION_SECRET_KEY=${SESSION_SECRET_KEY}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-      - CORS_ORIGINS=http://localhost,https://localhost
+      - CORS_ORIGINS=http://localhost,https://localhost,http://localhost:6001
       - COOKIE_SECURE=false
       - COOKIE_DOMAIN=
       - WEBP_QUALITY=85
       - THUMBNAIL_SIZE=400
       - MAX_FILE_SIZE=52428800
+      - OIDC_ENDPOINT=http://authelia:9091
+      - OIDC_PUBLIC_ENDPOINT=https://localhost.localdomain
+      - OIDC_CLIENT_ID=arcadia-client
+      - OIDC_CLIENT_SECRET=arcadia-secret
+      - OIDC_REDIRECT_URI=http://localhost/api/auth/callback
     command:
       - "uvicorn"
       - "app.main:app"
@@ -64,7 +72,10 @@ services:
       - db
       - redis
     networks:
-      - portfolio-network
+      portfolio-network:
+      first-party-auth-network:
+        aliases:
+          - auth-broker
 
   frontend:
     # Override the image to use a development base
@@ -127,9 +138,30 @@ services:
       timeout: 5s
       retries: 5
 
+  authelia:
+    image: authelia/authelia:latest
+    container_name: authelia
+    restart: unless-stopped
+    environment:
+      TZ: "Europe/Vienna"
+      X_AUTHELIA_CONFIG_FILTERS: template
+      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: /config/secrets/jwt
+      AUTHELIA_SESSION_SECRET_FILE: /config/secrets/session
+      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /config/secrets/storage
+    volumes:
+      - ./authelia/config:/config
+      - ./authelia/assets:/assets:ro
+    networks:
+      - portfolio-network
+    ports:
+      - "9091:9091"
+
 volumes:
   db_data:
 
 networks:
   portfolio-network:
     driver: bridge
+  first-party-auth-network:
+    driver: bridge
+    name: first-party-auth-network

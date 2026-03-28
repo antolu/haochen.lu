@@ -37,13 +37,12 @@ async def seed_integration_data():
 
         if not admin_user:
             print("Creating integration admin user...", flush=True)
+            # Adjust to new User model: remove legacy flags
             admin_user = await UserFactory.create_async(
                 session,
                 username="integration_admin",
                 email="admin@integration.test",
                 is_admin=True,
-                is_superuser=True,
-                is_active=True,
             )
         else:
             print("Admin user already exists", flush=True)
@@ -61,8 +60,6 @@ async def seed_integration_data():
                 username="integration_user",
                 email="user@integration.test",
                 is_admin=False,
-                is_superuser=False,
-                is_active=True,
             )
         else:
             print("Regular user already exists", flush=True)
