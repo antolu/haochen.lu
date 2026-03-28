@@ -208,15 +208,13 @@ const AdminLayoutContent: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-  const [authChecked, setAuthChecked] = useState(false);
+  const [authChecked, setAuthChecked] = useState(isAuthenticated);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated && !authChecked) {
       void checkAuth().finally(() => setAuthChecked(true));
-    } else {
-      setAuthChecked(true);
     }
-  }, [isAuthenticated, checkAuth]);
+  }, [isAuthenticated, authChecked, checkAuth]);
 
   useEffect(() => {
     if (authChecked && !isLoading && !isAuthenticated) {

@@ -392,7 +392,7 @@ const AppForm: React.FC<AppFormProps> = ({
                         type="button"
                         onClick={() => {
                           void navigator.clipboard.writeText(
-                            application.client_id!,
+                            application.client_id ?? "",
                           );
                         }}
                         className="px-2 py-2 text-xs text-muted-foreground hover:text-foreground border border-border rounded-lg transition-colors"
