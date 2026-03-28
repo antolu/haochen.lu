@@ -36,6 +36,22 @@ check_dependencies() {
     fi
 }
 
+# Generate self-signed cert for localhost.localdomain (required by Authelia)
+setup_certs() {
+    local cert_dir="authelia/certs"
+    if [ ! -f "$cert_dir/cert.pem" ] || [ ! -f "$cert_dir/key.pem" ]; then
+        print_status "Generating self-signed cert for localhost.localdomain..."
+        mkdir -p "$cert_dir"
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+            -keyout "$cert_dir/key.pem" \
+            -out "$cert_dir/cert.pem" \
+            -subj "/CN=localhost.localdomain" \
+            -addext "subjectAltName=DNS:localhost.localdomain,DNS:localhost" \
+            2>/dev/null
+        print_status "Cert generated at $cert_dir/"
+    fi
+}
+
 # Function to start development environment
 start_dev() {
     print_status "Starting development environment..."
@@ -44,6 +60,8 @@ start_dev() {
     print_status "  - Use nginx proxy on standard ports"
     print_status "  - Frontend (Vite dev server) with HMR"
     print_status "  - Backend (Uvicorn) with auto-reload"
+
+    setup_certs
 
     # Stop any existing containers
     docker compose -f docker-compose.dev.yml down

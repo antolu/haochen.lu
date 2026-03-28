@@ -131,7 +131,7 @@ proxy_set_header X-Forwarded-Port 443;
 
 Without `X-Forwarded-Proto: https`, Authelia may reject or misbehave even if the user connected over TLS.
 
-In development, a self-signed cert is used for `localhost.localdomain` so the same nginx-terminates-TLS pattern is preserved locally.
+In development, a self-signed cert is used for `localhost.localdomain` so the same nginx-terminates-TLS pattern is preserved locally. `./dev.sh start` generates this cert automatically in `authelia/certs/` if it doesn't exist (the directory is gitignored).
 
 ## Notes
 
