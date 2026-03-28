@@ -173,6 +173,22 @@ const MainLayout: React.FC = () => {
               )}
             </nav>
 
+            {/* Login / user indicator */}
+            <div className="hidden md:flex items-center">
+              {isAuthenticated ? (
+                <span className="text-sm text-muted-foreground">
+                  {/* Intentionally minimal — admin access is via /admin */}
+                </span>
+              ) : (
+                <a
+                  href="/api/auth/login?next=/admin"
+                  className={`px-3 transition-all duration-300 ease-out ${navPadding} ${navClasses} text-foreground hover:text-primary`}
+                >
+                  Login
+                </a>
+              )}
+            </div>
+
             {/* Mobile menu button */}
             <div className="md:hidden">
               <button
