@@ -150,6 +150,7 @@ services:
       AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /config/secrets/storage
     volumes:
       - ./authelia/config:/config
+      - ./authelia/assets:/assets:ro
     networks:
       - portfolio-network
     ports:

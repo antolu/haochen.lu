@@ -36,6 +36,15 @@ check_dependencies() {
     fi
 }
 
+# Check /etc/hosts for localhost.localdomain (required by Authelia cookie domain)
+check_hosts() {
+    if ! grep -q "localhost.localdomain" /etc/hosts; then
+        print_warning "localhost.localdomain is not in /etc/hosts"
+        print_warning "Authelia requires a dotted domain for session cookies."
+        print_warning "Run: sudo sh -c 'echo \"127.0.0.1 localhost.localdomain\" >> /etc/hosts'"
+    fi
+}
+
 # Generate self-signed cert for localhost.localdomain (required by Authelia)
 setup_certs() {
     local cert_dir="authelia/certs"
@@ -61,6 +70,7 @@ start_dev() {
     print_status "  - Frontend (Vite dev server) with HMR"
     print_status "  - Backend (Uvicorn) with auto-reload"
 
+    check_hosts
     setup_certs
 
     # Stop any existing containers
