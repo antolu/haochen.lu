@@ -24,7 +24,7 @@ access_control:
     - domain: "localhost"
       policy: two_factor
       subject:
-        - "user:anton"
+        - "group:admins"
 
 session:
   cookies:

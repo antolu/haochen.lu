@@ -117,6 +117,17 @@ VITE_AUTH_BASE_URL=http://localhost
 VITE_AUTH_REDIRECT_URI=http://localhost:6001/auth/callback
 ```
 
+## Dev credentials
+
+Authelia users are defined in `authelia/config/users_database.yml`.
+
+| username | password   |
+|----------|------------|
+| admin    | adminadmin |
+| root     | adminadmin |
+
+Both are in the `admins` group.
+
 ## Deploying Authelia behind a reverse proxy
 
 Authelia requires `authelia_url` to use `https://`. In production this is fine — your outer nginx terminates TLS and users hit Authelia over HTTPS.

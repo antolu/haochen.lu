@@ -1,8 +1,15 @@
 users:
-  anton:
+  admin:
     disabled: false
-    displayname: "Anton"
-    email: anton@yourdomain.com
+    displayname: "Admin"
+    email: admin@localhost.localdomain
     groups:
       - admins
-    password: "$argon2id$v=19$m=65536,t=3,p=4$wWhrY1fvWpEB2P21/8F/DA$kNKF2X+SLsOSWFgiWY9Z6ZBBpXsOcNt2Ar0UhlCbrjo"
+    password: "$argon2id$v=19$m=65536,t=3,p=4$6VGRXeiKkQLFSBrwZYPOwg$8/G40YM7Qbgv/Mh7MdRjJKMjrqR67ZuXZIKbKG0oxI8"
+  root:
+    disabled: false
+    displayname: "Root"
+    email: root@localhost.localdomain
+    groups:
+      - admins
+    password: "$argon2id$v=19$m=65536,t=3,p=4$ZRo1QQ2/bZagKDIz0BybyQ$7ttEubM/kDrdk3Xy1seb+RRvS3Ed1KWi5wgQVliYxpA"
