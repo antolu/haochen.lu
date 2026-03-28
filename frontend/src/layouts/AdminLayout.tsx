@@ -203,26 +203,27 @@ const SidebarContent = ({
 
 const AdminLayoutContent: React.FC = () => {
   const location = useLocation();
-  const { user, isAuthenticated, logout, checkAuth } = useAuthStore();
+  const { user, isAuthenticated, isLoading, logout, checkAuth } =
+    useAuthStore();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
-      void checkAuth();
+      void checkAuth().finally(() => setAuthChecked(true));
+    } else {
+      setAuthChecked(true);
     }
   }, [isAuthenticated, checkAuth]);
 
   useEffect(() => {
-    // Only redirect if checkAuth has finished and we are still not authenticated
-    // We assume checkAuth is finished if it's not the first render, but a better way
-    // is to check if it's currently loading.
-    if (!isAuthenticated) {
+    if (authChecked && !isLoading && !isAuthenticated) {
       const next = encodeURIComponent(location.pathname);
       window.location.href = `/api/auth/login?next=${next}`;
     }
-  }, [isAuthenticated, location.pathname]);
+  }, [authChecked, isLoading, isAuthenticated, location.pathname]);
 
   if (!isAuthenticated || !user?.is_admin) {
     return (
