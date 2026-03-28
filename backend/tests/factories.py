@@ -13,7 +13,7 @@ import factory
 from factory import Faker, LazyAttribute, LazyFunction
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import BlogPost, Photo, Project, SubApp, User
+from app.models import Application, BlogPost, Photo, Project, User
 
 
 class AsyncSQLAlchemyModelFactory(factory.Factory):
@@ -210,13 +210,13 @@ class BlogPostFactory(AsyncSQLAlchemyModelFactory):
 
 
 class SubAppFactory(AsyncSQLAlchemyModelFactory):
-    """Factory for SubApp model."""
+    """Factory for Application model."""
 
     class Meta:
-        model = SubApp
+        model = Application
 
     id = factory.LazyFunction(uuid.uuid4)
-    name = factory.Sequence(lambda n: f"SubApp {n}")
+    name = factory.Sequence(lambda n: f"Application {n}")
     slug = LazyAttribute(lambda obj: obj.name.lower().replace(" ", "-"))
     description = Faker("sentence", nb_words=8)
 

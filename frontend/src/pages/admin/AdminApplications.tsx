@@ -1,22 +1,22 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Puzzle } from "lucide-react";
+import { Plus, FileCode2 } from "lucide-react";
 
-import SubAppForm from "../../components/SubAppForm";
-import SubAppList from "../../components/SubAppList";
+import AppForm from "../../components/AppForm";
+import AppList from "../../components/AppList";
 import { Button } from "../../components/ui/button";
 import {
-  useSubApps,
-  useCreateSubApp,
-  useUpdateSubApp,
-  useDeleteSubApp,
-  useToggleSubAppEnabled,
-} from "../../hooks/useSubApps";
-import { subapps as subappsApi } from "../../api/client";
-import type { SubApp } from "../../types";
+  useApplications,
+  useCreateApplication,
+  useUpdateApplication,
+  useDeleteApplication,
+  useToggleAppEnabled,
+} from "../../hooks/useApplications";
+import { applications as applicationsApi } from "../../api/client";
+import type { Application } from "../../types";
 
-interface SubAppFormData {
+interface AppFormData {
   name: string;
   url: string;
   admin_url?: string;
@@ -31,47 +31,48 @@ interface SubAppFormData {
   order: number;
 }
 
-const AdminSubApps: React.FC = () => {
+const AdminApplications: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
-  const [editingSubApp, setEditingSubApp] = useState<SubApp | null>(null);
+  const [editingApplication, setEditingApplication] =
+    useState<Application | null>(null);
 
   // Query hooks
   const {
-    data: subappsData,
-    isLoading: isLoadingSubApps,
-    error: subappsError,
-  } = useSubApps();
+    data: applicationsData,
+    isLoading: isLoadingApplications,
+    error: applicationsError,
+  } = useApplications();
 
   // Mutation hooks
-  const createMutation = useCreateSubApp();
-  const updateMutation = useUpdateSubApp();
-  const deleteMutation = useDeleteSubApp();
-  const toggleEnabledMutation = useToggleSubAppEnabled();
+  const createMutation = useCreateApplication();
+  const updateMutation = useUpdateApplication();
+  const deleteMutation = useDeleteApplication();
+  const toggleEnabledMutation = useToggleAppEnabled();
 
-  const subapps = subappsData?.subapps ?? [];
+  const apps = applicationsData?.applications ?? [];
 
-  const handleCreateSubApp = () => {
-    setEditingSubApp(null);
+  const handleCreateApplication = () => {
+    setEditingApplication(null);
     setShowForm(true);
   };
 
-  const handleEditSubApp = (subapp: SubApp) => {
-    setEditingSubApp(subapp);
+  const handleEditApplication = (application: Application) => {
+    setEditingApplication(application);
     setShowForm(true);
   };
 
-  const handleFormSubmit = async (data: SubAppFormData) => {
+  const handleFormSubmit = async (data: AppFormData) => {
     try {
-      if (editingSubApp) {
+      if (editingApplication) {
         await updateMutation.mutateAsync({
-          id: editingSubApp.id,
+          id: editingApplication.id,
           data,
         });
       } else {
         await createMutation.mutateAsync(data);
       }
       setShowForm(false);
-      setEditingSubApp(null);
+      setEditingApplication(null);
     } catch (error) {
       // Error handling is done in the mutation hooks
       console.error("Form submission error:", error);
@@ -80,46 +81,57 @@ const AdminSubApps: React.FC = () => {
 
   const handleFormCancel = () => {
     setShowForm(false);
-    setEditingSubApp(null);
+    setEditingApplication(null);
   };
 
-  const handleDeleteSubApp = async (subappId: string) => {
+  const handleDeleteApplication = async (applicationId: string) => {
     try {
-      await deleteMutation.mutateAsync(subappId);
+      await deleteMutation.mutateAsync(applicationId);
     } catch (error) {
       // Error handling is done in the mutation hook
       console.error("Delete error:", error);
     }
   };
 
-  const handleToggleEnabled = async (subappId: string, enabled: boolean) => {
+  const handleToggleEnabled = async (
+    applicationId: string,
+    enabled: boolean,
+  ) => {
     try {
-      await toggleEnabledMutation.mutateAsync({ id: subappId, enabled });
+      await toggleEnabledMutation.mutateAsync({ id: applicationId, enabled });
     } catch (error) {
       // Error handling is done in the mutation hook
       console.error("Toggle enabled error:", error);
     }
   };
 
-  const handleOpenSubApp = async (subapp: SubApp, target: "app" | "admin") => {
+  const handleOpenApplication = async (
+    application: Application,
+    target: "app" | "admin",
+  ) => {
     try {
-      if (subapp.requires_auth) {
-        const { url } = await subappsApi.getJumpUrl(subapp.slug, target);
-        window.open(url, subapp.is_external ? "_blank" : "_self");
+      if (application.requires_auth) {
+        const { url } = await applicationsApi.getJumpUrl(
+          application.slug,
+          target,
+        );
+        window.open(url, application.is_external ? "_blank" : "_self");
         return;
       }
 
       const destination =
-        target === "admin" ? (subapp.admin_url ?? subapp.url) : subapp.url;
-      window.open(destination, subapp.is_external ? "_blank" : "_self");
+        target === "admin"
+          ? (application.admin_url ?? application.url)
+          : application.url;
+      window.open(destination, application.is_external ? "_blank" : "_self");
     } catch (error) {
-      console.error("Open sub-app error:", error);
+      console.error("Open application error:", error);
     }
   };
 
   const isFormLoading = createMutation.isPending || updateMutation.isPending;
 
-  if (subappsError) {
+  if (applicationsError) {
     return (
       <div className="text-center py-12">
         <div className="text-destructive mb-4">
@@ -136,9 +148,9 @@ const AdminSubApps: React.FC = () => {
               d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
             />
           </svg>
-          Error loading sub-applications
+          Error loading applications
         </div>
-        <p className="text-muted-foreground">{subappsError.message}</p>
+        <p className="text-muted-foreground">{applicationsError.message}</p>
         <Button className="mt-4" onClick={() => window.location.reload()}>
           Retry
         </Button>
@@ -152,26 +164,26 @@ const AdminSubApps: React.FC = () => {
       <div className="mb-10">
         <div className="flex justify-between items-center">
           <div className="space-y-3">
-            <h1 className="admin-page-title">Sub-Applications</h1>
+            <h1 className="admin-page-title">Applications</h1>
             <p className="text-muted-foreground text-xl">
-              Manage external and internal sub-applications
+              Manage external and internal applications
             </p>
           </div>
           <div className="flex gap-3">
             <Button variant="outline" asChild>
-              <Link to="/admin/subapps/integrate">
-                <Puzzle className="h-4 w-4 mr-2" />
-                Integrate Subapp
+              <Link to="/admin/applications/import">
+                <FileCode2 className="h-4 w-4 mr-2" />
+                Import via YAML
               </Link>
             </Button>
             <Button
               variant="gradient"
               size="lg"
-              onClick={() => handleCreateSubApp()}
+              onClick={() => handleCreateApplication()}
               disabled={showForm}
             >
               <Plus className="h-5 w-5 mr-2" />
-              Add Sub-App
+              Add Application
             </Button>
           </div>
         </div>
@@ -195,15 +207,15 @@ const AdminSubApps: React.FC = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-card rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+              className="bg-background border border-border rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl font-bold text-foreground">
-                    {editingSubApp
-                      ? "Edit Sub-Application"
-                      : "Create New Sub-Application"}
+                    {editingApplication
+                      ? "Edit Application"
+                      : "Create Application"}
                   </h2>
                   <button
                     onClick={handleFormCancel}
@@ -225,8 +237,8 @@ const AdminSubApps: React.FC = () => {
                   </button>
                 </div>
 
-                <SubAppForm
-                  subapp={editingSubApp ?? undefined}
+                <AppForm
+                  application={editingApplication ?? undefined}
                   onSubmit={async (data) => {
                     await handleFormSubmit(data);
                   }}
@@ -242,29 +254,29 @@ const AdminSubApps: React.FC = () => {
       {/* Sub-Apps List */}
       <div className="bg-card rounded-xl shadow-sm p-6">
         <h2 className="text-lg font-medium text-foreground mb-4">
-          All Sub-Applications ({subapps.length})
+          All Applications ({apps.length})
         </h2>
 
-        <SubAppList
-          subapps={subapps}
-          onEdit={handleEditSubApp}
-          onOpen={(subapp) => {
-            void handleOpenSubApp(subapp, "app");
+        <AppList
+          applications={apps}
+          onEdit={handleEditApplication}
+          onOpen={(application) => {
+            void handleOpenApplication(application, "app");
           }}
-          onOpenAdmin={(subapp) => {
-            void handleOpenSubApp(subapp, "admin");
+          onOpenAdmin={(application) => {
+            void handleOpenApplication(application, "admin");
           }}
           onDelete={(id) => {
-            void handleDeleteSubApp(id);
+            void handleDeleteApplication(id);
           }}
           onToggleEnabled={(id, enabled) => {
             void handleToggleEnabled(id, enabled);
           }}
-          isLoading={isLoadingSubApps}
+          isLoading={isLoadingApplications}
         />
       </div>
     </div>
   );
 };
 
-export default AdminSubApps;
+export default AdminApplications;

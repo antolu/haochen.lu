@@ -20,7 +20,7 @@ const YamlEditor: React.FC<YamlEditorProps> = ({
   value,
   onChange,
   onValidationChange,
-  placeholder = "Paste your subapp configuration YAML here...",
+  placeholder = "Paste your application configuration YAML here...",
   className = "",
   disabled = false,
 }) => {
@@ -46,7 +46,7 @@ const YamlEditor: React.FC<YamlEditorProps> = ({
       setIsValidating(true);
 
       try {
-        const response = await fetch("/api/subapp-integration/validate", {
+        const response = await fetch("/api/app-integration/validate", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

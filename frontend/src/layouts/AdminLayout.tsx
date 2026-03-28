@@ -271,8 +271,8 @@ const AdminLayoutContent: React.FC = () => {
       badge: null,
     },
     {
-      name: "Sub-Apps",
-      href: "/admin/subapps",
+      name: "Applications",
+      href: "/admin/applications",
       icon: Layers,
       badge: null,
     },

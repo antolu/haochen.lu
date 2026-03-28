@@ -66,7 +66,7 @@ database:
   schema: "cookbook"
   migrations: true`;
 
-const AdminSubAppIntegration: React.FC = () => {
+const AdminAppImport: React.FC = () => {
   const [yamlContent, setYamlContent] = useState("");
   const [validationResult, setValidationResult] =
     useState<ValidationResult | null>(null);
@@ -93,7 +93,7 @@ const AdminSubAppIntegration: React.FC = () => {
     setIsIntegrating(true);
 
     try {
-      const response = await fetch("/api/subapp-integration/integrate", {
+      const response = await fetch("/api/app-integration/integrate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -145,9 +145,9 @@ const AdminSubAppIntegration: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="space-y-3">
-        <h1 className="admin-page-title">Integrate Subapp</h1>
+        <h1 className="admin-page-title">Import via YAML</h1>
         <p className="text-muted-foreground text-xl">
-          Add a new subapp by pasting its YAML configuration below. The
+          Add a new application by pasting its YAML configuration below. The
           configuration will be validated in real-time.
         </p>
       </div>
@@ -202,7 +202,9 @@ const AdminSubAppIntegration: React.FC = () => {
           {validationResult.config && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div>
-                <h4 className="text-sm font-medium mb-2">Subapp Details</h4>
+                <h4 className="text-sm font-medium mb-2">
+                  Application Details
+                </h4>
                 <dl className="space-y-1 text-sm">
                   <div className="flex">
                     <dt className="w-20 text-muted-foreground">Name:</dt>
@@ -262,7 +264,7 @@ const AdminSubAppIntegration: React.FC = () => {
                     <div className="flex">
                       <dt className="w-20 text-muted-foreground">Admin:</dt>
                       <dd className="font-mono text-primary">
-                        /admin/subapps/
+                        /admin/applications/
                         {
                           (
                             validationResult.config as {
@@ -292,7 +294,7 @@ const AdminSubAppIntegration: React.FC = () => {
                 Integrating...
               </div>
             ) : (
-              "Integrate Subapp"
+              "Import Application"
             )}
           </Button>
         </motion.div>
@@ -355,7 +357,7 @@ const AdminSubAppIntegration: React.FC = () => {
               {integrationResult.frontend_url && (
                 <div className="space-y-1">
                   <p className="text-sm text-green-600 dark:text-green-400">
-                    Your subapp is now available at:
+                    Your application is now available at:
                   </p>
                   <div className="space-y-1 text-sm">
                     <div>
@@ -395,4 +397,4 @@ const AdminSubAppIntegration: React.FC = () => {
   );
 };
 
-export default AdminSubAppIntegration;
+export default AdminAppImport;

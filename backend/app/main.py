@@ -17,6 +17,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.api import (
+    app_integration,
+    applications,
     auth,
     blog,
     camera_aliases,
@@ -27,8 +29,6 @@ from app.api import (
     photos,
     profile_pictures,
     projects,
-    subapp_integration,
-    subapps,
 )
 from app.api import (
     settings as settings_api,
@@ -111,9 +111,11 @@ api_router.include_router(
 )
 api_router.include_router(projects.router, prefix="/projects", tags=["projects"])
 api_router.include_router(blog.router, prefix="/blog", tags=["blog"])
-api_router.include_router(subapps.router, prefix="/subapps", tags=["subapps"])
 api_router.include_router(
-    subapp_integration.router, prefix="/subapp-integration", tags=["subapp-integration"]
+    applications.router, prefix="/applications", tags=["applications"]
+)
+api_router.include_router(
+    app_integration.router, prefix="/app-integration", tags=["app-integration"]
 )
 api_router.include_router(
     camera_aliases.router, prefix="/camera-aliases", tags=["camera-aliases"]

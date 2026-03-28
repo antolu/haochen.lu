@@ -116,7 +116,7 @@ export interface BlogPostListResponse {
   pages: number;
 }
 
-export interface SubApp {
+export interface Application {
   id: string;
   name: string;
   slug: string;
@@ -138,8 +138,8 @@ export interface SubApp {
   updated_at: string;
 }
 
-export interface SubAppListResponse {
-  subapps: SubApp[];
+export interface ApplicationListResponse {
+  applications: Application[];
   total: number;
 }
 
@@ -154,10 +154,10 @@ export interface ProjectStatsSummary {
   featured_projects: number;
 }
 
-export interface SubAppStatsSummary {
-  total_subapps: number;
-  enabled_subapps: number;
-  disabled_subapps: number;
+export interface ApplicationStatsSummary {
+  total_applications: number;
+  enabled_applications: number;
+  disabled_applications: number;
 }
 
 export interface User {

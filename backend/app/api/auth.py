@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.core.redis import TokenManager, redis_client
 from app.core.security import create_access_token, create_refresh_token, decode_token
-from app.crud.subapp import get_subapp_by_client_id, get_subapp_by_slug
+from app.crud.application import get_application_by_client_id, get_application_by_slug
 from app.crud.user import (
     create_user,
     get_user_by_id,
@@ -115,7 +115,7 @@ def _parse_redirect_uris(value: str | None) -> list[str]:
     ]
 
 
-def _validate_subapp_redirect_uri(registered: str | None, redirect_uri: str) -> None:
+def _validate_app_redirect_uri(registered: str | None, redirect_uri: str) -> None:
     allowed = _parse_redirect_uris(registered)
     if redirect_uri not in allowed:
         raise HTTPException(
@@ -132,7 +132,7 @@ def _relative_target(url: str) -> str:
     return target
 
 
-def _encode_subapp_state(next_url: typing.Any) -> str:
+def _encode_app_state(next_url: typing.Any) -> str:
     url_str = str(next_url)
     payload = json.dumps({"next": _relative_target(url_str)}, separators=(",", ":"))
     return urlsafe_b64encode(payload.encode("utf-8")).decode("utf-8").rstrip("=")
@@ -359,13 +359,13 @@ async def login_redirect(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Missing OAuth parameters",
             )
-        subapp = await get_subapp_by_client_id(session, client_id)
-        if subapp is None:
+        app = await get_application_by_client_id(session, client_id)
+        if app is None:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid client_id",
             )
-        _validate_subapp_redirect_uri(subapp.redirect_uris, redirect_uri)
+        _validate_app_redirect_uri(app.redirect_uris, redirect_uri)
 
     state_token = await _store_login_state(context)
     query = urlencode({
@@ -516,13 +516,13 @@ async def authorize(
             detail="Unsupported response_type",
         )
 
-    subapp = await get_subapp_by_client_id(session, client_id)
-    if subapp is None:
+    app = await get_application_by_client_id(session, client_id)
+    if app is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid client_id"
         )
 
-    _validate_subapp_redirect_uri(subapp.redirect_uris, redirect_uri)
+    _validate_app_redirect_uri(app.redirect_uris, redirect_uri)
     auth_code = await _store_authorization_code(
         user_id=str(user.id),
         client_id=client_id,
@@ -542,13 +542,13 @@ async def oauth_token(
             detail="unsupported_grant_type",
         )
 
-    subapp = await get_subapp_by_client_id(session, request.client_id)
-    if subapp is None or subapp.client_secret != request.client_secret:
+    app = await get_application_by_client_id(session, request.client_id)
+    if app is None or app.client_secret != request.client_secret:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_client"
         )
 
-    _validate_subapp_redirect_uri(subapp.redirect_uris, request.redirect_uri)
+    _validate_app_redirect_uri(app.redirect_uris, request.redirect_uri)
     auth_code_payload = await _consume_authorization_code(request.code)
     if (
         auth_code_payload.get("client_id") != request.client_id
@@ -571,29 +571,29 @@ async def oauth_token(
     )
 
 
-@router.get("/jump/{subapp_slug}", response_model=AuthorizeResponse)
-async def jump_to_subapp(
-    subapp_slug: str,
+@router.get("/jump/{application_slug}", response_model=AuthorizeResponse)
+async def jump_to_application(
+    application_slug: str,
     target: str = "app",
     session: AsyncSession = _session_dependency,
     user: User = _current_user_dependency,
 ) -> AuthorizeResponse:
-    subapp = await get_subapp_by_slug(session, subapp_slug)
-    if subapp is None:
+    application = await get_application_by_slug(session, application_slug)
+    if application is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="SubApp not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Application not found"
         )
 
-    redirect_uris = _parse_redirect_uris(subapp.redirect_uris)
+    redirect_uris = _parse_redirect_uris(application.redirect_uris)
     if not redirect_uris:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="SubApp redirect URI not configured",
+            detail="Application redirect URI not configured",
         )
-    if not subapp.client_id:
+    if not application.client_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="SubApp client credentials not configured",
+            detail="Application client credentials not configured",
         )
 
     if target not in {"app", "admin"}:
@@ -601,24 +601,24 @@ async def jump_to_subapp(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid jump target",
         )
-    if target == "admin" and not subapp.admin_url:
+    if target == "admin" and not application.admin_url:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="SubApp admin URL not configured",
+            detail="Application admin URL not configured",
         )
 
     redirect_uri = redirect_uris[0]
-    destination = subapp.admin_url if target == "admin" else subapp.url
+    destination = application.admin_url if target == "admin" else application.url
     if not destination:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="SubApp destination not configured",
+            detail="Application destination not configured",
         )
 
-    state = _encode_subapp_state(destination)
+    state = _encode_app_state(destination)
     auth_code = await _store_authorization_code(
         user_id=str(user.id),
-        client_id=str(subapp.client_id),
+        client_id=str(application.client_id),
         redirect_uri=redirect_uri,
     )
     return AuthorizeResponse(url=f"{redirect_uri}?code={auth_code}&state={state}")

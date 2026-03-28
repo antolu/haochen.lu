@@ -1,5 +1,15 @@
 from __future__ import annotations
 
+# Application CRUD
+from app.crud.application import (
+    create_application,
+    delete_application,
+    get_application,
+    get_application_by_slug,
+    get_applications,
+    update_application,
+)
+
 # Blog CRUD
 from app.crud.blog import (
     create_blog_post,
@@ -46,16 +56,6 @@ from app.crud.project import (
     update_project,
 )
 
-# SubApp CRUD
-from app.crud.subapp import (
-    create_subapp,
-    delete_subapp,
-    get_subapp,
-    get_subapp_by_slug,
-    get_subapps,
-    update_subapp,
-)
-
 # User CRUD
 from app.crud.user import (
     get_user_by_email,
@@ -66,6 +66,8 @@ from app.crud.user import (
 __all__ = [
     # Photo
     "bulk_reorder_photos",
+    # Application
+    "create_application",
     # Blog
     "create_blog_post",
     # Content
@@ -73,13 +75,14 @@ __all__ = [
     "create_photo",
     # Project
     "create_project",
-    # SubApp
-    "create_subapp",
+    "delete_application",
     "delete_blog_post",
     "delete_content",
     "delete_photo",
     "delete_project",
-    "delete_subapp",
+    "get_application",
+    "get_application_by_slug",
+    "get_applications",
     "get_blog_post",
     "get_blog_post_by_slug",
     "get_blog_posts",
@@ -91,18 +94,15 @@ __all__ = [
     "get_project",
     "get_project_by_slug",
     "get_projects",
-    "get_subapp",
-    "get_subapp_by_slug",
-    "get_subapps",
     # User
     "get_user_by_email",
     "get_user_by_id",
     "get_user_by_username",
     "increment_blog_view_count",
     "increment_photo_view_count",
+    "update_application",
     "update_blog_post",
     "update_content",
     "update_photo",
     "update_project",
-    "update_subapp",
 ]

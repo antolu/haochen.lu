@@ -5,7 +5,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
 
-class SubAppBase(BaseModel):
+class ApplicationBase(BaseModel):
     name: str
     description: str | None = None
     icon: str | None = None
@@ -23,11 +23,11 @@ class SubAppBase(BaseModel):
     redirect_uris: str | None = None
 
 
-class SubAppCreate(SubAppBase):
+class ApplicationCreate(ApplicationBase):
     slug: str | None = None
 
 
-class SubAppUpdate(BaseModel):
+class ApplicationUpdate(BaseModel):
     name: str | None = None
     description: str | None = None
     url: str | None = None
@@ -42,7 +42,7 @@ class SubAppUpdate(BaseModel):
     order: int | None = None
 
 
-class SubAppResponse(SubAppBase):
+class ApplicationResponse(ApplicationBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: str
@@ -51,6 +51,6 @@ class SubAppResponse(SubAppBase):
     updated_at: datetime
 
 
-class SubAppListResponse(BaseModel):
-    subapps: list[SubAppResponse]
+class ApplicationListResponse(BaseModel):
+    applications: list[ApplicationResponse]
     total: int

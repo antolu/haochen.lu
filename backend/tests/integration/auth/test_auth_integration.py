@@ -177,6 +177,6 @@ async def test_admin_only_endpoint_requires_admin_role(
         "Authorization": f"Bearer {create_access_token({'sub': str(regular_user.id)})}"
     }
 
-    response = await async_client.get("/api/subapps/admin", headers=headers)
+    response = await async_client.get("/api/applications/admin", headers=headers)
 
     assert response.status_code == status.HTTP_403_FORBIDDEN

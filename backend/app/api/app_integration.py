@@ -5,17 +5,17 @@ from fastapi import APIRouter, HTTPException
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.crud.subapp import get_subapp_by_slug
+from app.crud.application import get_application_by_slug
 from app.dependencies import (
     _current_admin_user_dependency,
     _session_dependency,
 )
 from app.models.user import User
-from app.schemas.subapp_config import (
-    SubAppConfig,
-    SubAppConfigValidationResponse,
-    SubAppIntegrationRequest,
-    SubAppIntegrationResponse,
+from app.schemas.app_config import (
+    AppConfig,
+    AppConfigValidationResponse,
+    AppIntegrationRequest,
+    AppIntegrationResponse,
 )
 
 router = APIRouter()
@@ -26,7 +26,6 @@ def parse_yaml_safely(yaml_content: str) -> tuple[dict | None, list[str]]:
     errors = []
 
     try:
-        # Parse YAML
         data = yaml.safe_load(yaml_content)
 
         if data is None:
@@ -47,25 +46,20 @@ def parse_yaml_safely(yaml_content: str) -> tuple[dict | None, list[str]]:
         return data, errors
 
 
-def validate_subapp_config(
+def validate_app_config(
     data: dict,
-) -> tuple[SubAppConfig | None, list[str], list[str]]:
-    """Validate parsed YAML data against SubAppConfig schema."""
+) -> tuple[AppConfig | None, list[str], list[str]]:
+    """Validate parsed YAML data against AppConfig schema."""
     errors = []
     warnings = []
 
     try:
-        # Validate with Pydantic
-        config = SubAppConfig(**data)
+        config = AppConfig(**data)
 
-        # Additional business logic validations
-
-        # Check for slug conflicts (this would be checked against database)
         slug = config.meta.slug
         if slug in ["admin", "api", "static", "uploads"]:
             errors.append(f"Slug '{slug}' is reserved and cannot be used")
 
-        # Validate Docker images format
         for image_field in ["backend_image", "frontend_image"]:
             image = getattr(config.docker, image_field)
             if ":" not in image:
@@ -73,7 +67,6 @@ def validate_subapp_config(
                     f"{image_field} should include a tag (e.g., {image}:latest)"
                 )
 
-        # Validate environment variables format
         warnings.extend(
             f"Environment variable '{env_var}' should use format 'KEY=value' or '${{VAR}}'"
             for env_var in config.docker.environment
@@ -92,36 +85,33 @@ def validate_subapp_config(
         return config, errors, warnings
 
 
-@router.post("/validate", response_model=SubAppConfigValidationResponse)
-async def validate_subapp_config_endpoint(
-    request: SubAppIntegrationRequest,
+@router.post("/validate", response_model=AppConfigValidationResponse)
+async def validate_app_config_endpoint(
+    request: AppIntegrationRequest,
     db: AsyncSession = _session_dependency,
     current_user: User = _current_admin_user_dependency,
-) -> SubAppConfigValidationResponse:
-    """Validate subapp YAML configuration."""
+) -> AppConfigValidationResponse:
+    """Validate application YAML configuration."""
 
-    # Parse YAML
     data, parse_errors = parse_yaml_safely(request.yaml_content)
 
     if parse_errors:
-        return SubAppConfigValidationResponse(valid=False, errors=parse_errors)
+        return AppConfigValidationResponse(valid=False, errors=parse_errors)
 
-    # Validate configuration schema
     config, validation_errors, warnings = (
-        validate_subapp_config(data) if data else (None, [], [])
+        validate_app_config(data) if data else (None, [], [])
     )
 
-    # Check for slug conflicts in database
     if config and not validation_errors:
-        existing_subapp = await get_subapp_by_slug(db, config.meta.slug)
-        if existing_subapp:
+        existing_application = await get_application_by_slug(db, config.meta.slug)
+        if existing_application:
             validation_errors.append(
-                f"A subapp with slug '{config.meta.slug}' already exists"
+                f"An application with slug '{config.meta.slug}' already exists"
             )
 
     all_errors = parse_errors + validation_errors
 
-    return SubAppConfigValidationResponse(
+    return AppConfigValidationResponse(
         valid=len(all_errors) == 0,
         errors=all_errors,
         warnings=warnings,
@@ -130,21 +120,20 @@ async def validate_subapp_config_endpoint(
 
 
 @router.post("/integrate")
-async def integrate_subapp(
-    request: SubAppIntegrationRequest,
+async def integrate_application(
+    request: AppIntegrationRequest,
     db: AsyncSession = _session_dependency,
     current_user: User = _current_admin_user_dependency,
-) -> SubAppConfigValidationResponse | SubAppIntegrationResponse:
-    """Integrate a new subapp from YAML configuration."""
+) -> AppConfigValidationResponse | AppIntegrationResponse:
+    """Integrate a new application from YAML configuration."""
 
     if request.validate_only:
-        result: SubAppConfigValidationResponse = await validate_subapp_config_endpoint(
+        result: AppConfigValidationResponse = await validate_app_config_endpoint(
             request, db, current_user
         )
         return result
 
-    # First validate
-    validation_result = await validate_subapp_config_endpoint(request, db, current_user)
+    validation_result = await validate_app_config_endpoint(request, db, current_user)
 
     if not validation_result.valid:
         raise HTTPException(
@@ -168,13 +157,13 @@ async def integrate_subapp(
     # 3. Updating nginx configuration
     # 4. Deploying containers
 
-    return SubAppIntegrationResponse(
+    return AppIntegrationResponse(
         success=True,
-        message=f"Subapp '{config.meta.name}' integrated successfully",
+        message=f"Application '{config.meta.name}' integrated successfully",
         slug=config.meta.slug,
         frontend_url=config.integration.frontend_path,
         api_url=config.integration.api_path,
-        admin_url=f"/admin/subapps/{config.meta.slug}"
+        admin_url=f"/admin/applications/{config.meta.slug}"
         if config.integration.has_admin
         else None,
     )
