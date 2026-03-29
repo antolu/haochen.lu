@@ -29,9 +29,8 @@ const MainLayout: React.FC = () => {
   const isScrolled = scrollY > 10;
 
   const { data: subAppsData } = useQuery({
-    queryKey: ["applications", isAuthenticated ? "authenticated" : "public"],
-    queryFn: () =>
-      isAuthenticated ? applications.listAuthenticated() : applications.list(),
+    queryKey: ["applications", "public"],
+    queryFn: () => applications.list(),
   });
 
   // Fetch footer content

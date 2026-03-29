@@ -42,13 +42,9 @@ async def list_applications(
     """List available applications for public access."""
     applications = await get_applications(db, enabled_only=True, admin_only=False)
 
-    public_applications = [app for app in applications if not app.requires_auth]
-
     return ApplicationListResponse(
-        applications=[
-            ApplicationResponse.model_validate(app) for app in public_applications
-        ],
-        total=len(public_applications),
+        applications=[ApplicationResponse.model_validate(app) for app in applications],
+        total=len(applications),
     )
 
 
