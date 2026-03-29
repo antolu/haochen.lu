@@ -1,5 +1,5 @@
 import React from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { motion } from "framer-motion";
 import type { Application } from "../types";
 
@@ -38,7 +38,7 @@ const AppForm: React.FC<AppFormProps> = ({
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     formState: { errors },
   } = useForm<AppFormData>({
     defaultValues: {
@@ -57,9 +57,12 @@ const AppForm: React.FC<AppFormProps> = ({
     },
   });
 
-  const watchUrl = watch("url");
-  const watchColor = watch("color");
-  const watchRequiresAuth = watch("requires_auth");
+  const watchUrl = useWatch<string | undefined>({ control, name: "url" });
+  const watchColor = useWatch<string | undefined>({ control, name: "color" });
+  const watchRequiresAuth = useWatch<boolean | undefined>({
+    control,
+    name: "requires_auth",
+  });
 
   const validateUrl = (value: string) => {
     try {
