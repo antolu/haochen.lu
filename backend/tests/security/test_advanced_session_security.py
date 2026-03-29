@@ -12,7 +12,6 @@ import pytest
 from httpx import AsyncClient
 from tests.utils.security_utils import SecurityTestUtils
 
-from app.core.security import create_access_token
 from app.models import User
 
 
@@ -169,7 +168,7 @@ async def test_token_validation_performance(
     async_client: AsyncClient, test_session, admin_user: User
 ):
     """Test token validation performance."""
-    token = create_access_token({"sub": str(admin_user.id)})
+    token = f"test-token-{admin_user.oidc_id}"
 
     # Measure token validation time
     validation_times = []
@@ -184,8 +183,7 @@ async def test_token_validation_performance(
         validation_time = time.time() - start_time
         validation_times.append(validation_time)
 
-        # Accept both 200 (success) and 404 (endpoint not found)
-        assert response.status_code in [200, 404]
+        assert response.status_code == 200
 
     avg_validation_time = sum(validation_times) / len(validation_times)
 
