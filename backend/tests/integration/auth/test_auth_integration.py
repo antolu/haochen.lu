@@ -62,11 +62,9 @@ async def test_protected_endpoint_requires_token(async_client: AsyncClient) -> N
 @pytest.mark.integration
 @pytest.mark.auth
 async def test_protected_endpoint_with_valid_token_succeeds(
-    async_client: AsyncClient, admin_user: User
+    async_client: AsyncClient, admin_user: User, admin_token: str
 ) -> None:
-    headers = {
-        "Authorization": f"Bearer {create_access_token({'sub': str(admin_user.id)})}"
-    }
+    headers = {"Authorization": f"Bearer {admin_token}"}
 
     response = await async_client.get("/api/auth/me", headers=headers)
 
@@ -77,18 +75,13 @@ async def test_protected_endpoint_with_valid_token_succeeds(
 @pytest.mark.integration
 @pytest.mark.auth
 async def test_logout_succeeds_with_valid_token_and_refresh_cookie(
-    async_client: AsyncClient, admin_user: User
+    async_client: AsyncClient, admin_user: User, admin_token: str
 ) -> None:
-    # Avoid top-level import-time DB/IO by importing only the helper symbol
-    # This import is allowed by our test style; keep it here intentionally.
-    from app.api.auth import _issue_session_tokens  # noqa: PLC0415
-
-    access_token, refresh_token, _ = await _issue_session_tokens(admin_user)
-    async_client.cookies.set("refresh_token", refresh_token)
+    async_client.cookies.set("refresh_token", "some-authelia-refresh-token")
 
     response = await async_client.post(
         "/api/auth/logout",
-        headers={"Authorization": f"Bearer {access_token}"},
+        headers={"Authorization": f"Bearer {admin_token}"},
     )
 
     assert response.status_code == status.HTTP_200_OK
@@ -173,10 +166,10 @@ async def test_admin_only_endpoint_requires_admin_role(
     async_client: AsyncClient, test_session: AsyncSession
 ) -> None:
     regular_user = await UserFactory.create_async(test_session, is_admin=False)
-    headers = {
-        "Authorization": f"Bearer {create_access_token({'sub': str(regular_user.id)})}"
-    }
+    token = f"test-token-{regular_user.oidc_id}"
 
-    response = await async_client.get("/api/applications/admin", headers=headers)
+    response = await async_client.get(
+        "/api/applications/admin", headers={"Authorization": f"Bearer {token}"}
+    )
 
     assert response.status_code == status.HTTP_403_FORBIDDEN

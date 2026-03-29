@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 from urllib.parse import parse_qs, urlparse
 
+import httpx
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
@@ -10,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from tests.factories import SubAppFactory
 
 from app.api import auth as auth_api
-from app.api.auth import _issue_session_tokens
+from app.core.oidc import oidc_validator
 from app.core.security import create_access_token, decode_token
 from app.models.user import User
 
@@ -22,10 +23,14 @@ async def test_callback_creates_local_session_and_redirects(
     test_session: AsyncSession,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    async def fake_fetch_token(code: str) -> str:
+    async def fake_fetch_tokens(code: str) -> dict:
         await asyncio.sleep(0)
         assert code == "oidc-code"
-        return "oidc-access-token"
+        return {
+            "access_token": "oidc-access-token",
+            "refresh_token": "oidc-refresh-token",
+            "expires_in": 3600,
+        }
 
     async def fake_fetch_profile(access_token: str) -> dict[str, object]:
         await asyncio.sleep(0)
@@ -37,7 +42,7 @@ async def test_callback_creates_local_session_and_redirects(
             "groups": ["admins"],
         }
 
-    monkeypatch.setattr(auth_api, "_fetch_oidc_token", fake_fetch_token)
+    monkeypatch.setattr(auth_api, "_fetch_oidc_tokens", fake_fetch_tokens)
     monkeypatch.setattr(auth_api, "_fetch_oidc_profile", fake_fetch_profile)
 
     login_response = await async_client.get(
@@ -82,10 +87,14 @@ async def test_callback_redirects_back_to_first_party_subapp(
         admin_url="http://localhost:6001/admin",
     )
 
-    async def fake_fetch_token(code: str) -> str:
+    async def fake_fetch_tokens(code: str) -> dict:
         await asyncio.sleep(0)
         assert code == "oidc-code"
-        return "oidc-access-token"
+        return {
+            "access_token": "oidc-access-token",
+            "refresh_token": "oidc-refresh-token",
+            "expires_in": 3600,
+        }
 
     async def fake_fetch_profile(access_token: str) -> dict[str, object]:
         await asyncio.sleep(0)
@@ -97,7 +106,7 @@ async def test_callback_redirects_back_to_first_party_subapp(
             "groups": [],
         }
 
-    monkeypatch.setattr(auth_api, "_fetch_oidc_token", fake_fetch_token)
+    monkeypatch.setattr(auth_api, "_fetch_oidc_tokens", fake_fetch_tokens)
     monkeypatch.setattr(auth_api, "_fetch_oidc_profile", fake_fetch_profile)
 
     login_response = await async_client.get(
@@ -228,10 +237,14 @@ async def test_mock_first_party_subapp_contract_flow(
         redirect_uris="http://mock-subapp.local/auth/callback",
     )
 
-    async def fake_fetch_token(code: str) -> str:
+    async def fake_fetch_tokens(code: str) -> dict:
         await asyncio.sleep(0)
         assert code == "oidc-code"
-        return "oidc-access-token"
+        return {
+            "access_token": "oidc-access-token",
+            "refresh_token": "oidc-refresh-token",
+            "expires_in": 3600,
+        }
 
     async def fake_fetch_profile(access_token: str) -> dict[str, object]:
         await asyncio.sleep(0)
@@ -243,7 +256,7 @@ async def test_mock_first_party_subapp_contract_flow(
             "groups": ["admins"],
         }
 
-    monkeypatch.setattr(auth_api, "_fetch_oidc_token", fake_fetch_token)
+    monkeypatch.setattr(auth_api, "_fetch_oidc_tokens", fake_fetch_tokens)
     monkeypatch.setattr(auth_api, "_fetch_oidc_profile", fake_fetch_profile)
 
     login_response = await async_client.get(
@@ -302,17 +315,34 @@ async def test_mock_first_party_subapp_contract_flow(
 async def test_refresh_rotates_refresh_cookie(
     async_client: AsyncClient,
     admin_user: User,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    _access_token, refresh_token, _ = await _issue_session_tokens(admin_user)
-    async_client.cookies.set("refresh_token", refresh_token)
+    fake_refresh_token = "authelia-refresh-token-123"
+    async_client.cookies.set("refresh_token", fake_refresh_token)
+
+    def fake_validate(token: str) -> dict | None:
+        if token == "new-access-token":
+            return {"sub": admin_user.oidc_id, "jti": "new-jti"}
+        return None
+
+    def fake_post(url: str, **_kwargs) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json={
+                "access_token": "new-access-token",
+                "refresh_token": "new-refresh-token",
+                "expires_in": 3600,
+            },
+        )
+
+    monkeypatch.setattr(oidc_validator, "validate_token", fake_validate)
+    monkeypatch.setattr(httpx.AsyncClient, "post", fake_post)
 
     response = await async_client.post("/api/auth/refresh")
 
     assert response.status_code == 200
     assert response.cookies.get("refresh_token")
-    payload = decode_token(response.json()["access_token"], expected_type="access")
-    assert payload is not None
-    assert payload["sub"] == str(admin_user.id)
+    assert response.json()["access_token"] == "new-access-token"
 
 
 @pytest.mark.integration
