@@ -64,14 +64,12 @@ function OverflowMenu({
 
   return (
     <div ref={ref} className="relative">
-      <Button
-        variant="outline"
-        size="sm"
+      <button
         onClick={() => setOpen((v) => !v)}
-        className="px-2"
+        className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
       >
         <MoreVertical className="h-4 w-4" />
-      </Button>
+      </button>
       <AnimatePresence>
         {open && (
           <motion.div
