@@ -4,7 +4,6 @@ import typing
 from contextlib import asynccontextmanager
 from datetime import datetime
 
-import jwt
 from fastapi import (
     APIRouter,
     FastAPI,
@@ -37,6 +36,7 @@ from app.config import settings
 from app.core.progress import progress_manager
 from app.core.rate_limiter import RateLimitMiddleware
 from app.core.redis import close_redis, init_redis
+from app.core.security import decode_token
 
 
 class NoCacheMiddleware(BaseHTTPMiddleware):
@@ -90,8 +90,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["content-type", "authorization", "x-requested-with"],
 )
 
 # API routes are mounted under /api.
@@ -155,10 +155,8 @@ async def uploads_progress_ws(websocket: WebSocket, upload_id: str) -> None:
         await websocket.close(code=1008)  # Policy violation
         return
 
-    # Verify token using generic JWT strategy
-    try:
-        jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
-    except Exception:
+    # Verify token — must be an access token specifically
+    if decode_token(token, expected_type="access") is None:
         await websocket.send_json({"error": "Invalid or expired token"})
         await websocket.close(code=1008)
         return
