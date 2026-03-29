@@ -298,16 +298,9 @@ async def test_mock_first_party_subapp_contract_flow(
     )
 
     assert token_response.status_code == 200
-    access_token = token_response.json()["access_token"]
-    me_response = await async_client.get(
-        "/api/auth/me",
-        headers={"Authorization": f"Bearer {access_token}"},
-    )
-
-    assert me_response.status_code == 200
-    body = me_response.json()
-    assert body["email"] == "subapp@example.com"
-    assert body["is_admin"] is True
+    body = token_response.json()
+    assert body["user"]["email"] == "subapp@example.com"
+    assert body["user"]["is_admin"] is True
 
 
 @pytest.mark.integration
