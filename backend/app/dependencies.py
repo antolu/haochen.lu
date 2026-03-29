@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi import Depends, File, Form, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.redis import TokenManager
 from app.core.security import decode_token
 from app.crud.user import get_user_by_id
 from app.database import get_session
@@ -34,6 +35,9 @@ async def get_current_user_optional(
     token = auth_header.split(" ")[1]
     payload = decode_token(token, expected_type="access")
     if payload is None:
+        return None
+    jti = payload.get("jti")
+    if isinstance(jti, str) and await TokenManager.is_access_token_blocked(jti):
         return None
     user_id_or_sub = payload.get("sub")
     if not isinstance(user_id_or_sub, str):

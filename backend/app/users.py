@@ -4,6 +4,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.redis import TokenManager
 from app.core.security import decode_token
 from app.crud.user import get_user_by_id
 from app.database import get_session
@@ -26,6 +27,12 @@ async def current_active_user(
     if payload is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+        )
+
+    jti = payload.get("jti")
+    if isinstance(jti, str) and await TokenManager.is_access_token_blocked(jti):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has been revoked"
         )
 
     user_id = payload.get("sub")

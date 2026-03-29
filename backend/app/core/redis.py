@@ -248,6 +248,18 @@ class TokenManager:
         keys = await redis_client.keys(pattern)
         return len(keys)
 
+    @staticmethod
+    async def blocklist_access_token(jti: str, expires_in: int) -> bool:
+        """Add an access token JTI to the blocklist until it naturally expires."""
+        key = f"blocklist_access:{jti}"
+        return await redis_client.setex(key, expires_in, "revoked")
+
+    @staticmethod
+    async def is_access_token_blocked(jti: str) -> bool:
+        """Check if an access token has been blocklisted."""
+        key = f"blocklist_access:{jti}"
+        return await redis_client.exists(key)
+
 
 # Session management helpers
 class SessionManager:

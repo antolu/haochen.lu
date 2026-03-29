@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import hmac
 import json
+import logging
 import secrets
 import typing
 from base64 import urlsafe_b64encode
@@ -14,7 +16,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.core.redis import TokenManager, redis_client
-from app.core.security import create_access_token, create_refresh_token, decode_token
+from app.core.security import (
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+)
 from app.crud.application import get_application_by_client_id, get_application_by_slug
 from app.crud.user import (
     create_user,
@@ -28,6 +34,7 @@ from app.schemas.user import UserCreate, UserRead, UserUpdate
 from app.users import current_active_user
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 _session_dependency = Depends(get_session)
 _current_user_dependency = Depends(current_active_user)
@@ -219,9 +226,10 @@ async def _fetch_oidc_token(code: str) -> str:
         )
 
     if response.status_code != status.HTTP_200_OK:
+        logger.error("OIDC token exchange failed: %s", response.text)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Failed to exchange OIDC code: {response.text}",
+            detail="Authentication failed",
         )
 
     access_token = response.json().get("access_token")
@@ -242,9 +250,10 @@ async def _fetch_oidc_profile(access_token: str) -> dict[str, object]:
         )
 
     if response.status_code != status.HTTP_200_OK:
+        logger.error("OIDC userinfo fetch failed: %s", response.text)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Failed to fetch OIDC profile: {response.text}",
+            detail="Authentication failed",
         )
 
     payload = response.json()
@@ -483,10 +492,23 @@ async def logout(
     response: Response,
     user: User = _current_user_dependency,
 ) -> dict[str, str]:
+    # Revoke refresh token
     refresh_token = request.cookies.get(settings.refresh_cookie_name)
-    payload = decode_token(refresh_token, expected_type="refresh")
-    if payload is not None and isinstance(payload.get("jti"), str):
-        await TokenManager.revoke_refresh_token(str(user.id), payload["jti"])
+    refresh_payload = decode_token(refresh_token, expected_type="refresh")
+    if refresh_payload is not None and isinstance(refresh_payload.get("jti"), str):
+        await TokenManager.revoke_refresh_token(str(user.id), refresh_payload["jti"])
+
+    # Blocklist the current access token so it can't be reused until expiry
+    auth_header = request.headers.get("authorization", "")
+    if auth_header.startswith("Bearer "):
+        access_token = auth_header.split(" ", 1)[1]
+        access_payload = decode_token(access_token, expected_type="access")
+        if access_payload is not None and isinstance(access_payload.get("jti"), str):
+            remaining_ttl = settings.access_token_expire_minutes * 60
+            await TokenManager.blocklist_access_token(
+                access_payload["jti"], remaining_ttl
+            )
+
     _clear_refresh_cookie(response)
     return {"message": "Logged out"}
 
@@ -543,16 +565,19 @@ async def oauth_token(
         )
 
     app = await get_application_by_client_id(session, request.client_id)
-    if app is None or app.client_secret != request.client_secret:
+    if app is None or not hmac.compare_digest(
+        app.client_secret or "", request.client_secret
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_client"
         )
 
     _validate_app_redirect_uri(app.redirect_uris, request.redirect_uri)
     auth_code_payload = await _consume_authorization_code(request.code)
-    if (
-        auth_code_payload.get("client_id") != request.client_id
-        or auth_code_payload.get("redirect_uri") != request.redirect_uri
+    if not hmac.compare_digest(
+        auth_code_payload.get("client_id") or "", request.client_id
+    ) or not hmac.compare_digest(
+        auth_code_payload.get("redirect_uri") or "", request.redirect_uri
     ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_grant"
