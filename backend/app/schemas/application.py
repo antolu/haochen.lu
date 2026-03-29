@@ -62,6 +62,34 @@ class ApplicationResponse(ApplicationBase):
     updated_at: datetime
 
 
+class ApplicationPublicResponse(BaseModel):
+    """Response schema for public/authenticated endpoints — omits credentials."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    slug: str
+    name: str
+    description: str | None = None
+    icon: str | None = None
+    color: str | None = None
+    url: str
+    admin_url: str | None = None
+    is_external: bool
+    requires_auth: bool
+    admin_only: bool
+    logged_in_only: bool
+    enabled: bool
+    order: int
+    created_at: datetime
+    updated_at: datetime
+
+
 class ApplicationListResponse(BaseModel):
     applications: list[ApplicationResponse]
+    total: int
+
+
+class ApplicationPublicListResponse(BaseModel):
+    applications: list[ApplicationPublicResponse]
     total: int

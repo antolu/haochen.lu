@@ -27,6 +27,8 @@ from app.models.user import User
 from app.schemas.application import (
     ApplicationCreate,
     ApplicationListResponse,
+    ApplicationPublicListResponse,
+    ApplicationPublicResponse,
     ApplicationReorderRequest,
     ApplicationResponse,
     ApplicationUpdate,
@@ -38,12 +40,14 @@ router = APIRouter()
 @router.get("/")
 async def list_applications(
     *, db: AsyncSession = _session_dependency
-) -> ApplicationListResponse:
+) -> ApplicationPublicListResponse:
     """List available applications for public access."""
     applications = await get_applications(db, enabled_only=True, admin_only=False)
 
-    return ApplicationListResponse(
-        applications=[ApplicationResponse.model_validate(app) for app in applications],
+    return ApplicationPublicListResponse(
+        applications=[
+            ApplicationPublicResponse.model_validate(app) for app in applications
+        ],
         total=len(applications),
     )
 
@@ -53,14 +57,16 @@ async def list_authenticated_applications(
     *,
     db: AsyncSession = _session_dependency,
     current_user: User = _current_user_dependency,
-) -> ApplicationListResponse:
+) -> ApplicationPublicListResponse:
     """List applications available to authenticated users."""
     admin_only = None if current_user.is_admin else False
 
     applications = await get_applications(db, enabled_only=True, admin_only=admin_only)
 
-    return ApplicationListResponse(
-        applications=[ApplicationResponse.model_validate(app) for app in applications],
+    return ApplicationPublicListResponse(
+        applications=[
+            ApplicationPublicResponse.model_validate(app) for app in applications
+        ],
         total=len(applications),
     )
 
