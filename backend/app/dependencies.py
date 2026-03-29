@@ -3,9 +3,9 @@ from __future__ import annotations
 from fastapi import Depends, File, Form, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.oidc import oidc_validator
 from app.core.redis import TokenManager
-from app.core.security import decode_token
-from app.crud.user import get_user_by_id
+from app.crud.user import get_user_by_oidc_id
 from app.database import get_session
 from app.models.user import User
 from app.users import current_active_user, current_superuser
@@ -33,16 +33,16 @@ async def get_current_user_optional(
         return None
 
     token = auth_header.split(" ")[1]
-    payload = decode_token(token, expected_type="access")
+    payload = await oidc_validator.validate_token(token)
     if payload is None:
         return None
     jti = payload.get("jti")
     if isinstance(jti, str) and await TokenManager.is_access_token_blocked(jti):
         return None
-    user_id_or_sub = payload.get("sub")
-    if not isinstance(user_id_or_sub, str):
+    oidc_id = payload.get("sub")
+    if not isinstance(oidc_id, str):
         return None
-    return await get_user_by_id(db, user_id=user_id_or_sub)
+    return await get_user_by_oidc_id(db, oidc_id=oidc_id)
 
 
 # Additional module-level singletons for common dependencies
