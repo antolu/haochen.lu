@@ -188,15 +188,8 @@ async def async_client(
     """Create an async test client compatible with httpx>=0.28."""
     app.dependency_overrides[get_session] = override_get_session
 
-    # Patch Redis client for rate limiting tests
-    # redis_client is imported at top level
-
-    # Store original state to restore later
     original_redis = redis_client._redis
     original_connected = redis_client._connection_attempted
-
-    # helper to ensure mock is compatible if FakeAsyncRedis isn't available
-    # But assuming it is since we are testing async code.
     redis_client._redis = fake_redis_client
     redis_client._connection_attempted = True
 
@@ -204,12 +197,10 @@ async def async_client(
     async with AsyncClient(transport=transport, base_url="http://testserver") as client:
         yield client
 
-    # Restore original state
     redis_client._redis = original_redis
     redis_client._connection_attempted = original_connected
 
     app.dependency_overrides.clear()
-    # We don't need to disconnect mock_redis explicitly here as it's memory-only
 
 
 # Service availability gates

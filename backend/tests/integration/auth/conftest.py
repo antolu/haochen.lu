@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import typing
 
 import pytest
@@ -22,7 +23,8 @@ def patch_oidc_validator(monkeypatch: pytest.MonkeyPatch) -> None:
     unchanged.
     """
 
-    def fake_validate(token: str) -> dict[str, typing.Any] | None:
+    async def fake_validate(token: str) -> dict[str, typing.Any] | None:
+        await asyncio.sleep(0)
         prefix = "test-token-"
         if token.startswith(prefix):
             oidc_id = token[len(prefix) :]
