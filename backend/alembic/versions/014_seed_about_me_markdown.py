@@ -1,7 +1,7 @@
 """seed_about_me_markdown
 
-Revision ID: 7c1449a15449
-Revises: 012_remove_photo_fields
+Revision ID: 014_seed_about_me_markdown
+Revises: 013_oidc_auth
 Create Date: 2026-03-19 12:55:41.504690
 
 """
@@ -15,8 +15,8 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "013_seed_about_me_markdown"
-down_revision = "012_remove_photo_fields"
+revision = "014_seed_about_me_markdown"
+down_revision = "013_oidc_auth"
 branch_labels = None
 depends_on = None
 
