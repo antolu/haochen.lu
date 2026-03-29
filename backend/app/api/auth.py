@@ -513,7 +513,6 @@ async def revoke_all_sessions(
     response: Response,
     user: User = _current_user_dependency,
 ) -> dict[str, str]:
-    await TokenManager.revoke_all_user_tokens(str(user.id))
     _clear_refresh_cookie(response)
     return {"message": "All sessions revoked"}
 

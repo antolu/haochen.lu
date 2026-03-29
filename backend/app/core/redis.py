@@ -205,48 +205,11 @@ async def close_redis() -> None:
 
 # Token management helpers
 class TokenManager:
-    """Helper class for token-related Redis operations"""
+    """Redis operations for access token blocklisting.
 
-    @staticmethod
-    def refresh_token_key(user_id: str, jti: str) -> str:
-        """Generate Redis key for refresh token"""
-        return f"refresh_token:{user_id}:{jti}"
-
-    @staticmethod
-    async def store_refresh_token(user_id: str, jti: str, expires_in: int) -> bool:
-        """Store refresh token in Redis"""
-        key = TokenManager.refresh_token_key(user_id, jti)
-        return await redis_client.setex(key, expires_in, "valid")
-
-    @staticmethod
-    async def is_refresh_token_valid(user_id: str, jti: str) -> bool:
-        """Check if refresh token is valid"""
-        key = TokenManager.refresh_token_key(user_id, jti)
-        value = await redis_client.get(key)
-        return value == "valid"
-
-    @staticmethod
-    async def revoke_refresh_token(user_id: str, jti: str) -> bool:
-        """Revoke a specific refresh token"""
-        key = TokenManager.refresh_token_key(user_id, jti)
-        deleted = await redis_client.delete(key)
-        return deleted > 0
-
-    @staticmethod
-    async def revoke_all_user_tokens(user_id: str) -> int:
-        """Revoke all refresh tokens for a user"""
-        pattern = f"refresh_token:{user_id}:*"
-        keys = await redis_client.keys(pattern)
-        if keys:
-            return await redis_client.delete(*keys)
-        return 0
-
-    @staticmethod
-    async def get_user_token_count(user_id: str) -> int:
-        """Get number of active tokens for a user"""
-        pattern = f"refresh_token:{user_id}:*"
-        keys = await redis_client.keys(pattern)
-        return len(keys)
+    Refresh tokens are owned by Authelia — only access token revocation
+    (on logout) is tracked here.
+    """
 
     @staticmethod
     async def blocklist_access_token(jti: str, expires_in: int) -> bool:
