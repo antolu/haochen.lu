@@ -131,12 +131,17 @@ class Settings(BaseSettings):
     oidc_public_endpoint: str = os.getenv(
         "OIDC_PUBLIC_ENDPOINT", "http://auth.localhost"
     )
+    # Authelia's issuer is its public URL; override if it differs from oidc_public_endpoint
+    oidc_issuer: str = os.getenv(
+        "OIDC_ISSUER", os.getenv("OIDC_PUBLIC_ENDPOINT", "http://auth.localhost")
+    )
     oidc_client_id: str = os.getenv("OIDC_CLIENT_ID", "")
     oidc_client_secret: str = os.getenv("OIDC_CLIENT_SECRET", "")
     oidc_redirect_uri: str = os.getenv(
         "OIDC_REDIRECT_URI",
         "http://localhost:8000/api/auth/callback",
     )
+    oidc_jwks_cache_ttl: int = int(os.getenv("OIDC_JWKS_CACHE_TTL", "3600"))
 
     # External API timeouts (in seconds)
     repository_request_timeout: int = int(os.getenv("REPOSITORY_TIMEOUT", "10"))
