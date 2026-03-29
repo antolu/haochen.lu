@@ -8,6 +8,7 @@ from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.application import (
+    bulk_reorder_applications,
     create_application,
     delete_application,
     get_application,
@@ -25,6 +26,7 @@ from app.models.user import User
 from app.schemas.application import (
     ApplicationCreate,
     ApplicationListResponse,
+    ApplicationReorderRequest,
     ApplicationResponse,
     ApplicationUpdate,
 )
@@ -137,6 +139,20 @@ async def update_application_endpoint(
         raise HTTPException(status_code=404, detail="Application not found")
 
     return ApplicationResponse.model_validate(application)
+
+
+@router.post("/reorder")
+async def reorder_applications(
+    payload: ApplicationReorderRequest,
+    db: AsyncSession = _session_dependency,
+    current_user: User = _current_admin_user_dependency,
+) -> dict[str, str]:
+    """Bulk reorder applications (admin only)."""
+    items: list[dict[str, str | int]] = [
+        {"id": str(i.id), "order": i.order} for i in payload.items
+    ]
+    await bulk_reorder_applications(db, items, normalize=payload.normalize)
+    return {"message": "Reordered successfully"}
 
 
 @router.delete("/{application_id}")

@@ -1,8 +1,19 @@
 from __future__ import annotations
 
 from datetime import datetime
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
+
+
+class ApplicationReorderItem(BaseModel):
+    id: str | UUID
+    order: int
+
+
+class ApplicationReorderRequest(BaseModel):
+    items: list[ApplicationReorderItem]
+    normalize: bool = False
 
 
 class ApplicationBase(BaseModel):
@@ -45,7 +56,7 @@ class ApplicationUpdate(BaseModel):
 class ApplicationResponse(ApplicationBase):
     model_config = ConfigDict(from_attributes=True)
 
-    id: str
+    id: UUID
     slug: str
     created_at: datetime
     updated_at: datetime

@@ -83,9 +83,12 @@ async def create_application(db: AsyncSession, app: ApplicationCreate) -> Applic
     app_data = app.model_dump()
     app_data["slug"] = slug
     if app_data.get("requires_auth"):
-        app_data.setdefault("client_id", secrets.token_urlsafe(16))
-        app_data.setdefault("client_secret", secrets.token_urlsafe(32))
-        app_data.setdefault("redirect_uris", default_redirect_uri(str(app_data["url"])))
+        if not app_data.get("client_id"):
+            app_data["client_id"] = secrets.token_urlsafe(16)
+        if not app_data.get("client_secret"):
+            app_data["client_secret"] = secrets.token_urlsafe(32)
+        if not app_data.get("redirect_uris"):
+            app_data["redirect_uris"] = default_redirect_uri(str(app_data["url"]))
 
     db_app = Application(**app_data)
     db.add(db_app)
@@ -124,6 +127,27 @@ async def update_application(
         await db.refresh(db_app)
 
     return db_app
+
+
+async def bulk_reorder_applications(
+    db: AsyncSession,
+    items: list[dict[str, str | int]],
+    *,
+    normalize: bool = False,
+) -> None:
+    pairs: list[tuple[UUID, int]] = [
+        (UUID(str(it["id"])), int(it["order"])) for it in items
+    ]
+    if normalize:
+        pairs = [
+            (pid, idx) for idx, (pid, _) in enumerate(sorted(pairs, key=lambda x: x[1]))
+        ]
+    for app_id, order in pairs:
+        result = await db.execute(select(Application).where(Application.id == app_id))
+        db_app = result.scalar_one_or_none()
+        if db_app:
+            db_app.order = order
+    await db.commit()
 
 
 async def delete_application(db: AsyncSession, application_id: UUID) -> bool:

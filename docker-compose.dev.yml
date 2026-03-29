@@ -153,6 +153,7 @@ services:
       - ./authelia/assets:/assets:ro
     networks:
       - portfolio-network
+      - first-party-auth-network
     ports:
       - "9091:9091"
 
