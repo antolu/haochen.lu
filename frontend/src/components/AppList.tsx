@@ -216,19 +216,24 @@ function SortableAppCard({
       }`}
     >
       <div className="flex items-start gap-3">
-        {/* Drag handle — only visible when reorder is enabled */}
-        <button
-          {...attributes}
-          {...listeners}
-          className={`mt-0.5 p-1 rounded transition-colors cursor-grab active:cursor-grabbing shrink-0 ${
-            reorderEnabled
-              ? "text-amber-500 hover:text-amber-600 hover:bg-amber-100/50 dark:hover:bg-amber-900/20"
-              : "invisible pointer-events-none"
-          }`}
-          title="Drag to reorder"
-        >
-          <GripVertical className="h-4 w-4" />
-        </button>
+        {/* Drag handle — animated in/out */}
+        <AnimatePresence initial={false}>
+          {reorderEnabled && (
+            <motion.button
+              key="grip"
+              {...attributes}
+              {...listeners}
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: "auto" }}
+              exit={{ opacity: 0, width: 0 }}
+              transition={{ duration: 0.15 }}
+              className="mt-0.5 p-1 rounded text-amber-500 hover:text-amber-600 hover:bg-amber-100/50 dark:hover:bg-amber-900/20 cursor-grab active:cursor-grabbing shrink-0 overflow-hidden"
+              title="Drag to reorder"
+            >
+              <GripVertical className="h-4 w-4" />
+            </motion.button>
+          )}
+        </AnimatePresence>
 
         {/* Icon */}
         <div
