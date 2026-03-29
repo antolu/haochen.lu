@@ -117,19 +117,13 @@ const AdminApplications: React.FC = () => {
     application: Application,
     target: "app" | "admin",
   ) => {
-    const windowTarget = application.is_external ? "_blank" : "_self";
     try {
       if (application.requires_auth) {
-        const win = window.open("", windowTarget);
         const { url } = await applicationsApi.getJumpUrl(
           application.slug,
           target,
         );
-        if (win) {
-          win.location.href = url;
-        } else {
-          window.open(url, windowTarget);
-        }
+        window.location.href = url;
         return;
       }
 
@@ -137,7 +131,11 @@ const AdminApplications: React.FC = () => {
         target === "admin"
           ? (application.admin_url ?? application.url)
           : application.url;
-      window.open(destination, windowTarget);
+      if (application.is_external) {
+        window.open(destination, "_blank", "noopener,noreferrer");
+      } else {
+        window.location.href = destination;
+      }
     } catch (error) {
       console.error("Open application error:", error);
     }
