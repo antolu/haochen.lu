@@ -101,9 +101,6 @@
   },
   "overrides": {
     "rollup": "^4.59.0",
-    "eslint-plugin-react-hooks": {
-      "eslint": "^10.0.2"
-    },
     "typescript-eslint": {
       "typescript": "~6.0.2"
     }
