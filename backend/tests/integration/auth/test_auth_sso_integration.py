@@ -512,6 +512,59 @@ async def test_mock_subapp_rejects_mismatched_redirect_uri(
 
 @pytest.mark.integration
 @pytest.mark.auth
+async def test_userinfo_endpoint_accepts_app_token(
+    async_client: AsyncClient,
+    test_session: AsyncSession,
+    admin_user: User,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    subapp = await SubAppFactory.create_async(
+        test_session,
+        client_id="client-userinfo",
+        client_secret="secret-userinfo",
+        redirect_uris="https://sub.example.com/callback",
+    )
+    headers = {"Authorization": f"Bearer test-token-{admin_user.oidc_id}"}
+
+    authorize_response = await async_client.get(
+        "/api/auth/authorize",
+        params={
+            "client_id": subapp.client_id,
+            "redirect_uri": "https://sub.example.com/callback",
+            "response_type": "code",
+            "state": "userinfo-state",
+        },
+        headers=headers,
+    )
+    assert authorize_response.status_code == 200
+    code = parse_qs(urlparse(authorize_response.json()["url"]).query)["code"][0]
+
+    token_response = await async_client.post(
+        "/api/auth/oauth/token",
+        json={
+            "grant_type": "authorization_code",
+            "code": code,
+            "client_id": subapp.client_id,
+            "client_secret": subapp.client_secret,
+            "redirect_uri": "https://sub.example.com/callback",
+        },
+    )
+    assert token_response.status_code == 200
+    access_token = token_response.json()["access_token"]
+
+    userinfo_response = await async_client.get(
+        "/api/auth/userinfo",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+    assert userinfo_response.status_code == 200
+    body = userinfo_response.json()
+    assert body["email"] == admin_user.email
+    assert body["id"] == str(admin_user.id)
+
+
+@pytest.mark.integration
+@pytest.mark.auth
 async def test_admin_jump_requires_admin_url(
     async_client: AsyncClient,
     test_session: AsyncSession,

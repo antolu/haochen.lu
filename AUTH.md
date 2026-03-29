@@ -63,23 +63,82 @@ Apps are registered via the admin UI at `/admin/applications`. Each app has:
 
 ### Authorization code flow for downstream apps
 
+Step by step:
+
+**1. Redirect the user to haochen.lu to authenticate**
+
 ```
-User visits downstream app
-→ app redirects to GET /api/auth/login?client_id=...&redirect_uri=...&response_type=code&state=...
-→ backend validates client_id + redirect_uri against app registry
-→ backend redirects to Authelia (user authenticates if not already)
-→ Authelia → /api/auth/callback
-→ backend issues an auth code for the downstream app
-→ app receives: {redirect_uri}?code=...&state=...
-→ app exchanges: POST /api/auth/oauth/token {grant_type, code, client_id, client_secret, redirect_uri}
-→ backend validates, returns HS256 access token (sub = internal user UUID)
+GET /api/auth/login
+  ?client_id=<your-client-id>
+  &redirect_uri=<your-registered-callback>
+  &response_type=code
+  &state=<random-nonce>
 ```
 
-Auth codes are one-time use, stored in Redis with a 5-minute TTL. Client secret comparison uses `hmac.compare_digest`.
+The backend validates `client_id` and `redirect_uri` against the app registry, then redirects the user through Authelia if they're not already logged in.
+
+**2. Receive the authorization code**
+
+After authentication, the user is redirected to your `redirect_uri`:
+
+```
+GET <redirect_uri>?code=<auth-code>&state=<your-nonce>
+```
+
+The code is one-time use with a 5-minute TTL.
+
+**3. Exchange the code for a token**
+
+```
+POST /api/auth/oauth/token
+Content-Type: application/json
+
+{
+  "grant_type": "authorization_code",
+  "code": "<auth-code>",
+  "client_id": "<your-client-id>",
+  "client_secret": "<your-client-secret>",
+  "redirect_uri": "<your-registered-callback>"
+}
+```
+
+Response:
+
+```json
+{
+  "access_token": "<HS256-token>",
+  "token_type": "bearer",
+  "expires_in": 900,
+  "user": {
+    "id": "<uuid>",
+    "email": "user@example.com",
+    "username": "username",
+    "is_admin": false,
+    "oidc_id": "...",
+    "created_at": "...",
+    "updated_at": "..."
+  }
+}
+```
+
+The `access_token` is HS256-signed, `sub` = internal DB user UUID.
+
+**4. Validate user identity via `/api/auth/userinfo`**
+
+On subsequent requests, use the access token to fetch verified user info:
+
+```
+GET /api/auth/userinfo
+Authorization: Bearer <access-token>
+```
+
+Response is the same `UserRead` shape as above. Returns 401 if the token is invalid, expired, or revoked.
+
+This endpoint uses `decode_token` (HS256) — not OIDC JWKS validation — so it only accepts tokens issued by `/api/auth/oauth/token`, not Authelia session tokens.
 
 ### Jump links
 
-`GET /api/auth/jump/{slug}?target=app|admin` — for authenticated users already logged into haochen.lu. Generates an auth code and returns the full redirect URL to the app's callback, skipping the Authelia round-trip.
+`GET /api/auth/jump/{slug}?target=app|admin` — for users already logged into haochen.lu. Generates an auth code and returns the full redirect URL to the app's callback, skipping the Authelia round-trip. Useful for "open in app" links from the haochen.lu admin UI.
 
 ### Key material
 
