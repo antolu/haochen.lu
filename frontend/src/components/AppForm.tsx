@@ -13,9 +13,8 @@ interface AppFormData {
   is_external: boolean;
   requires_auth: boolean;
   admin_only: boolean;
-  show_in_menu: boolean;
+  logged_in_only: boolean;
   enabled: boolean;
-  order: number;
   redirect_uris?: string;
 }
 
@@ -23,6 +22,7 @@ interface AppFormProps {
   application?: Application;
   onSubmit: (data: AppFormData) => Promise<void>;
   onCancel: () => void;
+  onRegenerateCredentials?: () => void;
   isLoading?: boolean;
 }
 
@@ -30,6 +30,7 @@ const AppForm: React.FC<AppFormProps> = ({
   application,
   onSubmit,
   onCancel,
+  onRegenerateCredentials,
   isLoading = false,
 }) => {
   const isEditing = !!application;
@@ -50,9 +51,8 @@ const AppForm: React.FC<AppFormProps> = ({
       is_external: application?.is_external ?? true,
       requires_auth: application?.requires_auth ?? false,
       admin_only: application?.admin_only ?? false,
-      show_in_menu: application?.show_in_menu ?? true,
+      logged_in_only: application?.logged_in_only ?? false,
       enabled: application?.enabled ?? true,
-      order: application?.order ?? 0,
       redirect_uris: application?.redirect_uris ?? "",
     },
   });
@@ -246,31 +246,6 @@ const AppForm: React.FC<AppFormProps> = ({
               </span>
             </div>
           </div>
-
-          {/* Order Field */}
-          <div>
-            <label
-              htmlFor="order"
-              className="block text-sm font-medium text-foreground mb-2"
-            >
-              Display Order
-            </label>
-            <input
-              id="order"
-              type="number"
-              className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="0"
-              {...register("order", {
-                valueAsNumber: true,
-                min: { value: 0, message: "Order must be 0 or greater" },
-              })}
-            />
-            {errors.order && (
-              <p className="mt-1 text-sm text-red-600">
-                {errors.order.message}
-              </p>
-            )}
-          </div>
         </div>
 
         {/* Settings Section */}
@@ -328,19 +303,19 @@ const AppForm: React.FC<AppFormProps> = ({
               </div>
             </label>
 
-            {/* Show in Menu Toggle */}
+            {/* Logged In Only Toggle */}
             <label className="flex items-center space-x-3 cursor-pointer">
               <input
                 type="checkbox"
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                {...register("show_in_menu")}
+                {...register("logged_in_only")}
               />
               <div>
                 <span className="text-sm font-medium text-foreground">
-                  Show in Menu
+                  Logged In Only
                 </span>
                 <p className="text-xs text-muted-foreground">
-                  Display in navigation
+                  Only show in navbar when logged in
                 </p>
               </div>
             </label>
@@ -376,57 +351,68 @@ const AppForm: React.FC<AppFormProps> = ({
             </p>
             <div className="space-y-4">
               {isEditing && application?.client_id && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">
-                      Client ID
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        readOnly
-                        value={application.client_id}
-                        className="w-full px-3 py-2 border border-border rounded-lg bg-muted text-foreground font-mono text-sm"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          void navigator.clipboard.writeText(
-                            application.client_id ?? "",
-                          );
-                        }}
-                        className="px-2 py-2 text-xs text-muted-foreground hover:text-foreground border border-border rounded-lg transition-colors"
-                        title="Copy"
-                      >
-                        Copy
-                      </button>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-1">
+                        Client ID
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          readOnly
+                          value={application.client_id}
+                          className="w-full px-3 py-2 border border-border rounded-lg bg-muted text-foreground font-mono text-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            void navigator.clipboard.writeText(
+                              application.client_id ?? "",
+                            );
+                          }}
+                          className="px-2 py-2 text-xs text-muted-foreground hover:text-foreground border border-border rounded-lg transition-colors"
+                          title="Copy"
+                        >
+                          Copy
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-1">
+                        Client Secret
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          readOnly
+                          value={application.client_secret ?? ""}
+                          className="w-full px-3 py-2 border border-border rounded-lg bg-muted text-foreground font-mono text-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            void navigator.clipboard.writeText(
+                              application.client_secret ?? "",
+                            );
+                          }}
+                          className="px-2 py-2 text-xs text-muted-foreground hover:text-foreground border border-border rounded-lg transition-colors"
+                          title="Copy"
+                        >
+                          Copy
+                        </button>
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">
-                      Client Secret
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        readOnly
-                        value={application.client_secret ?? ""}
-                        className="w-full px-3 py-2 border border-border rounded-lg bg-muted text-foreground font-mono text-sm"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          void navigator.clipboard.writeText(
-                            application.client_secret ?? "",
-                          );
-                        }}
-                        className="px-2 py-2 text-xs text-muted-foreground hover:text-foreground border border-border rounded-lg transition-colors"
-                        title="Copy"
-                      >
-                        Copy
-                      </button>
-                    </div>
-                  </div>
+                  {onRegenerateCredentials && (
+                    <button
+                      type="button"
+                      onClick={onRegenerateCredentials}
+                      className="text-xs text-amber-600 hover:text-amber-700 underline underline-offset-2 transition-colors"
+                    >
+                      Regenerate client ID &amp; secret
+                    </button>
+                  )}
                 </div>
               )}
               {!isEditing && (

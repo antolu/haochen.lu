@@ -190,6 +190,72 @@ export const useToggleAppEnabled = () => {
   });
 };
 
+export const useRegenerateCredentials = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => applications.regenerateCredentials(id),
+    onSuccess: (updatedApp) => {
+      queryClient.setQueryData(
+        appKeys.list("admin"),
+        (old: ApplicationListResponse | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            applications: old.applications.map((app) =>
+              app.id === updatedApp.id ? updatedApp : app,
+            ),
+          };
+        },
+      );
+      toast.success("Credentials regenerated");
+    },
+    onError: () => {
+      toast.error("Failed to regenerate credentials");
+    },
+  });
+};
+
+export const useReorderApplications = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (items: Array<{ id: string; order: number }>) =>
+      applications.reorder(items, true),
+    onMutate: async (items) => {
+      await queryClient.cancelQueries({ queryKey: appKeys.list("admin") });
+      const previous = queryClient.getQueryData<ApplicationListResponse>(
+        appKeys.list("admin"),
+      );
+      const orderMap = new Map(items.map((i) => [i.id, i.order]));
+      queryClient.setQueryData(
+        appKeys.list("admin"),
+        (old: ApplicationListResponse | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            applications: [...old.applications].sort(
+              (a, b) =>
+                (orderMap.get(a.id) ?? a.order) -
+                (orderMap.get(b.id) ?? b.order),
+            ),
+          };
+        },
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(appKeys.list("admin"), context.previous);
+      }
+      toast.error("Failed to reorder applications");
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: appKeys.lists() });
+    },
+  });
+};
+
 export const useBulkUpdateApplications = () => {
   const queryClient = useQueryClient();
 

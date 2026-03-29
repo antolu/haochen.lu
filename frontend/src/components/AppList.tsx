@@ -1,31 +1,350 @@
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  DndContext,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import type { DragEndEvent } from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { GripVertical, MoreVertical } from "lucide-react";
+import { Button } from "./ui/button";
 import type { Application } from "../types";
 import { formatDateSimple } from "../utils/dateFormat";
 import { applications as applicationsApi } from "../api/client";
 
 interface AppListProps {
   applications: Application[];
+  reorderEnabled?: boolean;
   onEdit: (application: Application) => void;
   onDelete: (applicationId: string) => void;
   onToggleEnabled: (applicationId: string, enabled: boolean) => void;
   onOpen: (application: Application) => void;
   onOpenAdmin: (application: Application) => void;
+  onReorder: (items: Array<{ id: string; order: number }>) => void;
   isLoading?: boolean;
 }
 
-const AppList: React.FC<AppListProps> = ({
-  applications,
+function OverflowMenu({
+  application,
+  onEdit,
+  onDelete,
+  onToggleEnabled,
+  onExport,
+}: {
+  application: Application;
+  onEdit: () => void;
+  onDelete: () => void;
+  onToggleEnabled: () => void;
+  onExport: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+        setConfirmDelete(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+      >
+        <MoreVertical className="h-4 w-4" />
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: -4 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: -4 }}
+            transition={{ duration: 0.1 }}
+            className="absolute right-0 z-50 mt-1 w-44 rounded-lg border border-border bg-popover shadow-lg"
+          >
+            <div className="py-1">
+              <button
+                onClick={() => {
+                  onEdit();
+                  setOpen(false);
+                }}
+                className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => {
+                  onToggleEnabled();
+                  setOpen(false);
+                }}
+                className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors"
+              >
+                {application.enabled ? "Disable" : "Enable"}
+              </button>
+              <button
+                onClick={() => {
+                  onExport();
+                  setOpen(false);
+                }}
+                className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors"
+              >
+                Export YAML
+              </button>
+              <div className="border-t border-border my-1" />
+              {confirmDelete ? (
+                <div className="px-3 py-2">
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Delete this app?
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        onDelete();
+                        setOpen(false);
+                        setConfirmDelete(false);
+                      }}
+                      className="flex-1 px-2 py-1 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded transition-colors"
+                    >
+                      Delete
+                    </button>
+                    <button
+                      onClick={() => setConfirmDelete(false)}
+                      className="flex-1 px-2 py-1 text-xs font-medium bg-muted hover:bg-muted/80 rounded transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirmDelete(true)}
+                  className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-muted transition-colors"
+                >
+                  Delete
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function SortableAppCard({
+  application,
+  reorderEnabled,
   onEdit,
   onDelete,
   onToggleEnabled,
   onOpen,
   onOpenAdmin,
+  onExport,
+}: {
+  application: Application;
+  reorderEnabled: boolean;
+  onEdit: () => void;
+  onDelete: () => void;
+  onToggleEnabled: () => void;
+  onOpen: () => void;
+  onOpenAdmin: () => void;
+  onExport: () => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: application.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  const icon = application.icon;
+  const initial = application.name.charAt(0).toUpperCase();
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`bg-card rounded-lg border p-4 transition-colors ${
+        isDragging
+          ? "border-amber-400 shadow-lg ring-1 ring-amber-400/50"
+          : reorderEnabled
+            ? "border-amber-300/60 bg-amber-50/30 dark:bg-amber-900/10"
+            : "border-border hover:border-border/60"
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        {/* Drag handle — animated in/out */}
+        <AnimatePresence initial={false}>
+          {reorderEnabled && (
+            <motion.button
+              key="grip"
+              {...attributes}
+              {...listeners}
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: "auto" }}
+              exit={{ opacity: 0, width: 0 }}
+              transition={{ duration: 0.15 }}
+              className="p-1 rounded text-amber-500 hover:text-amber-600 hover:bg-amber-100/50 dark:hover:bg-amber-900/20 cursor-grab active:cursor-grabbing shrink-0 overflow-hidden"
+              title="Drag to reorder"
+            >
+              <GripVertical className="h-4 w-4" />
+            </motion.button>
+          )}
+        </AnimatePresence>
+
+        {/* Icon */}
+        <div
+          className="h-10 w-10 rounded-lg flex items-center justify-center shrink-0 text-white text-sm font-semibold"
+          style={{ backgroundColor: application.color ?? "#3B82F6" }}
+        >
+          {icon && icon.length <= 2 ? (
+            <span className="text-base">{icon}</span>
+          ) : icon ? (
+            <img src={icon} alt="" className="h-6 w-6 object-contain" />
+          ) : (
+            initial
+          )}
+        </div>
+
+        {/* Main content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-medium text-foreground">
+              {application.name}
+            </span>
+            <span className="text-xs text-muted-foreground font-mono">
+              {application.slug}
+            </span>
+            {!application.enabled && (
+              <span className="px-1.5 py-0.5 rounded text-xs bg-muted text-muted-foreground">
+                disabled
+              </span>
+            )}
+            {application.logged_in_only && !application.admin_only && (
+              <span className="px-1.5 py-0.5 rounded text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                logged in only
+              </span>
+            )}
+            {application.admin_only && (
+              <span className="px-1.5 py-0.5 rounded text-xs bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                admin only
+              </span>
+            )}
+            {application.requires_auth && !application.admin_only && (
+              <span className="px-1.5 py-0.5 rounded text-xs bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
+                auth
+              </span>
+            )}
+            {!application.requires_auth && application.enabled && (
+              <span className="px-1.5 py-0.5 rounded text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                public
+              </span>
+            )}
+          </div>
+
+          {application.description && (
+            <p className="mt-1 text-sm text-muted-foreground truncate">
+              {application.description}
+            </p>
+          )}
+
+          <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+            <a
+              href={application.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline truncate max-w-xs"
+            >
+              {application.url}
+            </a>
+            <span>·</span>
+            <span>{formatDateSimple(application.created_at)}</span>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-2 shrink-0">
+          <Button variant="outline" size="sm" onClick={onOpen}>
+            Open
+          </Button>
+          {application.admin_url && (
+            <Button variant="outline" size="sm" onClick={onOpenAdmin}>
+              Admin
+            </Button>
+          )}
+          <OverflowMenu
+            application={application}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onToggleEnabled={onToggleEnabled}
+            onExport={onExport}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const AppList: React.FC<AppListProps> = ({
+  applications,
+  reorderEnabled = false,
+  onEdit,
+  onDelete,
+  onToggleEnabled,
+  onOpen,
+  onOpenAdmin,
+  onReorder,
   isLoading = false,
 }) => {
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [exportingId, setExportingId] = useState<string | null>(null);
+  const [localApps, setLocalApps] = useState<Application[]>(applications);
+
+  React.useEffect(() => {
+    setLocalApps(applications);
+  }, [applications]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { delay: 150, tolerance: 5 },
+    }),
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    if (!reorderEnabled) return;
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = localApps.findIndex((a) => a.id === active.id);
+    const newIndex = localApps.findIndex((a) => a.id === over.id);
+    const reordered = arrayMove(localApps, oldIndex, newIndex);
+    setLocalApps(reordered);
+    onReorder(reordered.map((a, i) => ({ id: a.id, order: i })));
+  };
 
   const handleExport = async (application: Application) => {
     setExportingId(application.id);
@@ -36,113 +355,29 @@ const AppList: React.FC<AppListProps> = ({
     }
   };
 
-  const filteredApplications = applications.filter(
-    (app) =>
-      app.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.url.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.description?.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
-
-  const handleDeleteClick = (applicationId: string) => {
-    setDeleteConfirm(applicationId);
-  };
-
-  const handleDeleteConfirm = (applicationId: string) => {
-    onDelete(applicationId);
-    setDeleteConfirm(null);
-  };
-
-  const handleDeleteCancel = () => {
-    setDeleteConfirm(null);
-  };
-
-  const getStatusBadge = (application: Application) => {
-    if (!application.enabled) {
-      return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-          Disabled
-        </span>
-      );
-    }
-
-    if (application.admin_only) {
-      return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-          Admin Only
-        </span>
-      );
-    }
-
-    if (application.requires_auth) {
-      return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-          Auth Required
-        </span>
-      );
-    }
-
-    return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-        Public
-      </span>
-    );
-  };
-
-  const renderIcon = (application: Application) => {
-    if (!application.icon) {
-      return (
-        <div className="h-8 w-8 bg-gray-200 rounded-lg flex items-center justify-center">
-          <span className="text-gray-500 text-sm font-medium">
-            {application.name.charAt(0).toUpperCase()}
-          </span>
-        </div>
-      );
-    }
-
-    // Check if icon is an emoji (single character) or URL
-    if (application.icon.length <= 2) {
-      return (
-        <div className="h-8 w-8 flex items-center justify-center text-lg">
-          {application.icon}
-        </div>
-      );
-    }
-
-    // Assume it's an image URL
-    return (
-      <img
-        src={application.icon}
-        alt={`${application.name} icon`}
-        className="h-8 w-8 rounded-lg object-cover"
-        onError={(e) => {
-          // Fallback to initial letter if image fails to load
-          const target = e.target as HTMLImageElement;
-          target.style.display = "none";
-          const fallback = target.parentElement?.querySelector(".fallback");
-          if (fallback) {
-            (fallback as HTMLElement).style.display = "flex";
-          }
-        }}
-      />
-    );
-  };
+  const filtered = searchTerm
+    ? localApps.filter(
+        (app) =>
+          app.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          app.url.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          app.description?.toLowerCase().includes(searchTerm.toLowerCase()),
+      )
+    : localApps;
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        {Array.from({ length: 3 }).map((_, index) => (
+      <div className="space-y-3">
+        {Array.from({ length: 3 }).map((_, i) => (
           <div
-            key={index}
-            className="bg-card rounded-lg border border-border p-6"
+            key={i}
+            className="bg-card rounded-lg border border-border p-4 animate-pulse"
           >
-            <div className="animate-pulse">
-              <div className="flex items-center space-x-4">
-                <div className="h-8 w-8 bg-muted rounded-lg" />
-                <div className="flex-1">
-                  <div className="h-4 bg-muted rounded w-1/4 mb-2" />
-                  <div className="h-3 bg-muted rounded w-1/2" />
-                </div>
-                <div className="h-6 bg-muted rounded-full w-16" />
+            <div className="flex items-center gap-3">
+              <div className="h-4 w-4 bg-muted rounded" />
+              <div className="h-10 w-10 bg-muted rounded-lg" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 bg-muted rounded w-1/4" />
+                <div className="h-3 bg-muted rounded w-1/2" />
               </div>
             </div>
           </div>
@@ -153,206 +388,66 @@ const AppList: React.FC<AppListProps> = ({
 
   return (
     <div>
-      {/* Search Bar */}
-      <div className="mb-6">
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search apps..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
+      <div className="mb-4 relative">
+        <input
+          type="text"
+          placeholder="Search apps..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full pl-9 pr-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+        />
+        <svg
+          className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
           />
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg
-              className="h-5 w-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </div>
-        </div>
+        </svg>
       </div>
 
-      {/* Applications List */}
-      <AnimatePresence>
-        {filteredApplications.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="text-center py-12"
+      {filtered.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground text-sm">
+          {searchTerm
+            ? "No apps match your search."
+            : "No apps yet. Create your first one!"}
+        </div>
+      ) : (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={filtered.map((a) => a.id)}
+            strategy={verticalListSortingStrategy}
           >
-            <div className="text-gray-500">
-              {searchTerm
-                ? "No apps match your search."
-                : "No apps found. Create your first one!"}
+            <div className="space-y-3">
+              {filtered.map((app) => (
+                <SortableAppCard
+                  key={app.id}
+                  application={app}
+                  reorderEnabled={reorderEnabled}
+                  onEdit={() => onEdit(app)}
+                  onDelete={() => onDelete(app.id)}
+                  onToggleEnabled={() => onToggleEnabled(app.id, !app.enabled)}
+                  onOpen={() => onOpen(app)}
+                  onOpenAdmin={() => onOpenAdmin(app)}
+                  onExport={() => {
+                    void handleExport(app);
+                  }}
+                />
+              ))}
             </div>
-          </motion.div>
-        ) : (
-          <div className="space-y-4">
-            {filteredApplications.map((application) => (
-              <motion.div
-                key={application.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="bg-card rounded-lg border border-border p-6 hover:border-border/80 transition-colors"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4 flex-1">
-                    {/* Icon */}
-                    <div className="relative">
-                      {renderIcon(application)}
-                      <div className="fallback h-8 w-8 bg-gray-200 rounded-lg hidden items-center justify-center">
-                        <span className="text-gray-500 text-sm font-medium">
-                          {application.name.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-3">
-                        <h3 className="text-lg font-medium text-foreground truncate">
-                          {application.name}
-                        </h3>
-                        {getStatusBadge(application)}
-                        {application.is_external && (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            External
-                          </span>
-                        )}
-                        {!application.show_in_menu && (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                            Hidden
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="mt-1">
-                        <a
-                          href={application.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-blue-600 hover:text-blue-800 hover:underline truncate block"
-                        >
-                          {application.url}
-                        </a>
-                      </div>
-
-                      {application.description && (
-                        <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
-                          {application.description}
-                        </p>
-                      )}
-
-                      <div className="mt-2 flex items-center text-xs text-muted-foreground space-x-4">
-                        <span>Order: {application.order}</span>
-                        <span>
-                          Created: {formatDateSimple(application.created_at)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center space-x-2 ml-4">
-                    <button
-                      onClick={() => onOpen(application)}
-                      className="px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-100 hover:bg-emerald-200 rounded transition-colors"
-                      title="Open App"
-                    >
-                      Open
-                    </button>
-
-                    {application.admin_url && (
-                      <button
-                        onClick={() => onOpenAdmin(application)}
-                        className="px-3 py-1.5 text-xs font-medium text-violet-700 bg-violet-100 hover:bg-violet-200 rounded transition-colors"
-                        title="Open Admin"
-                      >
-                        Admin
-                      </button>
-                    )}
-
-                    {/* Toggle Enable/Disable */}
-                    <button
-                      onClick={() =>
-                        onToggleEnabled(application.id, !application.enabled)
-                      }
-                      className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
-                        application.enabled
-                          ? "text-orange-700 bg-orange-100 hover:bg-orange-200"
-                          : "text-green-700 bg-green-100 hover:bg-green-200"
-                      }`}
-                      title={application.enabled ? "Disable" : "Enable"}
-                    >
-                      {application.enabled ? "Disable" : "Enable"}
-                    </button>
-
-                    {/* Export Button */}
-                    <button
-                      onClick={() => {
-                        void handleExport(application);
-                      }}
-                      disabled={exportingId === application.id}
-                      className="px-3 py-1.5 text-xs font-medium text-cyan-700 bg-cyan-100 hover:bg-cyan-200 disabled:opacity-50 rounded transition-colors"
-                      title="Export YAML"
-                    >
-                      {exportingId === application.id ? "..." : "Export"}
-                    </button>
-
-                    {/* Edit Button */}
-                    <button
-                      onClick={() => onEdit(application)}
-                      className="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 rounded transition-colors"
-                      title="Edit"
-                    >
-                      Edit
-                    </button>
-
-                    {/* Delete Button */}
-                    {deleteConfirm === application.id ? (
-                      <div className="flex space-x-1">
-                        <button
-                          onClick={() => handleDeleteConfirm(application.id)}
-                          className="px-2 py-1.5 text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded transition-colors"
-                          title="Confirm Delete"
-                        >
-                          Yes
-                        </button>
-                        <button
-                          onClick={handleDeleteCancel}
-                          className="px-2 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded transition-colors"
-                          title="Cancel Delete"
-                        >
-                          No
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => handleDeleteClick(application.id)}
-                        className="px-3 py-1.5 text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded transition-colors"
-                        title="Delete"
-                      >
-                        Delete
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </AnimatePresence>
+          </SortableContext>
+        </DndContext>
+      )}
+      {exportingId && <span className="sr-only">Exporting...</span>}
     </div>
   );
 };

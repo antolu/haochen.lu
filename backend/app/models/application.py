@@ -36,9 +36,9 @@ class Application(Base):
     client_secret: Mapped[str | None] = mapped_column(String(100), nullable=True)
     redirect_uris: Mapped[str | None] = mapped_column(Text, nullable=True)
 
+    logged_in_only: Mapped[bool] = mapped_column(Boolean, default=False)
     order: Mapped[int] = mapped_column(Integer, default=0)
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
-    show_in_menu: Mapped[bool] = mapped_column(Boolean, default=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(

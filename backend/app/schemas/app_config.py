@@ -34,7 +34,6 @@ class AppIntegration(BaseModel):
 
     requires_auth: bool = Field(default=True, description="Requires authentication")
     admin_only: bool = Field(default=False, description="Admin-only access")
-    show_in_menu: bool = Field(default=True, description="Show in navigation menu")
     menu_order: int = Field(default=10, description="Menu ordering", ge=0, le=100)
 
     has_admin: bool = Field(default=False, description="Has admin interface")

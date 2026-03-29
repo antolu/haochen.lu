@@ -128,7 +128,7 @@ export interface Application {
   is_external: boolean;
   requires_auth: boolean;
   admin_only: boolean;
-  show_in_menu: boolean;
+  logged_in_only: boolean;
   enabled: boolean;
   order: number;
   client_id?: string;
