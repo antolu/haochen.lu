@@ -9,9 +9,10 @@ import { Button } from "../../components/ui/button";
 import {
   useApplications,
   useCreateApplication,
-  useUpdateApplication,
   useDeleteApplication,
+  useReorderApplications,
   useToggleAppEnabled,
+  useUpdateApplication,
 } from "../../hooks/useApplications";
 import { applications as applicationsApi } from "../../api/client";
 import type { Application } from "../../types";
@@ -28,7 +29,6 @@ interface AppFormData {
   admin_only: boolean;
   show_in_menu: boolean;
   enabled: boolean;
-  order: number;
 }
 
 const AdminApplications: React.FC = () => {
@@ -48,6 +48,7 @@ const AdminApplications: React.FC = () => {
   const updateMutation = useUpdateApplication();
   const deleteMutation = useDeleteApplication();
   const toggleEnabledMutation = useToggleAppEnabled();
+  const reorderMutation = useReorderApplications();
 
   const apps = applicationsData?.applications ?? [];
 
@@ -103,6 +104,10 @@ const AdminApplications: React.FC = () => {
       // Error handling is done in the mutation hook
       console.error("Toggle enabled error:", error);
     }
+  };
+
+  const handleReorder = (items: Array<{ id: string; order: number }>) => {
+    reorderMutation.mutate(items);
   };
 
   const handleOpenApplication = async (
@@ -272,6 +277,7 @@ const AdminApplications: React.FC = () => {
           onToggleEnabled={(id, enabled) => {
             void handleToggleEnabled(id, enabled);
           }}
+          onReorder={handleReorder}
           isLoading={isLoadingApplications}
         />
       </div>

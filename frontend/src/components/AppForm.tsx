@@ -15,7 +15,6 @@ interface AppFormData {
   admin_only: boolean;
   show_in_menu: boolean;
   enabled: boolean;
-  order: number;
   redirect_uris?: string;
 }
 
@@ -52,7 +51,6 @@ const AppForm: React.FC<AppFormProps> = ({
       admin_only: application?.admin_only ?? false,
       show_in_menu: application?.show_in_menu ?? true,
       enabled: application?.enabled ?? true,
-      order: application?.order ?? 0,
       redirect_uris: application?.redirect_uris ?? "",
     },
   });
@@ -245,31 +243,6 @@ const AppForm: React.FC<AppFormProps> = ({
                 {watchColor}
               </span>
             </div>
-          </div>
-
-          {/* Order Field */}
-          <div>
-            <label
-              htmlFor="order"
-              className="block text-sm font-medium text-foreground mb-2"
-            >
-              Display Order
-            </label>
-            <input
-              id="order"
-              type="number"
-              className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="0"
-              {...register("order", {
-                valueAsNumber: true,
-                min: { value: 0, message: "Order must be 0 or greater" },
-              })}
-            />
-            {errors.order && (
-              <p className="mt-1 text-sm text-red-600">
-                {errors.order.message}
-              </p>
-            )}
           </div>
         </div>
 

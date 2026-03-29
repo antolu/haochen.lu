@@ -611,6 +611,13 @@ export const applications = {
     await apiClient.delete(`/applications/${id}`);
   },
 
+  reorder: async (
+    items: Array<{ id: string; order: number }>,
+    normalize = true,
+  ): Promise<void> => {
+    await apiClient.post("/applications/reorder", { items, normalize });
+  },
+
   getStats: async (): Promise<ApplicationStatsSummary> => {
     const response = await apiClient.get<ApplicationStatsSummary>(
       "/applications/stats/summary",
