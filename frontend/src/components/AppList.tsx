@@ -22,6 +22,7 @@ import { applications as applicationsApi } from "../api/client";
 
 interface AppListProps {
   applications: Application[];
+  reorderEnabled?: boolean;
   onEdit: (application: Application) => void;
   onDelete: (applicationId: string) => void;
   onToggleEnabled: (applicationId: string, enabled: boolean) => void;
@@ -167,6 +168,7 @@ function OverflowMenu({
 
 function SortableAppCard({
   application,
+  reorderEnabled,
   onEdit,
   onDelete,
   onToggleEnabled,
@@ -175,6 +177,7 @@ function SortableAppCard({
   onExport,
 }: {
   application: Application;
+  reorderEnabled: boolean;
   onEdit: () => void;
   onDelete: () => void;
   onToggleEnabled: () => void;
@@ -206,16 +209,22 @@ function SortableAppCard({
       style={style}
       className={`bg-card rounded-lg border p-4 transition-colors ${
         isDragging
-          ? "border-blue-400 shadow-lg"
-          : "border-border hover:border-border/60"
+          ? "border-amber-400 shadow-lg ring-1 ring-amber-400/50"
+          : reorderEnabled
+            ? "border-amber-300/60 bg-amber-50/30 dark:bg-amber-900/10"
+            : "border-border hover:border-border/60"
       }`}
     >
       <div className="flex items-start gap-3">
-        {/* Drag handle */}
+        {/* Drag handle — only visible when reorder is enabled */}
         <button
           {...attributes}
           {...listeners}
-          className="mt-0.5 p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-grab active:cursor-grabbing shrink-0"
+          className={`mt-0.5 p-1 rounded transition-colors cursor-grab active:cursor-grabbing shrink-0 ${
+            reorderEnabled
+              ? "text-amber-500 hover:text-amber-600 hover:bg-amber-100/50 dark:hover:bg-amber-900/20"
+              : "invisible pointer-events-none"
+          }`}
           title="Drag to reorder"
         >
           <GripVertical className="h-4 w-4" />
@@ -339,6 +348,7 @@ function SortableAppCard({
 
 const AppList: React.FC<AppListProps> = ({
   applications,
+  reorderEnabled = false,
   onEdit,
   onDelete,
   onToggleEnabled,
@@ -362,6 +372,7 @@ const AppList: React.FC<AppListProps> = ({
   );
 
   const handleDragEnd = (event: DragEndEvent) => {
+    if (!reorderEnabled) return;
     const { active, over } = event;
     if (!over || active.id === over.id) return;
     const oldIndex = localApps.findIndex((a) => a.id === active.id);
@@ -457,6 +468,7 @@ const AppList: React.FC<AppListProps> = ({
                 <SortableAppCard
                   key={app.id}
                   application={app}
+                  reorderEnabled={reorderEnabled}
                   onEdit={() => onEdit(app)}
                   onDelete={() => onDelete(app.id)}
                   onToggleEnabled={() => onToggleEnabled(app.id, !app.enabled)}

@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, FileCode2 } from "lucide-react";
+import { Switch } from "../../components/ui/switch";
+import { cn } from "../../lib/utils";
 
 import AppForm from "../../components/AppForm";
 import AppList from "../../components/AppList";
@@ -35,6 +37,7 @@ const AdminApplications: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingApplication, setEditingApplication] =
     useState<Application | null>(null);
+  const [reorderEnabled, setReorderEnabled] = useState(false);
 
   // Query hooks
   const {
@@ -166,26 +169,49 @@ const AdminApplications: React.FC = () => {
   return (
     <div>
       {/* Header */}
-      <div className="mb-10">
-        <div className="flex justify-between items-center">
-          <div className="space-y-3">
-            <h1 className="admin-page-title">Applications</h1>
-            <p className="text-muted-foreground text-xl">
+      <div className="mb-12">
+        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between border-b pb-8">
+          <div className="space-y-2">
+            <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              Applications
+            </h1>
+            <p className="text-muted-foreground text-lg">
               Manage external and internal applications
             </p>
           </div>
-          <div className="flex gap-3">
-            <Button variant="outline" asChild>
+
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-3 bg-muted/30 px-4 py-2 rounded-xl border border-dashed border-border/60">
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
+                Reorder
+              </span>
+              <Switch
+                checked={reorderEnabled}
+                onCheckedChange={(checked) => {
+                  if (!apps.length && checked) return;
+                  setReorderEnabled(checked);
+                }}
+              />
+            </div>
+
+            <Button
+              variant="outline"
+              size="lg"
+              className={cn("rounded-full px-6")}
+              asChild
+            >
               <Link to="/admin/applications/import">
                 <FileCode2 className="h-4 w-4 mr-2" />
                 Import via YAML
               </Link>
             </Button>
+
             <Button
               variant="gradient"
               size="lg"
               onClick={() => handleCreateApplication()}
-              disabled={showForm}
+              disabled={showForm || reorderEnabled}
+              className="rounded-full px-8 shadow-xl shadow-primary/20"
             >
               <Plus className="h-5 w-5 mr-2" />
               Add Application
@@ -264,6 +290,7 @@ const AdminApplications: React.FC = () => {
 
         <AppList
           applications={apps}
+          reorderEnabled={reorderEnabled}
           onEdit={handleEditApplication}
           onOpen={(application) => {
             void handleOpenApplication(application, "app");
