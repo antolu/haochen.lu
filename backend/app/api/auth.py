@@ -19,6 +19,7 @@ from app.core.oidc import oidc_validator
 from app.core.redis import TokenManager, redis_client
 from app.core.security import (
     create_access_token,
+    decode_token,
 )
 from app.crud.application import get_application_by_client_id, get_application_by_slug
 from app.crud.user import (
@@ -405,6 +406,45 @@ async def auth_callback(
 
 @router.get("/me", response_model=UserRead)
 async def get_me(user: User = _current_user_dependency) -> UserRead:
+    return UserRead.model_validate(user)
+
+
+@router.get("/userinfo", response_model=UserRead)
+async def userinfo(
+    request: Request,
+    session: AsyncSession = _session_dependency,
+) -> UserRead:
+    auth_header = request.headers.get("authorization", "")
+    if not auth_header.lower().startswith("bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing token"
+        )
+    token = auth_header.split(" ", 1)[1]
+
+    payload = decode_token(token, expected_type="access")
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+        )
+
+    jti = payload.get("jti")
+    if isinstance(jti, str) and await TokenManager.is_access_token_blocked(jti):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token revoked"
+        )
+
+    sub = payload.get("sub")
+    if not isinstance(sub, str):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+        )
+
+    user = await get_user_by_id(session, sub)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
+        )
+
     return UserRead.model_validate(user)
 
 
