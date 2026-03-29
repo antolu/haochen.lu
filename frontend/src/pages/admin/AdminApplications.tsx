@@ -17,7 +17,6 @@ import {
   useToggleAppEnabled,
   useUpdateApplication,
 } from "../../hooks/useApplications";
-import { applications as applicationsApi } from "../../api/client";
 import type { Application } from "../../types";
 
 interface AppFormData {
@@ -32,6 +31,7 @@ interface AppFormData {
   admin_only: boolean;
   logged_in_only: boolean;
   enabled: boolean;
+  redirect_uris?: string;
 }
 
 const AdminApplications: React.FC = () => {

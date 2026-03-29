@@ -6,7 +6,6 @@ import { useQuery } from "@tanstack/react-query";
 
 import { applications, content } from "../api/client";
 import { useAuthStore } from "../stores/authStore";
-import { useRef } from "react";
 
 const MainLayout: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

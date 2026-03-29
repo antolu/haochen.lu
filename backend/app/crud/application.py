@@ -66,6 +66,12 @@ async def get_application_by_client_id(
     return result.scalar_one_or_none()
 
 
+async def _next_order(db: AsyncSession) -> int:
+    result = await db.execute(select(func.max(Application.order)))
+    current_max = result.scalar()
+    return (current_max or 0) + 1
+
+
 async def create_application(db: AsyncSession, app: ApplicationCreate) -> Application:
     slug = app.slug or generate_slug(app.name)
 
@@ -78,6 +84,7 @@ async def create_application(db: AsyncSession, app: ApplicationCreate) -> Applic
 
     app_data = app.model_dump()
     app_data["slug"] = slug
+    app_data["order"] = await _next_order(db)
     if app_data.get("requires_auth"):
         if not app_data.get("client_id"):
             app_data["client_id"] = secrets.token_urlsafe(16)

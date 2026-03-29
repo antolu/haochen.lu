@@ -587,7 +587,10 @@ export const applications = {
   },
 
   create: async (
-    application: Omit<Application, "id" | "slug" | "created_at" | "updated_at">,
+    application: Omit<
+      Application,
+      "id" | "slug" | "order" | "created_at" | "updated_at"
+    >,
   ): Promise<Application> => {
     const response = await apiClient.post<Application>(
       "/applications",

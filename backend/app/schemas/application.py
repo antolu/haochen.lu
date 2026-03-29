@@ -28,7 +28,6 @@ class ApplicationBase(BaseModel):
     admin_only: bool = False
     logged_in_only: bool = False
     enabled: bool = True
-    order: int = 0
     client_id: str | None = None
     client_secret: str | None = None
     redirect_uris: str | None = None
@@ -50,7 +49,6 @@ class ApplicationUpdate(BaseModel):
     client_secret: str | None = None
     redirect_uris: str | None = None
     enabled: bool | None = None
-    order: int | None = None
 
 
 class ApplicationResponse(ApplicationBase):

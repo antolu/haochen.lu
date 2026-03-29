@@ -54,7 +54,10 @@ export const useCreateApplication = () => {
 
   return useMutation({
     mutationFn: (
-      data: Omit<Application, "id" | "slug" | "created_at" | "updated_at">,
+      data: Omit<
+        Application,
+        "id" | "slug" | "order" | "created_at" | "updated_at"
+      >,
     ) => applications.create(data),
     onSuccess: (newApp) => {
       void queryClient.invalidateQueries({ queryKey: appKeys.lists() });
