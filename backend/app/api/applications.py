@@ -15,6 +15,7 @@ from app.crud.application import (
     get_application_by_slug,
     get_application_count,
     get_applications,
+    regenerate_application_credentials,
     update_application,
 )
 from app.dependencies import (
@@ -138,6 +139,19 @@ async def update_application_endpoint(
     if not application:
         raise HTTPException(status_code=404, detail="Application not found")
 
+    return ApplicationResponse.model_validate(application)
+
+
+@router.post("/{application_id}/regenerate-credentials")
+async def regenerate_credentials(
+    application_id: UUID,
+    db: AsyncSession = _session_dependency,
+    current_user: User = _current_admin_user_dependency,
+) -> ApplicationResponse:
+    """Regenerate client ID and secret for an application (admin only)."""
+    application = await regenerate_application_credentials(db, application_id)
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
     return ApplicationResponse.model_validate(application)
 
 

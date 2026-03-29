@@ -190,6 +190,32 @@ export const useToggleAppEnabled = () => {
   });
 };
 
+export const useRegenerateCredentials = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => applications.regenerateCredentials(id),
+    onSuccess: (updatedApp) => {
+      queryClient.setQueryData(
+        appKeys.list("admin"),
+        (old: ApplicationListResponse | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            applications: old.applications.map((app) =>
+              app.id === updatedApp.id ? updatedApp : app,
+            ),
+          };
+        },
+      );
+      toast.success("Credentials regenerated");
+    },
+    onError: () => {
+      toast.error("Failed to regenerate credentials");
+    },
+  });
+};
+
 export const useReorderApplications = () => {
   const queryClient = useQueryClient();
 

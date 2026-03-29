@@ -129,6 +129,21 @@ async def update_application(
     return db_app
 
 
+async def regenerate_application_credentials(
+    db: AsyncSession, application_id: UUID
+) -> Application | None:
+    result = await db.execute(
+        select(Application).where(Application.id == application_id)
+    )
+    db_app = result.scalar_one_or_none()
+    if db_app:
+        db_app.client_id = secrets.token_urlsafe(16)
+        db_app.client_secret = secrets.token_urlsafe(32)
+        await db.commit()
+        await db.refresh(db_app)
+    return db_app
+
+
 async def bulk_reorder_applications(
     db: AsyncSession,
     items: list[dict[str, str | int]],

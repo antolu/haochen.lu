@@ -618,6 +618,13 @@ export const applications = {
     await apiClient.post("/applications/reorder", { items, normalize });
   },
 
+  regenerateCredentials: async (id: string): Promise<Application> => {
+    const response = await apiClient.post<Application>(
+      `/applications/${id}/regenerate-credentials`,
+    );
+    return response.data;
+  },
+
   getStats: async (): Promise<ApplicationStatsSummary> => {
     const response = await apiClient.get<ApplicationStatsSummary>(
       "/applications/stats/summary",

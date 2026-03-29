@@ -12,6 +12,7 @@ import {
   useApplications,
   useCreateApplication,
   useDeleteApplication,
+  useRegenerateCredentials,
   useReorderApplications,
   useToggleAppEnabled,
   useUpdateApplication,
@@ -52,6 +53,7 @@ const AdminApplications: React.FC = () => {
   const deleteMutation = useDeleteApplication();
   const toggleEnabledMutation = useToggleAppEnabled();
   const reorderMutation = useReorderApplications();
+  const regenerateCredentialsMutation = useRegenerateCredentials();
 
   const apps = applicationsData?.applications ?? [];
 
@@ -261,6 +263,14 @@ const AdminApplications: React.FC = () => {
                     await handleFormSubmit(data);
                   }}
                   onCancel={() => handleFormCancel()}
+                  onRegenerateCredentials={
+                    editingApplication
+                      ? () =>
+                          regenerateCredentialsMutation.mutate(
+                            editingApplication.id,
+                          )
+                      : undefined
+                  }
                   isLoading={isFormLoading}
                 />
               </div>

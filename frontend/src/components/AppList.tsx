@@ -15,7 +15,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Check, Copy, GripVertical, MoreVertical } from "lucide-react";
+import { GripVertical, MoreVertical } from "lucide-react";
 import type { Application } from "../types";
 import { formatDateSimple } from "../utils/dateFormat";
 import { applications as applicationsApi } from "../api/client";
@@ -30,25 +30,6 @@ interface AppListProps {
   onOpenAdmin: (application: Application) => void;
   onReorder: (items: Array<{ id: string; order: number }>) => void;
   isLoading?: boolean;
-}
-
-function CopyButton({ value }: { value: string }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <button
-      type="button"
-      onClick={() => {
-        void navigator.clipboard.writeText(value).then(() => {
-          setCopied(true);
-          setTimeout(() => setCopied(false), 1500);
-        });
-      }}
-      className="ml-1 p-0.5 rounded text-muted-foreground hover:text-foreground transition-colors"
-      title="Copy"
-    >
-      {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-    </button>
-  );
 }
 
 function OverflowMenu({
@@ -303,23 +284,6 @@ function SortableAppCard({
             <span>·</span>
             <span>{formatDateSimple(application.created_at)}</span>
           </div>
-
-          {application.requires_auth && application.client_id && (
-            <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-xs font-mono">
-              <div className="flex items-center gap-1 text-muted-foreground">
-                <span className="text-foreground/50 shrink-0">client_id</span>
-                <span className="truncate">{application.client_id}</span>
-                <CopyButton value={application.client_id} />
-              </div>
-              {application.client_secret && (
-                <div className="flex items-center gap-1 text-muted-foreground">
-                  <span className="text-foreground/50 shrink-0">secret</span>
-                  <span className="truncate">{application.client_secret}</span>
-                  <CopyButton value={application.client_secret} />
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Actions */}
