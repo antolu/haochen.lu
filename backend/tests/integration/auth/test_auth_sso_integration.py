@@ -12,7 +12,7 @@ from tests.factories import SubAppFactory
 
 from app.api import auth as auth_api
 from app.core.oidc import oidc_validator
-from app.core.security import create_access_token, decode_token
+from app.core.security import decode_token
 from app.models.user import User
 
 
@@ -150,9 +150,7 @@ async def test_authorize_validates_redirect_uri(
         client_secret="secret-1",
         redirect_uris="https://sub.example.com/callback",
     )
-    headers = {
-        "Authorization": f"Bearer {create_access_token({'sub': str(admin_user.id)})}"
-    }
+    headers = {"Authorization": f"Bearer test-token-{admin_user.oidc_id}"}
 
     response = await async_client.get(
         "/api/auth/authorize",
@@ -182,9 +180,7 @@ async def test_authorize_and_token_exchange_flow(
         client_secret="secret-2",
         redirect_uris="https://sub.example.com/callback",
     )
-    headers = {
-        "Authorization": f"Bearer {create_access_token({'sub': str(admin_user.id)})}"
-    }
+    headers = {"Authorization": f"Bearer test-token-{admin_user.oidc_id}"}
 
     authorize_response = await async_client.get(
         "/api/auth/authorize",
@@ -313,28 +309,36 @@ async def test_refresh_rotates_refresh_cookie(
     fake_refresh_token = "authelia-refresh-token-123"
     async_client.cookies.set("refresh_token", fake_refresh_token)
 
-    def fake_validate(token: str) -> dict | None:
+    async def fake_validate(token: str) -> dict | None:
+        await asyncio.sleep(0)
         if token == "new-access-token":
             return {"sub": admin_user.oidc_id, "jti": "new-jti"}
         return None
 
-    def fake_post(url: str, **_kwargs) -> httpx.Response:
-        return httpx.Response(
-            200,
-            json={
-                "access_token": "new-access-token",
-                "refresh_token": "new-refresh-token",
-                "expires_in": 3600,
-            },
-        )
+    from unittest.mock import AsyncMock, patch  # noqa: PLC0415
+
+    mock_response = httpx.Response(
+        200,
+        json={
+            "access_token": "new-access-token",
+            "refresh_token": "new-refresh-token",
+            "expires_in": 3600,
+        },
+        request=httpx.Request("POST", "http://test/token"),
+    )
 
     monkeypatch.setattr(oidc_validator, "validate_token", fake_validate)
-    monkeypatch.setattr(httpx.AsyncClient, "post", fake_post)
 
-    response = await async_client.post("/api/auth/refresh")
+    with patch("app.api.auth.httpx.AsyncClient") as mock_client_cls:
+        mock_client = AsyncMock()
+        mock_client.post = AsyncMock(return_value=mock_response)
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+        mock_client_cls.return_value = mock_client
+        response = await async_client.post("/api/auth/refresh")
 
     assert response.status_code == 200
-    assert response.cookies.get("refresh_token")
+    assert "refresh_token" in response.headers.get("set-cookie", "")
     assert response.json()["access_token"] == "new-access-token"
 
 
@@ -354,9 +358,7 @@ async def test_admin_jump_uses_admin_url_state(
         client_secret="secret-admin",
         redirect_uris="https://moviedb.example.com/auth/callback",
     )
-    headers = {
-        "Authorization": f"Bearer {create_access_token({'sub': str(admin_user.id)})}"
-    }
+    headers = {"Authorization": f"Bearer test-token-{admin_user.oidc_id}"}
 
     response = await async_client.get(
         f"/api/auth/jump/{subapp.slug}",
@@ -383,9 +385,7 @@ async def test_mock_subapp_rejects_wrong_client_secret(
         client_secret="expected-secret",
         redirect_uris="http://mock-subapp.local/auth/callback",
     )
-    headers = {
-        "Authorization": f"Bearer {create_access_token({'sub': str(admin_user.id)})}"
-    }
+    headers = {"Authorization": f"Bearer test-token-{admin_user.oidc_id}"}
 
     authorize_response = await async_client.get(
         "/api/auth/authorize",
@@ -427,9 +427,7 @@ async def test_mock_subapp_rejects_reused_code(
         client_secret="reuse-secret",
         redirect_uris="http://mock-subapp.local/auth/callback",
     )
-    headers = {
-        "Authorization": f"Bearer {create_access_token({'sub': str(admin_user.id)})}"
-    }
+    headers = {"Authorization": f"Bearer test-token-{admin_user.oidc_id}"}
 
     authorize_response = await async_client.get(
         "/api/auth/authorize",
@@ -483,9 +481,7 @@ async def test_mock_subapp_rejects_mismatched_redirect_uri(
         client_secret="redirect-secret",
         redirect_uris="http://mock-subapp.local/auth/callback",
     )
-    headers = {
-        "Authorization": f"Bearer {create_access_token({'sub': str(admin_user.id)})}"
-    }
+    headers = {"Authorization": f"Bearer test-token-{admin_user.oidc_id}"}
 
     authorize_response = await async_client.get(
         "/api/auth/authorize",
@@ -530,9 +526,7 @@ async def test_admin_jump_requires_admin_url(
         client_secret="secret-no-admin",
         redirect_uris="http://mock-subapp.local/auth/callback",
     )
-    headers = {
-        "Authorization": f"Bearer {create_access_token({'sub': str(admin_user.id)})}"
-    }
+    headers = {"Authorization": f"Bearer test-token-{admin_user.oidc_id}"}
 
     response = await async_client.get(
         f"/api/auth/jump/{subapp.slug}",
