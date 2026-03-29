@@ -9,6 +9,7 @@ import { formatDate } from "../utils/dateFormat";
 import { selectOptimalImage, ImageUseCase } from "../utils/imageUtils";
 import ProgressiveImage from "../components/ProgressiveImage";
 import ProfilePictureDisplay from "../components/ProfilePictureDisplay";
+import MarkdownRenderer from "../components/MarkdownRenderer";
 
 const HomePage: React.FC = () => {
   const { data: latestPhotos } = useQuery({
@@ -41,6 +42,9 @@ const HomePage: React.FC = () => {
         "social.linkedin_url",
         "social.google_scholar_url",
         "social.github_url",
+        "about.bio",
+        "about.interests",
+        "about.skills",
       ]),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
@@ -275,21 +279,14 @@ const HomePage: React.FC = () => {
               viewport={{ once: true }}
               className="space-y-6"
             >
-              <div className="prose prose-lg">
-                <p className="text-gray-700 leading-relaxed">
-                  My name is Anton (Hào-chen) Lu, and I'm a M.Sc. student at KTH
-                  Royal Institute of Technology in Stockholm, Sweden. I'm
-                  currently enrolled in a five-year degree programme in
-                  Engineering Physics, pursuing a M.Sc. in Machine Learning with
-                  specialization in deep learning and computational linguistics.
-                </p>
-                <p className="text-gray-700 leading-relaxed">
-                  My biggest passion is learning new things, whether it be a new
-                  problem solving method, a new programming language, a new
-                  spoken language, or how to capture the perfect moment through
-                  photography.
-                </p>
-              </div>
+              <MarkdownRenderer
+                content={
+                  homeContent?.["about.bio"]?.content ??
+                  `My name is Anton (Hào-chen) Lu, and I'm a M.Sc. student at KTH Royal Institute of Technology in Stockholm, Sweden. I'm currently enrolled in a five-year degree programme in Engineering Physics, pursuing a M.Sc. in Machine Learning with specialization in deep learning and computational linguistics.
+
+My biggest passion is learning new things, whether it be a new problem solving method, a new programming language, a new spoken language, or how to capture the perfect moment through photography.`
+                }
+              />
 
               <div className="grid grid-cols-2 gap-6">
                 <div className="bg-white p-6 rounded-lg shadow-sm">
@@ -297,23 +294,25 @@ const HomePage: React.FC = () => {
                     {homeContent?.["about.interests_title"]?.content ??
                       "Interests"}
                   </h3>
-                  <ul className="space-y-2 text-gray-700">
-                    <li>📸 Photography</li>
-                    <li>🎮 Gaming</li>
-                    <li>💻 Programming</li>
-                    <li>🏊 Swimming</li>
-                  </ul>
+                  <MarkdownRenderer
+                    content={
+                      homeContent?.["about.interests"]?.content ??
+                      "* 📸 Photography\n* 🎮 Gaming\n* 💻 Programming\n* 🏊 Swimming"
+                    }
+                    compact
+                  />
                 </div>
                 <div className="bg-white p-6 rounded-lg shadow-sm">
                   <h3 className="font-semibold text-gray-900 mb-3">
                     {homeContent?.["about.skills_title"]?.content ?? "Skills"}
                   </h3>
-                  <ul className="space-y-2 text-gray-700">
-                    <li>🤖 Machine Learning</li>
-                    <li>📊 Data Science</li>
-                    <li>🌐 Web Development</li>
-                    <li>🎯 Deep Learning</li>
-                  </ul>
+                  <MarkdownRenderer
+                    content={
+                      homeContent?.["about.skills"]?.content ??
+                      "* 🤖 Machine Learning\n* 📊 Data Science\n* 🌐 Web Development\n* 🎯 Deep Learning"
+                    }
+                    compact
+                  />
                 </div>
               </div>
             </motion.div>
