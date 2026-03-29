@@ -113,32 +113,15 @@ const AdminApplications: React.FC = () => {
     reorderMutation.mutate(items);
   };
 
-  const handleOpenApplication = async (
+  const handleOpenApplication = (
     application: Application,
     target: "app" | "admin",
   ) => {
-    try {
-      if (application.requires_auth) {
-        const { url } = await applicationsApi.getJumpUrl(
-          application.slug,
-          target,
-        );
-        window.location.href = url;
-        return;
-      }
-
-      const destination =
-        target === "admin"
-          ? (application.admin_url ?? application.url)
-          : application.url;
-      if (application.is_external) {
-        window.open(destination, "_blank", "noopener,noreferrer");
-      } else {
-        window.location.href = destination;
-      }
-    } catch (error) {
-      console.error("Open application error:", error);
-    }
+    const destination =
+      target === "admin"
+        ? (application.admin_url ?? application.url)
+        : application.url;
+    window.open(destination, "_blank", "noopener,noreferrer");
   };
 
   const isFormLoading = createMutation.isPending || updateMutation.isPending;
