@@ -16,6 +16,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, MoreVertical } from "lucide-react";
+import { Button } from "./ui/button";
 import type { Application } from "../types";
 import { formatDateSimple } from "../utils/dateFormat";
 import { applications as applicationsApi } from "../api/client";
@@ -63,12 +64,14 @@ function OverflowMenu({
 
   return (
     <div ref={ref} className="relative">
-      <button
+      <Button
+        variant="outline"
+        size="sm"
         onClick={() => setOpen((v) => !v)}
-        className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+        className="px-2"
       >
         <MoreVertical className="h-4 w-4" />
-      </button>
+      </Button>
       <AnimatePresence>
         {open && (
           <motion.div
@@ -196,7 +199,7 @@ function SortableAppCard({
             : "border-border hover:border-border/60"
       }`}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-center gap-3">
         {/* Drag handle — animated in/out */}
         <AnimatePresence initial={false}>
           {reorderEnabled && (
@@ -208,7 +211,7 @@ function SortableAppCard({
               animate={{ opacity: 1, width: "auto" }}
               exit={{ opacity: 0, width: 0 }}
               transition={{ duration: 0.15 }}
-              className="mt-0.5 p-1 rounded text-amber-500 hover:text-amber-600 hover:bg-amber-100/50 dark:hover:bg-amber-900/20 cursor-grab active:cursor-grabbing shrink-0 overflow-hidden"
+              className="p-1 rounded text-amber-500 hover:text-amber-600 hover:bg-amber-100/50 dark:hover:bg-amber-900/20 cursor-grab active:cursor-grabbing shrink-0 overflow-hidden"
               title="Drag to reorder"
             >
               <GripVertical className="h-4 w-4" />
@@ -282,20 +285,14 @@ function SortableAppCard({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-1 shrink-0">
-          <button
-            onClick={onOpen}
-            className="px-2.5 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 rounded transition-colors"
-          >
+        <div className="flex items-center gap-2 shrink-0">
+          <Button variant="outline" size="sm" onClick={onOpen}>
             Open
-          </button>
+          </Button>
           {application.admin_url && (
-            <button
-              onClick={onOpenAdmin}
-              className="px-2.5 py-1.5 text-xs font-medium text-violet-700 bg-violet-100 hover:bg-violet-200 dark:bg-violet-900/30 dark:text-violet-400 rounded transition-colors"
-            >
+            <Button variant="outline" size="sm" onClick={onOpenAdmin}>
               Admin
-            </button>
+            </Button>
           )}
           <OverflowMenu
             application={application}
