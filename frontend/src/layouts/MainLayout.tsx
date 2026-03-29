@@ -68,23 +68,12 @@ const MainLayout: React.FC = () => {
 
   const navPadding = isScrolled ? "py-2" : "py-3 md:py-4";
 
-  const handleAppNavigation = async (app: {
-    slug: string;
-    url: string;
-    requires_auth: boolean;
-    is_external: boolean;
-  }) => {
-    if (!app.requires_auth) {
-      window.open(app.url, app.is_external ? "_blank" : "_self");
-      return;
-    }
-
-    try {
-      const { url } = await applications.getJumpUrl(app.slug, "app");
-      window.open(url, app.is_external ? "_blank" : "_self");
-    } catch (error) {
-      console.error("Failed to open application", error);
-    }
+  const handleAppNavigation = (app: { url: string; is_external: boolean }) => {
+    window.open(
+      app.url,
+      app.is_external ? "_blank" : "_self",
+      "noopener,noreferrer",
+    );
   };
 
   return (
