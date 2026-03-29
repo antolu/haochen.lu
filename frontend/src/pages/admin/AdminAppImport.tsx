@@ -28,7 +28,6 @@ integration:
   admin_path: "/cookbook/admin"
   requires_auth: true
   admin_only: false
-  show_in_menu: true
   menu_order: 10
   has_admin: true
   admin_iframe: true

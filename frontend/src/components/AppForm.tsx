@@ -13,7 +13,6 @@ interface AppFormData {
   is_external: boolean;
   requires_auth: boolean;
   admin_only: boolean;
-  show_in_menu: boolean;
   enabled: boolean;
   redirect_uris?: string;
 }
@@ -51,7 +50,6 @@ const AppForm: React.FC<AppFormProps> = ({
       is_external: application?.is_external ?? true,
       requires_auth: application?.requires_auth ?? false,
       admin_only: application?.admin_only ?? false,
-      show_in_menu: application?.show_in_menu ?? true,
       enabled: application?.enabled ?? true,
       redirect_uris: application?.redirect_uris ?? "",
     },
@@ -299,23 +297,6 @@ const AppForm: React.FC<AppFormProps> = ({
                 </span>
                 <p className="text-xs text-muted-foreground">
                   Only admins can access
-                </p>
-              </div>
-            </label>
-
-            {/* Show in Menu Toggle */}
-            <label className="flex items-center space-x-3 cursor-pointer">
-              <input
-                type="checkbox"
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                {...register("show_in_menu")}
-              />
-              <div>
-                <span className="text-sm font-medium text-foreground">
-                  Show in Menu
-                </span>
-                <p className="text-xs text-muted-foreground">
-                  Display in navigation
                 </p>
               </div>
             </label>

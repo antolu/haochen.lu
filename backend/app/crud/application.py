@@ -23,16 +23,12 @@ async def get_applications(
     db: AsyncSession,
     *,
     enabled_only: bool = True,
-    menu_only: bool = True,
     admin_only: bool | None = None,
 ) -> list[Application]:
     query = select(Application)
 
     if enabled_only:
         query = query.where(Application.enabled)
-
-    if menu_only:
-        query = query.where(Application.show_in_menu)
 
     if admin_only is not None:
         query = query.where(Application.admin_only == admin_only)

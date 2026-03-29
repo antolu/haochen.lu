@@ -37,12 +37,10 @@ router = APIRouter()
 
 @router.get("/")
 async def list_applications(
-    *, menu_only: bool = True, db: AsyncSession = _session_dependency
+    *, db: AsyncSession = _session_dependency
 ) -> ApplicationListResponse:
     """List available applications for public access."""
-    applications = await get_applications(
-        db, enabled_only=True, menu_only=menu_only, admin_only=False
-    )
+    applications = await get_applications(db, enabled_only=True, admin_only=False)
 
     public_applications = [app for app in applications if not app.requires_auth]
 
@@ -57,16 +55,13 @@ async def list_applications(
 @router.get("/authenticated")
 async def list_authenticated_applications(
     *,
-    menu_only: bool = True,
     db: AsyncSession = _session_dependency,
     current_user: User = _current_user_dependency,
 ) -> ApplicationListResponse:
     """List applications available to authenticated users."""
     admin_only = None if current_user.is_admin else False
 
-    applications = await get_applications(
-        db, enabled_only=True, menu_only=menu_only, admin_only=admin_only
-    )
+    applications = await get_applications(db, enabled_only=True, admin_only=admin_only)
 
     return ApplicationListResponse(
         applications=[ApplicationResponse.model_validate(app) for app in applications],
@@ -77,14 +72,11 @@ async def list_authenticated_applications(
 @router.get("/admin")
 async def list_all_applications(
     *,
-    menu_only: bool = False,
     db: AsyncSession = _session_dependency,
     current_user: User = _current_admin_user_dependency,
 ) -> ApplicationListResponse:
     """List all applications (admin only)."""
-    applications = await get_applications(
-        db, enabled_only=False, menu_only=menu_only, admin_only=None
-    )
+    applications = await get_applications(db, enabled_only=False, admin_only=None)
 
     return ApplicationListResponse(
         applications=[ApplicationResponse.model_validate(app) for app in applications],
@@ -210,7 +202,6 @@ async def export_application(
             "is_external": application.is_external,
             "requires_auth": application.requires_auth,
             "admin_only": application.admin_only,
-            "show_in_menu": application.show_in_menu,
             "menu_order": application.order,
             "has_admin": bool(application.admin_url),
         },
@@ -242,9 +233,7 @@ async def get_application_stats(
 ) -> dict[str, int]:
     """Get application statistics (admin only)."""
     total_applications = await get_application_count(db)
-    enabled_applications = len(
-        await get_applications(db, enabled_only=True, menu_only=False)
-    )
+    enabled_applications = len(await get_applications(db, enabled_only=True))
 
     return {
         "total_applications": total_applications,

@@ -259,11 +259,6 @@ function SortableAppCard({
                 public
               </span>
             )}
-            {!application.show_in_menu && (
-              <span className="px-1.5 py-0.5 rounded text-xs bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
-                hidden
-              </span>
-            )}
           </div>
 
           {application.description && (
