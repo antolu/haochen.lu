@@ -169,7 +169,7 @@ const MainLayout: React.FC = () => {
             {!isAuthenticated && (
               <div className="hidden md:flex items-center">
                 <a
-                  href="/api/auth/login?next=/admin"
+                  href={`/api/auth/login?next=${encodeURIComponent(location.pathname + location.search)}`}
                   className={`px-3 transition-all duration-300 ease-out ${navPadding} ${navClasses} text-foreground hover:text-primary`}
                 >
                   Login
