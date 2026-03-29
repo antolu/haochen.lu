@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     refresh_cookie_name: str = "refresh_token"
     cookie_secure: bool = os.getenv("COOKIE_SECURE", "false").lower() == "true"
     cookie_httponly: bool = True
-    cookie_samesite: str = "lax"
+    cookie_samesite: str = "strict"
     cookie_domain: str | None = os.getenv("COOKIE_DOMAIN")
 
     # CORS (accept str or list[str] for tests)
