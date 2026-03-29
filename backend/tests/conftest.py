@@ -16,6 +16,7 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 from urllib.parse import urlparse
 import sys
+import asyncio
 
 # Mock pyvips before it is imported by app modules
 mock_pyvips = MagicMock()
@@ -81,6 +82,7 @@ import app.core.file_access as fa_mod  # noqa: E402
 import app.core.image_processor as ip_mod  # noqa: E402
 from app import config as app_config  # noqa: E402
 from app.config import Settings  # noqa: E402
+from app.core.oidc import oidc_validator  # noqa: E402
 from app.core.redis import redis_client  # noqa: E402
 from app.database import Base, get_session  # noqa: E402
 from app.main import app  # noqa: E402
@@ -261,8 +263,14 @@ def create_access_token_for_user(user: User, settings: Settings) -> str:
 
 
 @pytest.fixture
-def admin_token(admin_user: User, test_settings: Settings) -> str:
-    """Generate a JWT token for admin user."""
+def admin_token(admin_user: User) -> str:
+    """Token for use with OIDC-validated endpoints."""
+    return f"test-token-{admin_user.oidc_id}"
+
+
+@pytest.fixture
+def hs256_admin_token(admin_user: User, test_settings: Settings) -> str:
+    """Generate a legacy HS256 JWT token for admin user (e.g. for /userinfo)."""
     return create_access_token_for_user(admin_user, test_settings)
 
 
@@ -580,3 +588,32 @@ class CustomAssertions:
 def assert_helper():
     """Provide custom assertion helpers."""
     return CustomAssertions()
+
+
+@pytest.fixture(autouse=True)
+def patch_oidc_validator(monkeypatch: pytest.MonkeyPatch) -> None:
+    """
+    Replace oidc_validator.validate_token with a test-friendly version that
+    accepts tokens of the form "test-token-{oidc_id}" and returns a minimal
+    payload. This avoids needing a real Authelia JWKS endpoint in integration
+    tests for the user-session layer.
+
+    Tokens issued by create_access_token (HS256, 'sub' = user UUID) are used
+    only for the app OAuth broker layer (/authorize, /oauth/token, /jump/*) and
+    are validated via decode_token, not oidc_validator. Those paths remain
+    unchanged.
+    """
+
+    async def fake_validate(token: str) -> dict[str, Any] | None:
+        await asyncio.sleep(0)
+        prefix = "test-token-"
+        if token.startswith(prefix):
+            oidc_id = token[len(prefix) :]
+            return {
+                "sub": oidc_id,
+                "jti": f"jti-{oidc_id}",
+                "iss": "http://auth.localhost",
+            }
+        return None
+
+    monkeypatch.setattr(oidc_validator, "validate_token", fake_validate)
