@@ -57,9 +57,9 @@ const AppForm: React.FC<AppFormProps> = ({
     },
   });
 
-  const watchUrl = useWatch<string | undefined>({ control, name: "url" });
-  const watchColor = useWatch<string | undefined>({ control, name: "color" });
-  const watchRequiresAuth = useWatch<boolean | undefined>({
+  const watchUrl = useWatch<AppFormData, "url">({ control, name: "url" });
+  const watchColor = useWatch<AppFormData, "color">({ control, name: "color" });
+  const watchRequiresAuth = useWatch<AppFormData, "requires_auth">({
     control,
     name: "requires_auth",
   });
