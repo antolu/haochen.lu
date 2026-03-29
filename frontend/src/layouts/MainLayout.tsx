@@ -33,6 +33,10 @@ const MainLayout: React.FC = () => {
     queryFn: () => applications.list(),
   });
 
+  const visibleApps = (subAppsData?.applications ?? []).filter(
+    (app) => !app.logged_in_only || isAuthenticated,
+  );
+
   // Fetch footer content
   const { data: footerContent } = useQuery({
     queryKey: ["content", "footer"],
@@ -117,49 +121,48 @@ const MainLayout: React.FC = () => {
               ))}
 
               {/* Sub-apps dropdown or direct links */}
-              {subAppsData?.applications &&
-                subAppsData.applications.length > 0 && (
-                  <div className="relative group">
-                    <button
-                      className={`px-3 text-foreground hover:text-primary transition-all duration-300 ease-out ${navPadding} ${navClasses}`}
-                    >
-                      Apps
-                    </button>
-                    <div className="absolute left-0 mt-2 w-56 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                      <div className="py-1">
-                        {subAppsData.applications.map((app) => {
-                          return (
-                            <button
-                              key={app.id}
-                              type="button"
-                              onClick={() => {
-                                void handleAppNavigation(app);
-                              }}
-                              className="flex w-full items-center px-4 py-2 text-sm text-foreground hover:bg-gray-50 hover:text-primary transition-colors duration-200"
-                            >
-                              {app.icon && (
-                                <span
-                                  className="mr-3 text-lg"
-                                  style={{ color: app.color ?? undefined }}
-                                >
-                                  {app.icon}
-                                </span>
+              {visibleApps.length > 0 && (
+                <div className="relative group">
+                  <button
+                    className={`px-3 text-foreground hover:text-primary transition-all duration-300 ease-out ${navPadding} ${navClasses}`}
+                  >
+                    Apps
+                  </button>
+                  <div className="absolute left-0 mt-2 w-56 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div className="py-1">
+                      {visibleApps.map((app) => {
+                        return (
+                          <button
+                            key={app.id}
+                            type="button"
+                            onClick={() => {
+                              void handleAppNavigation(app);
+                            }}
+                            className="flex w-full items-center px-4 py-2 text-sm text-foreground hover:bg-gray-50 hover:text-primary transition-colors duration-200"
+                          >
+                            {app.icon && (
+                              <span
+                                className="mr-3 text-lg"
+                                style={{ color: app.color ?? undefined }}
+                              >
+                                {app.icon}
+                              </span>
+                            )}
+                            <div>
+                              <div className="font-medium">{app.name}</div>
+                              {app.description && (
+                                <div className="text-xs text-muted-foreground">
+                                  {app.description}
+                                </div>
                               )}
-                              <div>
-                                <div className="font-medium">{app.name}</div>
-                                {app.description && (
-                                  <div className="text-xs text-muted-foreground">
-                                    {app.description}
-                                  </div>
-                                )}
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
-                )}
+                </div>
+              )}
             </nav>
 
             {/* Login / user indicator */}
@@ -251,7 +254,7 @@ const MainLayout: React.FC = () => {
                       <div className="px-3 py-2 text-sm font-medium text-muted-foreground uppercase tracking-wider">
                         Applications
                       </div>
-                      {subAppsData.applications.map((app) => {
+                      {visibleApps.map((app) => {
                         return (
                           <button
                             key={app.id}

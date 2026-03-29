@@ -30,6 +30,7 @@ interface AppFormData {
   is_external: boolean;
   requires_auth: boolean;
   admin_only: boolean;
+  logged_in_only: boolean;
   enabled: boolean;
 }
 

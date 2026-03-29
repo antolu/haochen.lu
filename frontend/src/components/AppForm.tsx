@@ -13,6 +13,7 @@ interface AppFormData {
   is_external: boolean;
   requires_auth: boolean;
   admin_only: boolean;
+  logged_in_only: boolean;
   enabled: boolean;
   redirect_uris?: string;
 }
@@ -50,6 +51,7 @@ const AppForm: React.FC<AppFormProps> = ({
       is_external: application?.is_external ?? true,
       requires_auth: application?.requires_auth ?? false,
       admin_only: application?.admin_only ?? false,
+      logged_in_only: application?.logged_in_only ?? false,
       enabled: application?.enabled ?? true,
       redirect_uris: application?.redirect_uris ?? "",
     },
@@ -297,6 +299,23 @@ const AppForm: React.FC<AppFormProps> = ({
                 </span>
                 <p className="text-xs text-muted-foreground">
                   Only admins can access
+                </p>
+              </div>
+            </label>
+
+            {/* Logged In Only Toggle */}
+            <label className="flex items-center space-x-3 cursor-pointer">
+              <input
+                type="checkbox"
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                {...register("logged_in_only")}
+              />
+              <div>
+                <span className="text-sm font-medium text-foreground">
+                  Logged In Only
+                </span>
+                <p className="text-xs text-muted-foreground">
+                  Only show in navbar when logged in
                 </p>
               </div>
             </label>

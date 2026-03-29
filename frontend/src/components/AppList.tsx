@@ -245,6 +245,11 @@ function SortableAppCard({
                 disabled
               </span>
             )}
+            {application.logged_in_only && !application.admin_only && (
+              <span className="px-1.5 py-0.5 rounded text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                logged in only
+              </span>
+            )}
             {application.admin_only && (
               <span className="px-1.5 py-0.5 rounded text-xs bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
                 admin only

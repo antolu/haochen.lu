@@ -26,6 +26,7 @@ class ApplicationBase(BaseModel):
     is_external: bool = False
     requires_auth: bool = True
     admin_only: bool = False
+    logged_in_only: bool = False
     enabled: bool = True
     order: int = 0
     client_id: str | None = None
@@ -44,6 +45,7 @@ class ApplicationUpdate(BaseModel):
     admin_url: str | None = None
     requires_auth: bool | None = None
     admin_only: bool | None = None
+    logged_in_only: bool | None = None
     client_id: str | None = None
     client_secret: str | None = None
     redirect_uris: str | None = None
