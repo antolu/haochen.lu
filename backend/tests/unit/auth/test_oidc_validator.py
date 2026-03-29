@@ -8,7 +8,6 @@ import jwt
 import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 
 from app.core.oidc import OidcValidator
 
@@ -22,8 +21,7 @@ def _generate_rsa_keypair() -> tuple[rsa.RSAPrivateKey, rsa.RSAPublicKey]:
 
 
 def _make_jwk(public_key: rsa.RSAPublicKey) -> dict:
-    pub_bytes = public_key.public_bytes(Encoding.PEM, PublicFormat.SubjectPublicKeyInfo)
-    return json.loads(jwt.algorithms.RSAAlgorithm.to_jwk(pub_bytes))  # type: ignore[attr-defined]
+    return json.loads(jwt.algorithms.RSAAlgorithm.to_jwk(public_key))  # type: ignore[attr-defined]
 
 
 def _make_token(
