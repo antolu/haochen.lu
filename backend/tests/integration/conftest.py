@@ -17,7 +17,6 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from app.core.security import create_access_token
 from app.models.user import User
 
 # Test fixture paths
@@ -111,8 +110,7 @@ async def admin_auth_headers(integration_session: AsyncSession) -> dict[str, str
         msg = "Integration admin user not found"
         raise RuntimeError(msg)
 
-    access_token = create_access_token({"sub": str(admin_user.id)})
-    return {"Authorization": f"Bearer {access_token}"}
+    return {"Authorization": f"Bearer test-token-{admin_user.oidc_id}"}
 
 
 @pytest_asyncio.fixture
@@ -125,8 +123,7 @@ async def user_auth_headers(integration_session: AsyncSession) -> dict[str, str]
         msg = "Integration regular user not found"
         raise RuntimeError(msg)
 
-    access_token = create_access_token({"sub": str(regular_user.id)})
-    return {"Authorization": f"Bearer {access_token}"}
+    return {"Authorization": f"Bearer test-token-{regular_user.oidc_id}"}
 
 
 @pytest.fixture

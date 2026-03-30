@@ -37,6 +37,7 @@ services:
         BUILD_TYPE: development
     environment:
       ENVIRONMENT: test
+      TESTING: "true"
       DATABASE_URL: postgresql+asyncpg://testuser:testpassword@db:5432/testdb
       REDIS_URL: redis://redis:6379/0
       SECRET_KEY: test_secret_key_for_integration_min_32_chars
