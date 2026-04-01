@@ -205,84 +205,20 @@ async def close_redis() -> None:
 
 # Token management helpers
 class TokenManager:
-    """Helper class for token-related Redis operations"""
+    """Redis operations for access token blocklisting.
+
+    Refresh tokens are owned by Authelia — only access token revocation
+    (on logout) is tracked here.
+    """
 
     @staticmethod
-    def refresh_token_key(user_id: str, jti: str) -> str:
-        """Generate Redis key for refresh token"""
-        return f"refresh_token:{user_id}:{jti}"
+    async def blocklist_access_token(jti: str, expires_in: int) -> bool:
+        """Add an access token JTI to the blocklist until it naturally expires."""
+        key = f"blocklist_access:{jti}"
+        return await redis_client.setex(key, expires_in, "revoked")
 
     @staticmethod
-    async def store_refresh_token(user_id: str, jti: str, expires_in: int) -> bool:
-        """Store refresh token in Redis"""
-        key = TokenManager.refresh_token_key(user_id, jti)
-        return await redis_client.setex(key, expires_in, "valid")
-
-    @staticmethod
-    async def is_refresh_token_valid(user_id: str, jti: str) -> bool:
-        """Check if refresh token is valid"""
-        key = TokenManager.refresh_token_key(user_id, jti)
-        value = await redis_client.get(key)
-        return value == "valid"
-
-    @staticmethod
-    async def revoke_refresh_token(user_id: str, jti: str) -> bool:
-        """Revoke a specific refresh token"""
-        key = TokenManager.refresh_token_key(user_id, jti)
-        deleted = await redis_client.delete(key)
-        return deleted > 0
-
-    @staticmethod
-    async def revoke_all_user_tokens(user_id: str) -> int:
-        """Revoke all refresh tokens for a user"""
-        pattern = f"refresh_token:{user_id}:*"
-        keys = await redis_client.keys(pattern)
-        if keys:
-            return await redis_client.delete(*keys)
-        return 0
-
-    @staticmethod
-    async def get_user_token_count(user_id: str) -> int:
-        """Get number of active tokens for a user"""
-        pattern = f"refresh_token:{user_id}:*"
-        keys = await redis_client.keys(pattern)
-        return len(keys)
-
-
-# Session management helpers
-class SessionManager:
-    """Helper class for session-related Redis operations"""
-
-    @staticmethod
-    def session_key(session_id: str) -> str:
-        """Generate Redis key for session"""
-        return f"session:{session_id}"
-
-    @staticmethod
-    async def store_session(session_id: str, user_id: str, expires_in: int) -> bool:
-        """Store session in Redis"""
-        key = SessionManager.session_key(session_id)
-        return await redis_client.setex(key, expires_in, user_id)
-
-    @staticmethod
-    async def get_session_user(session_id: str) -> str | None:
-        """Get user ID from session"""
-        key = SessionManager.session_key(session_id)
-        return await redis_client.get(key)
-
-    @staticmethod
-    async def revoke_session(session_id: str) -> bool:
-        """Revoke a session"""
-        key = SessionManager.session_key(session_id)
-        deleted = await redis_client.delete(key)
-        return deleted > 0
-
-    @staticmethod
-    async def extend_session(session_id: str, expires_in: int) -> bool:
-        """Extend session expiration"""
-        key = SessionManager.session_key(session_id)
-        if await redis_client.exists(key):
-            user_id = await redis_client.get(key)
-            if user_id:
-                return await redis_client.setex(key, expires_in, user_id)
-        return False
+    async def is_access_token_blocked(jti: str) -> bool:
+        """Check if an access token has been blocklisted."""
+        key = f"blocklist_access:{jti}"
+        return await redis_client.exists(key)

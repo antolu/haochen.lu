@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import hmac
 import json
+import logging
 import secrets
 import typing
 from base64 import urlsafe_b64encode
@@ -13,8 +15,12 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
+from app.core.oidc import oidc_validator
 from app.core.redis import TokenManager, redis_client
-from app.core.security import create_access_token, create_refresh_token, decode_token
+from app.core.security import (
+    create_access_token,
+    decode_token,
+)
 from app.crud.application import get_application_by_client_id, get_application_by_slug
 from app.crud.user import (
     create_user,
@@ -28,6 +34,7 @@ from app.schemas.user import UserCreate, UserRead, UserUpdate
 from app.users import current_active_user
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 _session_dependency = Depends(get_session)
 _current_user_dependency = Depends(current_active_user)
@@ -69,11 +76,13 @@ def _refresh_token_ttl_seconds() -> int:
     return settings.refresh_token_expire_days * 24 * 60 * 60
 
 
-def _set_refresh_cookie(response: Response, refresh_token: str) -> None:
+def _set_refresh_cookie(
+    response: Response, refresh_token: str, max_age: int | None = None
+) -> None:
     response.set_cookie(
         key=settings.refresh_cookie_name,
         value=refresh_token,
-        max_age=_refresh_token_ttl_seconds(),
+        max_age=max_age if max_age is not None else _refresh_token_ttl_seconds(),
         httponly=settings.cookie_httponly,
         secure=settings.cookie_secure,
         samesite=typing.cast(typing.Any, settings.cookie_samesite),
@@ -204,9 +213,8 @@ async def _consume_authorization_code(code: str) -> dict[str, str]:
     return result
 
 
-async def _fetch_oidc_token(code: str) -> str:
+async def _fetch_oidc_tokens(code: str) -> dict[str, typing.Any]:
     async with httpx.AsyncClient(timeout=10.0) as client:
-        # Authelia OIDC token endpoint is typically /api/oidc/token
         response = await client.post(
             f"{settings.oidc_endpoint}/api/oidc/token",
             data={
@@ -219,18 +227,20 @@ async def _fetch_oidc_token(code: str) -> str:
         )
 
     if response.status_code != status.HTTP_200_OK:
+        logger.error("OIDC token exchange failed: %s", response.text)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Failed to exchange OIDC code: {response.text}",
+            detail="Authentication failed",
         )
 
-    access_token = response.json().get("access_token")
+    data: dict[str, typing.Any] = response.json()
+    access_token = data.get("access_token")
     if not isinstance(access_token, str) or not access_token:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="OIDC token missing",
         )
-    return access_token
+    return data
 
 
 async def _fetch_oidc_profile(access_token: str) -> dict[str, object]:
@@ -242,9 +252,10 @@ async def _fetch_oidc_profile(access_token: str) -> dict[str, object]:
         )
 
     if response.status_code != status.HTTP_200_OK:
+        logger.error("OIDC userinfo fetch failed: %s", response.text)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Failed to fetch OIDC profile: {response.text}",
+            detail="Authentication failed",
         )
 
     payload = response.json()
@@ -297,37 +308,6 @@ async def _sync_user(session: AsyncSession, oidc_profile: dict[str, object]) -> 
             detail="Failed to update user",
         )
     return updated_user
-
-
-async def _issue_session_tokens(user: User) -> tuple[str, str, str]:
-    access_token = create_access_token({"sub": str(user.id)})
-    refresh_token = create_refresh_token({"sub": str(user.id)})
-    refresh_payload = decode_token(refresh_token, expected_type="refresh")
-    if refresh_payload is None:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create refresh token",
-        )
-
-    refresh_jti = refresh_payload.get("jti")
-    if not isinstance(refresh_jti, str):
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Invalid refresh token",
-        )
-
-    stored = await TokenManager.store_refresh_token(
-        str(user.id),
-        refresh_jti,
-        _refresh_token_ttl_seconds(),
-    )
-    if not stored:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Session storage unavailable",
-        )
-
-    return access_token, refresh_token, refresh_jti
 
 
 @router.get("/login", response_model=None)
@@ -394,10 +374,18 @@ async def auth_callback(
     session: AsyncSession = _session_dependency,
 ) -> Response:
     context = await _consume_login_state(state)
-    oidc_access_token = await _fetch_oidc_token(code)
-    oidc_profile = await _fetch_oidc_profile(oidc_access_token)
+    oidc_tokens = await _fetch_oidc_tokens(code)
+    oidc_profile = await _fetch_oidc_profile(oidc_tokens["access_token"])
     user = await _sync_user(session, oidc_profile)
-    _, refresh_token, _ = await _issue_session_tokens(user)
+    refresh_token = oidc_tokens.get("refresh_token") or ""
+    if not isinstance(refresh_token, str) or not refresh_token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="OIDC refresh token missing",
+        )
+    cookie_ttl = oidc_tokens.get("expires_in")
+    if not isinstance(cookie_ttl, int):
+        cookie_ttl = _refresh_token_ttl_seconds()
 
     redirect_target = context.next
     if context.client_id and context.redirect_uri and context.state:
@@ -412,12 +400,51 @@ async def auth_callback(
 
     response = Response(status_code=status.HTTP_302_FOUND)
     response.headers["Location"] = redirect_target
-    _set_refresh_cookie(response, refresh_token)
+    _set_refresh_cookie(response, refresh_token, max_age=cookie_ttl)
     return response
 
 
 @router.get("/me", response_model=UserRead)
 async def get_me(user: User = _current_user_dependency) -> UserRead:
+    return UserRead.model_validate(user)
+
+
+@router.get("/userinfo", response_model=UserRead)
+async def userinfo(
+    request: Request,
+    session: AsyncSession = _session_dependency,
+) -> UserRead:
+    auth_header = request.headers.get("authorization", "")
+    if not auth_header.lower().startswith("bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing token"
+        )
+    token = auth_header.split(" ", 1)[1]
+
+    payload = decode_token(token, expected_type="access")
+    if payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+        )
+
+    jti = payload.get("jti")
+    if isinstance(jti, str) and await TokenManager.is_access_token_blocked(jti):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token revoked"
+        )
+
+    sub = payload.get("sub")
+    if not isinstance(sub, str):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+        )
+
+    user = await get_user_by_id(session, sub)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
+        )
+
     return UserRead.model_validate(user)
 
 
@@ -427,51 +454,58 @@ async def refresh_session(
     response: Response,
     session: AsyncSession = _session_dependency,
 ) -> OAuthTokenResponse:
-    refresh_token = request.cookies.get(settings.refresh_cookie_name)
-    payload = decode_token(refresh_token, expected_type="refresh")
-    if payload is None:
+    old_refresh_token = request.cookies.get(settings.refresh_cookie_name)
+    if not old_refresh_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
         )
 
-    user_id = payload.get("sub")
-    jti = payload.get("jti")
-    if not isinstance(user_id, str) or not isinstance(jti, str):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        token_response = await client.post(
+            f"{settings.oidc_endpoint}/api/oidc/token",
+            data={
+                "grant_type": "refresh_token",
+                "refresh_token": old_refresh_token,
+                "client_id": settings.oidc_client_id,
+                "client_secret": settings.oidc_client_secret,
+            },
         )
 
-    is_valid = await TokenManager.is_refresh_token_valid(user_id, jti)
-    if not is_valid:
+    if token_response.status_code != status.HTTP_200_OK:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token revoked"
         )
 
-    user = await get_user_by_id(session, user_id)
+    token_data = token_response.json()
+    new_access_token = token_data.get("access_token")
+    new_refresh_token = token_data.get("refresh_token")
+    if not isinstance(new_access_token, str) or not isinstance(new_refresh_token, str):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token response"
+        )
+
+    access_payload = await oidc_validator.validate_token(new_access_token)
+    if access_payload is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid access token"
+        )
+
+    oidc_id = access_payload.get("sub")
+    if not isinstance(oidc_id, str):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+        )
+
+    user = await get_user_by_oidc_id(session, oidc_id)
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
         )
 
-    access_token = create_access_token({"sub": str(user.id)})
-    rotated_refresh_token = create_refresh_token({"sub": str(user.id)})
-    rotated_payload = decode_token(rotated_refresh_token, expected_type="refresh")
-    if rotated_payload is None or not isinstance(rotated_payload.get("jti"), str):
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to rotate refresh token",
-        )
-
-    await TokenManager.revoke_refresh_token(user_id, jti)
-    await TokenManager.store_refresh_token(
-        user_id,
-        rotated_payload["jti"],
-        _refresh_token_ttl_seconds(),
-    )
-    _set_refresh_cookie(response, rotated_refresh_token)
+    _set_refresh_cookie(response, new_refresh_token)
 
     return OAuthTokenResponse(
-        access_token=access_token,
+        access_token=new_access_token,
         expires_in=settings.access_token_expire_minutes * 60,
         user=UserRead.model_validate(user),
     )
@@ -483,10 +517,33 @@ async def logout(
     response: Response,
     user: User = _current_user_dependency,
 ) -> dict[str, str]:
+    # Blocklist the current access token so it can't be reused until expiry
+    auth_header = request.headers.get("authorization", "")
+    if auth_header.lower().startswith("bearer "):
+        access_token = auth_header.split(" ", 1)[1]
+        access_payload = await oidc_validator.validate_token(access_token)
+        if access_payload is not None and isinstance(access_payload.get("jti"), str):
+            remaining_ttl = settings.access_token_expire_minutes * 60
+            await TokenManager.blocklist_access_token(
+                access_payload["jti"], remaining_ttl
+            )
+
+    # Revoke refresh token at Authelia (best-effort)
     refresh_token = request.cookies.get(settings.refresh_cookie_name)
-    payload = decode_token(refresh_token, expected_type="refresh")
-    if payload is not None and isinstance(payload.get("jti"), str):
-        await TokenManager.revoke_refresh_token(str(user.id), payload["jti"])
+    if refresh_token:
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                await client.post(
+                    f"{settings.oidc_endpoint}/api/oidc/revocation",
+                    data={
+                        "token": refresh_token,
+                        "client_id": settings.oidc_client_id,
+                        "client_secret": settings.oidc_client_secret,
+                    },
+                )
+        except Exception:
+            logger.debug("Authelia revocation request failed (ignored)")
+
     _clear_refresh_cookie(response)
     return {"message": "Logged out"}
 
@@ -496,7 +553,6 @@ async def revoke_all_sessions(
     response: Response,
     user: User = _current_user_dependency,
 ) -> dict[str, str]:
-    await TokenManager.revoke_all_user_tokens(str(user.id))
     _clear_refresh_cookie(response)
     return {"message": "All sessions revoked"}
 
@@ -543,16 +599,19 @@ async def oauth_token(
         )
 
     app = await get_application_by_client_id(session, request.client_id)
-    if app is None or app.client_secret != request.client_secret:
+    if app is None or not hmac.compare_digest(
+        app.client_secret or "", request.client_secret
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_client"
         )
 
     _validate_app_redirect_uri(app.redirect_uris, request.redirect_uri)
     auth_code_payload = await _consume_authorization_code(request.code)
-    if (
-        auth_code_payload.get("client_id") != request.client_id
-        or auth_code_payload.get("redirect_uri") != request.redirect_uri
+    if not hmac.compare_digest(
+        auth_code_payload.get("client_id") or "", request.client_id
+    ) or not hmac.compare_digest(
+        auth_code_payload.get("redirect_uri") or "", request.redirect_uri
     ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="invalid_grant"

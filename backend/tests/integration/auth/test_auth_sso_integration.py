@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 from urllib.parse import parse_qs, urlparse
 
+import httpx
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
@@ -10,8 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from tests.factories import SubAppFactory
 
 from app.api import auth as auth_api
-from app.api.auth import _issue_session_tokens
-from app.core.security import create_access_token, decode_token
+from app.core.oidc import oidc_validator
+from app.core.security import decode_token
 from app.models.user import User
 
 
@@ -22,10 +23,14 @@ async def test_callback_creates_local_session_and_redirects(
     test_session: AsyncSession,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    async def fake_fetch_token(code: str) -> str:
+    async def fake_fetch_tokens(code: str) -> dict:
         await asyncio.sleep(0)
         assert code == "oidc-code"
-        return "oidc-access-token"
+        return {
+            "access_token": "oidc-access-token",
+            "refresh_token": "oidc-refresh-token",
+            "expires_in": 3600,
+        }
 
     async def fake_fetch_profile(access_token: str) -> dict[str, object]:
         await asyncio.sleep(0)
@@ -37,7 +42,7 @@ async def test_callback_creates_local_session_and_redirects(
             "groups": ["admins"],
         }
 
-    monkeypatch.setattr(auth_api, "_fetch_oidc_token", fake_fetch_token)
+    monkeypatch.setattr(auth_api, "_fetch_oidc_tokens", fake_fetch_tokens)
     monkeypatch.setattr(auth_api, "_fetch_oidc_profile", fake_fetch_profile)
 
     login_response = await async_client.get(
@@ -82,10 +87,14 @@ async def test_callback_redirects_back_to_first_party_subapp(
         admin_url="http://localhost:6001/admin",
     )
 
-    async def fake_fetch_token(code: str) -> str:
+    async def fake_fetch_tokens(code: str) -> dict:
         await asyncio.sleep(0)
         assert code == "oidc-code"
-        return "oidc-access-token"
+        return {
+            "access_token": "oidc-access-token",
+            "refresh_token": "oidc-refresh-token",
+            "expires_in": 3600,
+        }
 
     async def fake_fetch_profile(access_token: str) -> dict[str, object]:
         await asyncio.sleep(0)
@@ -97,7 +106,7 @@ async def test_callback_redirects_back_to_first_party_subapp(
             "groups": [],
         }
 
-    monkeypatch.setattr(auth_api, "_fetch_oidc_token", fake_fetch_token)
+    monkeypatch.setattr(auth_api, "_fetch_oidc_tokens", fake_fetch_tokens)
     monkeypatch.setattr(auth_api, "_fetch_oidc_profile", fake_fetch_profile)
 
     login_response = await async_client.get(
@@ -141,9 +150,7 @@ async def test_authorize_validates_redirect_uri(
         client_secret="secret-1",
         redirect_uris="https://sub.example.com/callback",
     )
-    headers = {
-        "Authorization": f"Bearer {create_access_token({'sub': str(admin_user.id)})}"
-    }
+    headers = {"Authorization": f"Bearer test-token-{admin_user.oidc_id}"}
 
     response = await async_client.get(
         "/api/auth/authorize",
@@ -173,9 +180,7 @@ async def test_authorize_and_token_exchange_flow(
         client_secret="secret-2",
         redirect_uris="https://sub.example.com/callback",
     )
-    headers = {
-        "Authorization": f"Bearer {create_access_token({'sub': str(admin_user.id)})}"
-    }
+    headers = {"Authorization": f"Bearer test-token-{admin_user.oidc_id}"}
 
     authorize_response = await async_client.get(
         "/api/auth/authorize",
@@ -228,10 +233,14 @@ async def test_mock_first_party_subapp_contract_flow(
         redirect_uris="http://mock-subapp.local/auth/callback",
     )
 
-    async def fake_fetch_token(code: str) -> str:
+    async def fake_fetch_tokens(code: str) -> dict:
         await asyncio.sleep(0)
         assert code == "oidc-code"
-        return "oidc-access-token"
+        return {
+            "access_token": "oidc-access-token",
+            "refresh_token": "oidc-refresh-token",
+            "expires_in": 3600,
+        }
 
     async def fake_fetch_profile(access_token: str) -> dict[str, object]:
         await asyncio.sleep(0)
@@ -243,7 +252,7 @@ async def test_mock_first_party_subapp_contract_flow(
             "groups": ["admins"],
         }
 
-    monkeypatch.setattr(auth_api, "_fetch_oidc_token", fake_fetch_token)
+    monkeypatch.setattr(auth_api, "_fetch_oidc_tokens", fake_fetch_tokens)
     monkeypatch.setattr(auth_api, "_fetch_oidc_profile", fake_fetch_profile)
 
     login_response = await async_client.get(
@@ -285,16 +294,9 @@ async def test_mock_first_party_subapp_contract_flow(
     )
 
     assert token_response.status_code == 200
-    access_token = token_response.json()["access_token"]
-    me_response = await async_client.get(
-        "/api/auth/me",
-        headers={"Authorization": f"Bearer {access_token}"},
-    )
-
-    assert me_response.status_code == 200
-    body = me_response.json()
-    assert body["email"] == "subapp@example.com"
-    assert body["is_admin"] is True
+    body = token_response.json()
+    assert body["user"]["email"] == "subapp@example.com"
+    assert body["user"]["is_admin"] is True
 
 
 @pytest.mark.integration
@@ -302,17 +304,42 @@ async def test_mock_first_party_subapp_contract_flow(
 async def test_refresh_rotates_refresh_cookie(
     async_client: AsyncClient,
     admin_user: User,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    _access_token, refresh_token, _ = await _issue_session_tokens(admin_user)
-    async_client.cookies.set("refresh_token", refresh_token)
+    fake_refresh_token = "authelia-refresh-token-123"
+    async_client.cookies.set("refresh_token", fake_refresh_token)
 
-    response = await async_client.post("/api/auth/refresh")
+    async def fake_validate(token: str) -> dict | None:
+        await asyncio.sleep(0)
+        if token == "new-access-token":
+            return {"sub": admin_user.oidc_id, "jti": "new-jti"}
+        return None
+
+    from unittest.mock import AsyncMock, patch  # noqa: PLC0415
+
+    mock_response = httpx.Response(
+        200,
+        json={
+            "access_token": "new-access-token",
+            "refresh_token": "new-refresh-token",
+            "expires_in": 3600,
+        },
+        request=httpx.Request("POST", "http://test/token"),
+    )
+
+    monkeypatch.setattr(oidc_validator, "validate_token", fake_validate)
+
+    with patch("app.api.auth.httpx.AsyncClient") as mock_client_cls:
+        mock_client = AsyncMock()
+        mock_client.post = AsyncMock(return_value=mock_response)
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+        mock_client_cls.return_value = mock_client
+        response = await async_client.post("/api/auth/refresh")
 
     assert response.status_code == 200
-    assert response.cookies.get("refresh_token")
-    payload = decode_token(response.json()["access_token"], expected_type="access")
-    assert payload is not None
-    assert payload["sub"] == str(admin_user.id)
+    assert "refresh_token" in response.headers.get("set-cookie", "")
+    assert response.json()["access_token"] == "new-access-token"
 
 
 @pytest.mark.integration
@@ -331,9 +358,7 @@ async def test_admin_jump_uses_admin_url_state(
         client_secret="secret-admin",
         redirect_uris="https://moviedb.example.com/auth/callback",
     )
-    headers = {
-        "Authorization": f"Bearer {create_access_token({'sub': str(admin_user.id)})}"
-    }
+    headers = {"Authorization": f"Bearer test-token-{admin_user.oidc_id}"}
 
     response = await async_client.get(
         f"/api/auth/jump/{subapp.slug}",
@@ -360,9 +385,7 @@ async def test_mock_subapp_rejects_wrong_client_secret(
         client_secret="expected-secret",
         redirect_uris="http://mock-subapp.local/auth/callback",
     )
-    headers = {
-        "Authorization": f"Bearer {create_access_token({'sub': str(admin_user.id)})}"
-    }
+    headers = {"Authorization": f"Bearer test-token-{admin_user.oidc_id}"}
 
     authorize_response = await async_client.get(
         "/api/auth/authorize",
@@ -404,9 +427,7 @@ async def test_mock_subapp_rejects_reused_code(
         client_secret="reuse-secret",
         redirect_uris="http://mock-subapp.local/auth/callback",
     )
-    headers = {
-        "Authorization": f"Bearer {create_access_token({'sub': str(admin_user.id)})}"
-    }
+    headers = {"Authorization": f"Bearer test-token-{admin_user.oidc_id}"}
 
     authorize_response = await async_client.get(
         "/api/auth/authorize",
@@ -460,9 +481,7 @@ async def test_mock_subapp_rejects_mismatched_redirect_uri(
         client_secret="redirect-secret",
         redirect_uris="http://mock-subapp.local/auth/callback",
     )
-    headers = {
-        "Authorization": f"Bearer {create_access_token({'sub': str(admin_user.id)})}"
-    }
+    headers = {"Authorization": f"Bearer test-token-{admin_user.oidc_id}"}
 
     authorize_response = await async_client.get(
         "/api/auth/authorize",
@@ -493,6 +512,59 @@ async def test_mock_subapp_rejects_mismatched_redirect_uri(
 
 @pytest.mark.integration
 @pytest.mark.auth
+async def test_userinfo_endpoint_accepts_app_token(
+    async_client: AsyncClient,
+    test_session: AsyncSession,
+    admin_user: User,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    subapp = await SubAppFactory.create_async(
+        test_session,
+        client_id="client-userinfo",
+        client_secret="secret-userinfo",
+        redirect_uris="https://sub.example.com/callback",
+    )
+    headers = {"Authorization": f"Bearer test-token-{admin_user.oidc_id}"}
+
+    authorize_response = await async_client.get(
+        "/api/auth/authorize",
+        params={
+            "client_id": subapp.client_id,
+            "redirect_uri": "https://sub.example.com/callback",
+            "response_type": "code",
+            "state": "userinfo-state",
+        },
+        headers=headers,
+    )
+    assert authorize_response.status_code == 200
+    code = parse_qs(urlparse(authorize_response.json()["url"]).query)["code"][0]
+
+    token_response = await async_client.post(
+        "/api/auth/oauth/token",
+        json={
+            "grant_type": "authorization_code",
+            "code": code,
+            "client_id": subapp.client_id,
+            "client_secret": subapp.client_secret,
+            "redirect_uri": "https://sub.example.com/callback",
+        },
+    )
+    assert token_response.status_code == 200
+    access_token = token_response.json()["access_token"]
+
+    userinfo_response = await async_client.get(
+        "/api/auth/userinfo",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+    assert userinfo_response.status_code == 200
+    body = userinfo_response.json()
+    assert body["email"] == admin_user.email
+    assert body["id"] == str(admin_user.id)
+
+
+@pytest.mark.integration
+@pytest.mark.auth
 async def test_admin_jump_requires_admin_url(
     async_client: AsyncClient,
     test_session: AsyncSession,
@@ -507,9 +579,7 @@ async def test_admin_jump_requires_admin_url(
         client_secret="secret-no-admin",
         redirect_uris="http://mock-subapp.local/auth/callback",
     )
-    headers = {
-        "Authorization": f"Bearer {create_access_token({'sub': str(admin_user.id)})}"
-    }
+    headers = {"Authorization": f"Bearer test-token-{admin_user.oidc_id}"}
 
     response = await async_client.get(
         f"/api/auth/jump/{subapp.slug}",

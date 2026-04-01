@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import typing
 import uuid
 from datetime import UTC, datetime, timedelta
@@ -19,15 +18,14 @@ def get_password_hash(password: str) -> str:
         msg = "Password must not be empty"
         raise ValueError(msg)
 
-    password_bytes = password.encode("utf-8")
-    prehashed = hashlib.sha256(password_bytes).digest()
-    hashed_bytes: bytes = hashpw(prehashed, gensalt())
+    hashed_bytes: bytes = hashpw(password.encode("utf-8"), gensalt())
     return hashed_bytes.decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    prehashed = hashlib.sha256(plain_password.encode("utf-8")).digest()
-    return bool(checkpw(prehashed, hashed_password.encode("utf-8")))
+    return bool(
+        checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
+    )
 
 
 def _create_token(
@@ -58,8 +56,10 @@ def create_access_token(
     expires_delta: int | None = None,
 ) -> str:
     lifetime_seconds = expires_delta or settings.access_token_expire_minutes * 60
+    payload = data.copy()
+    payload.setdefault("jti", str(uuid.uuid4()))
     return _create_token(
-        data, expires_delta=lifetime_seconds, token_type=ACCESS_TOKEN_TYPE
+        payload, expires_delta=lifetime_seconds, token_type=ACCESS_TOKEN_TYPE
     )
 
 

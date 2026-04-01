@@ -276,6 +276,7 @@ module = [
   "httpx",
   "httpx.*",
   "jwt",
+  "jwt.*",
   "yaml",
   "bcrypt",
 ]

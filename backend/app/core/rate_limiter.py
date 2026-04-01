@@ -22,27 +22,34 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         period: int = 3600,  # Time period in seconds (1 hour)
         file_calls: int = 20,  # Calls for file endpoints
         file_period: int = 60,  # Period for file endpoints (1 minute)
+        auth_calls: int = 10,  # Calls for auth endpoints
+        auth_period: int = 60,  # Period for auth endpoints (1 minute)
     ):
         super().__init__(app)
         self.calls = calls
         self.period = period
         self.file_calls = file_calls
         self.file_period = file_period
+        self.auth_calls = auth_calls
+        self.auth_period = auth_period
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
-        # Only apply rate limiting to file access endpoints
+        # Only apply rate limiting to relevant endpoints
         if not self._should_rate_limit(request):
             return typing.cast(Response, await call_next(request))
 
         # Get client identifier
         client_id = self._get_client_id(request)
 
-        # Check if file endpoint (more restrictive)
-        is_file_endpoint = (
-            "/file" in request.url.path or "/download" in request.url.path
-        )
+        path = request.url.path
+        is_auth_endpoint = path.startswith("/api/auth/")
+        is_file_endpoint = "/file" in path or "/download" in path
 
-        if is_file_endpoint:
+        if is_auth_endpoint:
+            calls_allowed = self.auth_calls
+            period = self.auth_period
+            key_suffix = "auth"
+        elif is_file_endpoint:
             calls_allowed = self.file_calls
             period = self.file_period
             key_suffix = "file"
@@ -78,11 +85,15 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         """Determine if request should be rate limited."""
         path = request.url.path
 
-        # Apply to photo-related endpoints
+        # Auth endpoints — brute force protection
+        if path.startswith("/api/auth/"):
+            return True
+
+        # Photo-related endpoints
         if path.startswith("/api/photos/"):
             return True
 
-        # Apply to file serving endpoints
+        # File serving endpoints
         return bool("/file" in path or "/download" in path)
 
     def _get_client_id(self, request: Request) -> str:
