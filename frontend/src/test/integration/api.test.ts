@@ -566,7 +566,6 @@ describe("API Integration Tests", () => {
       url: "https://application.example.com",
       icon: "test-icon",
       enabled: true,
-      show_in_menu: true,
       requires_auth: false,
       is_external: true,
       admin_only: false,

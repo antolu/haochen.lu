@@ -8,12 +8,14 @@ from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.application import (
+    bulk_reorder_applications,
     create_application,
     delete_application,
     get_application,
     get_application_by_slug,
     get_application_count,
     get_applications,
+    regenerate_application_credentials,
     update_application,
 )
 from app.dependencies import (
@@ -25,6 +27,9 @@ from app.models.user import User
 from app.schemas.application import (
     ApplicationCreate,
     ApplicationListResponse,
+    ApplicationPublicListResponse,
+    ApplicationPublicResponse,
+    ApplicationReorderRequest,
     ApplicationResponse,
     ApplicationUpdate,
 )
@@ -34,39 +39,34 @@ router = APIRouter()
 
 @router.get("/")
 async def list_applications(
-    *, menu_only: bool = True, db: AsyncSession = _session_dependency
-) -> ApplicationListResponse:
+    *, db: AsyncSession = _session_dependency
+) -> ApplicationPublicListResponse:
     """List available applications for public access."""
-    applications = await get_applications(
-        db, enabled_only=True, menu_only=menu_only, admin_only=False
-    )
+    applications = await get_applications(db, enabled_only=True, admin_only=False)
 
-    public_applications = [app for app in applications if not app.requires_auth]
-
-    return ApplicationListResponse(
+    return ApplicationPublicListResponse(
         applications=[
-            ApplicationResponse.model_validate(app) for app in public_applications
+            ApplicationPublicResponse.model_validate(app) for app in applications
         ],
-        total=len(public_applications),
+        total=len(applications),
     )
 
 
 @router.get("/authenticated")
 async def list_authenticated_applications(
     *,
-    menu_only: bool = True,
     db: AsyncSession = _session_dependency,
     current_user: User = _current_user_dependency,
-) -> ApplicationListResponse:
+) -> ApplicationPublicListResponse:
     """List applications available to authenticated users."""
     admin_only = None if current_user.is_admin else False
 
-    applications = await get_applications(
-        db, enabled_only=True, menu_only=menu_only, admin_only=admin_only
-    )
+    applications = await get_applications(db, enabled_only=True, admin_only=admin_only)
 
-    return ApplicationListResponse(
-        applications=[ApplicationResponse.model_validate(app) for app in applications],
+    return ApplicationPublicListResponse(
+        applications=[
+            ApplicationPublicResponse.model_validate(app) for app in applications
+        ],
         total=len(applications),
     )
 
@@ -74,14 +74,11 @@ async def list_authenticated_applications(
 @router.get("/admin")
 async def list_all_applications(
     *,
-    menu_only: bool = False,
     db: AsyncSession = _session_dependency,
     current_user: User = _current_admin_user_dependency,
 ) -> ApplicationListResponse:
     """List all applications (admin only)."""
-    applications = await get_applications(
-        db, enabled_only=False, menu_only=menu_only, admin_only=None
-    )
+    applications = await get_applications(db, enabled_only=False, admin_only=None)
 
     return ApplicationListResponse(
         applications=[ApplicationResponse.model_validate(app) for app in applications],
@@ -139,6 +136,33 @@ async def update_application_endpoint(
     return ApplicationResponse.model_validate(application)
 
 
+@router.post("/{application_id}/regenerate-credentials")
+async def regenerate_credentials(
+    application_id: UUID,
+    db: AsyncSession = _session_dependency,
+    current_user: User = _current_admin_user_dependency,
+) -> ApplicationResponse:
+    """Regenerate client ID and secret for an application (admin only)."""
+    application = await regenerate_application_credentials(db, application_id)
+    if not application:
+        raise HTTPException(status_code=404, detail="Application not found")
+    return ApplicationResponse.model_validate(application)
+
+
+@router.post("/reorder")
+async def reorder_applications(
+    payload: ApplicationReorderRequest,
+    db: AsyncSession = _session_dependency,
+    current_user: User = _current_admin_user_dependency,
+) -> dict[str, str]:
+    """Bulk reorder applications (admin only)."""
+    items: list[dict[str, str | int]] = [
+        {"id": str(i.id), "order": i.order} for i in payload.items
+    ]
+    await bulk_reorder_applications(db, items, normalize=payload.normalize)
+    return {"message": "Reordered successfully"}
+
+
 @router.delete("/{application_id}")
 async def delete_application_endpoint(
     application_id: UUID,
@@ -180,7 +204,6 @@ async def export_application(
             "is_external": application.is_external,
             "requires_auth": application.requires_auth,
             "admin_only": application.admin_only,
-            "show_in_menu": application.show_in_menu,
             "menu_order": application.order,
             "has_admin": bool(application.admin_url),
         },
@@ -212,9 +235,7 @@ async def get_application_stats(
 ) -> dict[str, int]:
     """Get application statistics (admin only)."""
     total_applications = await get_application_count(db)
-    enabled_applications = len(
-        await get_applications(db, enabled_only=True, menu_only=False)
-    )
+    enabled_applications = len(await get_applications(db, enabled_only=True))
 
     return {
         "total_applications": total_applications,

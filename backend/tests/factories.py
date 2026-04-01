@@ -231,9 +231,7 @@ class SubAppFactory(AsyncSQLAlchemyModelFactory):
     client_id = factory.LazyFunction(lambda: secrets.token_urlsafe(12))
     client_secret = factory.LazyFunction(lambda: secrets.token_urlsafe(24))
     redirect_uris = LazyAttribute(lambda obj: f"{obj.url}/callback")
-    show_in_menu = True
     enabled = True
-    order = Faker("random_int", min=0, max=100)
 
     created_at = Faker("date_time_this_year")
     updated_at = LazyAttribute(lambda obj: obj.created_at)

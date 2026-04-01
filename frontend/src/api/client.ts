@@ -587,7 +587,10 @@ export const applications = {
   },
 
   create: async (
-    application: Omit<Application, "id" | "slug" | "created_at" | "updated_at">,
+    application: Omit<
+      Application,
+      "id" | "slug" | "order" | "created_at" | "updated_at"
+    >,
   ): Promise<Application> => {
     const response = await apiClient.post<Application>(
       "/applications",
@@ -609,6 +612,20 @@ export const applications = {
 
   delete: async (id: string): Promise<void> => {
     await apiClient.delete(`/applications/${id}`);
+  },
+
+  reorder: async (
+    items: Array<{ id: string; order: number }>,
+    normalize = true,
+  ): Promise<void> => {
+    await apiClient.post("/applications/reorder", { items, normalize });
+  },
+
+  regenerateCredentials: async (id: string): Promise<Application> => {
+    const response = await apiClient.post<Application>(
+      `/applications/${id}/regenerate-credentials`,
+    );
+    return response.data;
   },
 
   getStats: async (): Promise<ApplicationStatsSummary> => {

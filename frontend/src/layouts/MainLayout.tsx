@@ -29,10 +29,14 @@ const MainLayout: React.FC = () => {
   const isScrolled = scrollY > 10;
 
   const { data: subAppsData } = useQuery({
-    queryKey: ["applications", isAuthenticated ? "authenticated" : "public"],
-    queryFn: () =>
-      isAuthenticated ? applications.listAuthenticated() : applications.list(),
+    queryKey: ["applications", "public"],
+    queryFn: () => applications.list(),
+    staleTime: 0,
   });
+
+  const visibleApps = (subAppsData?.applications ?? []).filter(
+    (app) => !app.logged_in_only || isAuthenticated,
+  );
 
   // Fetch footer content
   const { data: footerContent } = useQuery({
@@ -68,23 +72,12 @@ const MainLayout: React.FC = () => {
 
   const navPadding = isScrolled ? "py-2" : "py-3 md:py-4";
 
-  const handleAppNavigation = async (app: {
-    slug: string;
-    url: string;
-    requires_auth: boolean;
-    is_external: boolean;
-  }) => {
-    if (!app.requires_auth) {
-      window.open(app.url, app.is_external ? "_blank" : "_self");
-      return;
-    }
-
-    try {
-      const { url } = await applications.getJumpUrl(app.slug, "app");
-      window.open(url, app.is_external ? "_blank" : "_self");
-    } catch (error) {
-      console.error("Failed to open application", error);
-    }
+  const handleAppNavigation = (app: { url: string; is_external: boolean }) => {
+    window.open(
+      app.url,
+      app.is_external ? "_blank" : "_self",
+      "noopener,noreferrer",
+    );
   };
 
   return (
@@ -129,66 +122,61 @@ const MainLayout: React.FC = () => {
               ))}
 
               {/* Sub-apps dropdown or direct links */}
-              {subAppsData?.applications &&
-                subAppsData.applications.length > 0 && (
-                  <div className="relative group">
-                    <button
-                      className={`px-3 text-foreground hover:text-primary transition-all duration-300 ease-out ${navPadding} ${navClasses}`}
-                    >
-                      Apps
-                    </button>
-                    <div className="absolute left-0 mt-2 w-56 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                      <div className="py-1">
-                        {subAppsData.applications.map((app) => {
-                          return (
-                            <button
-                              key={app.id}
-                              type="button"
-                              onClick={() => {
-                                void handleAppNavigation(app);
-                              }}
-                              className="flex w-full items-center px-4 py-2 text-sm text-foreground hover:bg-gray-50 hover:text-primary transition-colors duration-200"
-                            >
-                              {app.icon && (
-                                <span
-                                  className="mr-3 text-lg"
-                                  style={{ color: app.color ?? undefined }}
-                                >
-                                  {app.icon}
-                                </span>
+              {visibleApps.length > 0 && (
+                <div className="relative group">
+                  <button
+                    className={`px-3 text-foreground hover:text-primary transition-all duration-300 ease-out ${navPadding} ${navClasses}`}
+                  >
+                    Apps
+                  </button>
+                  <div className="absolute left-0 mt-2 w-56 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div className="py-1">
+                      {visibleApps.map((app) => {
+                        return (
+                          <button
+                            key={app.id}
+                            type="button"
+                            onClick={() => {
+                              void handleAppNavigation(app);
+                            }}
+                            className="flex w-full items-center px-4 py-2 text-sm text-foreground hover:bg-gray-50 hover:text-primary transition-colors duration-200"
+                          >
+                            {app.icon && (
+                              <span
+                                className="mr-3 text-lg"
+                                style={{ color: app.color ?? undefined }}
+                              >
+                                {app.icon}
+                              </span>
+                            )}
+                            <div>
+                              <div className="font-medium">{app.name}</div>
+                              {app.description && (
+                                <div className="text-xs text-muted-foreground">
+                                  {app.description}
+                                </div>
                               )}
-                              <div>
-                                <div className="font-medium">{app.name}</div>
-                                {app.description && (
-                                  <div className="text-xs text-muted-foreground">
-                                    {app.description}
-                                  </div>
-                                )}
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
-                )}
+                </div>
+              )}
             </nav>
 
             {/* Login / user indicator */}
-            <div className="hidden md:flex items-center">
-              {isAuthenticated ? (
-                <span className="text-sm text-muted-foreground">
-                  {/* Intentionally minimal — admin access is via /admin */}
-                </span>
-              ) : (
+            {!isAuthenticated && (
+              <div className="hidden md:flex items-center">
                 <a
-                  href="/api/auth/login?next=/admin"
+                  href={`/api/auth/login?next=${encodeURIComponent(location.pathname + location.search)}`}
                   className={`px-3 transition-all duration-300 ease-out ${navPadding} ${navClasses} text-foreground hover:text-primary`}
                 >
                   Login
                 </a>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Mobile menu button */}
             <div className="md:hidden">
@@ -267,7 +255,7 @@ const MainLayout: React.FC = () => {
                       <div className="px-3 py-2 text-sm font-medium text-muted-foreground uppercase tracking-wider">
                         Applications
                       </div>
-                      {subAppsData.applications.map((app) => {
+                      {visibleApps.map((app) => {
                         return (
                           <button
                             key={app.id}
