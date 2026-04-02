@@ -28,7 +28,7 @@ repos:
 
   # Python linting and formatting
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.7
+    rev: v0.15.8
     hooks:
       - id: ruff-check
         args: [--fix, --exit-non-zero-on-fix, --unsafe-fixes, --preview, --config=backend/pyproject.toml]
@@ -41,7 +41,7 @@ repos:
 
   # Python type checking
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.19.1
+    rev: v1.20.0
     hooks:
       - id: mypy
         files: ^backend/
@@ -54,7 +54,7 @@ repos:
           - 'types-PyYAML'
           - 'types-redis>=4.6.0.20241004'
           - 'httpx>=0.28.1'
-          - 'fastapi>=0.135.2'
+          - 'fastapi>=0.135.3'
           - 'starlette>=1.0.0'
           - 'bcrypt>=5.0.0'
 
@@ -70,7 +70,7 @@ repos:
         additional_dependencies:
           - eslint@10.1.0
           - '@eslint/js@10.0.1'
-          - 'typescript-eslint@8.57.2'
+          - 'typescript-eslint@8.58.0'
           - 'eslint-plugin-react-hooks@7.0.1'
           - 'eslint-plugin-react-refresh@0.5.2'
           - 'globals@17.4.0'
