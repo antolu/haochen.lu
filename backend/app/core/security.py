@@ -86,9 +86,8 @@ def decode_token(
         return None
 
     try:
-        payload = typing.cast(
-            dict[str, typing.Any],
-            jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm]),
+        payload: dict[str, typing.Any] = jwt.decode(
+            token, settings.secret_key, algorithms=[settings.algorithm]
         )
     except jwt.PyJWTError:
         return None
