@@ -28,7 +28,7 @@ repos:
 
   # Python linting and formatting
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.8
+    rev: v0.15.9
     hooks:
       - id: ruff-check
         args: [--fix, --exit-non-zero-on-fix, --unsafe-fixes, --preview, --config=backend/pyproject.toml]
@@ -50,7 +50,7 @@ repos:
         additional_dependencies:
           - 'pydantic>=2.12.5'
           - 'pydantic-settings>=2.13.1'
-          - 'sqlalchemy[mypy]>=2.0.48'
+          - 'sqlalchemy[mypy]>=2.0.49'
           - 'types-PyYAML'
           - 'types-redis>=4.6.0.20241004'
           - 'httpx>=0.28.1'
@@ -60,7 +60,7 @@ repos:
 
   # ESLint for TypeScript/JavaScript linting
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v10.1.0
+    rev: v10.2.0
     hooks:
       - id: eslint
         files: ^frontend/.*\.(ts|tsx|js|jsx)$  # Explicitly match TypeScript and JavaScript files
@@ -68,9 +68,9 @@ repos:
         types: [file]
         args: [--fix, --config, frontend/eslint.config.js]
         additional_dependencies:
-          - eslint@10.1.0
+          - eslint@10.2.0
           - '@eslint/js@10.0.1'
-          - 'typescript-eslint@8.58.0'
+          - 'typescript-eslint@8.58.1'
           - 'eslint-plugin-react-hooks@7.0.1'
           - 'eslint-plugin-react-refresh@0.5.2'
           - 'globals@17.4.0'
