@@ -22,7 +22,7 @@ classifiers = [
 ]
 dependencies = [
   "fastapi>=0.129.0",
-  "uvicorn[standard]~=0.42.0",
+  "uvicorn[standard]~=0.44.0",
   "sqlalchemy~=2.0.43",
   "alembic~=1.16",
   "asyncpg~=0.31.0",
@@ -261,17 +261,10 @@ exclude = ["alembic/"]
 module = [
   "fastapi",
   "fastapi.*",
-  "fastapi_users",
-  "fastapi_users.*",
-  "fastapi_users_db_sqlalchemy",
-  "fastapi_users_db_sqlalchemy.*",
-  "alembic",
-  "alembic.*",
   "PIL",
   "PIL.*",
   "pyvips",
   "piexif",
-  "geopy",
   "geopy.*",
   "httpx",
   "httpx.*",
@@ -290,11 +283,6 @@ disable_error_code = ["union-attr"]
 [[tool.mypy.overrides]]
 module = "app.schemas.user"
 disable_error_code = ["assignment"]
-
-[[tool.mypy.overrides]]
-module = "tests.*"
-disallow_untyped_defs = false
-ignore_errors = true
 
 [[tool.mypy.overrides]]
 module = "app.crud.*"
