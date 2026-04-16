@@ -67,7 +67,7 @@ jobs:
 
     - name: Notify on failure
       if: failure() && github.event_name != 'pull_request'
-      uses: actions/github-script@v8
+      uses: actions/github-script@v9
       with:
         script: |
           github.rest.issues.create({
