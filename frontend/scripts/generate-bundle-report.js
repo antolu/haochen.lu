@@ -17,9 +17,9 @@ if (!fs.existsSync(ASSETS_DIR)) {
 
 const files = fs
   .readdirSync(ASSETS_DIR)
-  .filter((file) => /\.(js|css|html)$/.test(file));
+  .filter(file => /\.(js|css|html)$/.test(file));
 
-const report = files.map((file) => {
+const report = files.map(file => {
   const filePath = path.join(ASSETS_DIR, file);
   const content = fs.readFileSync(filePath);
   const statSize = content.length;

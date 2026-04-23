@@ -66,7 +66,7 @@ const PhotoMetadataForm: React.FC<PhotoMetadataFormProps> = ({
 
   return (
     <form
-      onSubmit={(e) => void handleSubmit(onSubmit)(e)}
+      onSubmit={e => void handleSubmit(onSubmit)(e)}
       onKeyDown={handleKeyDown}
       className="space-y-4"
     >

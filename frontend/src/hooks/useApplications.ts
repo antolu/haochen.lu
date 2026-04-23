@@ -26,7 +26,7 @@ export const useApplications = () => {
     select: (data: ApplicationListResponse) => ({
       ...data,
       applications: data.applications.sort(
-        (a, b) => a.order - b.order || a.name.localeCompare(b.name),
+        (a, b) => a.order - b.order || a.name.localeCompare(b.name)
       ),
     }),
   });
@@ -57,9 +57,9 @@ export const useCreateApplication = () => {
       data: Omit<
         Application,
         "id" | "slug" | "order" | "created_at" | "updated_at"
-      >,
+      >
     ) => applications.create(data),
-    onSuccess: (newApp) => {
+    onSuccess: newApp => {
       void queryClient.invalidateQueries({ queryKey: appKeys.lists() });
       void queryClient.invalidateQueries({ queryKey: appKeys.stats() });
 
@@ -80,18 +80,18 @@ export const useUpdateApplication = () => {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Application> }) =>
       applications.update(id, data),
-    onSuccess: (updatedApp) => {
+    onSuccess: updatedApp => {
       queryClient.setQueryData(
         appKeys.list("admin"),
         (old: ApplicationListResponse | undefined) => {
           if (!old) return old;
           return {
             ...old,
-            applications: old.applications.map((app) =>
-              app.id === updatedApp.id ? updatedApp : app,
+            applications: old.applications.map(app =>
+              app.id === updatedApp.id ? updatedApp : app
             ),
           };
-        },
+        }
       );
 
       queryClient.setQueryData(appKeys.detail(updatedApp.id), updatedApp);
@@ -120,12 +120,10 @@ export const useDeleteApplication = () => {
           if (!old) return old;
           return {
             ...old,
-            applications: old.applications.filter(
-              (app) => app.id !== deletedId,
-            ),
+            applications: old.applications.filter(app => app.id !== deletedId),
             total: old.total - 1,
           };
-        },
+        }
       );
 
       queryClient.removeQueries({ queryKey: appKeys.detail(deletedId) });
@@ -152,7 +150,7 @@ export const useToggleAppEnabled = () => {
       await queryClient.cancelQueries({ queryKey: appKeys.list("admin") });
 
       const previousData = queryClient.getQueryData<ApplicationListResponse>(
-        appKeys.list("admin"),
+        appKeys.list("admin")
       );
 
       queryClient.setQueryData(
@@ -161,11 +159,11 @@ export const useToggleAppEnabled = () => {
           if (!old) return old;
           return {
             ...old,
-            applications: old.applications.map((app) =>
-              app.id === id ? { ...app, enabled } : app,
+            applications: old.applications.map(app =>
+              app.id === id ? { ...app, enabled } : app
             ),
           };
-        },
+        }
       );
 
       return { previousData };
@@ -178,7 +176,7 @@ export const useToggleAppEnabled = () => {
       const message = "Failed to update app status";
       toast.error(message);
     },
-    onSuccess: (updatedApp) => {
+    onSuccess: updatedApp => {
       queryClient.setQueryData(appKeys.detail(updatedApp.id), updatedApp);
       queryClient.setQueryData(appKeys.detail(updatedApp.slug), updatedApp);
 
@@ -198,18 +196,18 @@ export const useRegenerateCredentials = () => {
 
   return useMutation({
     mutationFn: (id: string) => applications.regenerateCredentials(id),
-    onSuccess: (updatedApp) => {
+    onSuccess: updatedApp => {
       queryClient.setQueryData(
         appKeys.list("admin"),
         (old: ApplicationListResponse | undefined) => {
           if (!old) return old;
           return {
             ...old,
-            applications: old.applications.map((app) =>
-              app.id === updatedApp.id ? updatedApp : app,
+            applications: old.applications.map(app =>
+              app.id === updatedApp.id ? updatedApp : app
             ),
           };
-        },
+        }
       );
       toast.success("Credentials regenerated");
     },
@@ -225,12 +223,12 @@ export const useReorderApplications = () => {
   return useMutation({
     mutationFn: (items: Array<{ id: string; order: number }>) =>
       applications.reorder(items, true),
-    onMutate: async (items) => {
+    onMutate: async items => {
       await queryClient.cancelQueries({ queryKey: appKeys.list("admin") });
       const previous = queryClient.getQueryData<ApplicationListResponse>(
-        appKeys.list("admin"),
+        appKeys.list("admin")
       );
-      const orderMap = new Map(items.map((i) => [i.id, i.order]));
+      const orderMap = new Map(items.map(i => [i.id, i.order]));
       queryClient.setQueryData(
         appKeys.list("admin"),
         (old: ApplicationListResponse | undefined) => {
@@ -240,10 +238,10 @@ export const useReorderApplications = () => {
             applications: [...old.applications].sort(
               (a, b) =>
                 (orderMap.get(a.id) ?? a.order) -
-                (orderMap.get(b.id) ?? b.order),
+                (orderMap.get(b.id) ?? b.order)
             ),
           };
-        },
+        }
       );
       return { previous };
     },
@@ -264,14 +262,14 @@ export const useBulkUpdateApplications = () => {
 
   return useMutation({
     mutationFn: async (
-      updates: Array<{ id: string; data: Partial<Application> }>,
+      updates: Array<{ id: string; data: Partial<Application> }>
     ) => {
       const results = await Promise.all(
-        updates.map(({ id, data }) => applications.update(id, data)),
+        updates.map(({ id, data }) => applications.update(id, data))
       );
       return results;
     },
-    onSuccess: (results) => {
+    onSuccess: results => {
       void queryClient.invalidateQueries({ queryKey: appKeys.all });
 
       toast.success(`Successfully updated ${results.length} apps!`);

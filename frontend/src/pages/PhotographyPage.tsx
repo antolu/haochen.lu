@@ -24,7 +24,7 @@ const PhotographyPage: React.FC = () => {
     index: number;
   } | null>(null);
   const [highlightedPhotoId, setHighlightedPhotoId] = useState<string | null>(
-    null,
+    null
   );
   const photoGridRef = useRef<HTMLDivElement>(null);
   const location = useLocation() as { state?: { photoId?: string } };
@@ -62,7 +62,7 @@ const PhotographyPage: React.FC = () => {
   useEffect(() => {
     const targetId = location?.state?.photoId;
     if (!targetId || allPhotos.length === 0) return;
-    const idx = allPhotos.findIndex((p) => p.id === targetId);
+    const idx = allPhotos.findIndex(p => p.id === targetId);
     if (idx >= 0) {
       setTimeout(() => {
         setTriggerGallery({ index: idx });
@@ -80,7 +80,7 @@ const PhotographyPage: React.FC = () => {
 
   const handleMapPhotoClick = useCallback(
     (photo: Photo) => {
-      const index = allPhotos.findIndex((p) => p.id === photo.id);
+      const index = allPhotos.findIndex(p => p.id === photo.id);
       if (index >= 0) {
         // Highlight the photo in the grid
         setHighlightedPhotoId(photo.id);
@@ -107,13 +107,13 @@ const PhotographyPage: React.FC = () => {
         }, 3000);
       }
     },
-    [allPhotos],
+    [allPhotos]
   );
 
   const handleOrderChange = (value: OrderByOption) => {
     // Update URL parameters
     setSearchParams(
-      (params) => {
+      params => {
         const next = new URLSearchParams(params);
         if (value === "order") {
           next.delete("order_by");
@@ -122,7 +122,7 @@ const PhotographyPage: React.FC = () => {
         }
         return next;
       },
-      { replace: true },
+      { replace: true }
     );
 
     // The optimized hook will handle the smart caching automatically

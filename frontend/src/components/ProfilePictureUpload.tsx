@@ -25,28 +25,28 @@ function getCenterSquareCrop(mediaWidth: number, mediaHeight: number): Crop {
       },
       1, // 1:1 aspect ratio (square)
       mediaWidth,
-      mediaHeight,
+      mediaHeight
     ),
     mediaWidth,
-    mediaHeight,
+    mediaHeight
   );
 }
 
 // Convert canvas to File
 function canvasToFile(
   canvas: HTMLCanvasElement,
-  fileName: string,
+  fileName: string
 ): Promise<File> {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     canvas.toBlob(
-      (blob) => {
+      blob => {
         if (blob) {
           const file = new File([blob], fileName, { type: "image/jpeg" });
           resolve(file);
         }
       },
       "image/jpeg",
-      0.9,
+      0.9
     );
   });
 }
@@ -110,17 +110,17 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
         selectFile(file);
       }
     },
-    [selectFile],
+    [selectFile]
   );
 
   const onDropzoneFiles = useCallback(
     (files: UploadFile[]) => {
-      const first = files.find((f) => f.status !== "error");
+      const first = files.find(f => f.status !== "error");
       if (first?.file) {
         selectFile(first.file);
       }
     },
-    [selectFile],
+    [selectFile]
   );
 
   const onImageLoad = useCallback(
@@ -130,7 +130,7 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
       setCrop(newCrop);
       setCompletedCrop(newCrop as PixelCrop);
     },
-    [],
+    []
   );
 
   const onDragOver = useCallback((e: React.DragEvent) => {
@@ -148,13 +148,13 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
       setIsDragOver(false);
 
       const files = Array.from(e.dataTransfer.files);
-      const imageFile = files.find((file) => file.type.startsWith("image/"));
+      const imageFile = files.find(file => file.type.startsWith("image/"));
 
       if (imageFile) {
         selectFile(imageFile);
       }
     },
-    [selectFile],
+    [selectFile]
   );
 
   // Silence unused handler warnings in contexts where drag events aren't bound
@@ -194,7 +194,7 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
       0,
       0,
       pixelCrop.width,
-      pixelCrop.height,
+      pixelCrop.height
     );
 
     // Convert canvas to file
@@ -268,8 +268,8 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
           <div className="border border-input rounded-lg overflow-hidden max-h-[40vh]">
             <ReactCrop
               crop={crop}
-              onChange={(newCrop) => setCrop(newCrop)}
-              onComplete={(c) => setCompletedCrop(c)}
+              onChange={newCrop => setCrop(newCrop)}
+              onComplete={c => setCompletedCrop(c)}
               aspect={1} // Square aspect ratio
               minWidth={100}
               minHeight={100}
@@ -292,7 +292,7 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
               <p className="text-xs text-muted-foreground mb-1">Preview:</p>
               <div className="inline-block border-2 border-input rounded-full overflow-hidden">
                 <canvas
-                  ref={(canvas) => {
+                  ref={canvas => {
                     if (canvas && imgRef.current && completedCrop) {
                       const ctx = canvas.getContext("2d");
                       if (ctx) {
@@ -312,7 +312,7 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
                           0,
                           0,
                           80,
-                          80,
+                          80
                         );
                       }
                     }

@@ -34,7 +34,7 @@ export const useUploadProfilePicture = () => {
       // Invalidate profile pictures list
       void queryClient.invalidateQueries({ queryKey: ["profile-pictures"] });
     },
-    onError: (error) => {
+    onError: error => {
       console.error("Failed to upload profile picture:", error);
     },
   });
@@ -49,7 +49,7 @@ export const useActivateProfilePicture = () => {
       // Invalidate both list and active queries
       void queryClient.invalidateQueries({ queryKey: ["profile-pictures"] });
     },
-    onError: (error) => {
+    onError: error => {
       console.error("Failed to activate profile picture:", error);
     },
   });
@@ -73,7 +73,7 @@ export const useUpdateProfilePicture = () => {
       });
       void queryClient.invalidateQueries({ queryKey: ["profile-pictures"] });
     },
-    onError: (error) => {
+    onError: error => {
       console.error("Failed to update profile picture:", error);
     },
   });
@@ -88,7 +88,7 @@ export const useDeleteProfilePicture = () => {
       // Invalidate profile pictures list and active query
       void queryClient.invalidateQueries({ queryKey: ["profile-pictures"] });
     },
-    onError: (error) => {
+    onError: error => {
       console.error("Failed to delete profile picture:", error);
     },
   });

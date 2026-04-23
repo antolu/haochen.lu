@@ -71,7 +71,7 @@ const HomePage: React.FC = () => {
     if (!activeHeroImage) return null;
     const optimalImage = selectOptimalImage(
       activeHeroImage.photo,
-      ImageUseCase.HERO,
+      ImageUseCase.HERO
     );
     const mobileFocalPoint = activeHeroImage.focal_points_responsive
       ?.mobile ?? {
@@ -106,11 +106,11 @@ const HomePage: React.FC = () => {
     el.style.setProperty("--hero-tablet-y", `${heroMemo.tabletFocalPoint.y}%`);
     el.style.setProperty(
       "--hero-desktop-x",
-      `${heroMemo.desktopFocalPoint.x}%`,
+      `${heroMemo.desktopFocalPoint.x}%`
     );
     el.style.setProperty(
       "--hero-desktop-y",
-      `${heroMemo.desktopFocalPoint.y}%`,
+      `${heroMemo.desktopFocalPoint.y}%`
     );
   }, [heroMemo]);
 
@@ -382,7 +382,7 @@ My biggest passion is learning new things, whether it be a new problem solving m
                         {(() => {
                           const optimalImage = selectOptimalImage(
                             photo,
-                            ImageUseCase.HERO,
+                            ImageUseCase.HERO
                           );
                           return (
                             <img
@@ -515,7 +515,7 @@ My biggest passion is learning new things, whether it be a new problem solving m
                       <div className="flex flex-wrap gap-2 mb-4">
                         {(() => {
                           const technologies = JSON.parse(
-                            project.technologies,
+                            project.technologies
                           ) as string[];
                           const displayTechnologies = technologies.slice(0, 4);
                           const remainingTechnologies = technologies.slice(4);
@@ -722,7 +722,7 @@ My biggest passion is learning new things, whether it be a new problem solving m
               <div className="p-6 grid md:grid-cols-2 gap-6">
                 <button
                   type="button"
-                  onClick={(e) => {
+                  onClick={e => {
                     e.stopPropagation();
                     setSelectedPhoto(null);
                     void navigate("/photography", {
@@ -736,7 +736,7 @@ My biggest passion is learning new things, whether it be a new problem solving m
                     // Use DPI-aware selection for modal display
                     const optimalImage = selectOptimalImage(
                       selectedPhoto,
-                      ImageUseCase.LIGHTBOX,
+                      ImageUseCase.LIGHTBOX
                     );
                     return (
                       <img
@@ -837,7 +837,7 @@ My biggest passion is learning new things, whether it be a new problem solving m
                     <div>
                       <div className="text-gray-500">Tags</div>
                       <div className="flex flex-wrap gap-2 mt-1">
-                        {selectedPhoto.tags.split(",").map((tag) => (
+                        {selectedPhoto.tags.split(",").map(tag => (
                           <span
                             key={tag}
                             className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs"

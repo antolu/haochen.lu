@@ -139,7 +139,7 @@ export const getScreenSize = (viewportWidth: number): ScreenSize => {
 export const calculateTargetSize = (
   useCase: ImageUseCase,
   context: DeviceContext,
-  containerSize?: { width: number; height: number },
+  containerSize?: { width: number; height: number }
 ): number => {
   const { devicePixelRatio, viewportWidth } = context;
   const screenSize = getScreenSize(viewportWidth);
@@ -196,7 +196,7 @@ export const calculateTargetSize = (
  */
 export const selectPlaceholderVariant = (
   useCase: ImageUseCase,
-  variants: Record<string, ImageVariant>,
+  variants: Record<string, ImageVariant>
 ): { variant: string; url: string } => {
   // For large images, we want a slightly higher res placeholder (e.g. tablet size)
   // For small images, a tiny thumbnail is enough.
@@ -233,7 +233,7 @@ export const selectPlaceholderVariant = (
 export const findOptimalVariant = (
   variants: Record<string, ImageVariant>,
   targetSize: number,
-  connectionSpeed: "slow" | "fast" | "unknown" = "unknown",
+  connectionSpeed: "slow" | "fast" | "unknown" = "unknown"
 ): string => {
   const variantEntries = Object.entries(variants);
 
@@ -243,7 +243,7 @@ export const findOptimalVariant = (
 
   // Sort variants by width
   const sortedVariants = variantEntries.sort(
-    ([, a], [, b]) => a.width - b.width,
+    ([, a], [, b]) => a.width - b.width
   );
 
   // For slow connections, prefer smaller images
@@ -270,7 +270,7 @@ export const findOptimalVariant = (
  * Generates srcset string for responsive images
  */
 export const generateSrcSet = (
-  variants: Record<string, ImageVariant>,
+  variants: Record<string, ImageVariant>
 ): string => {
   const variantEntries = Object.entries(variants);
 
@@ -307,7 +307,7 @@ export const generateSizesAttribute = (useCase: ImageUseCase): string => {
 export const selectOptimalImage = (
   photo: PhotoLike,
   useCase: ImageUseCase,
-  containerSize?: { width: number; height: number },
+  containerSize?: { width: number; height: number }
 ): OptimalImageSelection => {
   const context = getDeviceContext();
   const variants = photo.variants ?? {};
@@ -319,7 +319,7 @@ export const selectOptimalImage = (
   const selectedVariant = findOptimalVariant(
     variants,
     targetSize,
-    context.connectionSpeed,
+    context.connectionSpeed
   );
 
   // Get URLs with proper fallbacks
@@ -351,7 +351,7 @@ export const selectOptimalImage = (
 export const getOptimalImageUrl = (
   photo: PhotoLike,
   useCase: ImageUseCase,
-  containerSize?: { width: number; height: number },
+  containerSize?: { width: number; height: number }
 ): string => {
   return selectOptimalImage(photo, useCase, containerSize).url;
 };
@@ -362,7 +362,7 @@ export const getOptimalImageUrl = (
 export const useOptimalImage = (
   photo: PhotoLike,
   useCase: ImageUseCase,
-  containerSize?: { width: number; height: number },
+  containerSize?: { width: number; height: number }
 ) => {
   // In a real implementation, this could be a proper React hook with state
   // For now, we'll just return the selection
@@ -375,7 +375,7 @@ export const useOptimalImage = (
 export const debugImageSelection = (
   photo: PhotoLike,
   useCase: ImageUseCase,
-  containerSize?: { width: number; height: number },
+  containerSize?: { width: number; height: number }
 ): object => {
   const context = getDeviceContext();
   const targetSize = calculateTargetSize(useCase, context, containerSize);

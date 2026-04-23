@@ -53,7 +53,7 @@ const ProfilePictureDisplay: React.FC<ProfilePictureDisplayProps> = ({
       original_url: profilePicture.original_url,
       variants: profilePicture.variants,
     },
-    useCase,
+    useCase
   );
 
   return (

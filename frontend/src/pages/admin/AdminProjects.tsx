@@ -77,7 +77,7 @@ const AdminProjects: React.FC = () => {
   const handleDeleteProject = async (project: Project) => {
     if (
       window.confirm(
-        `Are you sure you want to delete "${project.title}"? This action cannot be undone.`,
+        `Are you sure you want to delete "${project.title}"? This action cannot be undone.`
       )
     ) {
       try {
@@ -137,7 +137,7 @@ const AdminProjects: React.FC = () => {
               type="text"
               placeholder="Search projects..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
             />
           </div>
 
@@ -145,7 +145,7 @@ const AdminProjects: React.FC = () => {
           <div className="flex items-center gap-3">
             <Select
               value={statusFilter || undefined}
-              onValueChange={(value) => setStatusFilter(value || "")}
+              onValueChange={value => setStatusFilter(value || "")}
             >
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="All Statuses" />
@@ -161,7 +161,7 @@ const AdminProjects: React.FC = () => {
               <input
                 type="checkbox"
                 checked={reorderEnabled}
-                onChange={(e) => setReorderEnabled(e.target.checked)}
+                onChange={e => setReorderEnabled(e.target.checked)}
                 className="cursor-pointer"
               />
               Reorder
@@ -232,9 +232,9 @@ const AdminProjects: React.FC = () => {
           <SortableProjectList
             projects={projects}
             reorderEnabled={reorderEnabled}
-            onReorder={(p) => void handleReorder(p)}
-            onEdit={(p) => handleEditProject(p)}
-            onDelete={(p) => void handleDeleteProject(p)}
+            onReorder={p => void handleReorder(p)}
+            onEdit={p => handleEditProject(p)}
+            onDelete={p => void handleDeleteProject(p)}
             isLoading={isLoading}
           />
         )}

@@ -31,7 +31,7 @@ const AdminPhotos = lazy(() => import("./pages/admin/AdminPhotos"));
 const AdminProjects = lazy(() => import("./pages/admin/AdminProjects"));
 const AdminBlog = lazy(() => import("./pages/admin/AdminBlog"));
 const AdminEquipmentAliases = lazy(
-  () => import("./pages/admin/AdminEquipmentAliases"),
+  () => import("./pages/admin/AdminEquipmentAliases")
 );
 const AdminApplications = lazy(() => import("./pages/admin/AdminApplications"));
 const AdminAppImport = lazy(() => import("./pages/admin/AdminAppImport"));
@@ -69,7 +69,7 @@ const PageLoadingFallback: React.FC = () => (
 
 // Component that uses hooks requiring QueryClient
 const AppContent: React.FC = () => {
-  const checkAuth = useAuthStore((state) => state.checkAuth);
+  const checkAuth = useAuthStore(state => state.checkAuth);
 
   // Initialize upload processor (runs in background)
   useUploadProcessor();

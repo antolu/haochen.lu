@@ -50,7 +50,7 @@ const PhotoDropzone: React.FC<PhotoDropzoneProps> = ({
       const validFiles: File[] = [];
       const errorUploads: UploadFile[] = [];
 
-      acceptedFiles.forEach((file) => {
+      acceptedFiles.forEach(file => {
         if (!(file instanceof File)) {
           console.warn("Invalid file object received:", file);
           return;
@@ -68,7 +68,7 @@ const PhotoDropzone: React.FC<PhotoDropzoneProps> = ({
 
         if (file.size > maxFileSize) {
           console.warn(
-            `File too large: ${file.name} (${formatFileSize(file.size)} > ${formatFileSize(maxFileSize)})`,
+            `File too large: ${file.name} (${formatFileSize(file.size)} > ${formatFileSize(maxFileSize)})`
           );
           errorUploads.push({
             id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
@@ -98,11 +98,11 @@ const PhotoDropzone: React.FC<PhotoDropzoneProps> = ({
 
       if (filesToProcess.length < validFiles.length) {
         console.warn(
-          `Only processing ${filesToProcess.length} of ${validFiles.length} files due to upload limit`,
+          `Only processing ${filesToProcess.length} of ${validFiles.length} files due to upload limit`
         );
       }
 
-      const acceptedUploads: UploadFile[] = filesToProcess.map((file) => ({
+      const acceptedUploads: UploadFile[] = filesToProcess.map(file => ({
         id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
         file,
         preview: URL.createObjectURL(file),
@@ -110,34 +110,32 @@ const PhotoDropzone: React.FC<PhotoDropzoneProps> = ({
         status: "pending",
       }));
 
-      const dropzoneRejections: UploadFile[] = fileRejections.map(
-        (rejection) => {
-          const message = rejection.errors
-            .map((error) => {
-              if (error.code === "file-too-large") {
-                return `File is too large (max ${formatFileSize(maxFileSize)})`;
-              }
-              if (error.code === "file-invalid-type") {
-                return "Unsupported file type";
-              }
-              if (error.code === "too-many-files") {
-                return "Too many files selected";
-              }
-              return error.message;
-            })
-            .filter(Boolean)
-            .join(", ");
+      const dropzoneRejections: UploadFile[] = fileRejections.map(rejection => {
+        const message = rejection.errors
+          .map(error => {
+            if (error.code === "file-too-large") {
+              return `File is too large (max ${formatFileSize(maxFileSize)})`;
+            }
+            if (error.code === "file-invalid-type") {
+              return "Unsupported file type";
+            }
+            if (error.code === "too-many-files") {
+              return "Too many files selected";
+            }
+            return error.message;
+          })
+          .filter(Boolean)
+          .join(", ");
 
-          return {
-            id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
-            file: rejection.file,
-            preview: "",
-            progress: 0,
-            status: "error",
-            error: message || "Upload failed",
-          } satisfies UploadFile;
-        },
-      );
+        return {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
+          file: rejection.file,
+          preview: "",
+          progress: 0,
+          status: "error",
+          error: message || "Upload failed",
+        } satisfies UploadFile;
+      });
 
       const uploads = [
         ...acceptedUploads,
@@ -151,7 +149,7 @@ const PhotoDropzone: React.FC<PhotoDropzoneProps> = ({
 
       onFilesAdded(uploads);
     },
-    [formatFileSize, maxFileSize, maxFiles, onFilesAdded],
+    [formatFileSize, maxFileSize, maxFiles, onFilesAdded]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({

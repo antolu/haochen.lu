@@ -17,14 +17,14 @@ export interface PhotoIntersectionResult {
  */
 export const analyzePhotoIntersection = (
   photosA: Photo[],
-  photosB: Photo[],
+  photosB: Photo[]
 ): PhotoIntersectionResult => {
-  const idsA = new Set(photosA.map((p) => p.id));
-  const idsB = new Set(photosB.map((p) => p.id));
+  const idsA = new Set(photosA.map(p => p.id));
+  const idsB = new Set(photosB.map(p => p.id));
 
-  const intersection = photosA.filter((p) => idsB.has(p.id));
-  const onlyInA = photosA.filter((p) => !idsB.has(p.id));
-  const onlyInB = photosB.filter((p) => !idsA.has(p.id));
+  const intersection = photosA.filter(p => idsB.has(p.id));
+  const onlyInA = photosA.filter(p => !idsB.has(p.id));
+  const onlyInB = photosB.filter(p => !idsA.has(p.id));
 
   const totalUnique = idsA.size + idsB.size - intersection.length;
   const intersectionRatio =
@@ -45,13 +45,13 @@ export const shouldShowCachedPhotos = (
   currentPhotos: Photo[],
   cachedPhotos: Photo[],
   minIntersection = 6,
-  minRatio = 0.3,
+  minRatio = 0.3
 ): boolean => {
   if (cachedPhotos.length < minIntersection) return false;
 
   const { intersectionRatio } = analyzePhotoIntersection(
     currentPhotos,
-    cachedPhotos,
+    cachedPhotos
   );
   return intersectionRatio >= minRatio;
 };
@@ -62,15 +62,15 @@ export const shouldShowCachedPhotos = (
 export const mergePhotoArrays = (
   primaryPhotos: Photo[],
   secondaryPhotos: Photo[],
-  orderBy: OrderByOption,
+  orderBy: OrderByOption
 ): Photo[] => {
   const photoMap = new Map<string, Photo>();
 
   // Add primary photos first
-  primaryPhotos.forEach((photo) => photoMap.set(photo.id, photo));
+  primaryPhotos.forEach(photo => photoMap.set(photo.id, photo));
 
   // Add secondary photos (won't override existing)
-  secondaryPhotos.forEach((photo) => {
+  secondaryPhotos.forEach(photo => {
     if (!photoMap.has(photo.id)) {
       photoMap.set(photo.id, photo);
     }
@@ -87,7 +87,7 @@ export const mergePhotoArrays = (
  */
 export const sortPhotosByOrder = (
   photos: Photo[],
-  orderBy: OrderByOption,
+  orderBy: OrderByOption
 ): Photo[] => {
   const sorted = [...photos];
 
@@ -95,7 +95,7 @@ export const sortPhotosByOrder = (
     case "created_at":
       return sorted.sort(
         (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
 
     case "date_taken":
@@ -129,7 +129,7 @@ export const calculateMissingPages = (
   _currentPhotoCount: number,
   targetPhotoCount: number,
   pageSize: number,
-  loadedPages: Set<number>,
+  loadedPages: Set<number>
 ): number[] => {
   const targetPages = Math.ceil(targetPhotoCount / pageSize);
   const missingPages: number[] = [];
@@ -164,7 +164,7 @@ export const calculateLoadStrategy = (
   cachedPhotos: Photo[],
   targetTotal: number,
   pageSize: number,
-  loadedPages: Set<number>,
+  loadedPages: Set<number>
 ): PhotoLoadStrategy => {
   const intersection = analyzePhotoIntersection(currentPhotos, cachedPhotos);
   const useCache = shouldShowCachedPhotos(currentPhotos, cachedPhotos);
@@ -211,7 +211,7 @@ export const calculateLoadStrategy = (
  * Validates photo data consistency
  */
 export const validatePhotoData = (
-  photos: Photo[],
+  photos: Photo[]
 ): {
   isValid: boolean;
   errors: string[];

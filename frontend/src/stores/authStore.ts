@@ -209,12 +209,12 @@ export const useAuthStore = create<AuthState>()(
     {
       name: "auth-store",
       // Only persist user and authentication state, not tokens (they come from cookies)
-      partialize: (state) => ({
+      partialize: state => ({
         user: state.user,
         isAuthenticated: state.isAuthenticated,
       }),
-    },
-  ),
+    }
+  )
 );
 
 // Make auth store available globally for API client

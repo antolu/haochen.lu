@@ -89,7 +89,7 @@ export function useCameraAliases(filters: CameraAliasFilters = {}) {
         params.append("is_active", filters.is_active.toString());
 
       const response = await apiClient.get<CameraAliasListResponse>(
-        `/camera-aliases?${params.toString()}`,
+        `/camera-aliases?${params.toString()}`
       );
       return response.data;
     },
@@ -101,7 +101,7 @@ export function useCameraAlias(id: string) {
     queryKey: cameraAliasKeys.detail(id),
     queryFn: async (): Promise<CameraAlias> => {
       const response = await apiClient.get<CameraAlias>(
-        `/camera-aliases/${id}`,
+        `/camera-aliases/${id}`
       );
       return response.data;
     },
@@ -114,7 +114,7 @@ export function useCameraDiscovery() {
     queryKey: cameraAliasKeys.discovery(),
     queryFn: async (): Promise<CameraDiscoveryResponse> => {
       const response = await apiClient.get<CameraDiscoveryResponse>(
-        "/camera-aliases/discover/cameras",
+        "/camera-aliases/discover/cameras"
       );
       return response.data;
     },
@@ -134,7 +134,7 @@ export function useUpdateCameraAlias() {
     }): Promise<CameraAlias> => {
       const response = await apiClient.put<CameraAlias>(
         `/camera-aliases/${id}`,
-        data,
+        data
       );
       return response.data;
     },

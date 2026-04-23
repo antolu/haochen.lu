@@ -39,7 +39,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     (path: string) => {
       void navigate(path);
     },
-    [navigate],
+    [navigate]
   );
 
   const commands = useMemo<PaletteCommand[]>(
@@ -148,20 +148,20 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         badge: "Quick",
       },
     ],
-    [goTo],
+    [goTo]
   );
 
   const filteredCommands = useMemo(() => {
     if (!search) return commands;
 
     const searchLower = search.toLowerCase();
-    return commands.filter((command) => {
+    return commands.filter(command => {
       const titleMatch = command.title.toLowerCase().includes(searchLower);
       const descriptionMatch = command.description
         ?.toLowerCase()
         .includes(searchLower);
-      const keywordMatch = command.keywords?.some((keyword) =>
-        keyword.toLowerCase().includes(searchLower),
+      const keywordMatch = command.keywords?.some(keyword =>
+        keyword.toLowerCase().includes(searchLower)
       );
       return (
         titleMatch ||
@@ -171,11 +171,11 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     });
   }, [search, commands]);
 
-  const navigationCommands = filteredCommands.filter((cmd) =>
-    cmd.id.startsWith("nav-"),
+  const navigationCommands = filteredCommands.filter(cmd =>
+    cmd.id.startsWith("nav-")
   );
-  const quickActions = filteredCommands.filter((cmd) =>
-    cmd.id.startsWith("action-"),
+  const quickActions = filteredCommands.filter(cmd =>
+    cmd.id.startsWith("action-")
   );
 
   const handleSelect = (command: PaletteCommand) => {
@@ -206,7 +206,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               className="flex h-8 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
               placeholder="Search commands... (⌘K)"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={e => setSearch(e.target.value)}
             />
           </div>
           <CommandList className="max-h-80 p-2">
@@ -229,7 +229,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                 >
                   {navigationCommands.length > 0 && (
                     <CommandGroup heading="Navigation">
-                      {navigationCommands.map((command) => {
+                      {navigationCommands.map(command => {
                         const Icon = command.icon;
                         return (
                           <CommandItem
@@ -269,7 +269,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 
                   {quickActions.length > 0 && (
                     <CommandGroup heading="Quick Actions">
-                      {quickActions.map((command) => {
+                      {quickActions.map(command => {
                         const Icon = command.icon;
                         return (
                           <CommandItem

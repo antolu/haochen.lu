@@ -59,18 +59,18 @@ describe("RepositoryConnector", () => {
       expect(screen.getByText("(optional)")).toBeInTheDocument();
       expect(
         screen.getByPlaceholderText(
-          /https:\/\/github\.com\/username\/repository/,
-        ),
+          /https:\/\/github\.com\/username\/repository/
+        )
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: /validate/i }),
+        screen.getByRole("button", { name: /validate/i })
       ).toBeInTheDocument();
     });
 
     it("renders with initial value", () => {
       const initialValue = "https://github.com/test/repo";
       renderWithProviders(
-        <RepositoryConnector {...defaultProps} value={initialValue} />,
+        <RepositoryConnector {...defaultProps} value={initialValue} />
       );
 
       const input = screen.getByDisplayValue(initialValue);
@@ -79,7 +79,7 @@ describe("RepositoryConnector", () => {
 
     it("applies custom className", () => {
       const { container } = renderWithProviders(
-        <RepositoryConnector {...defaultProps} className="custom-class" />,
+        <RepositoryConnector {...defaultProps} className="custom-class" />
       );
 
       expect(container.firstChild).toHaveClass("custom-class");
@@ -89,7 +89,7 @@ describe("RepositoryConnector", () => {
       renderWithProviders(<RepositoryConnector {...defaultProps} disabled />);
 
       const input = screen.getByPlaceholderText(
-        /https:\/\/github\.com\/username\/repository/,
+        /https:\/\/github\.com\/username\/repository/
       );
       const button = screen.getByRole("button", { name: /validate/i });
 
@@ -102,13 +102,13 @@ describe("RepositoryConnector", () => {
 
       expect(
         screen.getByText(
-          /Connect your GitHub or GitLab repository to automatically sync README content/,
-        ),
+          /Connect your GitHub or GitLab repository to automatically sync README content/
+        )
       ).toBeInTheDocument();
       expect(
         screen.getByText(
-          /Private repositories require authentication tokens configured on the server/,
-        ),
+          /Private repositories require authentication tokens configured on the server/
+        )
       ).toBeInTheDocument();
     });
   });
@@ -119,7 +119,7 @@ describe("RepositoryConnector", () => {
       renderWithProviders(<RepositoryConnector {...defaultProps} />);
 
       const input = screen.getByPlaceholderText(
-        /https:\/\/github\.com\/username\/repository/,
+        /https:\/\/github\.com\/username\/repository/
       );
       await user.type(input, "https://github.com/test/repo");
 
@@ -131,7 +131,7 @@ describe("RepositoryConnector", () => {
       renderWithProviders(<RepositoryConnector {...defaultProps} />);
 
       const input = screen.getByPlaceholderText(
-        /https:\/\/github\.com\/username\/repository/,
+        /https:\/\/github\.com\/username\/repository/
       );
       await user.type(input, "https://github.com/test/repo");
 
@@ -145,15 +145,15 @@ describe("RepositoryConnector", () => {
       renderWithProviders(<RepositoryConnector {...defaultProps} />);
 
       const input = screen.getByPlaceholderText(
-        /https:\/\/github\.com\/username\/repository/,
+        /https:\/\/github\.com\/username\/repository/
       );
       await user.type(input, "https://github.com/user/repo");
 
       expect(mockOnValidationChange).toHaveBeenCalledWith(true);
       expect(
         screen.queryByText(
-          "Please enter a valid GitHub or GitLab repository URL",
-        ),
+          "Please enter a valid GitHub or GitLab repository URL"
+        )
       ).not.toBeInTheDocument();
     });
 
@@ -162,15 +162,15 @@ describe("RepositoryConnector", () => {
       renderWithProviders(<RepositoryConnector {...defaultProps} />);
 
       const input = screen.getByPlaceholderText(
-        /https:\/\/github\.com\/username\/repository/,
+        /https:\/\/github\.com\/username\/repository/
       );
       await user.type(input, "https://gitlab.com/user/repo");
 
       expect(mockOnValidationChange).toHaveBeenCalledWith(true);
       expect(
         screen.queryByText(
-          "Please enter a valid GitHub or GitLab repository URL",
-        ),
+          "Please enter a valid GitHub or GitLab repository URL"
+        )
       ).not.toBeInTheDocument();
     });
 
@@ -179,15 +179,13 @@ describe("RepositoryConnector", () => {
       renderWithProviders(<RepositoryConnector {...defaultProps} />);
 
       const input = screen.getByPlaceholderText(
-        /https:\/\/github\.com\/username\/repository/,
+        /https:\/\/github\.com\/username\/repository/
       );
       await user.type(input, "invalid-url");
 
       expect(mockOnValidationChange).toHaveBeenCalledWith(false);
       expect(
-        screen.getByText(
-          "Please enter a valid GitHub or GitLab repository URL",
-        ),
+        screen.getByText("Please enter a valid GitHub or GitLab repository URL")
       ).toBeInTheDocument();
     });
 
@@ -196,20 +194,18 @@ describe("RepositoryConnector", () => {
       renderWithProviders(<RepositoryConnector {...defaultProps} />);
 
       const input = screen.getByPlaceholderText(
-        /https:\/\/github\.com\/username\/repository/,
+        /https:\/\/github\.com\/username\/repository/
       );
       await user.type(input, "invalid-url");
       expect(
-        screen.getByText(
-          "Please enter a valid GitHub or GitLab repository URL",
-        ),
+        screen.getByText("Please enter a valid GitHub or GitLab repository URL")
       ).toBeInTheDocument();
 
       await user.clear(input);
       expect(
         screen.queryByText(
-          "Please enter a valid GitHub or GitLab repository URL",
-        ),
+          "Please enter a valid GitHub or GitLab repository URL"
+        )
       ).not.toBeInTheDocument();
       expect(mockOnValidationChange).toHaveBeenCalledWith(true);
     });
@@ -219,15 +215,15 @@ describe("RepositoryConnector", () => {
       renderWithProviders(<RepositoryConnector {...defaultProps} />);
 
       const input = screen.getByPlaceholderText(
-        /https:\/\/github\.com\/username\/repository/,
+        /https:\/\/github\.com\/username\/repository/
       );
       await user.type(input, "https://git.example.com/user/repo");
 
       expect(mockOnValidationChange).toHaveBeenCalledWith(true);
       expect(
         screen.queryByText(
-          "Please enter a valid GitHub or GitLab repository URL",
-        ),
+          "Please enter a valid GitHub or GitLab repository URL"
+        )
       ).not.toBeInTheDocument();
     });
   });
@@ -238,7 +234,7 @@ describe("RepositoryConnector", () => {
       renderWithProviders(<RepositoryConnector {...defaultProps} />);
 
       const input = screen.getByPlaceholderText(
-        /https:\/\/github\.com\/username\/repository/,
+        /https:\/\/github\.com\/username\/repository/
       );
       const validateButton = screen.getByRole("button", { name: /validate/i });
 
@@ -249,7 +245,7 @@ describe("RepositoryConnector", () => {
         "/projects/repository/validate",
         {
           repository_url: "https://github.com/test/repo",
-        },
+        }
       );
     });
 
@@ -257,15 +253,15 @@ describe("RepositoryConnector", () => {
       const user = userEvent.setup();
       vi.mocked(mockApi.post).mockImplementation(
         () =>
-          new Promise<{ data: unknown }>((resolve) =>
-            setTimeout(() => resolve({ data: {} }), 100),
-          ),
+          new Promise<{ data: unknown }>(resolve =>
+            setTimeout(() => resolve({ data: {} }), 100)
+          )
       );
 
       renderWithProviders(<RepositoryConnector {...defaultProps} />);
 
       const input = screen.getByPlaceholderText(
-        /https:\/\/github\.com\/username\/repository/,
+        /https:\/\/github\.com\/username\/repository/
       );
       const validateButton = screen.getByRole("button", { name: /validate/i });
 
@@ -274,7 +270,7 @@ describe("RepositoryConnector", () => {
 
       expect(screen.getByText("Validating...")).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: /validating/i }),
+        screen.getByRole("button", { name: /validating/i })
       ).toBeDisabled();
     });
 
@@ -283,7 +279,7 @@ describe("RepositoryConnector", () => {
       renderWithProviders(<RepositoryConnector {...defaultProps} />);
 
       const input = screen.getByPlaceholderText(
-        /https:\/\/github\.com\/username\/repository/,
+        /https:\/\/github\.com\/username\/repository/
       );
       const validateButton = screen.getByRole("button", { name: /validate/i });
 
@@ -316,14 +312,14 @@ describe("RepositoryConnector", () => {
                 detail: "Repository not found",
               },
             },
-          }),
-        ),
+          })
+        )
       );
 
       renderWithProviders(<RepositoryConnector {...defaultProps} />);
 
       const input = screen.getByPlaceholderText(
-        /https:\/\/github\.com\/username\/repository/,
+        /https:\/\/github\.com\/username\/repository/
       );
       const validateButton = screen.getByRole("button", { name: /validate/i });
 
@@ -333,7 +329,7 @@ describe("RepositoryConnector", () => {
       await waitFor(() => {
         expect(screen.getByText(/Validation Error/i)).toBeInTheDocument();
         expect(
-          screen.getByText(/Failed to validate repository|not found/i),
+          screen.getByText(/Failed to validate repository|not found/i)
         ).toBeInTheDocument();
       });
 
@@ -347,7 +343,7 @@ describe("RepositoryConnector", () => {
       renderWithProviders(<RepositoryConnector {...defaultProps} />);
 
       const input = screen.getByPlaceholderText(
-        /https:\/\/github\.com\/username\/repository/,
+        /https:\/\/github\.com\/username\/repository/
       );
       const validateButton = screen.getByRole("button", { name: /validate/i });
 
@@ -357,7 +353,7 @@ describe("RepositoryConnector", () => {
       await waitFor(() => {
         expect(screen.getByText("Validation Error")).toBeInTheDocument();
         expect(
-          screen.getByText("Failed to validate repository"),
+          screen.getByText("Failed to validate repository")
         ).toBeInTheDocument();
       });
     });
@@ -396,7 +392,7 @@ describe("RepositoryConnector", () => {
       renderWithProviders(<RepositoryConnector {...defaultProps} />);
 
       const input = screen.getByPlaceholderText(
-        /https:\/\/github\.com\/username\/repository/,
+        /https:\/\/github\.com\/username\/repository/
       );
       const validateButton = screen.getByRole("button", { name: /validate/i });
 
@@ -424,7 +420,7 @@ describe("RepositoryConnector", () => {
       renderWithProviders(<RepositoryConnector {...defaultProps} />);
 
       const input = screen.getByPlaceholderText(
-        /https:\/\/github\.com\/username\/repository/,
+        /https:\/\/github\.com\/username\/repository/
       );
       const validateButton = screen.getByRole("button", { name: /validate/i });
 
@@ -446,7 +442,7 @@ describe("RepositoryConnector", () => {
       renderWithProviders(<RepositoryConnector {...defaultProps} />);
 
       const input = screen.getByPlaceholderText(
-        /https:\/\/github\.com\/username\/repository/,
+        /https:\/\/github\.com\/username\/repository/
       );
       const validateButton = screen.getByRole("button", { name: /validate/i });
 
@@ -464,7 +460,7 @@ describe("RepositoryConnector", () => {
 
       // Previous validation should be cleared
       expect(
-        screen.queryByText("Repository Validated"),
+        screen.queryByText("Repository Validated")
       ).not.toBeInTheDocument();
     });
 
@@ -473,15 +469,13 @@ describe("RepositoryConnector", () => {
       renderWithProviders(<RepositoryConnector {...defaultProps} />);
 
       const input = screen.getByPlaceholderText(
-        /https:\/\/github\.com\/username\/repository/,
+        /https:\/\/github\.com\/username\/repository/
       );
 
       // Enter invalid URL
       await user.type(input, "invalid-url");
       expect(
-        screen.getByText(
-          "Please enter a valid GitHub or GitLab repository URL",
-        ),
+        screen.getByText("Please enter a valid GitHub or GitLab repository URL")
       ).toBeInTheDocument();
 
       // Change to valid URL
@@ -491,8 +485,8 @@ describe("RepositoryConnector", () => {
       // Error should be cleared
       expect(
         screen.queryByText(
-          "Please enter a valid GitHub or GitLab repository URL",
-        ),
+          "Please enter a valid GitHub or GitLab repository URL"
+        )
       ).not.toBeInTheDocument();
     });
   });
@@ -513,7 +507,7 @@ describe("RepositoryConnector", () => {
       // Tab to input
       await user.tab();
       const input = screen.getByPlaceholderText(
-        /https:\/\/github\.com\/username\/repository/,
+        /https:\/\/github\.com\/username\/repository/
       );
       expect(input).toHaveFocus();
 
@@ -529,7 +523,7 @@ describe("RepositoryConnector", () => {
       renderWithProviders(<RepositoryConnector {...defaultProps} />);
 
       const input = screen.getByPlaceholderText(
-        /https:\/\/github\.com\/username\/repository/,
+        /https:\/\/github\.com\/username\/repository/
       );
       const validateButton = screen.getByRole("button", { name: /validate/i });
 
@@ -548,12 +542,12 @@ describe("RepositoryConnector", () => {
       renderWithProviders(<RepositoryConnector {...defaultProps} />);
 
       const input = screen.getByPlaceholderText(
-        /https:\/\/github\.com\/username\/repository/,
+        /https:\/\/github\.com\/username\/repository/
       );
       await user.type(input, "invalid-url");
 
       const errorMessage = screen.getByText(
-        "Please enter a valid GitHub or GitLab repository URL",
+        "Please enter a valid GitHub or GitLab repository URL"
       );
       expect(errorMessage).toBeInTheDocument();
       // Styling assertion removed to avoid coupling to CSS classes
@@ -567,7 +561,7 @@ describe("RepositoryConnector", () => {
           <RepositoryConnector
             onChange={undefined as never}
             onValidationChange={mockOnValidationChange}
-          />,
+          />
         );
       }).not.toThrow();
     });
@@ -578,15 +572,15 @@ describe("RepositoryConnector", () => {
         <RepositoryConnector
           onChange={mockOnChange}
           onValidationChange={undefined}
-        />,
+        />
       );
 
       const input = screen.getByPlaceholderText(
-        /https:\/\/github\.com\/username\/repository/,
+        /https:\/\/github\.com\/username\/repository/
       );
 
       expect(() =>
-        user.type(input, "https://github.com/test/repo"),
+        user.type(input, "https://github.com/test/repo")
       ).not.toThrow();
     });
 
@@ -596,7 +590,7 @@ describe("RepositoryConnector", () => {
       renderWithProviders(<RepositoryConnector {...defaultProps} />);
 
       const input = screen.getByPlaceholderText(
-        /https:\/\/github\.com\/username\/repository/,
+        /https:\/\/github\.com\/username\/repository/
       );
       fireEvent.change(input, { target: { value: longUrl } });
 
@@ -619,7 +613,7 @@ describe("RepositoryConnector", () => {
       renderWithProviders(<RepositoryConnector {...defaultProps} />);
 
       const input = screen.getByPlaceholderText(
-        /https:\/\/github\.com\/username\/repository/,
+        /https:\/\/github\.com\/username\/repository/
       );
       const validateButton = screen.getByRole("button", { name: /validate/i });
 
@@ -643,7 +637,7 @@ describe("RepositoryConnector", () => {
       renderWithProviders(<RepositoryConnector {...defaultProps} />);
 
       const input = screen.getByPlaceholderText(
-        /https:\/\/github\.com\/username\/repository/,
+        /https:\/\/github\.com\/username\/repository/
       );
       const validateButton = screen.getByRole("button", { name: /validate/i });
 

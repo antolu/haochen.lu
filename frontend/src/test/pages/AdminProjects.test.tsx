@@ -44,7 +44,7 @@ vi.mock("../../hooks/useProjects", async () => {
     useDeleteProject: () => mockUseDeleteProject(),
     useProjectStats: () => mockUseProjectStats(),
     parseTechnologies: vi.fn((tech: string) =>
-      tech ? tech.split(",").map((t: string) => t.trim()) : [],
+      tech ? tech.split(",").map((t: string) => t.trim()) : []
     ),
   };
 });
@@ -96,7 +96,7 @@ vi.mock("../../components/admin/SortableProjectList", () => ({
     isLoading?: boolean;
   }) => (
     <div className="divide-y divide-gray-200">
-      {projects.map((project) => (
+      {projects.map(project => (
         <div key={project.id} className="p-4">
           <h4>{project.title}</h4>
           {project.short_description && <p>{project.short_description}</p>}
@@ -121,9 +121,9 @@ vi.mock("../../components/admin/SortableProjectList", () => ({
           <div>
             {(project.technologies ?? "")
               .split(",")
-              .map((tech) => tech.trim())
+              .map(tech => tech.trim())
               .filter(Boolean)
-              .map((tech) => (
+              .map(tech => (
                 <span key={`${project.id}-${tech}`}>{tech}</span>
               ))}
           </div>
@@ -181,7 +181,7 @@ describe("AdminProjects", () => {
 
       expect(screen.getByText("Project Management")).toBeInTheDocument();
       expect(
-        screen.getByText("Create and manage your project portfolio"),
+        screen.getByText("Create and manage your project portfolio")
       ).toBeInTheDocument();
     });
 
@@ -189,7 +189,7 @@ describe("AdminProjects", () => {
       renderWithProviders(<AdminProjects />);
 
       expect(
-        screen.getByRole("button", { name: /new project/i }),
+        screen.getByRole("button", { name: /new project/i })
       ).toBeInTheDocument();
     });
 
@@ -197,7 +197,7 @@ describe("AdminProjects", () => {
       renderWithProviders(<AdminProjects />);
 
       expect(
-        screen.getByPlaceholderText("Search projects..."),
+        screen.getByPlaceholderText("Search projects...")
       ).toBeInTheDocument();
     });
 
@@ -206,14 +206,14 @@ describe("AdminProjects", () => {
 
       // List container should exist
       expect(
-        document.querySelector(".divide-y.divide-gray-200"),
+        document.querySelector(".divide-y.divide-gray-200")
       ).toBeInTheDocument();
     });
 
     it("renders project list items", () => {
       renderWithProviders(<AdminProjects />);
 
-      mockProjects.forEach((project) => {
+      mockProjects.forEach(project => {
         expect(screen.getByText(project.title)).toBeInTheDocument();
       });
     });
@@ -227,7 +227,7 @@ describe("AdminProjects", () => {
       expect(screen.getByText(firstProject.title)).toBeInTheDocument();
       if (firstProject.short_description) {
         const descriptions = screen.getAllByText(
-          firstProject.short_description,
+          firstProject.short_description
         );
         expect(descriptions.length).toBeGreaterThan(0);
       }
@@ -236,11 +236,11 @@ describe("AdminProjects", () => {
     it("shows project status badges with correct styling", () => {
       renderWithProviders(<AdminProjects />);
 
-      const activeProject = mockProjects.find((p) => p.status === "active");
+      const activeProject = mockProjects.find(p => p.status === "active");
       if (activeProject) {
         const statusBadges = screen.getAllByText("Active");
-        const badge = statusBadges.find((el) =>
-          el.className.includes("bg-green-100"),
+        const badge = statusBadges.find(el =>
+          el.className.includes("bg-green-100")
         );
         expect(badge).toBeDefined();
         expect(badge!).toHaveClass("bg-green-100", "text-green-800");
@@ -263,11 +263,11 @@ describe("AdminProjects", () => {
     it("displays featured project indicators", () => {
       renderWithProviders(<AdminProjects />);
 
-      const featuredProjects = mockProjects.filter((p) => p.featured);
+      const featuredProjects = mockProjects.filter(p => p.featured);
       if (featuredProjects.length > 0) {
         const featuredBadges = screen.getAllByText("Featured");
         expect(featuredBadges.length).toBeGreaterThanOrEqual(
-          featuredProjects.length,
+          featuredProjects.length
         );
       }
     });
@@ -387,7 +387,7 @@ describe("AdminProjects", () => {
       expect(screen.getByTestId("project-form")).toBeInTheDocument();
       expect(screen.getByText("Edit Project")).toBeInTheDocument();
       expect(screen.getByTestId("project-form-title")).toHaveTextContent(
-        mockProjects[0].title,
+        mockProjects[0].title
       );
     });
 
@@ -399,7 +399,7 @@ describe("AdminProjects", () => {
       await user.click(editButtons[0]);
 
       expect(screen.getByTestId("project-form-title")).toHaveTextContent(
-        mockProjects[0].title,
+        mockProjects[0].title
       );
     });
 
@@ -443,7 +443,7 @@ describe("AdminProjects", () => {
       await user.click(deleteButtons[0]);
 
       expect(window.confirm).toHaveBeenCalledWith(
-        `Are you sure you want to delete "${mockProjects[0].title}"? This action cannot be undone.`,
+        `Are you sure you want to delete "${mockProjects[0].title}"? This action cannot be undone.`
       );
     });
 
@@ -507,7 +507,7 @@ describe("AdminProjects", () => {
       await waitFor(() => {
         expect(consoleSpy).toHaveBeenCalledWith(
           "Failed to delete project:",
-          expect.any(Error),
+          expect.any(Error)
         );
       });
 
@@ -542,7 +542,7 @@ describe("AdminProjects", () => {
 
       // Stats should show loading state
       expect(
-        screen.queryByText(mockStatsData.total_projects.toString()),
+        screen.queryByText(mockStatsData.total_projects.toString())
       ).not.toBeInTheDocument();
     });
 
@@ -590,7 +590,7 @@ describe("AdminProjects", () => {
 
       // Stats should show error or fallback values
       expect(
-        screen.queryByText(mockStatsData.total_projects.toString()),
+        screen.queryByText(mockStatsData.total_projects.toString())
       ).not.toBeInTheDocument();
     });
   });
@@ -608,7 +608,7 @@ describe("AdminProjects", () => {
 
       expect(screen.getByText(/no projects found/i)).toBeInTheDocument();
       expect(
-        screen.getByText(/create your first project/i),
+        screen.getByText(/create your first project/i)
       ).toBeInTheDocument();
     });
 
@@ -624,7 +624,7 @@ describe("AdminProjects", () => {
 
       // Should still show the search input
       expect(
-        screen.getByPlaceholderText("Search projects..."),
+        screen.getByPlaceholderText("Search projects...")
       ).toBeInTheDocument();
       expect(screen.getByText(/no projects found/i)).toBeInTheDocument();
     });
@@ -661,7 +661,7 @@ describe("AdminProjects", () => {
 
       expect(screen.getByRole("textbox")).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: /new project/i }),
+        screen.getByRole("button", { name: /new project/i })
       ).toBeInTheDocument();
       const actions = screen.getAllByRole("button", { name: /edit|delete/i });
       expect(actions.length).toBeGreaterThan(0);
@@ -694,7 +694,7 @@ describe("AdminProjects", () => {
       // First tab lands on New Project button, then search input
       await user.tab();
       expect(
-        screen.getByRole("button", { name: /new project/i }),
+        screen.getByRole("button", { name: /new project/i })
       ).toHaveFocus();
 
       await user.tab();
@@ -724,7 +724,7 @@ describe("AdminProjects", () => {
       }).not.toThrow();
 
       expect(
-        screen.getByText(projectsWithMissingData[0].title),
+        screen.getByText(projectsWithMissingData[0].title)
       ).toBeInTheDocument();
     });
 

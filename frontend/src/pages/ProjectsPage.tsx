@@ -37,7 +37,7 @@ const ProjectsPage: React.FC = () => {
     search: debouncedSearch.trim() === "" ? undefined : debouncedSearch,
   });
 
-  const projects = data?.pages.flatMap((page) => page.projects) ?? [];
+  const projects = data?.pages.flatMap(page => page.projects) ?? [];
   const totalProjects = data?.pages[0]?.total ?? 0;
 
   const handleSearch = (e: React.FormEvent): void => {
@@ -46,7 +46,7 @@ const ProjectsPage: React.FC = () => {
   };
 
   const handleFilterChange = (newFilters: Partial<ProjectFilters>) => {
-    setFilters((prev) => ({ ...prev, ...newFilters }));
+    setFilters(prev => ({ ...prev, ...newFilters }));
   };
 
   if (error) {
@@ -142,7 +142,7 @@ const ProjectsPage: React.FC = () => {
                     type="text"
                     placeholder="Search projects..."
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={e => setSearchQuery(e.target.value)}
                     className="w-full pl-10 pr-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent"
                   />
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -174,8 +174,8 @@ const ProjectsPage: React.FC = () => {
                 {/* Order selector */}
                 <Select
                   value={filters.order_by ?? "order"}
-                  onValueChange={(value) =>
-                    setFilters((prev) => ({
+                  onValueChange={value =>
+                    setFilters(prev => ({
                       ...prev,
                       order_by: value as "order" | "created_at" | "updated_at",
                     }))

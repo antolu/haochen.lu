@@ -35,7 +35,7 @@ describe("ProfilePictureManager", () => {
       } satisfies ProfilePicture);
 
     const { getByText, findByText } = renderWithProviders(
-      <ProfilePictureManager />,
+      <ProfilePictureManager />
     );
 
     // Open upload modal

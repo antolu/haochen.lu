@@ -86,7 +86,7 @@ describe("MapPicker", () => {
     render(<MapPicker {...defaultProps} showSearch={true} />);
 
     expect(
-      screen.getByPlaceholderText("Search for a location..."),
+      screen.getByPlaceholderText("Search for a location...")
     ).toBeInTheDocument();
   });
 
@@ -94,7 +94,7 @@ describe("MapPicker", () => {
     render(<MapPicker {...defaultProps} showSearch={false} />);
 
     expect(
-      screen.queryByPlaceholderText("Search for a location..."),
+      screen.queryByPlaceholderText("Search for a location...")
     ).not.toBeInTheDocument();
   });
 
@@ -121,7 +121,7 @@ describe("MapPicker", () => {
     expect(screen.getByText(/37\.774900/)).toBeInTheDocument();
 
     rerender(
-      <MapPicker {...defaultProps} latitude={40.7128} longitude={-74.006} />,
+      <MapPicker {...defaultProps} latitude={40.7128} longitude={-74.006} />
     );
 
     await waitFor(() => {
@@ -162,7 +162,7 @@ describe("MapPicker", () => {
       render(<MapPicker {...defaultProps} showSearch={true} />);
 
       const searchInput = screen.getByPlaceholderText(
-        "Search for a location...",
+        "Search for a location..."
       );
 
       await user.type(searchInput, "New York");
@@ -171,10 +171,10 @@ describe("MapPicker", () => {
       await waitFor(
         () => {
           expect(mockFetch).toHaveBeenCalledWith(
-            "/api/locations/search?q=New%20York&limit=5",
+            "/api/locations/search?q=New%20York&limit=5"
           );
         },
-        { timeout: 500 },
+        { timeout: 500 }
       );
     });
 
@@ -197,7 +197,7 @@ describe("MapPicker", () => {
       render(<MapPicker {...defaultProps} showSearch={true} />);
 
       const searchInput = screen.getByPlaceholderText(
-        "Search for a location...",
+        "Search for a location..."
       );
 
       await user.type(searchInput, "New York");
@@ -231,11 +231,11 @@ describe("MapPicker", () => {
           {...defaultProps}
           showSearch={true}
           onLocationSelect={onLocationSelect}
-        />,
+        />
       );
 
       const searchInput = screen.getByPlaceholderText(
-        "Search for a location...",
+        "Search for a location..."
       );
 
       await user.type(searchInput, "New York");
@@ -257,22 +257,22 @@ describe("MapPicker", () => {
       // Mock a delayed response
       mockFetch.mockImplementation(
         () =>
-          new Promise((resolve) =>
+          new Promise(resolve =>
             setTimeout(
               () =>
                 resolve({
                   ok: true,
                   json: () => Promise.resolve([]),
                 }),
-              100,
-            ),
-          ),
+              100
+            )
+          )
       );
 
       render(<MapPicker {...defaultProps} showSearch={true} />);
 
       const searchInput = screen.getByPlaceholderText(
-        "Search for a location...",
+        "Search for a location..."
       );
 
       await user.type(searchInput, "test");
@@ -294,7 +294,7 @@ describe("MapPicker", () => {
       render(<MapPicker {...defaultProps} showSearch={true} />);
 
       const searchInput = screen.getByPlaceholderText(
-        "Search for a location...",
+        "Search for a location..."
       );
 
       await user.type(searchInput, "test");
@@ -302,7 +302,7 @@ describe("MapPicker", () => {
       await waitFor(() => {
         expect(consoleSpy).toHaveBeenCalledWith(
           "Error searching locations:",
-          expect.any(Error),
+          expect.any(Error)
         );
       });
 
@@ -315,7 +315,7 @@ describe("MapPicker", () => {
       render(<MapPicker {...defaultProps} showSearch={true} />);
 
       const searchInput = screen.getByPlaceholderText(
-        "Search for a location...",
+        "Search for a location..."
       );
 
       await user.type(searchInput, "test");
@@ -344,7 +344,7 @@ describe("MapPicker", () => {
       render(<MapPicker {...defaultProps} showSearch={true} />);
 
       const searchInput = screen.getByPlaceholderText(
-        "Search for a location...",
+        "Search for a location..."
       );
 
       await user.type(searchInput, "test");
@@ -368,7 +368,7 @@ describe("MapPicker", () => {
       render(<MapPicker {...defaultProps} showSearch={true} />);
 
       const searchInput = screen.getByPlaceholderText(
-        "Search for a location...",
+        "Search for a location..."
       );
 
       // Type quickly
@@ -382,7 +382,7 @@ describe("MapPicker", () => {
         () => {
           expect(mockFetch).toHaveBeenCalledTimes(1);
         },
-        { timeout: 500 },
+        { timeout: 500 }
       );
     });
   });
@@ -392,7 +392,7 @@ describe("MapPicker", () => {
       render(<MapPicker {...defaultProps} showSearch={true} />);
 
       const searchInput = screen.getByPlaceholderText(
-        "Search for a location...",
+        "Search for a location..."
       );
       expect(searchInput).toHaveAttribute("type", "text");
     });
@@ -416,7 +416,7 @@ describe("MapPicker", () => {
       render(<MapPicker {...defaultProps} showSearch={true} />);
 
       const searchInput = screen.getByPlaceholderText(
-        "Search for a location...",
+        "Search for a location..."
       );
 
       await user.type(searchInput, "New York");

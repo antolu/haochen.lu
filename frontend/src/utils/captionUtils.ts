@@ -17,7 +17,7 @@ export const generateCaptionHtml = (photo: Photo): string => {
   // Description (if present)
   if (description) {
     parts.push(
-      `<p class="lg-caption-description">${escapeHtml(description)}</p>`,
+      `<p class="lg-caption-description">${escapeHtml(description)}</p>`
     );
   }
 
@@ -30,7 +30,7 @@ export const generateCaptionHtml = (photo: Photo): string => {
  */
 export const generateMobileCaptionHtml = (
   photo: Photo,
-  maxDescLength = 100,
+  maxDescLength = 100
 ): string => {
   const title = photo.title || "Untitled";
   let description = photo.description?.trim();
@@ -48,7 +48,7 @@ export const generateMobileCaptionHtml = (
   // Short description
   if (description) {
     parts.push(
-      `<p class="lg-caption-description lg-caption-description--mobile">${escapeHtml(description)}</p>`,
+      `<p class="lg-caption-description lg-caption-description--mobile">${escapeHtml(description)}</p>`
     );
   }
 

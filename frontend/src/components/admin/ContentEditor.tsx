@@ -68,7 +68,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
     () =>
       title.trim().length > 0 &&
       (!isEditing ? keyField.trim().length > 0 : true),
-    [title, keyField, isEditing],
+    [title, keyField, isEditing]
   );
 
   const handleSave = () => {
@@ -109,7 +109,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
               <Input
                 id="key"
                 value={keyField}
-                onChange={(e) => setKeyField(e.target.value)}
+                onChange={e => setKeyField(e.target.value)}
                 placeholder="e.g., hero.title"
               />
             </div>
@@ -128,7 +128,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
               <Input
                 id="title"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={e => setTitle(e.target.value)}
                 placeholder="Human-readable title"
               />
             </div>
@@ -142,14 +142,14 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                   id="content"
                   rows={4}
                   value={content}
-                  onChange={(e) => setContent(e.target.value)}
+                  onChange={e => setContent(e.target.value)}
                   placeholder="Enter text..."
                 />
               ) : (
                 <Input
                   id="content"
                   value={content}
-                  onChange={(e) => setContent(e.target.value)}
+                  onChange={e => setContent(e.target.value)}
                   placeholder="Enter text..."
                 />
               )}
@@ -166,7 +166,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                 <Textarea
                   rows={14}
                   value={content}
-                  onChange={(e) => setContent(e.target.value)}
+                  onChange={e => setContent(e.target.value)}
                 />
               </TabsContent>
               <TabsContent value="preview">
@@ -188,7 +188,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                 <MDEditor
                   id="markdown-editor"
                   value={content}
-                  onChange={(v) => setContent(v ?? "")}
+                  onChange={v => setContent(v ?? "")}
                   height={500}
                   preview="live"
                 />

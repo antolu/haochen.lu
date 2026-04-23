@@ -51,7 +51,7 @@ const ContentManager: React.FC = () => {
       console.error("Error updating content:", error);
       const errorData = error.response?.data as { detail?: string } | undefined;
       toast.error(
-        `Failed to update content: ${errorData?.detail ?? error.message}`,
+        `Failed to update content: ${errorData?.detail ?? error.message}`
       );
     },
   });
@@ -71,7 +71,7 @@ const ContentManager: React.FC = () => {
       navigation: 0,
       general: 0,
     };
-    contentList?.content.forEach((c) => {
+    contentList?.content.forEach(c => {
       const k = c.category as ContentCategory;
       if (k in base) base[k] += 1;
     });
@@ -109,7 +109,7 @@ const ContentManager: React.FC = () => {
         <Input
           placeholder="Search by title, key, or content..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={e => setSearch(e.target.value)}
           className="w-full md:w-80"
         />
       </div>
@@ -117,12 +117,12 @@ const ContentManager: React.FC = () => {
       <CategoryTabs
         value={category}
         counts={counts}
-        onValueChange={(v) => setCategory(v)}
+        onValueChange={v => setCategory(v)}
       />
 
       {viewMode === "grouped" ? (
         <div className="space-y-6">
-          {CONTENT_SECTIONS.map((sectionConfig) => {
+          {CONTENT_SECTIONS.map(sectionConfig => {
             const sectionItems = groupedContent[sectionConfig.id] || [];
             if (sectionItems.length === 0 && category !== "all") return null;
 
@@ -134,7 +134,7 @@ const ContentManager: React.FC = () => {
                 items={sectionItems}
                 defaultExpanded={sectionConfig.defaultExpanded}
               >
-                {sectionItems.map((item) => (
+                {sectionItems.map(item => (
                   <ContentCard
                     key={item.id}
                     item={item}
@@ -148,7 +148,7 @@ const ContentManager: React.FC = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {contentList?.content.map((item) => (
+          {contentList?.content.map(item => (
             <ContentCard key={item.id} item={item} onEdit={handleEdit} />
           ))}
         </div>
@@ -160,7 +160,7 @@ const ContentManager: React.FC = () => {
 
       <ContentEditor
         open={editorOpen}
-        onOpenChange={(o) => {
+        onOpenChange={o => {
           setEditorOpen(o);
           if (!o) setEditingContent(null);
         }}

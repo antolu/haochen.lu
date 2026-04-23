@@ -52,10 +52,10 @@ export const useUploadQueue = create<UploadQueueState>()(
       queue: [],
       isProcessing: false,
 
-      addToQueue: (upload) => {
-        set((state) => {
+      addToQueue: upload => {
+        set(state => {
           // Prevent duplicates by ID
-          if (state.queue.some((u) => u.id === upload.id)) {
+          if (state.queue.some(u => u.id === upload.id)) {
             return state;
           }
           return {
@@ -64,58 +64,56 @@ export const useUploadQueue = create<UploadQueueState>()(
         });
       },
 
-      removeFromQueue: (id) => {
-        set((state) => ({
-          queue: state.queue.filter((u) => u.id !== id),
+      removeFromQueue: id => {
+        set(state => ({
+          queue: state.queue.filter(u => u.id !== id),
         }));
       },
 
       updateUpload: (id, updates) => {
-        set((state) => ({
-          queue: state.queue.map((u) =>
-            u.id === id ? { ...u, ...updates } : u,
-          ),
+        set(state => ({
+          queue: state.queue.map(u => (u.id === id ? { ...u, ...updates } : u)),
         }));
       },
 
       clearCompleted: () => {
-        set((state) => ({
-          queue: state.queue.filter((u) => u.status !== "completed"),
+        set(state => ({
+          queue: state.queue.filter(u => u.status !== "completed"),
         }));
       },
 
       clearAll: () => {
         // Only clear completed and error uploads, keep pending/uploading
-        set((state) => ({
+        set(state => ({
           queue: state.queue.filter(
-            (u) => u.status === "pending" || u.status === "uploading",
+            u => u.status === "pending" || u.status === "uploading"
           ),
         }));
       },
 
-      pauseUpload: (id) => {
-        set((state) => ({
-          queue: state.queue.map((u) =>
+      pauseUpload: id => {
+        set(state => ({
+          queue: state.queue.map(u =>
             u.id === id && u.status === "uploading"
               ? { ...u, status: "paused" as const }
-              : u,
+              : u
           ),
         }));
       },
 
-      resumeUpload: (id) => {
-        set((state) => ({
-          queue: state.queue.map((u) =>
+      resumeUpload: id => {
+        set(state => ({
+          queue: state.queue.map(u =>
             u.id === id && u.status === "paused"
               ? { ...u, status: "pending" as const }
-              : u,
+              : u
           ),
         }));
       },
 
-      retryUpload: (id) => {
-        set((state) => ({
-          queue: state.queue.map((u) =>
+      retryUpload: id => {
+        set(state => ({
+          queue: state.queue.map(u =>
             u.id === id && u.status === "error"
               ? {
                   ...u,
@@ -123,34 +121,34 @@ export const useUploadQueue = create<UploadQueueState>()(
                   error: undefined,
                   progress: 0,
                 }
-              : u,
+              : u
           ),
         }));
       },
 
-      setProcessing: (processing) => {
+      setProcessing: processing => {
         set({ isProcessing: processing });
       },
 
       getPendingCount: () => {
         return get().queue.filter(
-          (u) => u.status === "pending" || u.status === "uploading",
+          u => u.status === "pending" || u.status === "uploading"
         ).length;
       },
 
       getCompletedCount: () => {
-        return get().queue.filter((u) => u.status === "completed").length;
+        return get().queue.filter(u => u.status === "completed").length;
       },
 
       getErrorCount: () => {
-        return get().queue.filter((u) => u.status === "error").length;
+        return get().queue.filter(u => u.status === "error").length;
       },
     }),
     {
       name: "upload-queue-storage",
       // Custom storage to handle File objects (can't be serialized)
-      partialize: (state) => ({
-        queue: state.queue.map((upload) => ({
+      partialize: state => ({
+        queue: state.queue.map(upload => ({
           ...upload,
           // Don't persist the File object, just metadata
           file: null,
@@ -161,6 +159,6 @@ export const useUploadQueue = create<UploadQueueState>()(
         })),
         isProcessing: false, // Always start fresh
       }),
-    },
-  ),
+    }
+  )
 );

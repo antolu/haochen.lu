@@ -46,7 +46,7 @@ const SortablePhotoCard: React.FC<SortablePhotoCardProps> = ({
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(
-      transform ? { ...transform, scaleY: 1 } : null,
+      transform ? { ...transform, scaleY: 1 } : null
     ),
     transition,
     zIndex: isDragging ? 20 : undefined,
@@ -80,7 +80,7 @@ const SortablePhotoCard: React.FC<SortablePhotoCardProps> = ({
         selected && "ring-2 ring-primary border-primary bg-primary/5",
         disabled && "opacity-60",
         !reorderEnabled && onPhotoClick && "cursor-pointer",
-        reorderEnabled && "border-amber-400/30 bg-amber-50/20",
+        reorderEnabled && "border-amber-400/30 bg-amber-50/20"
       )}
       onClick={handleClick}
     >
@@ -112,9 +112,9 @@ const SortablePhotoCard: React.FC<SortablePhotoCardProps> = ({
                 "flex h-6 w-6 items-center justify-center rounded-full border bg-card/90 backdrop-blur-sm transition-all",
                 selected
                   ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                  : "border-muted-foreground/30 opacity-0 group-hover:opacity-100 hover:border-primary",
+                  : "border-muted-foreground/30 opacity-0 group-hover:opacity-100 hover:border-primary"
               )}
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation();
                 onToggleSelection?.(photo.id);
               }}
@@ -146,7 +146,7 @@ const SortablePhotoCard: React.FC<SortablePhotoCardProps> = ({
               "absolute right-2 top-2 z-10 flex gap-1 transition-all duration-300",
               photo.featured
                 ? "opacity-100"
-                : "opacity-0 group-hover:opacity-100",
+                : "opacity-0 group-hover:opacity-100"
             )}
           >
             {onToggleFeatured && (
@@ -155,9 +155,9 @@ const SortablePhotoCard: React.FC<SortablePhotoCardProps> = ({
                 size="icon"
                 className={cn(
                   "h-8 w-8 rounded-full bg-card/90 backdrop-blur-sm shadow-sm hover:bg-card",
-                  photo.featured && "text-yellow-500",
+                  photo.featured && "text-yellow-500"
                 )}
-                onClick={(e) => {
+                onClick={e => {
                   e.stopPropagation();
                   onToggleFeatured(photo);
                 }}
@@ -172,7 +172,7 @@ const SortablePhotoCard: React.FC<SortablePhotoCardProps> = ({
                 variant="destructive"
                 size="icon"
                 className="h-8 w-8 rounded-full bg-destructive/90 backdrop-blur-sm shadow-sm hover:bg-destructive"
-                onClick={(e) => {
+                onClick={e => {
                   e.stopPropagation();
                   onDelete(photo);
                 }}

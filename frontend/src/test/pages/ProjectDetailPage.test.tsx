@@ -39,7 +39,7 @@ vi.mock("../../hooks/useProjects", async () => {
     useProject: (...args: unknown[]) => mockUseProject(...args),
     useProjectReadme: (...args: unknown[]) => mockUseProjectReadme(...args),
     parseTechnologies: vi.fn((tech: string) =>
-      tech ? tech.split(",").map((t: string) => t.trim()) : [],
+      tech ? tech.split(",").map((t: string) => t.trim()) : []
     ),
   };
 });
@@ -61,7 +61,7 @@ vi.mock("framer-motion", () => ({
 
 const renderWithRouter = (
   component: React.ReactElement,
-  initialEntries = ["/projects/test-project"],
+  initialEntries = ["/projects/test-project"]
 ) => {
   window.history.pushState({}, "Test", initialEntries[0]);
   // Ensure react-router reads the correct slug by updating window.location
@@ -110,7 +110,7 @@ describe("ProjectDetailPage", () => {
 
       expect(screen.getByText("Test Project")).toBeInTheDocument();
       expect(
-        screen.getByText("A test project for unit testing"),
+        screen.getByText("A test project for unit testing")
       ).toBeInTheDocument();
       expect(screen.getByText("Active")).toBeInTheDocument();
       expect(screen.getByText("⭐ Featured")).toBeInTheDocument();
@@ -130,7 +130,7 @@ describe("ProjectDetailPage", () => {
       const projectImage = screen.getByRole("img", { name: "Test Project" });
       expect(projectImage).toHaveAttribute(
         "src",
-        "https://example.com/project-image.jpg",
+        "https://example.com/project-image.jpg"
       );
       expect(projectImage).toHaveAttribute("alt", "Test Project");
     });
@@ -146,7 +146,7 @@ describe("ProjectDetailPage", () => {
 
       // Should display SVG placeholder instead of image
       expect(
-        screen.queryByRole("img", { name: "Test Project" }),
+        screen.queryByRole("img", { name: "Test Project" })
       ).not.toBeInTheDocument();
 
       // Check for placeholder SVG
@@ -164,7 +164,7 @@ describe("ProjectDetailPage", () => {
       expect(statusBadge).toHaveClass(
         "bg-green-100",
         "text-green-800",
-        "border-green-200",
+        "border-green-200"
       );
     });
 
@@ -175,7 +175,7 @@ describe("ProjectDetailPage", () => {
       expect(featuredBadge).toHaveClass(
         "bg-blue-100",
         "text-blue-800",
-        "border-blue-200",
+        "border-blue-200"
       );
     });
 
@@ -206,7 +206,7 @@ describe("ProjectDetailPage", () => {
       expect(statusBadge).toHaveClass(
         "bg-yellow-100",
         "text-yellow-800",
-        "border-yellow-200",
+        "border-yellow-200"
       );
     });
 
@@ -258,7 +258,7 @@ describe("ProjectDetailPage", () => {
       });
       expect(githubLink).toHaveAttribute(
         "href",
-        "https://github.com/test/project",
+        "https://github.com/test/project"
       );
       expect(githubLink).toHaveAttribute("target", "_blank");
       expect(githubLink).toHaveAttribute("rel", "noopener noreferrer");
@@ -274,7 +274,7 @@ describe("ProjectDetailPage", () => {
       renderWithRouter(<ProjectDetailPage />);
 
       expect(
-        screen.queryByRole("link", { name: /view live demo/i }),
+        screen.queryByRole("link", { name: /view live demo/i })
       ).not.toBeInTheDocument();
     });
 
@@ -288,7 +288,7 @@ describe("ProjectDetailPage", () => {
       renderWithRouter(<ProjectDetailPage />);
 
       expect(
-        screen.queryByRole("link", { name: /view source code/i }),
+        screen.queryByRole("link", { name: /view source code/i })
       ).not.toBeInTheDocument();
     });
 
@@ -381,10 +381,10 @@ describe("ProjectDetailPage", () => {
 
       // Relax whitespace expectations for markdown rendering
       expect(screen.getByTestId("markdown-content")).toHaveTextContent(
-        /Test Project/i,
+        /Test Project/i
       );
       expect(screen.getByTestId("markdown-content")).toHaveTextContent(
-        /This is a test README file/i,
+        /This is a test README file/i
       );
     });
 
@@ -396,7 +396,7 @@ describe("ProjectDetailPage", () => {
       renderWithRouter(<ProjectDetailPage />);
 
       expect(screen.getByTestId("markdown-content")).toHaveTextContent(
-        /This is a test project description\./i,
+        /This is a test project description\./i
       );
     });
 
@@ -405,11 +405,11 @@ describe("ProjectDetailPage", () => {
 
       expect(
         screen.getByText(
-          /This content is automatically synced from the project's README.md file on/,
-        ),
+          /This content is automatically synced from the project's README.md file on/
+        )
       ).toBeInTheDocument();
       expect(
-        screen.getByText(new RegExp(mockReadmeResponse.source, "i")),
+        screen.getByText(new RegExp(mockReadmeResponse.source, "i"))
       ).toBeInTheDocument();
     });
 
@@ -421,7 +421,7 @@ describe("ProjectDetailPage", () => {
       renderWithRouter(<ProjectDetailPage />);
 
       expect(
-        screen.queryByText(/This content is automatically synced/),
+        screen.queryByText(/This content is automatically synced/)
       ).not.toBeInTheDocument();
     });
 
@@ -432,7 +432,7 @@ describe("ProjectDetailPage", () => {
       expect(markdownRenderer).toBeInTheDocument();
       expect(markdownRenderer.textContent).toContain("Test Project");
       expect(markdownRenderer.textContent).toContain(
-        "This is a test README file",
+        "This is a test README file"
       );
     });
   });
@@ -480,8 +480,8 @@ describe("ProjectDetailPage", () => {
       expect(screen.getByText("Project not found")).toBeInTheDocument();
       expect(
         screen.getByText(
-          "The project you're looking for doesn't exist or has been removed.",
-        ),
+          "The project you're looking for doesn't exist or has been removed."
+        )
       ).toBeInTheDocument();
     });
 
@@ -548,7 +548,7 @@ describe("ProjectDetailPage", () => {
 
       expect(mockUseProjectReadme).toHaveBeenCalledWith(
         mockProject.id,
-        mockProject.github_url,
+        mockProject.github_url
       );
     });
 
@@ -563,7 +563,7 @@ describe("ProjectDetailPage", () => {
 
       expect(mockUseProjectReadme).toHaveBeenCalledWith(
         mockProject.id,
-        undefined,
+        undefined
       );
     });
   });
@@ -580,7 +580,7 @@ describe("ProjectDetailPage", () => {
       renderWithRouter(<ProjectDetailPage />);
 
       const containers = document.querySelectorAll(
-        ".max-w-7xl.mx-auto, .max-w-4xl.mx-auto",
+        ".max-w-7xl.mx-auto, .max-w-4xl.mx-auto"
       );
       expect(containers.length).toBeGreaterThan(0);
     });
@@ -609,12 +609,12 @@ describe("ProjectDetailPage", () => {
       const externalLinks = screen
         .getAllByRole("link")
         .filter(
-          (link) =>
+          link =>
             link.hasAttribute("target") &&
-            link.getAttribute("target") === "_blank",
+            link.getAttribute("target") === "_blank"
         );
 
-      externalLinks.forEach((link) => {
+      externalLinks.forEach(link => {
         expect(link).toHaveAttribute("rel", "noopener noreferrer");
       });
     });
@@ -661,7 +661,7 @@ describe("ProjectDetailPage", () => {
 
       expect(screen.getByText("Test Project")).toBeInTheDocument();
       expect(
-        screen.queryByText("A test project for unit testing"),
+        screen.queryByText("A test project for unit testing")
       ).not.toBeInTheDocument();
     });
 

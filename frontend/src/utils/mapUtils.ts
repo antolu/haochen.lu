@@ -78,7 +78,7 @@ export const getHighQualityTileConfig = (): TileConfig => {
  * Gets optimized marker icon configuration for high-DPI displays
  */
 export const getOptimizedMarkerIcon = (
-  size: "small" | "medium" | "large" = "medium",
+  size: "small" | "medium" | "large" = "medium"
 ) => {
   const sizeConfig = {
     small: {

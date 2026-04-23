@@ -7,13 +7,13 @@ import { afterEach, beforeAll, afterAll, vi } from "vitest";
   .fn()
   .mockImplementation((callback: any) => {
     const observer = {
-      observe: vi.fn((element) => {
+      observe: vi.fn(element => {
         // Trigger callback with a default entry to prevent undefined access in components
         // but set isIntersecting to false so it doesn't trigger logic prematurely
         setTimeout(() => {
           callback(
             [{ isIntersecting: false, target: element } as any],
-            observer as any,
+            observer as any
           );
         }, 0);
       }),
@@ -42,7 +42,7 @@ Object.defineProperty(window, "ResizeObserver", {
 // Mock matchMedia
 Object.defineProperty(window, "matchMedia", {
   writable: true,
-  value: vi.fn().mockImplementation((query) => ({
+  value: vi.fn().mockImplementation(query => ({
     matches: false,
     media: query as string,
     onchange: null,
@@ -155,13 +155,13 @@ Object.defineProperty(window.URL, "revokeObjectURL", {
   constructor(
     chunks: (string | ArrayBuffer | ArrayBufferView | Blob)[],
     filename: string,
-    options?: { type?: string },
+    options?: { type?: string }
   ) {
     this.name = filename;
     this.size = chunks.reduce(
       (acc: number, chunk: string | ArrayBuffer | ArrayBufferView | Blob) =>
         acc + (chunk as { length: number }).length,
-      0,
+      0
     );
     this.type = options?.type ?? "";
     this.lastModified = Date.now();
@@ -193,7 +193,7 @@ Object.defineProperty(window.URL, "revokeObjectURL", {
       this.onload?.({
         target: { result: this.result },
       } as any);
-      (this.listeners["load"] || []).forEach((cb) => cb());
+      (this.listeners["load"] || []).forEach(cb => cb());
     }, 0);
   }
   readAsText() {
@@ -202,7 +202,7 @@ Object.defineProperty(window.URL, "revokeObjectURL", {
       this.onload?.({
         target: { result: this.result },
       } as any);
-      (this.listeners["load"] || []).forEach((cb) => cb());
+      (this.listeners["load"] || []).forEach(cb => cb());
     }, 0);
   }
   addEventListener(type: string, cb: () => void) {
@@ -211,7 +211,7 @@ Object.defineProperty(window.URL, "revokeObjectURL", {
   }
   removeEventListener(type: string, cb: () => void) {
     if (!this.listeners[type]) return;
-    this.listeners[type] = this.listeners[type].filter((fn) => fn !== cb);
+    this.listeners[type] = this.listeners[type].filter(fn => fn !== cb);
   }
   onload: ((event: any) => void) | null = null;
   onerror: (() => void) | null = null;
@@ -222,7 +222,7 @@ Object.defineProperty(window.URL, "revokeObjectURL", {
 Object.defineProperty(window, "crypto", {
   value: {
     randomUUID: vi.fn(() => "mock-uuid-1234-5678-9abc-def0"),
-    getRandomValues: vi.fn((buffer) => {
+    getRandomValues: vi.fn(buffer => {
       // For Node.js/Vitest environment
       if (typeof Buffer !== "undefined" && typeof require === "function") {
         // eslint-disable-next-line @typescript-eslint/no-require-imports

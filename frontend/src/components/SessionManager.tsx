@@ -25,8 +25,7 @@ const SessionManager: React.FC = () => {
     } catch (error: unknown) {
       const axiosError = error as AxiosError<{ detail?: string }>;
       toast.error(
-        axiosError.response?.data?.detail ??
-          "Failed to logout from all devices",
+        axiosError.response?.data?.detail ?? "Failed to logout from all devices"
       );
     } finally {
       setIsLoading(false);

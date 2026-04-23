@@ -56,7 +56,7 @@ const AdminSettings: React.FC = () => {
   const handleMapValue = (
     mapKey: "responsive_sizes" | "quality_settings",
     k: string,
-    value: number,
+    value: number
   ) => {
     if (!img) return;
     setImg({
@@ -129,7 +129,7 @@ const AdminSettings: React.FC = () => {
                 className="w-40"
                 type="number"
                 value={v}
-                onChange={(e) =>
+                onChange={e =>
                   handleMapValue("responsive_sizes", k, Number(e.target.value))
                 }
                 min={100}
@@ -153,7 +153,7 @@ const AdminSettings: React.FC = () => {
                 className="w-40"
                 type="number"
                 value={v}
-                onChange={(e) =>
+                onChange={e =>
                   handleMapValue("quality_settings", k, Number(e.target.value))
                 }
                 min={50}
@@ -174,10 +174,10 @@ const AdminSettings: React.FC = () => {
               className="w-40"
               type="number"
               value={img?.avif_quality_base_offset ?? 0}
-              onChange={(e) =>
+              onChange={e =>
                 handleNumeric(
                   "avif_quality_base_offset",
-                  Number(e.target.value),
+                  Number(e.target.value)
                 )
               }
               min={-30}
@@ -191,7 +191,7 @@ const AdminSettings: React.FC = () => {
               className="w-40"
               type="number"
               value={img?.avif_quality_floor ?? 50}
-              onChange={(e) =>
+              onChange={e =>
                 handleNumeric("avif_quality_floor", Number(e.target.value))
               }
               min={30}
@@ -205,7 +205,7 @@ const AdminSettings: React.FC = () => {
               className="w-40"
               type="number"
               value={img?.avif_effort_default ?? 6}
-              onChange={(e) =>
+              onChange={e =>
                 handleNumeric("avif_effort_default", Number(e.target.value))
               }
               min={1}
@@ -221,7 +221,7 @@ const AdminSettings: React.FC = () => {
               className="w-40"
               type="number"
               value={img?.webp_quality ?? 85}
-              onChange={(e) =>
+              onChange={e =>
                 handleNumeric("webp_quality", Number(e.target.value))
               }
               min={60}

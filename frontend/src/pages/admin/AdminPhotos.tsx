@@ -64,7 +64,7 @@ const AdminPhotos: React.FC = () => {
   };
 
   const handleToggleSelection = (id: string) => {
-    setSelectedPhotos((prev) => {
+    setSelectedPhotos(prev => {
       const next = new Set(prev);
       if (next.has(id)) {
         next.delete(id);
@@ -86,7 +86,7 @@ const AdminPhotos: React.FC = () => {
     if (selectedPhotos.size === photos.length) {
       setSelectedPhotos(new Set());
     } else {
-      setSelectedPhotos(new Set(photos.map((p) => p.id)));
+      setSelectedPhotos(new Set(photos.map(p => p.id)));
     }
   };
 
@@ -151,13 +151,13 @@ const AdminPhotos: React.FC = () => {
     }
 
     const confirmed = window.confirm(
-      "Reset photo ordering back to upload date? Any custom ordering will be lost.",
+      "Reset photo ordering back to upload date? Any custom ordering will be lost."
     );
     if (!confirmed) return;
 
     const resetOrder = [...photos].sort(
       (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
 
     try {
@@ -224,7 +224,7 @@ const AdminPhotos: React.FC = () => {
                   "px-6 py-2 text-sm font-semibold rounded-lg transition-all duration-200",
                   viewMode === "grid"
                     ? "bg-background text-foreground shadow-sm ring-1 ring-border/50"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/30",
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
                 )}
               >
                 Grid
@@ -235,7 +235,7 @@ const AdminPhotos: React.FC = () => {
                   "px-6 py-2 text-sm font-semibold rounded-lg transition-all duration-200",
                   viewMode === "list"
                     ? "bg-background text-foreground shadow-sm ring-1 ring-border/50"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/30",
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
                 )}
               >
                 List
@@ -250,7 +250,7 @@ const AdminPhotos: React.FC = () => {
               </span>
               <Switch
                 checked={reorderEnabled}
-                onCheckedChange={(checked) => {
+                onCheckedChange={checked => {
                   if (!photos.length && checked) {
                     toast.error("Add some photos before reordering.");
                     return;
@@ -307,7 +307,7 @@ const AdminPhotos: React.FC = () => {
               <svg
                 className={cn(
                   "h-3.5 w-3.5 transition-transform duration-300",
-                  showStats && "rotate-90",
+                  showStats && "rotate-90"
                 )}
                 fill="none"
                 stroke="currentColor"
@@ -346,7 +346,7 @@ const AdminPhotos: React.FC = () => {
                     title="Featured"
                     value={
                       stats.featured_photos ||
-                      photos.filter((p) => p.featured).length
+                      photos.filter(p => p.featured).length
                     }
                     gradient="from-yellow-500/10 to-yellow-600/10"
                     iconBg="bg-yellow-500/10"
@@ -358,7 +358,7 @@ const AdminPhotos: React.FC = () => {
                     title="Storage Used"
                     value={formatFileSize(
                       stats.total_size ||
-                        photos.reduce((sum, p) => sum + (p.file_size || 0), 0),
+                        photos.reduce((sum, p) => sum + (p.file_size || 0), 0)
                     )}
                     gradient="from-emerald-500/10 to-emerald-600/10"
                     iconBg="bg-emerald-500/10"
@@ -436,7 +436,7 @@ const AdminPhotos: React.FC = () => {
                   className="rounded-full"
                   onClick={() => {
                     const confirmed = window.confirm(
-                      `Really delete ${selectedPhotos.size} photos?`,
+                      `Really delete ${selectedPhotos.size} photos?`
                     );
                     if (confirmed) void handleBulkDelete();
                   }}
@@ -468,7 +468,7 @@ const AdminPhotos: React.FC = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
-            onClick={(e) => {
+            onClick={e => {
               if (e.target === e.currentTarget) {
                 setShowUpload(false);
               }
@@ -479,7 +479,7 @@ const AdminPhotos: React.FC = () => {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="bg-background rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
             >
               <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
@@ -537,16 +537,16 @@ const AdminPhotos: React.FC = () => {
               photo={editingPhoto}
               onCancel={() => setEditingPhoto(null)}
               onSuccess={() => setEditingPhoto(null)}
-              onDelete={(photo) => {
+              onDelete={photo => {
                 const confirmed = window.confirm(
-                  "Are you sure you want to delete this photo?",
+                  "Are you sure you want to delete this photo?"
                 );
                 if (confirmed) {
                   void deleteMutation.mutateAsync(photo.id);
                   setEditingPhoto(null);
                 }
               }}
-              onToggleFeatured={(photo) => {
+              onToggleFeatured={photo => {
                 void toggleFeaturedMutation.mutateAsync({
                   id: photo.id,
                   featured: !photo.featured,
@@ -558,21 +558,21 @@ const AdminPhotos: React.FC = () => {
               <SortablePhotoGrid
                 photos={photos}
                 reorderEnabled={reorderEnabled}
-                onReorder={(items) => void handleReorder(items)}
+                onReorder={items => void handleReorder(items)}
                 disabled={isReordering}
                 selectedIds={selectedPhotos}
                 onToggleSelection={handleToggleSelection}
                 onPhotoClick={handlePhotoClick}
-                onDelete={(photo) => {
+                onDelete={photo => {
                   if (reorderEnabled) return;
                   const confirmed = window.confirm(
-                    "Are you sure you want to delete this photo?",
+                    "Are you sure you want to delete this photo?"
                   );
                   if (confirmed) {
                     void deleteMutation.mutateAsync(photo.id);
                   }
                 }}
-                onToggleFeatured={(photo) => {
+                onToggleFeatured={photo => {
                   if (reorderEnabled) return;
                   void toggleFeaturedMutation.mutateAsync({
                     id: photo.id,
@@ -587,16 +587,16 @@ const AdminPhotos: React.FC = () => {
             photo={editingPhoto}
             onCancel={() => setEditingPhoto(null)}
             onSuccess={() => setEditingPhoto(null)}
-            onDelete={(photo) => {
+            onDelete={photo => {
               const confirmed = window.confirm(
-                "Are you sure you want to delete this photo?",
+                "Are you sure you want to delete this photo?"
               );
               if (confirmed) {
                 void deleteMutation.mutateAsync(photo.id);
                 setEditingPhoto(null);
               }
             }}
-            onToggleFeatured={(photo) => {
+            onToggleFeatured={photo => {
               void toggleFeaturedMutation.mutateAsync({
                 id: photo.id,
                 featured: !photo.featured,
@@ -607,26 +607,26 @@ const AdminPhotos: React.FC = () => {
           <SortablePhotoList
             photos={photos}
             reorderEnabled={reorderEnabled}
-            onReorder={(ordered) => {
+            onReorder={ordered => {
               void handleReorder(ordered);
             }}
             selectedIds={selectedPhotos}
             onToggleSelection={handleToggleSelection}
-            onEdit={(photo) => {
+            onEdit={photo => {
               if (reorderEnabled) return;
               setEditingPhoto(photo);
             }}
-            onToggleFeatured={(photo) => {
+            onToggleFeatured={photo => {
               if (reorderEnabled) return;
               void toggleFeaturedMutation.mutateAsync({
                 id: photo.id,
                 featured: !photo.featured,
               });
             }}
-            onDelete={(photo) => {
+            onDelete={photo => {
               if (reorderEnabled) return;
               const confirmed = window.confirm(
-                "Are you sure you want to delete this photo?",
+                "Are you sure you want to delete this photo?"
               );
               if (confirmed) {
                 void deleteMutation.mutateAsync(photo.id);

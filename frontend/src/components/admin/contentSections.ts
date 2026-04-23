@@ -95,19 +95,19 @@ export const CONTENT_SECTIONS: ContentSectionConfig[] = [
 ];
 
 export const groupContentBySections = (
-  content: Content[],
+  content: Content[]
 ): Record<string, Content[]> => {
   const grouped: Record<string, Content[]> = {};
 
   // Initialize all sections
-  CONTENT_SECTIONS.forEach((section) => {
+  CONTENT_SECTIONS.forEach(section => {
     grouped[section.id] = [];
   });
 
   // Group content items by section
-  content.forEach((item) => {
-    const section = CONTENT_SECTIONS.find((s) =>
-      s.categories.includes(item.category as ContentCategory),
+  content.forEach(item => {
+    const section = CONTENT_SECTIONS.find(s =>
+      s.categories.includes(item.category as ContentCategory)
     );
 
     if (section) {
@@ -122,7 +122,7 @@ export const groupContentBySections = (
 };
 
 export const getSectionConfig = (
-  sectionId: string,
+  sectionId: string
 ): ContentSectionConfig | undefined => {
-  return CONTENT_SECTIONS.find((section) => section.id === sectionId);
+  return CONTENT_SECTIONS.find(section => section.id === sectionId);
 };

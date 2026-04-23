@@ -107,7 +107,7 @@ describe("XSS Prevention Tests", () => {
         };
 
         const { unmount } = renderWithProviders(
-          <MockPhotoCard photo={photo} />,
+          <MockPhotoCard photo={photo} />
         );
 
         const photoCard = screen.getByTestId("photo-card");
@@ -162,7 +162,7 @@ describe("XSS Prevention Tests", () => {
       const sanitizeHTML = (html: string) => {
         return html.replace(
           /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-          "",
+          ""
         );
       };
 
@@ -301,7 +301,7 @@ alert('This should not execute');
           .replace(/\[([^\]]+)\]\(javascript:[^)]*\)/g, "[BLOCKED LINK]")
           .replace(
             /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-            "[SCRIPT BLOCKED]",
+            "[SCRIPT BLOCKED]"
           );
       };
 
@@ -332,8 +332,8 @@ alert('This should not execute');
   describe("Form Input XSS Prevention", () => {
     it("should sanitize user input in comment forms", async () => {
       const mockSubmit = vi.fn();
-      const user = await import("@testing-library/user-event").then((m) =>
-        m.userEvent.setup(),
+      const user = await import("@testing-library/user-event").then(m =>
+        m.userEvent.setup()
       );
 
       renderWithProviders(<MockCommentForm onSubmit={mockSubmit} />);
@@ -367,7 +367,7 @@ alert('This should not execute');
         for (const [key, value] of params.entries()) {
           sanitized[key] = value.replace(
             /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-            "[BLOCKED]",
+            "[BLOCKED]"
           );
         }
 
@@ -407,7 +407,7 @@ alert('This should not execute');
               ...data,
               content: data.content.replace(
                 /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-                "",
+                ""
               ),
             };
             setContent(sanitized);
@@ -460,7 +460,7 @@ alert('This should not execute');
         results: { id: string; title: string; description: string }[];
       }) => (
         <div data-testid="search-results">
-          {results.map((result) => (
+          {results.map(result => (
             <div key={result.id} data-testid={`result-${result.id}`}>
               <h3>{result.title}</h3>
               <p>{result.description}</p>
@@ -491,8 +491,8 @@ alert('This should not execute');
 
   describe("Event Handler XSS Prevention", () => {
     it("should prevent XSS through event handlers", async () => {
-      const user = await import("@testing-library/user-event").then((m) =>
-        m.userEvent.setup(),
+      const user = await import("@testing-library/user-event").then(m =>
+        m.userEvent.setup()
       );
       const mockHandler = vi.fn();
 

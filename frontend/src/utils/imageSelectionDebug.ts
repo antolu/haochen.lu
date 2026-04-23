@@ -180,16 +180,16 @@ export const testImageSelectionAcrossDevices = () => {
   // eslint-disable-next-line no-console
   console.group("🖼️  DPI-Aware Image Selection Test Results");
 
-  testDevices.forEach((device) => {
+  testDevices.forEach(device => {
     // Mock the device
     mockDevice(device);
 
     // eslint-disable-next-line no-console
     console.group(
-      `📱 ${device.name} (${device.devicePixelRatio}x DPI, ${device.viewportWidth}×${device.viewportHeight})`,
+      `📱 ${device.name} (${device.devicePixelRatio}x DPI, ${device.viewportWidth}×${device.viewportHeight})`
     );
 
-    Object.values(ImageUseCase).forEach((useCase) => {
+    Object.values(ImageUseCase).forEach(useCase => {
       const debug = debugImageSelection(testPhoto, useCase) as {
         targetSize: number;
         context: unknown;
@@ -254,10 +254,10 @@ export const testBandwidthEfficiency = () => {
   let totalStaticBytes = 0;
   let totalDynamicBytes = 0;
 
-  testDevices.forEach((device) => {
+  testDevices.forEach(device => {
     mockDevice(device);
 
-    Object.values(ImageUseCase).forEach((useCase) => {
+    Object.values(ImageUseCase).forEach(useCase => {
       const staticVariant = staticSelection[useCase];
       const staticBytes = testPhoto.variants?.[staticVariant]?.size_bytes ?? 0;
 
@@ -318,13 +318,13 @@ export const testHighDPIQuality = () => {
     viewportHeight: 844,
   };
 
-  [standardDevice, retinaDevice, ultraDevice].forEach((device) => {
+  [standardDevice, retinaDevice, ultraDevice].forEach(device => {
     mockDevice(device);
 
     // eslint-disable-next-line no-console
     console.group(`🖥️  ${device.name} (${device.devicePixelRatio}x)`);
 
-    Object.values(ImageUseCase).forEach((useCase) => {
+    Object.values(ImageUseCase).forEach(useCase => {
       const selection = selectOptimalImage(testPhoto, useCase);
       const variant = testPhoto.variants?.[selection.selectedVariant];
 
@@ -332,7 +332,7 @@ export const testHighDPIQuality = () => {
         const pixelDensity = variant.width / device.viewportWidth;
         const qualityScore = Math.min(
           pixelDensity * device.devicePixelRatio,
-          3,
+          3
         );
 
         // eslint-disable-next-line no-console

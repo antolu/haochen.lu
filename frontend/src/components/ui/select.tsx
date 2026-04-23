@@ -4,10 +4,10 @@ import { Check, ChevronDown } from "lucide-react";
 import { cn } from "../../lib/utils";
 
 export const Select = (
-  props: React.ComponentProps<typeof SelectPrimitive.Root>,
+  props: React.ComponentProps<typeof SelectPrimitive.Root>
 ) => <SelectPrimitive.Root {...props} />;
 export const SelectValue = (
-  props: React.ComponentProps<typeof SelectPrimitive.Value>,
+  props: React.ComponentProps<typeof SelectPrimitive.Value>
 ) => <SelectPrimitive.Value {...props} />;
 
 export const SelectTrigger = React.forwardRef<
@@ -18,7 +18,7 @@ export const SelectTrigger = React.forwardRef<
     ref={ref}
     className={cn(
       "flex h-11 w-full items-center justify-between rounded-lg border-2 border-border/50 bg-background px-4 py-3 text-sm ring-offset-background placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:shadow-glow-sm disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200 hover:border-border",
-      className,
+      className
     )}
     {...props}
   >
@@ -44,7 +44,7 @@ export const SelectContent = React.forwardRef<
         "relative z-50 min-w-[8rem] max-h-96 overflow-y-auto overflow-x-hidden rounded-xl border border-border/50 bg-popover text-popover-foreground shadow-xl backdrop-blur-sm",
         position === "popper" &&
           "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
-        className,
+        className
       )}
       {...props}
     >
@@ -52,7 +52,7 @@ export const SelectContent = React.forwardRef<
         className={cn(
           "p-2",
           position === "popper" &&
-            "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]",
+            "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]"
         )}
       >
         {children}
@@ -70,7 +70,7 @@ export const SelectItem = React.forwardRef<
     ref={ref}
     className={cn(
       "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground",
-      className,
+      className
     )}
     {...props}
   >

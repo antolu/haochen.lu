@@ -101,7 +101,7 @@ const AdminApplications: React.FC = () => {
 
   const handleToggleEnabled = async (
     applicationId: string,
-    enabled: boolean,
+    enabled: boolean
   ) => {
     try {
       await toggleEnabledMutation.mutateAsync({ id: applicationId, enabled });
@@ -117,7 +117,7 @@ const AdminApplications: React.FC = () => {
 
   const handleOpenApplication = (
     application: Application,
-    target: "app" | "admin",
+    target: "app" | "admin"
   ) => {
     const destination =
       target === "admin"
@@ -176,7 +176,7 @@ const AdminApplications: React.FC = () => {
               </span>
               <Switch
                 checked={reorderEnabled}
-                onCheckedChange={(checked) => {
+                onCheckedChange={checked => {
                   if (!apps.length && checked) return;
                   setReorderEnabled(checked);
                 }}
@@ -217,7 +217,7 @@ const AdminApplications: React.FC = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
-            onClick={(e) => {
+            onClick={e => {
               if (e.target === e.currentTarget) {
                 handleFormCancel();
               }
@@ -228,7 +228,7 @@ const AdminApplications: React.FC = () => {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="bg-background border border-border rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
             >
               <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
@@ -259,7 +259,7 @@ const AdminApplications: React.FC = () => {
 
                 <AppForm
                   application={editingApplication ?? undefined}
-                  onSubmit={async (data) => {
+                  onSubmit={async data => {
                     await handleFormSubmit(data);
                   }}
                   onCancel={() => handleFormCancel()}
@@ -267,7 +267,7 @@ const AdminApplications: React.FC = () => {
                     editingApplication
                       ? () =>
                           regenerateCredentialsMutation.mutate(
-                            editingApplication.id,
+                            editingApplication.id
                           )
                       : undefined
                   }
@@ -289,13 +289,13 @@ const AdminApplications: React.FC = () => {
           applications={apps}
           reorderEnabled={reorderEnabled}
           onEdit={handleEditApplication}
-          onOpen={(application) => {
+          onOpen={application => {
             void handleOpenApplication(application, "app");
           }}
-          onOpenAdmin={(application) => {
+          onOpenAdmin={application => {
             void handleOpenApplication(application, "admin");
           }}
-          onDelete={(id) => {
+          onDelete={id => {
             void handleDeleteApplication(id);
           }}
           onToggleEnabled={(id, enabled) => {

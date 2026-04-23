@@ -31,7 +31,7 @@ interface PhotoCacheActions {
   setPhotos: (
     orderBy: OrderByOption,
     response: PhotoListResponse,
-    page: number,
+    page: number
   ) => void;
   appendPhotos: (orderBy: OrderByOption, response: PhotoListResponse) => void;
   updatePhoto: (photoId: string, updates: Partial<Photo>) => void;
@@ -47,7 +47,7 @@ interface PhotoCacheActions {
   // Utility functions
   getPhotoIntersection: (
     orderA: OrderByOption,
-    orderB: OrderByOption,
+    orderB: OrderByOption
   ) => Photo[];
   getCachedPhotos: (orderBy: OrderByOption) => Photo[];
   clearCache: (orderBy?: OrderByOption) => void;
@@ -105,7 +105,7 @@ export const usePhotoCacheStore = create<PhotoCacheStore>()(
 
         // Actions
         setPhotos: (orderBy, response, page) => {
-          set((state) => {
+          set(state => {
             const newCache = { ...state.cache };
             const orderCache = { ...newCache[orderBy] };
 
@@ -115,9 +115,9 @@ export const usePhotoCacheStore = create<PhotoCacheStore>()(
               orderCache.loadedPages = new Set([1]);
             } else {
               // Append photos for subsequent pages
-              const existingIds = new Set(orderCache.photos.map((p) => p.id));
+              const existingIds = new Set(orderCache.photos.map(p => p.id));
               const newPhotos = response.photos.filter(
-                (p) => !existingIds.has(p.id),
+                p => !existingIds.has(p.id)
               );
               orderCache.photos = [...orderCache.photos, ...newPhotos];
               orderCache.loadedPages.add(page);
@@ -130,7 +130,7 @@ export const usePhotoCacheStore = create<PhotoCacheStore>()(
 
             // Update photo index
             const newPhotoIndex = new Map(state.photoIndex);
-            response.photos.forEach((photo) => {
+            response.photos.forEach(photo => {
               newPhotoIndex.set(photo.id, photo);
             });
 
@@ -149,7 +149,7 @@ export const usePhotoCacheStore = create<PhotoCacheStore>()(
         },
 
         updatePhoto: (photoId, updates) => {
-          set((state) => {
+          set(state => {
             const newCache = { ...state.cache };
             const newPhotoIndex = new Map(state.photoIndex);
 
@@ -160,11 +160,11 @@ export const usePhotoCacheStore = create<PhotoCacheStore>()(
               newPhotoIndex.set(photoId, updatedPhoto);
 
               // Update in all order caches
-              Object.keys(newCache).forEach((orderKey) => {
+              Object.keys(newCache).forEach(orderKey => {
                 const orderBy = orderKey as OrderByOption;
                 const orderCache = { ...newCache[orderBy] };
                 const photoIndex = orderCache.photos.findIndex(
-                  (p) => p.id === photoId,
+                  p => p.id === photoId
                 );
                 if (photoIndex !== -1) {
                   orderCache.photos = [...orderCache.photos];
@@ -181,8 +181,8 @@ export const usePhotoCacheStore = create<PhotoCacheStore>()(
           });
         },
 
-        removePhoto: (photoId) => {
-          set((state) => {
+        removePhoto: photoId => {
+          set(state => {
             const newCache = { ...state.cache };
             const newPhotoIndex = new Map(state.photoIndex);
 
@@ -190,11 +190,11 @@ export const usePhotoCacheStore = create<PhotoCacheStore>()(
             newPhotoIndex.delete(photoId);
 
             // Remove from all order caches
-            Object.keys(newCache).forEach((orderKey) => {
+            Object.keys(newCache).forEach(orderKey => {
               const orderBy = orderKey as OrderByOption;
               const orderCache = { ...newCache[orderBy] };
               orderCache.photos = orderCache.photos.filter(
-                (p) => p.id !== photoId,
+                p => p.id !== photoId
               );
               orderCache.total = Math.max(0, orderCache.total - 1);
               newCache[orderBy] = orderCache;
@@ -207,7 +207,7 @@ export const usePhotoCacheStore = create<PhotoCacheStore>()(
           });
         },
 
-        switchOrder: (newOrder) => {
+        switchOrder: newOrder => {
           const { cache, activeOrder, photoIndex } = get();
 
           set({
@@ -219,15 +219,15 @@ export const usePhotoCacheStore = create<PhotoCacheStore>()(
           const newCache = cache[newOrder];
 
           // Find intersection of photos between orders
-          const currentPhotoIds = new Set(currentCache.photos.map((p) => p.id));
-          const newPhotoIds = new Set(newCache.photos.map((p) => p.id));
-          const intersectionIds = [...currentPhotoIds].filter((id) =>
-            newPhotoIds.has(id),
+          const currentPhotoIds = new Set(currentCache.photos.map(p => p.id));
+          const newPhotoIds = new Set(newCache.photos.map(p => p.id));
+          const intersectionIds = [...currentPhotoIds].filter(id =>
+            newPhotoIds.has(id)
           );
 
           // Get cached photos that can be reused
           const cachedPhotos = intersectionIds
-            .map((id) => photoIndex.get(id))
+            .map(id => photoIndex.get(id))
             .filter((photo): photo is Photo => Boolean(photo));
 
           // Determine which pages are missing
@@ -257,22 +257,22 @@ export const usePhotoCacheStore = create<PhotoCacheStore>()(
           const cacheA = cache[orderA];
           const cacheB = cache[orderB];
 
-          const idsA = new Set(cacheA.photos.map((p) => p.id));
-          const idsB = new Set(cacheB.photos.map((p) => p.id));
-          const intersectionIds = [...idsA].filter((id) => idsB.has(id));
+          const idsA = new Set(cacheA.photos.map(p => p.id));
+          const idsB = new Set(cacheB.photos.map(p => p.id));
+          const intersectionIds = [...idsA].filter(id => idsB.has(id));
 
           return intersectionIds
-            .map((id) => photoIndex.get(id))
+            .map(id => photoIndex.get(id))
             .filter((photo): photo is Photo => Boolean(photo));
         },
 
-        getCachedPhotos: (orderBy) => {
+        getCachedPhotos: orderBy => {
           const { cache } = get();
           return cache[orderBy].photos;
         },
 
-        clearCache: (orderBy) => {
-          set((state) => {
+        clearCache: orderBy => {
+          set(state => {
             if (orderBy) {
               // Clear specific order cache
               const newCache = { ...state.cache };
@@ -316,7 +316,7 @@ export const usePhotoCacheStore = create<PhotoCacheStore>()(
           });
         },
 
-        setActiveOrder: (order) => {
+        setActiveOrder: order => {
           set({ activeOrder: order });
         },
 
@@ -354,7 +354,7 @@ export const usePhotoCacheStore = create<PhotoCacheStore>()(
       {
         name: "photo-cache-store",
         // Only persist the cache data, not the Maps or Sets
-        partialize: (state) => ({
+        partialize: state => ({
           cache: {
             created_at: {
               ...state.cache.created_at,
@@ -372,24 +372,24 @@ export const usePhotoCacheStore = create<PhotoCacheStore>()(
           activeOrder: state.activeOrder,
         }),
         // Rehydrate the Sets and Maps
-        onRehydrateStorage: () => (state) => {
+        onRehydrateStorage: () => state => {
           if (state) {
             // Rebuild photoIndex from cached photos
             const photoIndex = new Map<string, Photo>();
-            Object.values(state.cache).forEach((orderCache) => {
-              orderCache.photos.forEach((photo) => {
+            Object.values(state.cache).forEach(orderCache => {
+              orderCache.photos.forEach(photo => {
                 photoIndex.set(photo.id, photo);
               });
             });
             state.photoIndex = photoIndex;
 
             // Convert loadedPages arrays back to Sets
-            Object.keys(state.cache).forEach((orderKey) => {
+            Object.keys(state.cache).forEach(orderKey => {
               const orderBy = orderKey as OrderByOption;
               const orderCache = state.cache[orderBy];
               if (
                 Array.isArray(
-                  (orderCache as { loadedPages: unknown }).loadedPages,
+                  (orderCache as { loadedPages: unknown }).loadedPages
                 )
               ) {
                 const loadedPagesArray = (
@@ -401,17 +401,17 @@ export const usePhotoCacheStore = create<PhotoCacheStore>()(
             });
           }
         },
-      },
-    ),
-  ),
+      }
+    )
+  )
 );
 
 // Selector hooks for performance
 export const usePhotosForOrder = (orderBy: OrderByOption) =>
-  usePhotoCacheStore((state) => state.cache[orderBy].photos);
+  usePhotoCacheStore(state => state.cache[orderBy].photos);
 
 export const useCacheStats = () =>
-  usePhotoCacheStore((state) => state.getCacheStats());
+  usePhotoCacheStore(state => state.getCacheStats());
 
 export const useIsTransitioning = () =>
-  usePhotoCacheStore((state) => state.isTransitioning);
+  usePhotoCacheStore(state => state.isTransitioning);

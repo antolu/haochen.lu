@@ -24,12 +24,12 @@ export const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
         className={cn(
           "w-full rounded-md border p-4 text-sm",
           variantClasses,
-          className,
+          className
         )}
         role="alert"
         {...props}
       />
     );
-  },
+  }
 );
 Alert.displayName = "Alert";

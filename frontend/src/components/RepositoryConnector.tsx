@@ -53,7 +53,7 @@ const RepositoryConnector: React.FC<RepositoryConnectorProps> = ({
       });
       return response.data as RepositoryInfo;
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       setRepoInfo(data);
       setError("");
       onValidationChange?.(true);
@@ -87,7 +87,7 @@ const RepositoryConnector: React.FC<RepositoryConnectorProps> = ({
     // Basic URL pattern validation
     const isValidPattern =
       /^https?:\/\/(github\.com|gitlab\.com|[^/]+\.[^/]+)\/[^/]+\/[^/]+/.test(
-        newUrl,
+        newUrl
       );
     if (!isValidPattern) {
       setError("Please enter a valid GitHub or GitLab repository URL");
@@ -136,7 +136,7 @@ const RepositoryConnector: React.FC<RepositoryConnectorProps> = ({
           <input
             type="url"
             value={url}
-            onChange={(e) => handleUrlChange(e.target.value)}
+            onChange={e => handleUrlChange(e.target.value)}
             disabled={disabled}
             placeholder="https://github.com/username/repository or https://gitlab.com/username/repository"
             className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent disabled:bg-gray-100"

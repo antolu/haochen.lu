@@ -50,7 +50,7 @@ export const UploadQueue: React.FC = () => {
     return null;
   }
 
-  const filteredQueue = queue.filter((upload) => {
+  const filteredQueue = queue.filter(upload => {
     if (filter === "all") return true;
     if (filter === "active")
       return upload.status === "uploading" || upload.status === "pending";
@@ -123,7 +123,7 @@ export const UploadQueue: React.FC = () => {
                 { key: "active", label: "Active" },
                 { key: "completed", label: "Done" },
                 { key: "error", label: "Failed" },
-              ].map((tab) => (
+              ].map(tab => (
                 <button
                   key={tab.key}
                   onClick={() => setFilter(tab.key as typeof filter)}
@@ -141,7 +141,7 @@ export const UploadQueue: React.FC = () => {
             {/* Queue Items */}
             <div className="max-h-96 overflow-y-auto">
               <AnimatePresence>
-                {filteredQueue.map((upload) => (
+                {filteredQueue.map(upload => (
                   <motion.div
                     key={upload.id}
                     initial={{ opacity: 0, height: 0 }}

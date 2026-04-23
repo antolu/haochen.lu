@@ -130,7 +130,7 @@ export default class LgSidebar {
     });
 
     // Handle keyboard shortcuts
-    document.addEventListener("keydown", (e) => {
+    document.addEventListener("keydown", e => {
       if (
         e.key === this.settings.sidebarToggleKey &&
         !e.ctrlKey &&
@@ -149,7 +149,7 @@ export default class LgSidebar {
     });
 
     // Handle escape key
-    document.addEventListener("keydown", (e) => {
+    document.addEventListener("keydown", e => {
       if (e.key === "Escape" && this.isVisible) {
         this.hideSidebar();
       }
@@ -264,7 +264,7 @@ export default class LgSidebar {
                         <span class="lg-sidebar-tag">
                             ${tag.trim()}
                         </span>
-                    `,
+                    `
                       )
                       .join("")}
                 </div>

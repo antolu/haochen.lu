@@ -89,7 +89,7 @@ describe("API Integration Tests", () => {
 
     it("sets default headers", () => {
       expect(apiClient.defaults.headers["Content-Type"]).toBe(
-        "application/json",
+        "application/json"
       );
     });
 
@@ -103,7 +103,7 @@ describe("API Integration Tests", () => {
       await apiClient.get("/test");
 
       expect(mockAdapter.history.get[0].headers?.Authorization).toBe(
-        "Bearer test-token",
+        "Bearer test-token"
       );
     });
 
@@ -177,7 +177,7 @@ describe("API Integration Tests", () => {
       await expect(auth.login(mockLoginRequest)).resolves.toBeUndefined();
 
       expect(window.location.assign).toHaveBeenCalledWith(
-        "https://auth.example.com/login?next=/admin",
+        "https://auth.example.com/login?next=/admin"
       );
       expect(mockAdapter.history.get[0]?.url).toBe("/auth/login");
       expect(mockAdapter.history.get[0]?.params).toMatchObject({
@@ -198,7 +198,7 @@ describe("API Integration Tests", () => {
 
       await expect(auth.logout()).resolves.toBeUndefined();
       expect(
-        mockAdapter.history.post.some((req) => req.url === "/auth/logout"),
+        mockAdapter.history.post.some(req => req.url === "/auth/logout")
       ).toBe(true);
     });
 
@@ -271,7 +271,7 @@ describe("API Integration Tests", () => {
 
       expect(result).toEqual(mockProject);
       expect(
-        JSON.parse(mockAdapter.history.post[0].data as string),
+        JSON.parse(mockAdapter.history.post[0].data as string)
       ).toMatchObject(newProject);
     });
 
@@ -288,7 +288,7 @@ describe("API Integration Tests", () => {
 
       expect(result).toEqual(updatedProject);
       expect(JSON.parse(mockAdapter.history.put[0].data as string)).toEqual(
-        updates,
+        updates
       );
     });
 
@@ -321,7 +321,7 @@ describe("API Integration Tests", () => {
             status: 404,
             data: { detail: "Project not found" },
           },
-        },
+        }
       );
     });
   });
@@ -736,7 +736,7 @@ describe("API Integration Tests", () => {
       await apiClient.post("/json", requestData);
 
       expect(mockAdapter.history.post[0].data).toBe(
-        JSON.stringify(requestData),
+        JSON.stringify(requestData)
       );
     });
 

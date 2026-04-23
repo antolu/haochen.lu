@@ -38,18 +38,18 @@ const SortableProjectList: React.FC<SortableProjectListProps> = ({
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { delay: 150, tolerance: 5 },
-    }),
+    })
   );
 
-  const items = useMemo(() => projects.map((p) => p.id), [projects]);
+  const items = useMemo(() => projects.map(p => p.id), [projects]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     if (!reorderEnabled) return;
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = projects.findIndex((p) => p.id === active.id);
-    const newIndex = projects.findIndex((p) => p.id === over.id);
+    const oldIndex = projects.findIndex(p => p.id === active.id);
+    const newIndex = projects.findIndex(p => p.id === over.id);
     if (oldIndex === -1 || newIndex === -1) return;
 
     const reordered = arrayMove(projects, oldIndex, newIndex);
@@ -128,7 +128,7 @@ const SortableRow: React.FC<RowProps> = ({
       exit={{ opacity: 0 }}
       className={cn(
         "p-4 sm:p-6 hover:bg-muted/50 transition-colors flex items-center justify-between",
-        reorderEnabled ? "cursor-move" : "cursor-default",
+        reorderEnabled ? "cursor-move" : "cursor-default"
       )}
     >
       <div className="flex items-center gap-4 min-w-0 flex-1">
@@ -138,7 +138,7 @@ const SortableRow: React.FC<RowProps> = ({
           {...attributes}
           className={cn(
             "hidden sm:flex h-8 w-8 items-center justify-center rounded-full border border-dashed text-muted-foreground",
-            reorderEnabled ? "" : "opacity-50",
+            reorderEnabled ? "" : "opacity-50"
           )}
           aria-label="Drag to reorder"
         >

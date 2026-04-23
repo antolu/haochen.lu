@@ -52,7 +52,7 @@ const MockLoginForm = () => {
 
   return (
     <form
-      onSubmit={(e) => {
+      onSubmit={e => {
         void handleSubmit(e);
       }}
       data-testid="login-form"
@@ -61,7 +61,7 @@ const MockLoginForm = () => {
         type="text"
         placeholder="Username"
         value={credentials.username}
-        onChange={(e) =>
+        onChange={e =>
           setCredentials({ ...credentials, username: e.target.value })
         }
         data-testid="username-input"
@@ -70,7 +70,7 @@ const MockLoginForm = () => {
         type="password"
         placeholder="Password"
         value={credentials.password}
-        onChange={(e) =>
+        onChange={e =>
           setCredentials({ ...credentials, password: e.target.value })
         }
         data-testid="password-input"
@@ -128,8 +128,8 @@ describe("Authentication Security Tests", () => {
 
   describe("Login Security", () => {
     it("should not expose credentials in memory longer than necessary", async () => {
-      const user = await import("@testing-library/user-event").then((m) =>
-        m.userEvent.setup(),
+      const user = await import("@testing-library/user-event").then(m =>
+        m.userEvent.setup()
       );
 
       mockApiService.login.mockResolvedValueOnce({
@@ -160,8 +160,8 @@ describe("Authentication Security Tests", () => {
     });
 
     it("should prevent brute force attacks with rate limiting", async () => {
-      const user = await import("@testing-library/user-event").then((m) =>
-        m.userEvent.setup(),
+      const user = await import("@testing-library/user-event").then(m =>
+        m.userEvent.setup()
       );
 
       // Mock failed login attempts
@@ -191,8 +191,8 @@ describe("Authentication Security Tests", () => {
     });
 
     it("should validate input to prevent injection attacks", async () => {
-      const user = await import("@testing-library/user-event").then((m) =>
-        m.userEvent.setup(),
+      const user = await import("@testing-library/user-event").then(m =>
+        m.userEvent.setup()
       );
 
       renderWithProviders(<MockLoginForm />);
@@ -329,7 +329,7 @@ describe("Authentication Security Tests", () => {
       renderWithProviders(
         <MockProtectedRoute>
           <div>Secret Content</div>
-        </MockProtectedRoute>,
+        </MockProtectedRoute>
       );
 
       expect(screen.getByTestId("login-required")).toBeInTheDocument();
@@ -348,7 +348,7 @@ describe("Authentication Security Tests", () => {
       renderWithProviders(
         <MockProtectedRoute>
           <div>Secret Content</div>
-        </MockProtectedRoute>,
+        </MockProtectedRoute>
       );
 
       expect(screen.getByTestId("protected-content")).toBeInTheDocument();
@@ -368,7 +368,7 @@ describe("Authentication Security Tests", () => {
       const { rerender } = renderWithProviders(
         <MockAdminRoute>
           <div>Admin Panel</div>
-        </MockAdminRoute>,
+        </MockAdminRoute>
       );
 
       expect(screen.getByTestId("admin-required")).toBeInTheDocument();
@@ -385,7 +385,7 @@ describe("Authentication Security Tests", () => {
       rerender(
         <MockAdminRoute>
           <div>Admin Panel</div>
-        </MockAdminRoute>,
+        </MockAdminRoute>
       );
 
       expect(screen.getByTestId("admin-content")).toBeInTheDocument();
@@ -410,7 +410,7 @@ describe("Authentication Security Tests", () => {
       renderWithProviders(
         <MockAdminRoute>
           <div>Admin Panel</div>
-        </MockAdminRoute>,
+        </MockAdminRoute>
       );
 
       // Should still deny access based on original user data
@@ -485,7 +485,7 @@ describe("Authentication Security Tests", () => {
       expect(localStorage.removeItem).toHaveBeenCalledWith("session_id");
       expect(localStorage.setItem).toHaveBeenCalledWith(
         "session_id",
-        newSessionId,
+        newSessionId
       );
       expect(localStorage.getItem("session_id")).toBe(newSessionId);
     });
@@ -528,7 +528,7 @@ describe("Authentication Security Tests", () => {
           headers: expect.objectContaining({
             "X-CSRF-Token": expect.any(String) as string,
           }) as Record<string, string>,
-        }),
+        })
       );
     });
 
@@ -589,8 +589,8 @@ describe("Authentication Security Tests", () => {
 
       renderWithProviders(<LoginWithErrorHandling />);
 
-      const user = await import("@testing-library/user-event").then((m) =>
-        m.userEvent.setup(),
+      const user = await import("@testing-library/user-event").then(m =>
+        m.userEvent.setup()
       );
       await user.click(screen.getByTestId("login-btn"));
 

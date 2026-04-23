@@ -4,7 +4,7 @@
 import { Project } from "../../hooks/useProjects";
 
 export const createMockProject = (
-  overrides: Partial<Project> = {},
+  overrides: Partial<Project> = {}
 ): Project => ({
   id: "test-project-1",
   title: "Test Project",

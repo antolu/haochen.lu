@@ -15,11 +15,11 @@ interface LightGalleryInstance {
   find(selector: string): { remove(): void; length: number };
   addEventListener(
     event: string,
-    handler: EventListenerOrEventListenerObject,
+    handler: EventListenerOrEventListenerObject
   ): void;
   removeEventListener(
     event: string,
-    handler: EventListenerOrEventListenerObject,
+    handler: EventListenerOrEventListenerObject
   ): void;
   openGallery(index?: number): void;
   closeGallery(): void;
@@ -74,7 +74,7 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
       return galleryRef.current;
     }
 
-    const dynamicElements = photos.map((photo) => {
+    const dynamicElements = photos.map(photo => {
       // Use DPI-aware selection for lightbox viewing (high quality)
       const lightboxImage = selectOptimalImage(photo, ImageUseCase.LIGHTBOX);
       const thumbnailImage = selectOptimalImage(photo, ImageUseCase.THUMBNAIL);
@@ -206,7 +206,7 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
     try {
       galleryRef.current = lightGallery(
         container,
-        lgOptions as unknown as Record<string, unknown>,
+        lgOptions as unknown as Record<string, unknown>
       ) as unknown as LightGalleryInstance;
 
       const onAfterClose = () => {
@@ -234,7 +234,7 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
       if (galleryRef.current) {
         const safeIndex = Math.max(
           0,
-          Math.min(initialIndex, photos.length - 1),
+          Math.min(initialIndex, photos.length - 1)
         );
         galleryRef.current.openGallery(safeIndex);
       }

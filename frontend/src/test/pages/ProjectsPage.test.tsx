@@ -103,11 +103,11 @@ describe("ProjectsPage", () => {
       expect(screen.getByText("Projects & Work")).toBeInTheDocument();
       expect(
         screen.getByText(
-          /Explore my portfolio of applications, tools, and experiments/,
-        ),
+          /Explore my portfolio of applications, tools, and experiments/
+        )
       ).toBeInTheDocument();
       expect(
-        screen.getByText(/From web applications to open-source contributions/),
+        screen.getByText(/From web applications to open-source contributions/)
       ).toBeInTheDocument();
     });
 
@@ -115,7 +115,7 @@ describe("ProjectsPage", () => {
       renderWithProviders(<ProjectsPage />);
 
       expect(
-        screen.getByText(`${mockProjectsListResponse.total} Projects`),
+        screen.getByText(`${mockProjectsListResponse.total} Projects`)
       ).toBeInTheDocument();
       expect(screen.getByText("Open Source & Commercial")).toBeInTheDocument();
       expect(screen.getByText("Continuously Updated")).toBeInTheDocument();
@@ -125,17 +125,17 @@ describe("ProjectsPage", () => {
       renderWithProviders(<ProjectsPage />);
 
       expect(
-        screen.getByPlaceholderText("Search projects..."),
+        screen.getByPlaceholderText("Search projects...")
       ).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "All" })).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: "Featured" }),
+        screen.getByRole("button", { name: "Featured" })
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: "Active" }),
+        screen.getByRole("button", { name: "Active" })
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: "In Progress" }),
+        screen.getByRole("button", { name: "In Progress" })
       ).toBeInTheDocument();
     });
 
@@ -144,7 +144,7 @@ describe("ProjectsPage", () => {
 
       expect(screen.getByTestId("project-grid")).toBeInTheDocument();
       expect(screen.getByTestId("project-count")).toHaveTextContent(
-        mockProjects.length.toString(),
+        mockProjects.length.toString()
       );
     });
 
@@ -153,8 +153,8 @@ describe("ProjectsPage", () => {
 
       expect(
         screen.getByText(
-          `Showing ${mockProjects.length} of ${mockProjectsListResponse.total} projects`,
-        ),
+          `Showing ${mockProjects.length} of ${mockProjectsListResponse.total} projects`
+        )
       ).toBeInTheDocument();
     });
   });
@@ -171,7 +171,7 @@ describe("ProjectsPage", () => {
 
       expect(screen.getByTestId("loading-state")).toHaveTextContent("loading");
       expect(
-        screen.queryByText(/Showing \d+ of \d+ projects/),
+        screen.queryByText(/Showing \d+ of \d+ projects/)
       ).not.toBeInTheDocument();
     });
 
@@ -184,7 +184,7 @@ describe("ProjectsPage", () => {
       renderWithProviders(<ProjectsPage />);
 
       expect(screen.getByTestId("loading-more-state")).toHaveTextContent(
-        "loading-more",
+        "loading-more"
       );
     });
 
@@ -199,7 +199,7 @@ describe("ProjectsPage", () => {
 
       expect(screen.getByTestId("loading-state")).toHaveTextContent("loading");
       expect(screen.getByTestId("loading-more-state")).toHaveTextContent(
-        "loading-more",
+        "loading-more"
       );
     });
   });
@@ -216,11 +216,11 @@ describe("ProjectsPage", () => {
       expect(screen.getByText("Failed to load projects")).toBeInTheDocument();
       expect(
         screen.getByText(
-          "There was an error loading the projects. Please try again.",
-        ),
+          "There was an error loading the projects. Please try again."
+        )
       ).toBeInTheDocument();
       expect(
-        screen.getByRole("button", { name: "Try Again" }),
+        screen.getByRole("button", { name: "Try Again" })
       ).toBeInTheDocument();
     });
 
@@ -276,7 +276,7 @@ describe("ProjectsPage", () => {
         expect(mockUseInfiniteProjects).toHaveBeenCalledWith(
           expect.objectContaining({
             search: "react",
-          }),
+          })
         );
       });
     });
@@ -290,7 +290,7 @@ describe("ProjectsPage", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText(/Search results for "react"/),
+          screen.getByText(/Search results for "react"/)
         ).toBeInTheDocument();
       });
     });
@@ -339,7 +339,7 @@ describe("ProjectsPage", () => {
         expect.objectContaining({
           featured: true,
           search: undefined,
-        }),
+        })
       );
       expect(featuredButton).toHaveClass("bg-blue-600", "text-white");
     });
@@ -355,7 +355,7 @@ describe("ProjectsPage", () => {
         expect.objectContaining({
           status: "active",
           search: undefined,
-        }),
+        })
       );
       expect(activeButton).toHaveClass("bg-blue-600", "text-white");
     });
@@ -373,7 +373,7 @@ describe("ProjectsPage", () => {
         expect.objectContaining({
           status: "in_progress",
           search: undefined,
-        }),
+        })
       );
       expect(inProgressButton).toHaveClass("bg-blue-600", "text-white");
     });
@@ -393,7 +393,7 @@ describe("ProjectsPage", () => {
       expect(mockUseInfiniteProjects).toHaveBeenCalledWith(
         expect.objectContaining({
           search: undefined,
-        }),
+        })
       );
       expect(allButton).toHaveClass("bg-blue-600", "text-white");
     });
@@ -406,7 +406,7 @@ describe("ProjectsPage", () => {
         "bg-white",
         "text-foreground",
         "border",
-        "border-input",
+        "border-input"
       );
     });
   });
@@ -416,10 +416,10 @@ describe("ProjectsPage", () => {
       renderWithProviders(<ProjectsPage />);
 
       expect(screen.getByTestId("project-count")).toHaveTextContent(
-        mockProjects.length.toString(),
+        mockProjects.length.toString()
       );
 
-      mockProjects.forEach((project) => {
+      mockProjects.forEach(project => {
         expect(screen.getByTestId(`project-${project.id}`)).toBeInTheDocument();
       });
     });
@@ -468,7 +468,7 @@ describe("ProjectsPage", () => {
       // Should show all projects from both pages
       const totalProjects = mockProjects.length + secondPageProjects.length;
       expect(screen.getByTestId("project-count")).toHaveTextContent(
-        totalProjects.toString(),
+        totalProjects.toString()
       );
     });
 
@@ -505,7 +505,7 @@ describe("ProjectsPage", () => {
           expect.objectContaining({
             featured: true,
             search: "react",
-          }),
+          })
         );
       });
     });
@@ -522,7 +522,7 @@ describe("ProjectsPage", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText(/Search results for "typescript"/),
+          screen.getByText(/Search results for "typescript"/)
         ).toBeInTheDocument();
         expect(activeButton).toHaveClass("bg-blue-600", "text-white");
       });
@@ -572,14 +572,14 @@ describe("ProjectsPage", () => {
       renderWithProviders(<ProjectsPage />);
 
       const filterButtons = screen.getAllByRole("button");
-      const namedButtons = filterButtons.filter((button) =>
+      const namedButtons = filterButtons.filter(button =>
         ["All", "Featured", "Active", "In Progress"].includes(
-          button.textContent ?? "",
-        ),
+          button.textContent ?? ""
+        )
       );
 
       expect(namedButtons).toHaveLength(4);
-      namedButtons.forEach((button) => {
+      namedButtons.forEach(button => {
         expect(button).toBeEnabled();
       });
     });
@@ -648,7 +648,7 @@ describe("ProjectsPage", () => {
         expect(mockUseInfiniteProjects).toHaveBeenCalledWith(
           expect.objectContaining({
             search: undefined,
-          }),
+          })
         );
       });
     });

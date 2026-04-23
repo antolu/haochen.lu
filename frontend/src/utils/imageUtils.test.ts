@@ -104,29 +104,29 @@ describe("Target Size Calculation", () => {
     // Thumbnail should be smaller for standard displays
     const standardThumbnail = calculateTargetSize(
       ImageUseCase.THUMBNAIL,
-      standardContext,
+      standardContext
     );
     const retinaThumbnail = calculateTargetSize(
       ImageUseCase.THUMBNAIL,
-      retinaContext,
+      retinaContext
     );
     expect(retinaThumbnail).toBeGreaterThan(standardThumbnail);
 
     // Gallery images should scale with DPI
     const standardGallery = calculateTargetSize(
       ImageUseCase.GALLERY,
-      standardContext,
+      standardContext
     );
     const retinaGallery = calculateTargetSize(
       ImageUseCase.GALLERY,
-      retinaContext,
+      retinaContext
     );
     expect(retinaGallery).toBe(standardGallery * 2);
 
     // Lightbox should request high quality for retina
     const retinaLightbox = calculateTargetSize(
       ImageUseCase.LIGHTBOX,
-      retinaContext,
+      retinaContext
     );
     expect(retinaLightbox).toBeGreaterThan(1600); // Should request large/xlarge variants
   });
@@ -143,7 +143,7 @@ describe("Target Size Calculation", () => {
     const targetSize = calculateTargetSize(
       ImageUseCase.GALLERY,
       context,
-      containerSize,
+      containerSize
     );
 
     // Should use container size (500px) * DPI (2x) = 1000px
@@ -214,29 +214,29 @@ describe("Complete Image Selection", () => {
     // Thumbnail usage picks the 400px thumbnail variant at 2x DPR
     const thumbnailSelection = selectOptimalImage(
       mockPhoto,
-      ImageUseCase.THUMBNAIL,
+      ImageUseCase.THUMBNAIL
     );
     expect(thumbnailSelection.selectedVariant).toBe("thumbnail");
     expect(thumbnailSelection.url).toBe(
-      "/api/photos/test-photo-123/file/thumbnail",
+      "/api/photos/test-photo-123/file/thumbnail"
     );
 
     // Gallery usage - should prefer medium/large for retina
     const gallerySelection = selectOptimalImage(
       mockPhoto,
-      ImageUseCase.GALLERY,
+      ImageUseCase.GALLERY
     );
     expect(["medium", "large"].includes(gallerySelection.selectedVariant)).toBe(
-      true,
+      true
     );
 
     // Lightbox usage - should prefer xlarge for retina
     const lightboxSelection = selectOptimalImage(
       mockPhoto,
-      ImageUseCase.LIGHTBOX,
+      ImageUseCase.LIGHTBOX
     );
     expect(
-      ["large", "xlarge"].includes(lightboxSelection.selectedVariant),
+      ["large", "xlarge"].includes(lightboxSelection.selectedVariant)
     ).toBe(true);
   });
 
@@ -276,19 +276,19 @@ describe("Standard Display Behavior", () => {
     // Gallery usage on standard display should prefer smaller variants
     const gallerySelection = selectOptimalImage(
       mockPhoto,
-      ImageUseCase.GALLERY,
+      ImageUseCase.GALLERY
     );
     expect(["small", "medium"].includes(gallerySelection.selectedVariant)).toBe(
-      true,
+      true
     );
 
     // Lightbox on standard display should still get good quality but not necessarily xlarge
     const lightboxSelection = selectOptimalImage(
       mockPhoto,
-      ImageUseCase.LIGHTBOX,
+      ImageUseCase.LIGHTBOX
     );
     expect(
-      ["medium", "large", "xlarge"].includes(lightboxSelection.selectedVariant),
+      ["medium", "large", "xlarge"].includes(lightboxSelection.selectedVariant)
     ).toBe(true);
   });
 });
@@ -309,14 +309,14 @@ describe("Mobile Device Behavior", () => {
     // Even on small screen, high DPI should get good quality variants
     const gallerySelection = selectOptimalImage(
       mockPhoto,
-      ImageUseCase.GALLERY,
+      ImageUseCase.GALLERY
     );
 
     // Should select at least small/medium due to 2x capped DPI
     expect(
       ["small", "medium", "large", "xlarge"].includes(
-        gallerySelection.selectedVariant,
-      ),
+        gallerySelection.selectedVariant
+      )
     ).toBe(true);
   });
 });

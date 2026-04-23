@@ -17,11 +17,11 @@ describe("ProfilePictureUpload", () => {
         onUpload={onUpload}
         onCancel={onCancel}
         isUploading={false}
-      />,
+      />
     );
 
     const fileInput = container.querySelector(
-      'input[type="file"].hidden[accept="image/*"]',
+      'input[type="file"].hidden[accept="image/*"]'
     ) as HTMLInputElement | null;
     expect(fileInput).not.toBeNull();
     const file = createMockImageFile("avatar.jpg", 800, 600);

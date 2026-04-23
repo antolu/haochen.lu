@@ -12,7 +12,7 @@ type CarouselProps = React.HTMLAttributes<HTMLDivElement> & {
 export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
   (
     { className, children, opts: _opts, setApi, plugins: _plugins, ...props },
-    ref,
+    ref
   ) => {
     const [emblaRef, api] = useEmblaCarousel({});
     React.useEffect(() => {
@@ -25,7 +25,7 @@ export const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
         </div>
       </div>
     );
-  },
+  }
 );
 Carousel.displayName = "Carousel";
 
@@ -34,7 +34,7 @@ export const CarouselContent: React.FC<
 > = ({ className, children, ...props }) => {
   return (
     <div className={`flex -ml-0 ${className ?? ""}`} {...props}>
-      {React.Children.map(children, (child) => (
+      {React.Children.map(children, child => (
         <div className="min-w-0 flex-[0_0_100%] pl-0">{child}</div>
       ))}
     </div>

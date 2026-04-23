@@ -96,7 +96,7 @@ const SortableItem: React.FC<ProjectImageItemProps> = ({
             <input
               type="text"
               value={tempTitle}
-              onChange={(e) => setTempTitle(e.target.value)}
+              onChange={e => setTempTitle(e.target.value)}
               placeholder="Title"
               className="w-full text-sm font-medium bg-background border rounded px-2 py-1"
               autoFocus
@@ -104,7 +104,7 @@ const SortableItem: React.FC<ProjectImageItemProps> = ({
             <input
               type="text"
               value={tempAlt}
-              onChange={(e) => setTempAlt(e.target.value)}
+              onChange={e => setTempAlt(e.target.value)}
               placeholder="Alt text"
               className="w-full text-xs bg-background border rounded px-2 py-1"
             />
@@ -125,7 +125,7 @@ const SortableItem: React.FC<ProjectImageItemProps> = ({
           <>
             <button
               type="button"
-              onClick={(e) => {
+              onClick={e => {
                 e.preventDefault();
                 e.stopPropagation();
                 void onSave(tempTitle, tempAlt);
@@ -136,7 +136,7 @@ const SortableItem: React.FC<ProjectImageItemProps> = ({
             </button>
             <button
               type="button"
-              onClick={(e) => {
+              onClick={e => {
                 e.preventDefault();
                 e.stopPropagation();
                 onCancel();
@@ -150,7 +150,7 @@ const SortableItem: React.FC<ProjectImageItemProps> = ({
           <>
             <button
               type="button"
-              onClick={(e) => {
+              onClick={e => {
                 e.preventDefault();
                 e.stopPropagation();
                 onEdit();
@@ -161,7 +161,7 @@ const SortableItem: React.FC<ProjectImageItemProps> = ({
             </button>
             <button
               type="button"
-              onClick={(e) => {
+              onClick={e => {
                 e.preventDefault();
                 e.stopPropagation();
                 onRemove(item.id);
@@ -191,17 +191,14 @@ const ProjectImagesManager: React.FC<ProjectImagesManagerProps> = ({
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { delay: 150, tolerance: 5 },
-    }),
+    })
   );
 
   const typedImages = useMemo(
     () => (images as unknown as ProjectImage[]) ?? [],
-    [images],
+    [images]
   );
-  const itemIds = useMemo(
-    () => typedImages.map((img) => img.id),
-    [typedImages],
-  );
+  const itemIds = useMemo(() => typedImages.map(img => img.id), [typedImages]);
 
   const handleCustomUpload = async (file: File) => {
     return attachMutation.mutateAsync({ file });
@@ -252,7 +249,7 @@ const ProjectImagesManager: React.FC<ProjectImagesManagerProps> = ({
                 strategy={verticalListSortingStrategy}
               >
                 <ul className="divide-y">
-                  {typedImages.map((img) => (
+                  {typedImages.map(img => (
                     <SortableItem
                       key={img.id}
                       item={img}
@@ -267,7 +264,7 @@ const ProjectImagesManager: React.FC<ProjectImagesManagerProps> = ({
                         });
                         setEditingId(null);
                       }}
-                      onRemove={(id) => {
+                      onRemove={id => {
                         void removeMutation.mutate(id, {
                           onSuccess: () => void refetch(),
                         });

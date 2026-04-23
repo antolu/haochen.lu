@@ -49,7 +49,7 @@ interface CustomRenderOptions extends Omit<RenderOptions, "wrapper"> {
 
 export const renderWithProviders = (
   ui: React.ReactElement,
-  options: CustomRenderOptions = {},
+  options: CustomRenderOptions = {}
 ) => {
   const { queryClient, initialRoute, ...renderOptions } = options;
 
@@ -93,7 +93,7 @@ export const triggerIntersectionObserver = (isIntersecting: boolean = true) => {
 export const mockMatchMedia = (matches: boolean = false) => {
   Object.defineProperty(window, "matchMedia", {
     writable: true,
-    value: vi.fn().mockImplementation((query) => ({
+    value: vi.fn().mockImplementation(query => ({
       matches,
       media: query as string,
       onchange: null,
@@ -108,5 +108,5 @@ export const mockMatchMedia = (matches: boolean = false) => {
 
 // Helper to wait for async operations
 export const waitForLoadingToFinish = () => {
-  return new Promise((resolve) => setTimeout(resolve, 0));
+  return new Promise(resolve => setTimeout(resolve, 0));
 };

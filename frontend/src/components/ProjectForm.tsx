@@ -158,7 +158,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
     setIsLoadingPreview(true);
     try {
       const result = (await previewReadmeMutation.mutateAsync(
-        watchedGithubUrl,
+        watchedGithubUrl
       )) as {
         content: string;
       };
@@ -177,7 +177,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
     try {
       const technologies = (data.technologies || "")
         .split(",")
-        .map((tech) => tech.trim())
+        .map(tech => tech.trim())
         .filter(Boolean);
 
       const projectData = {
@@ -224,7 +224,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
       transition={{ duration: 0.3 }}
     >
       <form
-        onSubmit={(e) => {
+        onSubmit={e => {
           void handleSubmit(onSubmit)(e);
         }}
         className="space-y-8"
@@ -340,10 +340,10 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                 <TagMultiSelect
                   value={(technologiesInput || "")
                     .split(",")
-                    .map((t) => t.trim())
+                    .map(t => t.trim())
                     .filter(Boolean)}
                   options={distinctTechnologies}
-                  onChange={(vals) => handleTechnologiesChange(vals.join(", "))}
+                  onChange={vals => handleTechnologiesChange(vals.join(", "))}
                   placeholder="Search or create technologies..."
                 />
                 <p className="mt-1 text-xs text-muted-foreground">
@@ -420,7 +420,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                       {...register("use_readme")}
                       type="checkbox"
                       checked={useReadme}
-                      onChange={(e) => {
+                      onChange={e => {
                         setUseReadme(e.target.checked);
                         setValue("use_readme", e.target.checked);
                       }}
@@ -475,7 +475,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
               {!isEditorExpanded ? (
                 <Input
                   value={markdownContent}
-                  onChange={(e) => setMarkdownContent(e.target.value)}
+                  onChange={e => setMarkdownContent(e.target.value)}
                   onFocus={() => setIsEditorExpanded(true)}
                   placeholder={
                     useReadme
@@ -487,7 +487,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                 <div data-color-mode="auto">
                   <MDEditor
                     value={markdownContent}
-                    onChange={(val) => setMarkdownContent(val ?? "")}
+                    onChange={val => setMarkdownContent(val ?? "")}
                     preview="edit"
                     height={400}
                     visibleDragbar={false}

@@ -79,7 +79,7 @@ const YamlEditor: React.FC<YamlEditorProps> = ({
         setIsValidating(false);
       }
     },
-    [onValidationChange],
+    [onValidationChange]
   );
 
   // Trigger validation when value changes - deferred to avoid synchronous setState in effect

@@ -67,10 +67,10 @@ const SortablePhotoList: React.FC<SortablePhotoListProps> = ({
         delay: 150,
         tolerance: 5,
       },
-    }),
+    })
   );
 
-  const items = useMemo(() => photos.map((photo) => photo.id), [photos]);
+  const items = useMemo(() => photos.map(photo => photo.id), [photos]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     if (!reorderEnabled) {
@@ -81,8 +81,8 @@ const SortablePhotoList: React.FC<SortablePhotoListProps> = ({
       return;
     }
 
-    const oldIndex = photos.findIndex((photo) => photo.id === active.id);
-    const newIndex = photos.findIndex((photo) => photo.id === over.id);
+    const oldIndex = photos.findIndex(photo => photo.id === active.id);
+    const newIndex = photos.findIndex(photo => photo.id === over.id);
     if (oldIndex === -1 || newIndex === -1) {
       return;
     }
@@ -202,7 +202,7 @@ const SortableRow: React.FC<SortableRowProps> = ({
       className={cn(
         "group border-b border-border transition-colors",
         reorderEnabled ? "cursor-move" : "cursor-pointer",
-        isDragging && "bg-primary/10 shadow-sm",
+        isDragging && "bg-primary/10 shadow-sm"
       )}
       onClick={() => {
         if (!reorderEnabled) {
@@ -242,9 +242,9 @@ const SortableRow: React.FC<SortableRowProps> = ({
                 "flex h-4 w-4 items-center justify-center rounded-full border transition-all",
                 selected
                   ? "border-primary bg-primary text-primary-foreground"
-                  : "border-muted-foreground/30 hover:border-primary",
+                  : "border-muted-foreground/30 hover:border-primary"
               )}
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation();
                 onToggleSelection(photo.id);
               }}
@@ -326,7 +326,7 @@ const SortableRow: React.FC<SortableRowProps> = ({
         <div className="flex items-center justify-end gap-1">
           <button
             type="button"
-            onClick={(event) => {
+            onClick={event => {
               event.stopPropagation();
               onToggleFeatured(photo);
             }}
@@ -338,13 +338,13 @@ const SortableRow: React.FC<SortableRowProps> = ({
             <Star
               className={cn(
                 "h-4 w-4",
-                photo.featured && "fill-current text-yellow-500",
+                photo.featured && "fill-current text-yellow-500"
               )}
             />
           </button>
           <button
             type="button"
-            onClick={(event) => {
+            onClick={event => {
               event.stopPropagation();
               onEdit(photo);
             }}
@@ -355,7 +355,7 @@ const SortableRow: React.FC<SortableRowProps> = ({
           </button>
           <button
             type="button"
-            onClick={(event) => {
+            onClick={event => {
               event.stopPropagation();
               onDelete(photo);
             }}
