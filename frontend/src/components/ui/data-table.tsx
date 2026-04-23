@@ -53,7 +53,7 @@ export function DataTable<T extends Record<string, unknown>>({
     return data.filter((item) =>
       columns.some((column) => {
         if (!column.searchable) return false;
-        const value = String(item[column.key as keyof T] || "").toLowerCase();
+        const value = String(item[column.key] || "").toLowerCase();
         return value.includes(search.toLowerCase());
       }),
     );
@@ -164,7 +164,7 @@ export function DataTable<T extends Record<string, unknown>>({
                   onClick={() => onRowClick?.(item)}
                 >
                   {columns.map((column) => {
-                    const value = item[column.key as keyof T];
+                    const value = item[column.key];
                     return (
                       <TableCell key={String(column.key)}>
                         {column.render

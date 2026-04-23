@@ -82,9 +82,10 @@ const YamlEditor: React.FC<YamlEditorProps> = ({
     [onValidationChange],
   );
 
-  // Trigger validation when value changes
+  // Trigger validation when value changes - deferred to avoid synchronous setState in effect
   useEffect(() => {
-    void validateYaml(value);
+    const id = setTimeout(() => void validateYaml(value), 0);
+    return () => clearTimeout(id);
   }, [value, validateYaml]);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {

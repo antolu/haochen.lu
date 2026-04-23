@@ -324,10 +324,12 @@ const AppList: React.FC<AppListProps> = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [exportingId, setExportingId] = useState<string | null>(null);
   const [localApps, setLocalApps] = useState<Application[]>(applications);
+  const [prevApplications, setPrevApplications] = useState(applications);
 
-  React.useEffect(() => {
+  if (prevApplications !== applications) {
+    setPrevApplications(applications);
     setLocalApps(applications);
-  }, [applications]);
+  }
 
   const sensors = useSensors(
     useSensor(PointerSensor, {

@@ -311,7 +311,7 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
         const clusters: ClusterFeature[] = clusterIndex.getClusters(
           [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()],
           Math.floor(map.getZoom()),
-        ) as ClusterFeature[];
+        );
 
         const visibleClusterIds = new Set<number>();
         const visiblePhotoIds = new Set<string>();

@@ -199,10 +199,7 @@ const ProfilePictureManager: React.FC = () => {
                         photo={{
                           filename: profilePicture.filename,
                           original_url: profilePicture.original_url,
-                          variants: profilePicture.variants as Record<
-                            string,
-                            { url?: string; width: number }
-                          >,
+                          variants: profilePicture.variants,
                         }}
                         useCase={ImageUseCase.THUMBNAIL}
                         alt={profilePicture.title ?? "Profile Picture"}

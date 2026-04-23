@@ -332,7 +332,7 @@ const ProjectDetailPage: React.FC = () => {
                         <dd className="text-gray-900">
                           {formatDate(
                             (readme as ProjectReadmeResponse)
-                              .last_updated as string,
+                              .last_updated,
                           )}
                         </dd>
                       </div>

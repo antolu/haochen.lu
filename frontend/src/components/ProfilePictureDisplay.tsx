@@ -51,10 +51,7 @@ const ProfilePictureDisplay: React.FC<ProfilePictureDisplayProps> = ({
       // Provide minimal PhotoLike shape
       filename: profilePicture.filename,
       original_url: profilePicture.original_url,
-      variants: profilePicture.variants as Record<
-        string,
-        { url?: string; width: number }
-      >,
+      variants: profilePicture.variants,
     },
     useCase,
   );

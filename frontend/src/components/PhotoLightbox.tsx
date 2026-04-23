@@ -205,7 +205,7 @@ const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
 
     try {
       galleryRef.current = lightGallery(
-        container as HTMLElement,
+        container,
         lgOptions as unknown as Record<string, unknown>,
       ) as unknown as LightGalleryInstance;
 

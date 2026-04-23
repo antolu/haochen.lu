@@ -174,7 +174,7 @@ const AdminEquipmentAliases: React.FC = () => {
           title: "Brand",
           render: (alias: AliasType) => (
             <span className="text-muted-foreground">
-              {(alias as CameraAlias).brand ?? "-"}
+              {(alias).brand ?? "-"}
             </span>
           ),
         },
@@ -183,7 +183,7 @@ const AdminEquipmentAliases: React.FC = () => {
           title: "Model",
           render: (alias: AliasType) => (
             <span className="text-muted-foreground">
-              {(alias as CameraAlias).model ?? "-"}
+              {(alias).model ?? "-"}
             </span>
           ),
         },

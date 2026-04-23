@@ -68,7 +68,7 @@ export const useUploadProcessor = () => {
 
       window.addEventListener(
         "upload:progress",
-        handleProgress as EventListener,
+        handleProgress,
       );
 
       // Start upload
@@ -95,7 +95,7 @@ export const useUploadProcessor = () => {
             abortControllersRef.current.delete(upload.id);
             window.removeEventListener(
               "upload:progress",
-              handleProgress as EventListener,
+              handleProgress,
             );
           },
           onError: (error) => {
@@ -144,7 +144,7 @@ export const useUploadProcessor = () => {
             abortControllersRef.current.delete(upload.id);
             window.removeEventListener(
               "upload:progress",
-              handleProgress as EventListener,
+              handleProgress,
             );
           },
         },

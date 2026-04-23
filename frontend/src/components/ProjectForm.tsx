@@ -18,8 +18,6 @@ import {
   generateSlug,
   useProjectTechnologies,
   type Project,
-  type ProjectCreate,
-  type ProjectUpdate,
 } from "../hooks/useProjects";
 
 interface ProjectFormProps {
@@ -203,10 +201,10 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
       if (isEditing) {
         result = await updateMutation.mutateAsync({
           id: project.id,
-          data: projectData as ProjectUpdate,
+          data: projectData,
         });
       } else {
-        result = await createMutation.mutateAsync(projectData as ProjectCreate);
+        result = await createMutation.mutateAsync(projectData);
       }
 
       onSuccess?.(result);
