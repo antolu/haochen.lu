@@ -4,10 +4,7 @@ import {
   useUpdateCameraAlias,
   type CameraAlias,
 } from "../hooks/useCameraAliases";
-import {
-  useUpdateLensAlias,
-  type LensAlias,
-} from "../hooks/useLensAliases";
+import { useUpdateLensAlias, type LensAlias } from "../hooks/useLensAliases";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
@@ -160,7 +157,7 @@ const EquipmentAliasForm: React.FC<EquipmentAliasFormProps> = ({
     if (alias) {
       const initialData: Record<string, string | boolean> = { is_active: true };
 
-      currentFields.forEach((field) => {
+      currentFields.forEach(field => {
         const value = (alias as unknown as Record<string, unknown>)[field.key];
         initialData[field.key] = (value as string) ?? "";
       });
@@ -173,7 +170,7 @@ const EquipmentAliasForm: React.FC<EquipmentAliasFormProps> = ({
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    currentFields.forEach((field) => {
+    currentFields.forEach(field => {
       if (field.required) {
         const value = formData[field.key] as string;
         if (!value?.toString().trim()) {
@@ -199,7 +196,7 @@ const EquipmentAliasForm: React.FC<EquipmentAliasFormProps> = ({
       // Prepare submit data
       const submitData: Record<string, string | boolean | undefined> = {};
 
-      currentFields.forEach((field) => {
+      currentFields.forEach(field => {
         const value = formData[field.key] as string;
         submitData[field.key] = value?.trim() || undefined;
       });
@@ -234,7 +231,7 @@ const EquipmentAliasForm: React.FC<EquipmentAliasFormProps> = ({
           setErrors({ submit: errorResponse.response.data.detail });
         } else if (Array.isArray(errorResponse.response.data.detail)) {
           const newErrors: Record<string, string> = {};
-          errorResponse.response.data.detail.forEach((err) => {
+          errorResponse.response.data.detail.forEach(err => {
             if (err.loc && err.msg) {
               const field = err.loc[err.loc.length - 1];
               newErrors[field] = err.msg;
@@ -253,11 +250,11 @@ const EquipmentAliasForm: React.FC<EquipmentAliasFormProps> = ({
   };
 
   const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData(prev => ({ ...prev, [field]: value }));
 
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }));
+      setErrors(prev => ({ ...prev, [field]: "" }));
     }
   };
 
@@ -289,7 +286,7 @@ const EquipmentAliasForm: React.FC<EquipmentAliasFormProps> = ({
       </div>
 
       <form
-        onSubmit={(e) => {
+        onSubmit={e => {
           void handleSubmit(e);
         }}
         className="space-y-6"
@@ -308,7 +305,7 @@ const EquipmentAliasForm: React.FC<EquipmentAliasFormProps> = ({
 
         {/* Form Fields */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {currentFields.map((field) => (
+          {currentFields.map(field => (
             <div
               key={field.key}
               className={field.key === "notes" ? "md:col-span-2" : ""}
@@ -323,12 +320,12 @@ const EquipmentAliasForm: React.FC<EquipmentAliasFormProps> = ({
               {field.type === "select" ? (
                 <select
                   value={(formData[field.key] as string) ?? ""}
-                  onChange={(e) => handleInputChange(field.key, e.target.value)}
+                  onChange={e => handleInputChange(field.key, e.target.value)}
                   className={`w-full px-3 py-2 border border-input rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring ${
                     errors[field.key] ? "border-destructive" : ""
                   }`}
                 >
-                  {field.options?.map((option) => (
+                  {field.options?.map(option => (
                     <option key={option} value={option}>
                       {option || field.placeholder}
                     </option>
@@ -337,7 +334,7 @@ const EquipmentAliasForm: React.FC<EquipmentAliasFormProps> = ({
               ) : field.key === "notes" ? (
                 <textarea
                   value={(formData[field.key] as string) ?? ""}
-                  onChange={(e) => handleInputChange(field.key, e.target.value)}
+                  onChange={e => handleInputChange(field.key, e.target.value)}
                   placeholder={field.placeholder}
                   rows={3}
                   className={`w-full px-3 py-2 border border-input rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring ${
@@ -355,14 +352,12 @@ const EquipmentAliasForm: React.FC<EquipmentAliasFormProps> = ({
                 >
                   <Input
                     value={(formData[field.key] as string) ?? ""}
-                    onChange={(e) =>
-                      handleInputChange(field.key, e.target.value)
-                    }
+                    onChange={e => handleInputChange(field.key, e.target.value)}
                     placeholder={field.placeholder}
                     className={cn(
                       errors[field.key] ? "border-destructive" : "",
                       field.key === "original_name" &&
-                        "bg-muted/50 font-mono text-xs",
+                        "bg-muted/50 font-mono text-xs"
                     )}
                     readOnly={field.key === "original_name"}
                   />
@@ -396,7 +391,7 @@ const EquipmentAliasForm: React.FC<EquipmentAliasFormProps> = ({
               </div>
               <Switch
                 checked={formData.is_active as boolean}
-                onCheckedChange={(checked) =>
+                onCheckedChange={checked =>
                   handleInputChange("is_active", checked)
                 }
               />

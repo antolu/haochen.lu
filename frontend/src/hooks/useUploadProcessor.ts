@@ -14,8 +14,8 @@ export const useUploadProcessor = () => {
   const abortControllersRef = useRef<Map<string, AbortController>>(new Map());
 
   const processQueue = useCallback(() => {
-    const pendingUploads = queue.filter((u) => u.status === "pending");
-    const currentlyUploading = queue.filter((u) => u.status === "uploading");
+    const pendingUploads = queue.filter(u => u.status === "pending");
+    const currentlyUploading = queue.filter(u => u.status === "uploading");
 
     // Don't start new uploads if we're at max concurrency
     if (currentlyUploading.length >= MAX_CONCURRENT_UPLOADS) {
@@ -66,10 +66,7 @@ export const useUploadProcessor = () => {
         }
       };
 
-      window.addEventListener(
-        "upload:progress",
-        handleProgress,
-      );
+      window.addEventListener("upload:progress", handleProgress);
 
       // Start upload
       uploadMutation.mutate(
@@ -84,7 +81,7 @@ export const useUploadProcessor = () => {
           },
         },
         {
-          onSuccess: (data) => {
+          onSuccess: data => {
             updateUpload(upload.id, {
               status: "completed",
               progress: 100,
@@ -93,12 +90,9 @@ export const useUploadProcessor = () => {
             });
             activeUploadsRef.current.delete(upload.id);
             abortControllersRef.current.delete(upload.id);
-            window.removeEventListener(
-              "upload:progress",
-              handleProgress,
-            );
+            window.removeEventListener("upload:progress", handleProgress);
           },
-          onError: (error) => {
+          onError: error => {
             const axiosError = error as AxiosError;
             let errorMessage: string;
 
@@ -142,12 +136,9 @@ export const useUploadProcessor = () => {
             });
             activeUploadsRef.current.delete(upload.id);
             abortControllersRef.current.delete(upload.id);
-            window.removeEventListener(
-              "upload:progress",
-              handleProgress,
-            );
+            window.removeEventListener("upload:progress", handleProgress);
           },
-        },
+        }
       );
     }
   }, [queue, updateUpload, uploadMutation]);
@@ -182,7 +173,7 @@ export const useUploadProcessor = () => {
     const activeUploads = activeUploadsRef.current;
     return () => {
       // Cancel all active uploads
-      abortControllers.forEach((controller) => {
+      abortControllers.forEach(controller => {
         controller.abort();
       });
       abortControllers.clear();
@@ -192,6 +183,6 @@ export const useUploadProcessor = () => {
 
   return {
     isProcessing,
-    activeCount: queue.filter((u) => u.status === "uploading").length,
+    activeCount: queue.filter(u => u.status === "uploading").length,
   };
 };
