@@ -185,7 +185,7 @@ jobs:
         docker build -f frontend/Dockerfile -t portfolio-frontend:security-scan frontend
 
     - name: Run Trivy vulnerability scanner on backend
-      uses: aquasecurity/trivy-action@0.35.0
+      uses: aquasecurity/trivy-action@v0.36.0
       with:
         image-ref: 'portfolio-backend:security-scan'
         format: 'json'
@@ -193,7 +193,7 @@ jobs:
       continue-on-error: true
 
     - name: Run Trivy vulnerability scanner on frontend
-      uses: aquasecurity/trivy-action@0.35.0
+      uses: aquasecurity/trivy-action@v0.36.0
       with:
         image-ref: 'portfolio-frontend:security-scan'
         format: 'json'
