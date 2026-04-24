@@ -30,8 +30,8 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
 
   const tags = useMemo<Tag[]>(
-    () => value.map(tag => ({ id: tag, text: tag })),
-    [value]
+    () => value.map((tag) => ({ id: tag, text: tag })),
+    [value],
   );
 
   const handleSetTags = useCallback(
@@ -44,7 +44,7 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
       }
 
       const tagStrings = (result as SharedTag[])
-        .map(t => t.text.trim())
+        .map((t) => t.text.trim())
         .filter(Boolean);
       const uniqueTags = Array.from(new Set(tagStrings));
 
@@ -52,7 +52,7 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
         onChange(uniqueTags);
       }
     },
-    [onChange, tags, value]
+    [onChange, tags, value],
   );
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -70,7 +70,7 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
       onMouseDown={handleMouseDown}
     >
       <datalist id={DATALIST_ID}>
-        {options.map(o => (
+        {options.map((o) => (
           <option key={o} value={o} />
         ))}
       </datalist>

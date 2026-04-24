@@ -101,7 +101,7 @@ export function useLensAliases(filters: LensAliasFilters = {}) {
         params.append("is_active", filters.is_active.toString());
 
       const response = await apiClient.get<LensAliasListResponse>(
-        `/lens-aliases?${params.toString()}`
+        `/lens-aliases?${params.toString()}`,
       );
       return response.data;
     },
@@ -124,7 +124,7 @@ export function useLensDiscovery() {
     queryKey: lensAliasKeys.discovery(),
     queryFn: async (): Promise<LensDiscoveryResponse> => {
       const response = await apiClient.get<LensDiscoveryResponse>(
-        "/lens-aliases/discover/lenses"
+        "/lens-aliases/discover/lenses",
       );
       return response.data;
     },
@@ -144,7 +144,7 @@ export function useUpdateLensAlias() {
     }): Promise<LensAlias> => {
       const response = await apiClient.put<LensAlias>(
         `/lens-aliases/${id}`,
-        data
+        data,
       );
       return response.data;
     },

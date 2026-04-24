@@ -93,7 +93,7 @@ describe("Auth Store", () => {
 
     await act(async () => {
       await expect(
-        result.current.login({ next: "/admin" })
+        result.current.login({ next: "/admin" }),
       ).rejects.toBeTruthy();
     });
 
@@ -146,7 +146,7 @@ describe("Auth Store", () => {
     expect(result.current.accessToken).toBeNull();
     expect(consoleWarnSpy).toHaveBeenCalledWith(
       "Token refresh failed:",
-      expect.any(Error)
+      expect.any(Error),
     );
   });
 
@@ -291,7 +291,7 @@ describe("Auth Store", () => {
     expect(result.current.user).toBeNull();
     expect(consoleWarnSpy).toHaveBeenCalledWith(
       "Logout request failed:",
-      expect.any(Error)
+      expect.any(Error),
     );
   });
 
@@ -316,7 +316,7 @@ describe("Auth Store", () => {
 
   it("clears auth even if revoke-all-sessions fails", async () => {
     vi.mocked(auth.revokeAllSessions).mockRejectedValueOnce(
-      new Error("Server error")
+      new Error("Server error"),
     );
 
     const { result } = renderHook(() => useAuthStore());
@@ -333,7 +333,7 @@ describe("Auth Store", () => {
     expect(result.current.isAuthenticated).toBe(false);
     expect(consoleWarnSpy).toHaveBeenCalledWith(
       "Logout everywhere request failed:",
-      expect.any(Error)
+      expect.any(Error),
     );
   });
 

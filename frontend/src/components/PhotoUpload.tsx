@@ -36,9 +36,9 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
   useEffect(() => {
     if (uploadFiles.length === 0) return;
 
-    const allCompleted = uploadFiles.every(f => f.status === "completed");
-    const hasErrors = uploadFiles.some(f => f.status === "error");
-    const hasUploading = uploadFiles.some(f => f.status === "uploading");
+    const allCompleted = uploadFiles.every((f) => f.status === "completed");
+    const hasErrors = uploadFiles.some((f) => f.status === "error");
+    const hasUploading = uploadFiles.some((f) => f.status === "uploading");
 
     if (allCompleted && !hasErrors && !hasUploading && onComplete) {
       setTimeout(onComplete, 500);
@@ -47,7 +47,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
 
   useEffect(() => {
     return () => {
-      uploadFiles.forEach(file => {
+      uploadFiles.forEach((file) => {
         if (file.preview) {
           URL.revokeObjectURL(file.preview);
         }
@@ -70,12 +70,12 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
       return;
     }
 
-    setUploadFiles(prev => [...prev, ...filesToAdd]);
+    setUploadFiles((prev) => [...prev, ...filesToAdd]);
   };
 
   const handleUpload = (file: UploadFile) => {
-    setUploadFiles(prev =>
-      prev.map(f => (f.id === file.id ? { ...f, status: "uploading" } : f))
+    setUploadFiles((prev) =>
+      prev.map((f) => (f.id === file.id ? { ...f, status: "uploading" } : f)),
     );
 
     // Listen for global progress events for this upload (best-effort)
@@ -86,15 +86,15 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
         progress?: number;
       };
       if (typeof detail?.progress !== "number") return;
-      setUploadFiles(prev =>
-        prev.map(f =>
+      setUploadFiles((prev) =>
+        prev.map((f) =>
           f.id === file.id
             ? {
                 ...f,
                 progress: Math.max(0, Math.min(100, detail.progress ?? 0)),
               }
-            : f
-        )
+            : f,
+        ),
       );
     };
     window.addEventListener("upload:progress", onProgress);
@@ -111,16 +111,16 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
       },
       {
         onSuccess: () => {
-          setUploadFiles(prev =>
-            prev.map(f =>
+          setUploadFiles((prev) =>
+            prev.map((f) =>
               f.id === file.id
                 ? { ...f, status: "completed", progress: 100 }
-                : f
-            )
+                : f,
+            ),
           );
           window.removeEventListener("upload:progress", onProgress);
         },
-        onError: error => {
+        onError: (error) => {
           const axiosError = error as AxiosError;
           let errorMessage = "Upload failed";
 
@@ -154,38 +154,38 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
               "Upload failed";
           }
 
-          setUploadFiles(prev =>
-            prev.map(f =>
+          setUploadFiles((prev) =>
+            prev.map((f) =>
               f.id === file.id
                 ? {
                     ...f,
                     status: "error",
                     error: errorMessage,
                   }
-                : f
-            )
+                : f,
+            ),
           );
           window.removeEventListener("upload:progress", onProgress);
         },
-      }
+      },
     );
   };
 
   const handleRemove = (fileId: string) => {
-    const file = uploadFiles.find(f => f.id === fileId);
+    const file = uploadFiles.find((f) => f.id === fileId);
     if (file?.preview) {
       URL.revokeObjectURL(file.preview);
     }
-    setUploadFiles(prev => prev.filter(f => f.id !== fileId));
+    setUploadFiles((prev) => prev.filter((f) => f.id !== fileId));
   };
 
   const handleRetry = (fileId: string) => {
-    const file = uploadFiles.find(f => f.id === fileId);
+    const file = uploadFiles.find((f) => f.id === fileId);
     if (file) {
-      setUploadFiles(prev =>
-        prev.map(f =>
-          f.id === fileId ? { ...f, status: "pending", error: undefined } : f
-        )
+      setUploadFiles((prev) =>
+        prev.map((f) =>
+          f.id === fileId ? { ...f, status: "pending", error: undefined } : f,
+        ),
       );
       handleUpload(file);
     }
@@ -200,11 +200,11 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
     try {
       setMetadata(newMetadata);
 
-      const pendingFiles = uploadFiles.filter(f => f.status === "pending");
+      const pendingFiles = uploadFiles.filter((f) => f.status === "pending");
 
       if (useQueue) {
         // Add to persistent queue
-        pendingFiles.forEach(file => {
+        pendingFiles.forEach((file) => {
           const queuedUpload: QueuedUpload = {
             id: file.id,
             file: file.file,
@@ -232,7 +232,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
         }
       } else {
         // Legacy immediate upload
-        pendingFiles.forEach(file => {
+        pendingFiles.forEach((file) => {
           handleUpload(file);
         });
       }
@@ -242,7 +242,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
   };
 
   const handleCancel = () => {
-    uploadFiles.forEach(file => {
+    uploadFiles.forEach((file) => {
       if (file.preview) {
         URL.revokeObjectURL(file.preview);
       }
@@ -252,11 +252,11 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
   };
 
   const hasFiles = uploadFiles.length > 0;
-  const pendingFiles = uploadFiles.filter(f => f.status === "pending");
-  const completedFiles = uploadFiles.filter(f => f.status === "completed");
-  const errorFiles = uploadFiles.filter(f => f.status === "error");
+  const pendingFiles = uploadFiles.filter((f) => f.status === "pending");
+  const completedFiles = uploadFiles.filter((f) => f.status === "completed");
+  const errorFiles = uploadFiles.filter((f) => f.status === "error");
   const allCompleted =
-    hasFiles && uploadFiles.every(f => f.status === "completed");
+    hasFiles && uploadFiles.every((f) => f.status === "completed");
 
   return (
     <div className="w-full max-w-4xl mx-auto p-6">
@@ -279,7 +279,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
           </div>
 
           <AnimatePresence>
-            {uploadFiles.map(file => (
+            {uploadFiles.map((file) => (
               <PhotoPreview
                 key={file.id}
                 uploadFile={file}

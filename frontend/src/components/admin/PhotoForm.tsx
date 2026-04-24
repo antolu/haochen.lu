@@ -142,14 +142,14 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
   const doReverseGeocode = useCallback(async (lat: number, lng: number) => {
     try {
       const resp = await fetch(
-        `/api/locations/reverse?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}`
+        `/api/locations/reverse?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}`,
       );
       if (!resp.ok) return;
       const data = (await resp.json()) as {
         location_name?: string;
         location_address?: string;
       };
-      setForm(f => ({
+      setForm((f) => ({
         ...f,
         location_name: data.location_name ?? "",
         location_address: data.location_address ?? "",
@@ -169,7 +169,7 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
     reverseTimer.current = setTimeout(() => {
       void doReverseGeocode(
         form.location_lat as number,
-        form.location_lon as number
+        form.location_lon as number,
       );
     }, 400);
     return () => {
@@ -178,7 +178,7 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
   }, [form.location_lat, form.location_lon, doReverseGeocode]);
 
   const handleMapSelect = (lat: number, lng: number) => {
-    setForm(f => ({ ...f, location_lat: lat, location_lon: lng }));
+    setForm((f) => ({ ...f, location_lat: lat, location_lon: lng }));
   };
 
   const parseNumber = (val: string) => {
@@ -194,7 +194,7 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
       transition={{ duration: 0.3 }}
     >
       <form
-        onSubmit={e => {
+        onSubmit={(e) => {
           void handleSubmit(e);
         }}
         onKeyDown={handleKeyDown}
@@ -242,7 +242,7 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
                 {(() => {
                   const optimalImage = selectOptimalImage(
                     photo,
-                    ImageUseCase.ADMIN
+                    ImageUseCase.ADMIN,
                   );
                   return (
                     <img
@@ -339,9 +339,9 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
                     <select
                       className="w-full bg-muted/20 border border-border/40 rounded-lg px-2 py-1.5 text-[13px] focus:ring-1 focus:ring-primary outline-none transition-all"
                       value={`${form.camera_make}|${form.camera_model}`}
-                      onChange={e => {
+                      onChange={(e) => {
                         const [make, model] = e.target.value.split("|");
-                        setForm(f => ({
+                        setForm((f) => ({
                           ...f,
                           camera_make: make,
                           camera_model: model,
@@ -349,7 +349,7 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
                       }}
                     >
                       <option value="|">Select camera...</option>
-                      {cameraAliases.map(alias => (
+                      {cameraAliases.map((alias) => (
                         <option
                           key={alias.id}
                           value={`${alias.brand}|${alias.model}`}
@@ -359,9 +359,9 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
                       ))}
                       {form.camera_make &&
                         !cameraAliases.find(
-                          a =>
+                          (a) =>
                             a.brand === form.camera_make &&
-                            a.model === form.camera_model
+                            a.model === form.camera_model,
                         ) && (
                           <option
                             value={`${form.camera_make}|${form.camera_model}`}
@@ -379,19 +379,19 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
                     <select
                       className="w-full bg-muted/20 border border-border/40 rounded-lg px-2 py-1.5 text-[13px] focus:ring-1 focus:ring-primary outline-none transition-all"
                       value={form.lens}
-                      onChange={e =>
-                        setForm(f => ({ ...f, lens: e.target.value }))
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, lens: e.target.value }))
                       }
                     >
                       <option value="">Select lens...</option>
-                      {lensAliases.map(alias => (
+                      {lensAliases.map((alias) => (
                         <option key={alias.id} value={alias.original_name}>
                           {alias.display_name}
                         </option>
                       ))}
                       {form.lens &&
                         !lensAliases.find(
-                          a => a.original_name === form.lens
+                          (a) => a.original_name === form.lens,
                         ) && <option value={form.lens}>{form.lens}</option>}
                     </select>
                   </div>
@@ -410,8 +410,8 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
                 <input
                   className="mt-1 w-full border-2 border-border/50 bg-background text-foreground rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                   value={form.title}
-                  onChange={e =>
-                    setForm(f => ({ ...f, title: e.target.value }))
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, title: e.target.value }))
                   }
                 />
               </div>
@@ -424,8 +424,8 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
                   className="mt-1 w-full border-2 border-border/50 bg-background text-foreground rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-y"
                   rows={6}
                   value={form.description}
-                  onChange={e =>
-                    setForm(f => ({ ...f, description: e.target.value }))
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, description: e.target.value }))
                   }
                 />
               </div>
@@ -435,11 +435,11 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
                 <TagMultiSelect
                   value={(form.tags ?? "")
                     .split(",")
-                    .map(t => t.trim())
+                    .map((t) => t.trim())
                     .filter(Boolean)}
                   options={distinctTags}
-                  onChange={vals =>
-                    setForm(f => ({ ...f, tags: vals.join(",") }))
+                  onChange={(vals) =>
+                    setForm((f) => ({ ...f, tags: vals.join(",") }))
                   }
                   placeholder="Search or create tags..."
                 />
@@ -454,7 +454,7 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
                       type="button"
                       className="text-sm text-muted-foreground hover:text-foreground underline"
                       onClick={() =>
-                        setForm(f => ({
+                        setForm((f) => ({
                           ...f,
                           location_lat: undefined,
                           location_lon: undefined,
@@ -471,7 +471,7 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
                           type="button"
                           className="text-sm text-muted-foreground hover:text-foreground underline"
                           onClick={() =>
-                            setForm(f => ({
+                            setForm((f) => ({
                               ...f,
                               location_lat: photo.location_lat,
                               location_lon: photo.location_lon,
@@ -525,9 +525,9 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
                             : ""
                         }
                         placeholder="e.g., 37.7749"
-                        onChange={e => {
+                        onChange={(e) => {
                           const v = parseNumber(e.target.value);
-                          setForm(f => ({ ...f, location_lat: v }));
+                          setForm((f) => ({ ...f, location_lat: v }));
                         }}
                       />
                     </div>
@@ -544,9 +544,9 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
                             : ""
                         }
                         placeholder="e.g., -122.4194"
-                        onChange={e => {
+                        onChange={(e) => {
                           const v = parseNumber(e.target.value);
-                          setForm(f => ({ ...f, location_lon: v }));
+                          setForm((f) => ({ ...f, location_lon: v }));
                         }}
                       />
                     </div>
@@ -560,8 +560,8 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
                       <input
                         className="mt-1 w-full border border-input bg-background text-foreground rounded px-3 py-2"
                         value={form.location_name}
-                        onChange={e =>
-                          setForm(f => ({
+                        onChange={(e) =>
+                          setForm((f) => ({
                             ...f,
                             location_name: e.target.value,
                           }))
@@ -576,8 +576,8 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
                       <input
                         className="mt-1 w-full border border-input bg-background text-foreground rounded px-3 py-2"
                         value={form.location_address}
-                        onChange={e =>
-                          setForm(f => ({
+                        onChange={(e) =>
+                          setForm((f) => ({
                             ...f,
                             location_address: e.target.value,
                           }))
@@ -614,13 +614,13 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
                     className={cn(
                       "rounded-full hover:bg-yellow-500/10",
                       photo.featured &&
-                        "text-yellow-600 dark:text-yellow-500 bg-yellow-500/5 hover:bg-yellow-500/20"
+                        "text-yellow-600 dark:text-yellow-500 bg-yellow-500/5 hover:bg-yellow-500/20",
                     )}
                   >
                     <Star
                       className={cn(
                         "h-4 w-4 mr-2",
-                        photo.featured && "fill-current"
+                        photo.featured && "fill-current",
                       )}
                     />
                     {photo.featured ? "Featured" : "Mark Featured"}

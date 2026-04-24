@@ -141,7 +141,7 @@ describe("Repository Service Integration Tests", () => {
 
       expect(response.data).toEqual(expectedResponse);
       expect(mockAdapter.history.post[0].data).toBe(
-        JSON.stringify({ repository_url: repoUrl })
+        JSON.stringify({ repository_url: repoUrl }),
       );
     });
 
@@ -176,7 +176,7 @@ describe("Repository Service Integration Tests", () => {
       await expect(
         apiClient.post("/projects/repository/validate", {
           repository_url: repoUrl,
-        })
+        }),
       ).rejects.toMatchObject({
         response: {
           status: 403,
@@ -195,7 +195,7 @@ describe("Repository Service Integration Tests", () => {
       await expect(
         apiClient.post("/projects/repository/validate", {
           repository_url: invalidUrl,
-        })
+        }),
       ).rejects.toMatchObject({
         response: {
           status: 400,
@@ -214,7 +214,7 @@ describe("Repository Service Integration Tests", () => {
       await expect(
         apiClient.post("/projects/repository/validate", {
           repository_url: nonExistentUrl,
-        })
+        }),
       ).rejects.toMatchObject({
         response: {
           status: 404,
@@ -234,7 +234,7 @@ describe("Repository Service Integration Tests", () => {
       await expect(
         apiClient.post("/projects/repository/validate", {
           repository_url: repoUrl,
-        })
+        }),
       ).rejects.toMatchObject({
         response: {
           status: 429,
@@ -262,15 +262,15 @@ describe("Repository Service Integration Tests", () => {
         `/projects/${projectId}/fetch-readme`,
         {
           repo_url: repoUrl,
-        }
+        },
       );
 
       expect(response.data).toEqual(expectedResponse);
       expect((response.data as { content: string }).content).toContain(
-        "# Test Project"
+        "# Test Project",
       );
       expect((response.data as { content: string }).content).toContain(
-        "## Features"
+        "## Features",
       );
     });
 
@@ -291,7 +291,7 @@ describe("Repository Service Integration Tests", () => {
         `/projects/${projectId}/fetch-readme`,
         {
           repo_url: repoUrl,
-        }
+        },
       );
 
       expect(response.data).toEqual(expectedResponse);
@@ -309,7 +309,7 @@ describe("Repository Service Integration Tests", () => {
       await expect(
         apiClient.post(`/projects/${projectId}/fetch-readme`, {
           repo_url: repoUrl,
-        })
+        }),
       ).rejects.toMatchObject({
         response: {
           status: 404,
@@ -355,12 +355,12 @@ describe("Repository Service Integration Tests", () => {
         `/projects/${projectId}/refresh-readme`,
         {
           repo_url: repoUrl,
-        }
+        },
       );
 
       expect(response.data).toEqual(refreshedResponse);
       expect((response.data as { content: string }).content).toContain(
-        "## Updates"
+        "## Updates",
       );
     });
 
@@ -375,7 +375,7 @@ describe("Repository Service Integration Tests", () => {
       await expect(
         apiClient.post(`/projects/${projectId}/fetch-readme`, {
           repo_url: repoUrl,
-        })
+        }),
       ).rejects.toMatchObject({
         response: {
           status: 422,
@@ -455,7 +455,7 @@ Installation
       await expect(
         apiClient.post("/projects/preview-readme", {
           repo_url: repoUrl,
-        })
+        }),
       ).rejects.toMatchObject({
         code: "ECONNABORTED",
       });
@@ -533,7 +533,7 @@ Installation
         undefined,
       ];
 
-      invalidUrls.forEach(url => {
+      invalidUrls.forEach((url) => {
         const result = parseRepositoryUrl(url as string);
         expect(result).toBeNull();
       });
@@ -698,7 +698,7 @@ Installation
       await expect(
         apiClient.post("/projects/repository/validate", {
           repository_url: repoUrl,
-        })
+        }),
       ).rejects.toMatchObject({
         response: { status: 500 },
       });
@@ -733,13 +733,13 @@ Installation
         "/projects/repository/validate",
         {
           repository_url: "https://github.com/testuser/test-project",
-        }
+        },
       );
       expect(validateResponse.status).toBe(200);
 
       // README should fail gracefully
       await expect(
-        apiClient.get(`/projects/${projectId}/readme`)
+        apiClient.get(`/projects/${projectId}/readme`),
       ).rejects.toMatchObject({
         response: { status: 503 },
       });
@@ -768,7 +768,7 @@ Installation
       await expect(
         apiClient.post("/projects/repository/validate", {
           repository_url: repoUrl,
-        })
+        }),
       ).rejects.toMatchObject({
         code: "ECONNABORTED",
         message: expect.stringContaining("timeout") as string,

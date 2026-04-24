@@ -147,7 +147,7 @@ describe("API Client Interceptors", () => {
 
     it("should queue requests during token refresh", async () => {
       let refreshResolve: (value: boolean) => void;
-      const refreshPromise = new Promise<boolean>(resolve => {
+      const refreshPromise = new Promise<boolean>((resolve) => {
         refreshResolve = resolve;
       });
 
@@ -173,7 +173,7 @@ describe("API Client Interceptors", () => {
       const request2Promise = apiClient.get("/test2");
 
       // Let the requests hit the 401 and start refresh
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Complete the refresh
       refreshResolve!(true);
@@ -188,7 +188,7 @@ describe("API Client Interceptors", () => {
       expect(result2.data).toEqual({ data: "test2" });
       // Ensure only one retry occurred
       expect(
-        mockAxios.history.get.filter(r => r.url === "/test1")
+        mockAxios.history.get.filter((r) => r.url === "/test1"),
       ).toHaveLength(2);
     });
 
@@ -300,7 +300,7 @@ describe("API Client Interceptors", () => {
   describe("Request Queue Management", () => {
     it("should process queued requests after successful refresh", async () => {
       let refreshResolve: (value: boolean) => void;
-      const refreshPromise = new Promise<boolean>(resolve => {
+      const refreshPromise = new Promise<boolean>((resolve) => {
         refreshResolve = resolve;
       });
 
@@ -332,7 +332,7 @@ describe("API Client Interceptors", () => {
       ];
 
       // Let them hit 401 and queue up
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Resolve the refresh
       refreshResolve!(true);
@@ -367,7 +367,7 @@ describe("API Client Interceptors", () => {
       ];
 
       // Let them queue up
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Reject the refresh (catch to avoid unhandled rejection noise)
       // Reject the refresh and catch to avoid unhandled rejection noise
@@ -379,7 +379,7 @@ describe("API Client Interceptors", () => {
 
       // All should fail
       const results = await Promise.all(promises);
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result).toBeInstanceOf(Error);
       });
     });
@@ -478,10 +478,10 @@ describe("API Client Interceptors", () => {
       // Both requests should have custom config
       expect(mockAxios.history.get).toHaveLength(2);
       expect(mockAxios.history.get[0].headers?.["X-Custom-Header"]).toBe(
-        "custom-value"
+        "custom-value",
       );
       expect(mockAxios.history.get[1].headers?.["X-Custom-Header"]).toBe(
-        "custom-value"
+        "custom-value",
       );
     });
 
@@ -503,10 +503,10 @@ describe("API Client Interceptors", () => {
 
       expect(mockAxios.history.post).toHaveLength(2);
       expect(JSON.parse(mockAxios.history.post[0].data as string)).toEqual(
-        postData
+        postData,
       );
       expect(JSON.parse(mockAxios.history.post[1].data as string)).toEqual(
-        postData
+        postData,
       );
     });
   });

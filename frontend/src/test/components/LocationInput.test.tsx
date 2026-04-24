@@ -61,7 +61,7 @@ describe("LocationInput", () => {
             longitude: -122.4194,
           },
         });
-      }
+      },
     );
   });
 
@@ -79,10 +79,10 @@ describe("LocationInput", () => {
 
     // Check that the search location input shows the location name
     expect(screen.getByLabelText("Search Location")).toHaveValue(
-      "San Francisco, CA"
+      "San Francisco, CA",
     );
     expect(screen.getByLabelText("Location Name")).toHaveValue(
-      "San Francisco, CA"
+      "San Francisco, CA",
     );
     expect(screen.getByLabelText("Latitude")).toHaveValue(37.7749);
     expect(screen.getByLabelText("Longitude")).toHaveValue(-122.4194);
@@ -105,7 +105,7 @@ describe("LocationInput", () => {
     const onLocationChange = vi.fn();
 
     render(
-      <LocationInput {...defaultProps} onLocationChange={onLocationChange} />
+      <LocationInput {...defaultProps} onLocationChange={onLocationChange} />,
     );
 
     const nameInput = screen.getByLabelText("Location Name");
@@ -115,7 +115,7 @@ describe("LocationInput", () => {
     expect(onLocationChange).toHaveBeenLastCalledWith(
       37.7749,
       -122.4194,
-      "New Location Name"
+      "New Location Name",
     );
   });
 
@@ -124,7 +124,7 @@ describe("LocationInput", () => {
     const onLocationChange = vi.fn();
 
     render(
-      <LocationInput {...defaultProps} onLocationChange={onLocationChange} />
+      <LocationInput {...defaultProps} onLocationChange={onLocationChange} />,
     );
 
     const latInput = screen.getByLabelText("Latitude");
@@ -140,7 +140,7 @@ describe("LocationInput", () => {
     const onLocationChange = vi.fn();
 
     render(
-      <LocationInput {...defaultProps} onLocationChange={onLocationChange} />
+      <LocationInput {...defaultProps} onLocationChange={onLocationChange} />,
     );
 
     const lonInput = screen.getByLabelText("Longitude");
@@ -155,7 +155,7 @@ describe("LocationInput", () => {
     const onLocationChange = vi.fn();
 
     render(
-      <LocationInput latitude={37.7749} onLocationChange={onLocationChange} />
+      <LocationInput latitude={37.7749} onLocationChange={onLocationChange} />,
     );
 
     const latInput = screen.getByLabelText("Latitude");
@@ -211,14 +211,14 @@ describe("LocationInput", () => {
 
       await waitFor(() => {
         expect(mockFetch).toHaveBeenCalledWith(
-          "/api/locations/reverse?lat=37.7749&lng=-122.4194"
+          "/api/locations/reverse?lat=37.7749&lng=-122.4194",
         );
       });
 
       expect(onLocationChange).toHaveBeenCalledWith(
         37.7749,
         -122.4194,
-        "San Francisco, California, United States"
+        "San Francisco, California, United States",
       );
     });
 
@@ -271,7 +271,7 @@ describe("LocationInput", () => {
       render(<LocationInput {...defaultProps} disabled={true} />);
 
       expect(
-        screen.queryByText("Use Current Location")
+        screen.queryByText("Use Current Location"),
       ).not.toBeInTheDocument();
     });
 
@@ -298,13 +298,13 @@ describe("LocationInput", () => {
       mockGeolocation.getCurrentPosition.mockImplementation(
         (
           success,
-          error: ((error: GeolocationPositionError) => void) | undefined
+          error: ((error: GeolocationPositionError) => void) | undefined,
         ) => {
           error?.({
             code: 1,
             message: "Permission denied",
           } as GeolocationPositionError);
-        }
+        },
       );
 
       render(<LocationInput />);
@@ -313,7 +313,7 @@ describe("LocationInput", () => {
 
       await waitFor(() => {
         expect(alertSpy).toHaveBeenCalledWith(
-          "Unable to get your current location. Please check your browser permissions."
+          "Unable to get your current location. Please check your browser permissions.",
         );
       });
 
@@ -335,7 +335,7 @@ describe("LocationInput", () => {
       await user.click(screen.getByText("Use Current Location"));
 
       expect(alertSpy).toHaveBeenCalledWith(
-        "Geolocation is not supported by this browser."
+        "Geolocation is not supported by this browser.",
       );
 
       alertSpy.mockRestore();
@@ -393,7 +393,7 @@ describe("LocationInput", () => {
         <LocationInput
           onLocationChange={onLocationChange}
           longitude={-122.4194}
-        />
+        />,
       );
 
       const latInput = screen.getByLabelText("Latitude");
@@ -416,7 +416,7 @@ describe("LocationInput", () => {
           longitude={-122.4194}
           locationName="Custom Location Name"
           onLocationChange={onLocationChange}
-        />
+        />,
       );
 
       const latInput = screen.getByLabelText("Latitude");
@@ -426,7 +426,7 @@ describe("LocationInput", () => {
       // Reverse geocoding may update the name; assert coordinates and any name
       // Ensure onLocationChange was called with a string name when coordinates edited
       const calledWithName = onLocationChange.mock.calls.some(
-        (args: unknown[]) => typeof args[2] === "string"
+        (args: unknown[]) => typeof args[2] === "string",
       );
       expect(calledWithName).toBe(true);
     });
@@ -446,15 +446,15 @@ describe("LocationInput", () => {
       render(<LocationInput />);
 
       expect(
-        screen.getByPlaceholderText("Search for a location...")
+        screen.getByPlaceholderText("Search for a location..."),
       ).toBeInTheDocument();
       expect(
         screen.getByPlaceholderText(
-          "Enter location name or let it be auto-detected"
-        )
+          "Enter location name or let it be auto-detected",
+        ),
       ).toBeInTheDocument();
       expect(screen.getAllByPlaceholderText("0.000000").length).toBeGreaterThan(
-        0
+        0,
       );
     });
 
@@ -463,11 +463,11 @@ describe("LocationInput", () => {
 
       expect(
         screen.getByText(
-          "Type to search for locations and GPS coordinates will be set automatically"
-        )
+          "Type to search for locations and GPS coordinates will be set automatically",
+        ),
       ).toBeInTheDocument();
       expect(
-        screen.getByText("Override the auto-detected location name if needed")
+        screen.getByText("Override the auto-detected location name if needed"),
       ).toBeInTheDocument();
     });
 
@@ -510,7 +510,7 @@ describe("LocationInput", () => {
 
     it("applies custom className", () => {
       render(
-        <LocationInput {...defaultProps} className="custom-location-input" />
+        <LocationInput {...defaultProps} className="custom-location-input" />,
       );
 
       const container = screen
@@ -531,7 +531,7 @@ describe("LocationInput", () => {
 
       await waitFor(() => {
         expect(mockFetch).toHaveBeenCalledWith(
-          "/api/locations/reverse?lat=37.7749&lng=-122.4194"
+          "/api/locations/reverse?lat=37.7749&lng=-122.4194",
         );
       });
     });
@@ -556,7 +556,7 @@ describe("LocationInput", () => {
       await waitFor(() => {
         expect(consoleSpy).toHaveBeenCalledWith(
           "Error reverse geocoding:",
-          expect.any(Error)
+          expect.any(Error),
         );
       });
 

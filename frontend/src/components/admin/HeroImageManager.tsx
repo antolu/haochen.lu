@@ -154,7 +154,7 @@ const HeroImageManager: React.FC = () => {
       <div className="bg-primary/5 border border-primary/10 rounded-xl p-6">
         <h3 className="font-semibold text-primary mb-2">Active Hero Image</h3>
         {(() => {
-          const activeHero = heroImagesList?.find(h => h.is_active);
+          const activeHero = heroImagesList?.find((h) => h.is_active);
           if (activeHero) {
             return (
               <div className="flex items-center space-x-4">
@@ -198,7 +198,7 @@ const HeroImageManager: React.FC = () => {
 
       {/* Hero Images Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {heroImagesList?.map(heroImage => {
+        {heroImagesList?.map((heroImage) => {
           return (
             <motion.div
               key={heroImage.id}
@@ -425,7 +425,7 @@ const HeroImageManager: React.FC = () => {
                         </div>
 
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6 max-h-96 overflow-y-auto">
-                          {photosData?.photos.map(photo => {
+                          {photosData?.photos.map((photo) => {
                             return (
                               <button
                                 key={photo.id}
@@ -500,7 +500,7 @@ const HeroImageManager: React.FC = () => {
                                 handleCreateHeroImage();
                               } else {
                                 const activeHero = heroImagesList?.find(
-                                  h => h.is_active
+                                  (h) => h.is_active,
                                 );
                                 if (activeHero) {
                                   void deleteMutation.mutate(activeHero.id);

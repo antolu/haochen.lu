@@ -27,7 +27,7 @@ const ProjectGrid: React.FC<ProjectGridProps> = ({
     if (!onLoadMore || !hasMore || isLoadingMore) return;
 
     const observer = new IntersectionObserver(
-      entries => {
+      (entries) => {
         if (entries && entries.length > 0 && entries[0].isIntersecting) {
           onLoadMore();
         }
@@ -35,7 +35,7 @@ const ProjectGrid: React.FC<ProjectGridProps> = ({
       {
         threshold: 0.1,
         rootMargin: "100px",
-      }
+      },
     );
 
     const currentRef = loadMoreRef.current;
@@ -92,7 +92,7 @@ const ProjectGrid: React.FC<ProjectGridProps> = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, staggerChildren: 0.1 }}
       >
-        {projects.map(project => (
+        {projects.map((project) => (
           <motion.div
             key={project.id}
             initial={{ opacity: 0, y: 20 }}

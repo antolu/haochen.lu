@@ -34,10 +34,10 @@ export const CategoryTabs: React.FC<CategoryTabsProps> = ({
   return (
     <Tabs
       value={value}
-      onValueChange={v => onValueChange(v as ContentCategory)}
+      onValueChange={(v) => onValueChange(v as ContentCategory)}
     >
       <TabsList className="flex flex-wrap gap-2">
-        {categories.map(cat => (
+        {categories.map((cat) => (
           <TabsTrigger key={cat} value={cat} className="capitalize">
             {cat}
             {typeof counts[cat] === "number" && (

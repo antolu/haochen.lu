@@ -34,7 +34,7 @@ export const usePhotos = () => {
 // Optimized hook for photography page with intelligent caching
 export const useOptimizedPhotos = (
   orderBy: OrderByOption,
-  photosPerPage = 24
+  photosPerPage = 24,
 ) => {
   const {
     cache,
@@ -64,7 +64,7 @@ export const useOptimizedPhotos = (
 
       return { photos: [], isFromCache: false };
     },
-    [activeOrder, currentCache, switchOrder, setActiveOrder]
+    [activeOrder, currentCache, switchOrder, setActiveOrder],
   );
 
   // Main query that respects cache
@@ -125,7 +125,7 @@ export const useOptimizedPhotos = (
   }, [isLoadingMore, hasMore, loadMoreQuery]);
 
   // Clear loading state when photos are loaded
-  const isTransitioning = usePhotoCacheStore(state => state.isTransitioning);
+  const isTransitioning = usePhotoCacheStore((state) => state.isTransitioning);
 
   useEffect(() => {
     if (isTransitioning && displayPhotos.length > 0) {
@@ -155,7 +155,7 @@ export const useInfinitePhotos = (
   params: {
     featured?: boolean;
     order_by?: string;
-  } = {}
+  } = {},
 ) => {
   return useInfiniteQuery({
     queryKey: photoKeys.list(`infinite-${JSON.stringify(params)}`),
@@ -236,7 +236,7 @@ export const useUploadPhoto = () => {
           (import.meta.env.VITE_WS_URL as string | undefined) ??
           `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/ws`;
         const ws = new WebSocket(`${wsBase}/uploads/${uploadId}`);
-        ws.onmessage = ev => {
+        ws.onmessage = (ev) => {
           try {
             const data = JSON.parse(ev.data as string) as {
               type?: string;
@@ -255,7 +255,7 @@ export const useUploadPhoto = () => {
                     stage: data.stage,
                     progress: data.progress,
                   },
-                })
+                }),
               );
             }
           } catch {
@@ -282,13 +282,13 @@ export const useUploadPhoto = () => {
 
       // Snapshot the previous value
       const previousData = queryClient.getQueryData<PhotoListResponse>(
-        photoKeys.list("admin-order")
+        photoKeys.list("admin-order"),
       );
 
       // Optimistically update with placeholder
       queryClient.setQueryData<PhotoListResponse>(
         photoKeys.list("admin-order"),
-        old => {
+        (old) => {
           if (!old)
             return {
               photos: [],
@@ -318,7 +318,7 @@ export const useUploadPhoto = () => {
             photos: [optimisticPhoto as Photo, ...old.photos],
             total: old.total + 1,
           };
-        }
+        },
       );
 
       return { previousData };
@@ -329,13 +329,13 @@ export const useUploadPhoto = () => {
       if (context?.previousData) {
         queryClient.setQueryData(
           photoKeys.list("admin-order"),
-          context.previousData
+          context.previousData,
         );
       }
       toast.error("Failed to upload photo. Please try again.");
     },
 
-    onSuccess: newPhoto => {
+    onSuccess: (newPhoto) => {
       // Invalidate and refetch
       void queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
       void queryClient.invalidateQueries({ queryKey: photoKeys.stats() });
@@ -366,30 +366,30 @@ export const useUpdatePhoto = () => {
 
       // Snapshot the previous values
       const previousListData = queryClient.getQueryData<PhotoListResponse>(
-        photoKeys.list("admin-order")
+        photoKeys.list("admin-order"),
       );
       const previousDetailData = queryClient.getQueryData<Photo>(
-        photoKeys.detail(id)
+        photoKeys.detail(id),
       );
 
       // Optimistically update the list
       queryClient.setQueryData<PhotoListResponse>(
         photoKeys.list("admin-order"),
-        old => {
+        (old) => {
           if (!old) return old;
           return {
             ...old,
             photos: old.photos.map((photo: Photo) =>
               photo.id === id
                 ? { ...photo, ...data, updated_at: new Date().toISOString() }
-                : photo
+                : photo,
             ),
           };
-        }
+        },
       );
 
       // Optimistically update the detail
-      queryClient.setQueryData<Photo>(photoKeys.detail(id), old => {
+      queryClient.setQueryData<Photo>(photoKeys.detail(id), (old) => {
         if (!old) return old;
         return {
           ...old,
@@ -406,19 +406,19 @@ export const useUpdatePhoto = () => {
       if (context?.previousListData) {
         queryClient.setQueryData(
           photoKeys.list("admin-order"),
-          context.previousListData
+          context.previousListData,
         );
       }
       if (context?.previousDetailData) {
         queryClient.setQueryData(
           photoKeys.detail(id),
-          context.previousDetailData
+          context.previousDetailData,
         );
       }
       toast.error("Failed to update photo. Please try again.");
     },
 
-    onSuccess: updatedPhoto => {
+    onSuccess: (updatedPhoto) => {
       // Invalidate related queries
       void queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
       void queryClient.invalidateQueries({
@@ -442,26 +442,26 @@ export const useDeletePhoto = () => {
   return useMutation({
     mutationFn: (id: string) => photos.delete(id),
 
-    onMutate: async id => {
+    onMutate: async (id) => {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: photoKeys.lists() });
 
       // Snapshot the previous value
       const previousData = queryClient.getQueryData<PhotoListResponse>(
-        photoKeys.list("admin-order")
+        photoKeys.list("admin-order"),
       );
 
       // Optimistically update by removing the photo
       queryClient.setQueryData<PhotoListResponse>(
         photoKeys.list("admin-order"),
-        old => {
+        (old) => {
           if (!old) return old;
           return {
             ...old,
             photos: old.photos.filter((photo: Photo) => photo.id !== id),
             total: old.total - 1,
           };
-        }
+        },
       );
 
       return { previousData };
@@ -472,7 +472,7 @@ export const useDeletePhoto = () => {
       if (context?.previousData) {
         queryClient.setQueryData(
           photoKeys.list("admin-order"),
-          context.previousData
+          context.previousData,
         );
       }
       toast.error("Failed to delete photo. Please try again.");
@@ -503,23 +503,23 @@ export const useTogglePhotoFeatured = () => {
 
       // Snapshot the previous value
       const previousData = queryClient.getQueryData<PhotoListResponse>(
-        photoKeys.list("admin-order")
+        photoKeys.list("admin-order"),
       );
 
       // Optimistically update
       queryClient.setQueryData<PhotoListResponse>(
         photoKeys.list("admin-order"),
-        old => {
+        (old) => {
           if (!old) return old;
           return {
             ...old,
             photos: old.photos.map((photo: Photo) =>
               photo.id === id
                 ? { ...photo, featured, updated_at: new Date().toISOString() }
-                : photo
+                : photo,
             ),
           };
-        }
+        },
       );
 
       return { previousData };
@@ -530,7 +530,7 @@ export const useTogglePhotoFeatured = () => {
       if (context?.previousData) {
         queryClient.setQueryData(
           photoKeys.list("admin-order"),
-          context.previousData
+          context.previousData,
         );
       }
       toast.error("Failed to update photo status. Please try again.");
@@ -543,7 +543,7 @@ export const useTogglePhotoFeatured = () => {
       void queryClient.invalidateQueries({ queryKey: photoKeys.stats() });
 
       toast.success(
-        featured ? "Photo added to featured!" : "Photo removed from featured!"
+        featured ? "Photo added to featured!" : "Photo removed from featured!",
       );
     },
   });
@@ -566,21 +566,21 @@ export const useReorderPhotos = () => {
       await queryClient.cancelQueries({ queryKey: photoKeys.lists() });
 
       const previousData = queryClient.getQueryData<PhotoListResponse>(
-        photoKeys.list("admin-order")
+        photoKeys.list("admin-order"),
       );
 
       queryClient.setQueryData<PhotoListResponse>(
         photoKeys.list("admin-order"),
-        old => {
+        (old) => {
           if (!old) return old;
-          const orderMap = new Map(items.map(item => [item.id, item.order]));
-          const updated = old.photos.map(photo =>
+          const orderMap = new Map(items.map((item) => [item.id, item.order]));
+          const updated = old.photos.map((photo) =>
             orderMap.has(photo.id)
               ? {
                   ...photo,
                   order: orderMap.get(photo.id) ?? photo.order,
                 }
-              : photo
+              : photo,
           );
           updated.sort((a, b) => {
             if (a.order !== b.order) {
@@ -595,7 +595,7 @@ export const useReorderPhotos = () => {
             ...old,
             photos: updated,
           };
-        }
+        },
       );
 
       return { previousData };
@@ -605,7 +605,7 @@ export const useReorderPhotos = () => {
       if (context?.previousData) {
         queryClient.setQueryData(
           photoKeys.list("admin-order"),
-          context.previousData
+          context.previousData,
         );
       }
       toast.error("Failed to reorder photos. Please try again.");

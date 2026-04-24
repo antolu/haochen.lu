@@ -43,7 +43,7 @@ vi.mock("react-hook-form", () => ({
       });
     }),
     formState: { errors: {}, isSubmitting: false },
-    watch: vi.fn(field => {
+    watch: vi.fn((field) => {
       const watchValues: Record<string, string | boolean> = {
         title: "Test Project",
         github_url: "https://github.com/test/project",
@@ -70,7 +70,7 @@ vi.mock("@uiw/react-md-editor", () => ({
     <div data-testid="markdown-editor">
       <textarea
         value={value}
-        onChange={e => onChange?.(e.target.value)}
+        onChange={(e) => onChange?.(e.target.value)}
         data-testid="markdown-textarea"
         {...props}
       />
@@ -98,7 +98,7 @@ vi.mock("../../components/RepositoryConnector", () => ({
       <input
         type="url"
         value={value}
-        onChange={e =>
+        onChange={(e) =>
           onChange?.({
             url: e.target.value,
             type: "github",
@@ -144,11 +144,11 @@ vi.mock("../../hooks/useProjects", async () => {
       isPending: false,
     }),
     generateSlug: vi.fn((title: string) =>
-      title.toLowerCase().replace(/\s+/g, "-")
+      title.toLowerCase().replace(/\s+/g, "-"),
     ),
     formatTechnologies: vi.fn((techs: string[]) => techs.join(", ")),
     parseTechnologies: vi.fn((techString: string) =>
-      techString ? techString.split(",").map((t: string) => t.trim()) : []
+      techString ? techString.split(",").map((t: string) => t.trim()) : [],
     ),
     useProjectTechnologies: () => ({
       data: [],
@@ -177,10 +177,10 @@ describe("ProjectForm", () => {
 
       expect(screen.getByText("Create New Project")).toBeInTheDocument();
       expect(
-        screen.getByText("Add a new project to your portfolio")
+        screen.getByText("Add a new project to your portfolio"),
       ).toBeInTheDocument();
       expect(
-        screen.getAllByRole("button", { name: /create project/i })
+        screen.getAllByRole("button", { name: /create project/i }),
       ).toHaveLength(2);
     });
 
@@ -190,10 +190,10 @@ describe("ProjectForm", () => {
 
       expect(screen.getByText("Edit Project")).toBeInTheDocument();
       expect(
-        screen.getByText("Update project information and content")
+        screen.getByText("Update project information and content"),
       ).toBeInTheDocument();
       expect(
-        screen.getAllByRole("button", { name: /update project/i })
+        screen.getAllByRole("button", { name: /update project/i }),
       ).toHaveLength(2);
     });
 
@@ -209,22 +209,22 @@ describe("ProjectForm", () => {
       renderWithProviders(<ProjectForm />);
 
       expect(
-        screen.getByPlaceholderText("Enter project title")
+        screen.getByPlaceholderText("Enter project title"),
       ).toBeInTheDocument();
       expect(
-        screen.getByPlaceholderText("project-url-slug")
+        screen.getByPlaceholderText("project-url-slug"),
       ).toBeInTheDocument();
       expect(
-        screen.getByPlaceholderText("Brief description for project cards")
+        screen.getByPlaceholderText("Brief description for project cards"),
       ).toBeInTheDocument();
       expect(
-        screen.getByPlaceholderText("Search or create technologies...")
+        screen.getByPlaceholderText("Search or create technologies..."),
       ).toBeInTheDocument();
       expect(
-        screen.getByPlaceholderText("https://project-demo.com")
+        screen.getByPlaceholderText("https://project-demo.com"),
       ).toBeInTheDocument();
       expect(
-        screen.getByPlaceholderText("https://project-demo.com")
+        screen.getByPlaceholderText("https://project-demo.com"),
       ).toBeInTheDocument();
     });
 
@@ -258,7 +258,7 @@ describe("ProjectForm", () => {
       const slugInput = screen.getByPlaceholderText("project-url-slug");
       expect(slugInput).toBeDisabled();
       expect(
-        screen.getByText("Slug cannot be changed after creation")
+        screen.getByText("Slug cannot be changed after creation"),
       ).toBeInTheDocument();
     });
 
@@ -287,7 +287,7 @@ describe("ProjectForm", () => {
       renderWithProviders(<ProjectForm />);
 
       expect(
-        screen.queryByText("Mark as featured project")
+        screen.queryByText("Mark as featured project"),
       ).not.toBeInTheDocument();
     });
   });
@@ -323,7 +323,7 @@ describe("ProjectForm", () => {
       renderWithProviders(<ProjectForm />);
 
       expect(
-        screen.getByText("Use README.md from repository")
+        screen.getByText("Use README.md from repository"),
       ).toBeInTheDocument();
       expect(screen.getByText("Preview README")).toBeInTheDocument();
     });
@@ -337,7 +337,7 @@ describe("ProjectForm", () => {
 
       await waitFor(() => {
         expect(mockPreviewReadme).toHaveBeenCalledWith(
-          "https://github.com/test/project"
+          "https://github.com/test/project",
         );
       });
     });
@@ -364,7 +364,7 @@ describe("ProjectForm", () => {
 
       // When README is checked, description becomes optional override
       const readmeCheckbox = screen.getByLabelText(
-        "Use README.md from repository"
+        "Use README.md from repository",
       );
       fireEvent.click(readmeCheckbox);
 
@@ -378,7 +378,7 @@ describe("ProjectForm", () => {
       renderWithProviders(<ProjectForm />);
 
       expect(
-        screen.getByPlaceholderText("Click to expand editor")
+        screen.getByPlaceholderText("Click to expand editor"),
       ).toBeInTheDocument();
     });
 
@@ -398,8 +398,8 @@ describe("ProjectForm", () => {
 
       expect(
         screen.getByText(
-          /Supports Markdown formatting including code blocks, links, and images/
-        )
+          /Supports Markdown formatting including code blocks, links, and images/,
+        ),
       ).toBeInTheDocument();
     });
   });
@@ -409,14 +409,14 @@ describe("ProjectForm", () => {
       renderWithProviders(<ProjectForm />);
 
       const techInput = screen.getByPlaceholderText(
-        "Search or create technologies..."
+        "Search or create technologies...",
       );
       expect(techInput).toBeInTheDocument();
       // Help text is now below the technologies input with new copy
       expect(
         screen.getByText(
-          /Type to search or press Enter to create a new technology/i
-        )
+          /Type to search or press Enter to create a new technology/i,
+        ),
       ).toBeInTheDocument();
     });
 
@@ -426,7 +426,7 @@ describe("ProjectForm", () => {
 
       // Placeholder has changed in the new UI
       const techInput = screen.getByPlaceholderText(
-        "Search or create technologies..."
+        "Search or create technologies...",
       );
       await user.type(techInput, "Vue.js");
       await waitFor(() => {
@@ -459,7 +459,7 @@ describe("ProjectForm", () => {
       const user = userEvent.setup();
 
       renderWithProviders(
-        <ProjectForm project={project} onSuccess={mockSuccess} />
+        <ProjectForm project={project} onSuccess={mockSuccess} />,
       );
 
       const submitButtons = screen.getAllByRole("button", {
@@ -508,7 +508,7 @@ describe("ProjectForm", () => {
       await waitFor(() => {
         expect(consoleSpy).toHaveBeenCalledWith(
           "Failed to save project:",
-          expect.any(Error)
+          expect.any(Error),
         );
       });
 
@@ -527,7 +527,7 @@ describe("ProjectForm", () => {
 
     it("shows loading state during README preview", async () => {
       mockPreviewReadme.mockImplementation(
-        () => new Promise(resolve => setTimeout(resolve, 100))
+        () => new Promise((resolve) => setTimeout(resolve, 100)),
       );
 
       const user = userEvent.setup();
@@ -570,7 +570,7 @@ describe("ProjectForm", () => {
 
       expect(screen.getByText("Create New Project")).toBeInTheDocument();
       expect(screen.getByPlaceholderText("Click to expand editor")).toHaveValue(
-        ""
+        "",
       );
     });
   });
@@ -593,7 +593,7 @@ describe("ProjectForm", () => {
       renderWithProviders(<ProjectForm />);
 
       const readmeCheckbox = screen.getByLabelText(
-        "Use README.md from repository"
+        "Use README.md from repository",
       );
 
       await user.click(readmeCheckbox);
@@ -620,7 +620,7 @@ describe("ProjectForm", () => {
       expect(screen.getByText("Project Title *")).toBeInTheDocument();
       expect(screen.getByText("Status")).toBeInTheDocument();
       expect(
-        screen.getByText("Use README.md from repository")
+        screen.getByText("Use README.md from repository"),
       ).toBeInTheDocument();
     });
 
@@ -631,12 +631,12 @@ describe("ProjectForm", () => {
       // Tab through elements without asserting exact focus target (UI can change)
       await user.tab();
       expect(
-        screen.getByPlaceholderText("Enter project title")
+        screen.getByPlaceholderText("Enter project title"),
       ).toBeInTheDocument();
 
       await user.tab();
       expect(
-        screen.getByPlaceholderText("project-url-slug")
+        screen.getByPlaceholderText("project-url-slug"),
       ).toBeInTheDocument();
     });
 
@@ -646,18 +646,18 @@ describe("ProjectForm", () => {
       expect(screen.getByText("Auto-generated from title")).toBeInTheDocument();
       expect(
         screen.getByText(
-          "Optional: Used in project cards and meta descriptions"
-        )
+          "Optional: Used in project cards and meta descriptions",
+        ),
       ).toBeInTheDocument();
       expect(
         screen.getByText(
-          /Type to search or press Enter to create a new technology/i
-        )
+          /Type to search or press Enter to create a new technology/i,
+        ),
       ).toBeInTheDocument();
       expect(
         screen.queryByText(
-          "Featured projects appear on the homepage and in special sections"
-        )
+          "Featured projects appear on the homepage and in special sections",
+        ),
       ).not.toBeInTheDocument();
     });
   });
@@ -687,7 +687,7 @@ describe("ProjectForm", () => {
 
       // Placeholder has changed in the new UI
       const techInput = screen.getByPlaceholderText(
-        "Search or create technologies..."
+        "Search or create technologies...",
       );
       await user.clear(techInput);
 
@@ -710,7 +710,7 @@ describe("ProjectForm", () => {
       await waitFor(() => {
         expect(consoleSpy).toHaveBeenCalledWith(
           "Failed to preview README:",
-          expect.any(Error)
+          expect.any(Error),
         );
       });
 

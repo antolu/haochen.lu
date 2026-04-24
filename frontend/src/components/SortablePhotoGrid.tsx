@@ -44,10 +44,10 @@ const SortablePhotoGrid: React.FC<SortablePhotoGridProps> = ({
         delay: 150,
         tolerance: 5,
       },
-    })
+    }),
   );
 
-  const items = useMemo(() => photos.map(photo => photo.id), [photos]);
+  const items = useMemo(() => photos.map((photo) => photo.id), [photos]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     if (disabled || !reorderEnabled) {
@@ -57,8 +57,8 @@ const SortablePhotoGrid: React.FC<SortablePhotoGridProps> = ({
     if (!over || active.id === over.id) {
       return;
     }
-    const oldIndex = photos.findIndex(photo => photo.id === active.id);
-    const newIndex = photos.findIndex(photo => photo.id === over.id);
+    const oldIndex = photos.findIndex((photo) => photo.id === active.id);
+    const newIndex = photos.findIndex((photo) => photo.id === over.id);
     if (oldIndex === -1 || newIndex === -1) {
       return;
     }
@@ -72,7 +72,7 @@ const SortablePhotoGrid: React.FC<SortablePhotoGridProps> = ({
         <div
           className={cn(
             "grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4",
-            disabled && "opacity-60"
+            disabled && "opacity-60",
           )}
         >
           {photos.map((photo, index) => (

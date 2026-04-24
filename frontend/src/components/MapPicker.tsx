@@ -49,7 +49,7 @@ const LocationSearch: React.FC<{
     setIsLoading(true);
     try {
       const response = await fetch(
-        `/api/locations/search?q=${encodeURIComponent(searchQuery)}&limit=5`
+        `/api/locations/search?q=${encodeURIComponent(searchQuery)}&limit=5`,
       );
       if (response.ok) {
         const data = (await response.json()) as SearchResult[];
@@ -93,7 +93,7 @@ const LocationSearch: React.FC<{
           value={query}
           onChange={handleInputChange}
           onFocus={() => setIsOpen(true)}
-          onKeyDown={e => {
+          onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
               e.stopPropagation();
@@ -173,7 +173,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
     () =>
       (import.meta as unknown as { env: { VITE_MAP_STYLE_URL?: string } }).env
         .VITE_MAP_STYLE_URL ?? PREFERRED_DEFAULT_STYLE_URL,
-    []
+    [],
   );
 
   // Update internal state when props change
@@ -192,7 +192,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
       onLocationSelect?.(lat, lng);
       onLocationChange?.(lat, lng);
     },
-    [onLocationSelect, onLocationChange]
+    [onLocationSelect, onLocationChange],
   );
 
   // Keep a stable ref so the map click handler always calls the latest version
@@ -207,7 +207,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
     (lat: number, lng: number) => {
       handleLocationSelect(lat, lng);
     },
-    [handleLocationSelect]
+    [handleLocationSelect],
   );
 
   const initialLatRef = useRef(currentLat);
@@ -231,7 +231,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
     mapRef.current = map;
     map.addControl(
       new maplibregl.NavigationControl({ visualizePitch: false }),
-      "top-right"
+      "top-right",
     );
     map.addControl(new maplibregl.AttributionControl({ compact: true }));
 
@@ -252,7 +252,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
       .addTo(map);
     markerRef.current = marker;
 
-    map.on("click", e => {
+    map.on("click", (e) => {
       if (disabledRef.current) return;
       const { lng, lat } = e.lngLat;
       marker.setLngLat([lng, lat]);

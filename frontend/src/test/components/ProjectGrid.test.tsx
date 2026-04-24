@@ -57,18 +57,18 @@ describe("ProjectGrid", () => {
 
       expect(screen.getByText(/no projects found/i)).toBeInTheDocument();
       expect(
-        screen.getByText(/create your first project/i)
+        screen.getByText(/create your first project/i),
       ).toBeInTheDocument();
     });
 
     it("renders projects grid when projects are provided", () => {
       renderWithProviders(
-        <ProjectGrid projects={mockProjects} isLoading={false} />
+        <ProjectGrid projects={mockProjects} isLoading={false} />,
       );
 
-      mockProjects.forEach(project => {
+      mockProjects.forEach((project) => {
         expect(
-          screen.getByTestId(`project-card-${project.id}`)
+          screen.getByTestId(`project-card-${project.id}`),
         ).toBeInTheDocument();
         expect(screen.getByText(project.title)).toBeInTheDocument();
       });
@@ -80,7 +80,7 @@ describe("ProjectGrid", () => {
           projects={mockProjects}
           className="custom-grid-class"
           isLoading={false}
-        />
+        />,
       );
 
       expect(container.firstChild).toHaveClass("custom-grid-class");
@@ -88,7 +88,7 @@ describe("ProjectGrid", () => {
 
     it("renders projects in correct grid layout", () => {
       renderWithProviders(
-        <ProjectGrid projects={mockProjects} isLoading={false} />
+        <ProjectGrid projects={mockProjects} isLoading={false} />,
       );
 
       const gridContainer = screen.getByRole("grid");
@@ -106,7 +106,7 @@ describe("ProjectGrid", () => {
       const skeletonCards = screen.getAllByTestId(/loading-skeleton/i);
       // New UI renders 1 grid container with multiple skeleton blocks inside
       expect(skeletonCards.length === 1 || skeletonCards.length === 6).toBe(
-        true
+        true,
       );
     });
 
@@ -117,7 +117,7 @@ describe("ProjectGrid", () => {
           hasMore={true}
           isLoadingMore={true}
           isLoading={false}
-        />
+        />,
       );
 
       expect(screen.getByText(/loading more projects/i)).toBeInTheDocument();
@@ -125,12 +125,12 @@ describe("ProjectGrid", () => {
 
     it("does not display projects when loading initially", () => {
       renderWithProviders(
-        <ProjectGrid projects={mockProjects} isLoading={true} />
+        <ProjectGrid projects={mockProjects} isLoading={true} />,
       );
 
       // Should show skeletons instead of actual projects
       expect(
-        screen.queryByTestId("project-card-project-1")
+        screen.queryByTestId("project-card-project-1"),
       ).not.toBeInTheDocument();
       const skeletons = screen.getAllByTestId(/loading-skeleton/i);
       expect(skeletons.length >= 1).toBe(true);
@@ -147,7 +147,7 @@ describe("ProjectGrid", () => {
           hasMore={true}
           onLoadMore={mockOnLoadMore}
           isLoading={false}
-        />
+        />,
       );
 
       // Trigger intersection observer
@@ -169,7 +169,7 @@ describe("ProjectGrid", () => {
           hasMore={false}
           onLoadMore={mockOnLoadMore}
           isLoading={false}
-        />
+        />,
       );
 
       act(() => {
@@ -191,7 +191,7 @@ describe("ProjectGrid", () => {
           isLoadingMore={true}
           onLoadMore={mockOnLoadMore}
           isLoading={false}
-        />
+        />,
       );
 
       act(() => {
@@ -205,7 +205,11 @@ describe("ProjectGrid", () => {
 
     it("does not call onLoadMore when no onLoadMore prop provided", () => {
       renderWithProviders(
-        <ProjectGrid projects={mockProjects} hasMore={true} isLoading={false} />
+        <ProjectGrid
+          projects={mockProjects}
+          hasMore={true}
+          isLoading={false}
+        />,
       );
 
       // Should not throw error when triggering intersection observer
@@ -218,7 +222,11 @@ describe("ProjectGrid", () => {
 
     it("shows load more trigger element when hasMore is true", () => {
       renderWithProviders(
-        <ProjectGrid projects={mockProjects} hasMore={true} isLoading={false} />
+        <ProjectGrid
+          projects={mockProjects}
+          hasMore={true}
+          isLoading={false}
+        />,
       );
 
       expect(screen.getByTestId("load-more-trigger")).toBeInTheDocument();
@@ -230,7 +238,7 @@ describe("ProjectGrid", () => {
           projects={mockProjects}
           hasMore={false}
           isLoading={false}
-        />
+        />,
       );
 
       expect(screen.queryByTestId("load-more-trigger")).not.toBeInTheDocument();
@@ -243,7 +251,7 @@ describe("ProjectGrid", () => {
 
       expect(screen.getByText(/no projects found/i)).toBeInTheDocument();
       expect(
-        screen.getByText(/create your first project/i)
+        screen.getByText(/create your first project/i),
       ).toBeInTheDocument();
 
       // Illustration is an inline SVG without role=img; assert container exists
@@ -258,7 +266,7 @@ describe("ProjectGrid", () => {
 
     it("shows empty state after loading completes with no results", () => {
       const { rerender } = renderWithProviders(
-        <ProjectGrid projects={[]} isLoading={true} />
+        <ProjectGrid projects={[]} isLoading={true} />,
       );
 
       // Initially loading
@@ -280,21 +288,21 @@ describe("ProjectGrid", () => {
       ];
 
       renderWithProviders(
-        <ProjectGrid projects={orderedProjects} isLoading={false} />
+        <ProjectGrid projects={orderedProjects} isLoading={false} />,
       );
 
       const projectCards = screen.getAllByTestId(/project-card/);
       expect(projectCards[0]).toHaveAttribute(
         "data-testid",
-        "project-card-first"
+        "project-card-first",
       );
       expect(projectCards[1]).toHaveAttribute(
         "data-testid",
-        "project-card-second"
+        "project-card-second",
       );
       expect(projectCards[2]).toHaveAttribute(
         "data-testid",
-        "project-card-third"
+        "project-card-third",
       );
     });
 
@@ -304,7 +312,7 @@ describe("ProjectGrid", () => {
       ];
 
       renderWithProviders(
-        <ProjectGrid projects={singleProject} isLoading={false} />
+        <ProjectGrid projects={singleProject} isLoading={false} />,
       );
 
       expect(screen.getByTestId("project-card-single")).toBeInTheDocument();
@@ -317,11 +325,11 @@ describe("ProjectGrid", () => {
         createMockProject({
           id: `project-${index}`,
           title: `Project ${index}`,
-        })
+        }),
       );
 
       renderWithProviders(
-        <ProjectGrid projects={manyProjects} isLoading={false} />
+        <ProjectGrid projects={manyProjects} isLoading={false} />,
       );
 
       expect(screen.getAllByTestId(/project-card/).length).toBe(50);
@@ -331,7 +339,7 @@ describe("ProjectGrid", () => {
   describe("Responsive Behavior", () => {
     it("has responsive grid classes", () => {
       renderWithProviders(
-        <ProjectGrid projects={mockProjects} isLoading={false} />
+        <ProjectGrid projects={mockProjects} isLoading={false} />,
       );
 
       const gridContainer = screen.getByRole("grid");
@@ -345,7 +353,7 @@ describe("ProjectGrid", () => {
 
     it("maintains proper spacing on different screen sizes", () => {
       renderWithProviders(
-        <ProjectGrid projects={mockProjects} isLoading={false} />
+        <ProjectGrid projects={mockProjects} isLoading={false} />,
       );
 
       const gridContainer = screen.getByRole("grid");
@@ -363,7 +371,7 @@ describe("ProjectGrid", () => {
       };
 
       const { rerender } = renderWithProviders(
-        <TestWrapper projects={mockProjects} />
+        <TestWrapper projects={mockProjects} />,
       );
 
       expect(renderSpy).toHaveBeenCalledTimes(1);
@@ -377,7 +385,7 @@ describe("ProjectGrid", () => {
 
     it("handles rapid state changes gracefully", () => {
       const { rerender } = renderWithProviders(
-        <ProjectGrid projects={[]} isLoading={true} />
+        <ProjectGrid projects={[]} isLoading={true} />,
       );
 
       // Rapidly change states
@@ -387,10 +395,14 @@ describe("ProjectGrid", () => {
           projects={mockProjects}
           isLoading={true}
           isLoadingMore={true}
-        />
+        />,
       );
       rerender(
-        <ProjectGrid projects={mockProjects} isLoading={false} hasMore={true} />
+        <ProjectGrid
+          projects={mockProjects}
+          isLoading={false}
+          hasMore={true}
+        />,
       );
 
       // Should not crash
@@ -408,7 +420,7 @@ describe("ProjectGrid", () => {
 
       expect(() => {
         renderWithProviders(
-          <ProjectGrid projects={malformedProjects} isLoading={false} />
+          <ProjectGrid projects={malformedProjects} isLoading={false} />,
         );
       }).not.toThrow();
 
@@ -419,13 +431,13 @@ describe("ProjectGrid", () => {
     it("handles null/undefined projects array gracefully", () => {
       expect(() => {
         renderWithProviders(
-          <ProjectGrid projects={null as never} isLoading={false} />
+          <ProjectGrid projects={null as never} isLoading={false} />,
         );
       }).toThrow();
 
       expect(() => {
         renderWithProviders(
-          <ProjectGrid projects={undefined as never} isLoading={false} />
+          <ProjectGrid projects={undefined as never} isLoading={false} />,
         );
       }).toThrow();
     });
@@ -434,7 +446,7 @@ describe("ProjectGrid", () => {
   describe("Accessibility", () => {
     it("has proper ARIA labels", () => {
       renderWithProviders(
-        <ProjectGrid projects={mockProjects} isLoading={false} />
+        <ProjectGrid projects={mockProjects} isLoading={false} />,
       );
 
       const gridContainer = screen.getByRole("grid");
@@ -460,7 +472,7 @@ describe("ProjectGrid", () => {
       const user = userEvent.setup();
 
       renderWithProviders(
-        <ProjectGrid projects={mockProjects} isLoading={false} />
+        <ProjectGrid projects={mockProjects} isLoading={false} />,
       );
 
       // Focus should move through project cards

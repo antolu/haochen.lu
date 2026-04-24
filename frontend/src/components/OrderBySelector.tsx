@@ -52,11 +52,11 @@ const OrderBySelector: React.FC<OrderBySelectorProps> = ({
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger className="min-w-[150px] border-border/40">
           <SelectValue>
-            {OPTIONS.find(opt => opt.value === value)?.label}
+            {OPTIONS.find((opt) => opt.value === value)?.label}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
-          {OPTIONS.map(option => (
+          {OPTIONS.map((option) => (
             <SelectItem key={option.value} value={option.value}>
               {option.label}
             </SelectItem>
@@ -71,7 +71,7 @@ const OrderBySelector: React.FC<OrderBySelectorProps> = ({
           />
         )}
         <span>
-          {OPTIONS.find(option => option.value === value)?.description ?? ""}
+          {OPTIONS.find((option) => option.value === value)?.description ?? ""}
         </span>
       </div>
     </div>

@@ -53,7 +53,7 @@ export function formatDate(date: Date | string | null | undefined): string {
  * Example: "18 Sep 2025"
  */
 export function formatDateShort(
-  date: Date | string | null | undefined
+  date: Date | string | null | undefined,
 ): string {
   if (!date) return "";
 
@@ -91,7 +91,7 @@ export function formatDateTime(date: Date | string | null | undefined): string {
  * Example: "18/09/2025"
  */
 export function formatDateSimple(
-  date: Date | string | null | undefined
+  date: Date | string | null | undefined,
 ): string {
   if (!date) return "";
 

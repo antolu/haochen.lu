@@ -97,7 +97,7 @@ interface CustomRenderOptions extends Omit<RenderOptions, "wrapper"> {
 
 export function renderWithProviders(
   ui: React.ReactElement,
-  options: CustomRenderOptions = {}
+  options: CustomRenderOptions = {},
 ): RenderResult {
   const {
     queryClient = new QueryClient({
@@ -135,7 +135,7 @@ export function renderWithProviders(
 
 // Mock API responses
 export const mockApiResponse = <T,>(data: T, delay = 0) => {
-  return new Promise<T>(resolve => {
+  return new Promise<T>((resolve) => {
     setTimeout(() => resolve(data), delay);
   });
 };
@@ -158,7 +158,7 @@ export const mockApiError = (message: string, status = 400, delay = 0) => {
 export const createMockFile = (
   name: string = "test.jpg",
   type: string = "image/jpeg",
-  size: number = 1024
+  size: number = 1024,
 ): File => {
   const content = new Array(size).fill("a").join("");
   return new File([content], name, { type });
@@ -167,7 +167,7 @@ export const createMockFile = (
 export const createMockImageFile = (
   name: string = "test-image.jpg",
   width: number = 800,
-  height: number = 600
+  height: number = 600,
 ): File => {
   // Create a minimal JPEG-like blob
   const canvas = document.createElement("canvas");
@@ -195,7 +195,7 @@ export const createMockImageFile = (
 // Mock drag and drop events
 export const createMockDragEvent = (
   type: string,
-  files: File[] = []
+  files: File[] = [],
 ): DragEvent => {
   const event = new DragEvent(type, {
     bubbles: true,
@@ -205,12 +205,12 @@ export const createMockDragEvent = (
   Object.defineProperty(event, "dataTransfer", {
     value: {
       files,
-      items: files.map(file => ({
+      items: files.map((file) => ({
         kind: "file",
         type: file.type,
         getAsFile: () => file,
       })),
-      types: files.map(file => file.type),
+      types: files.map((file) => file.type),
     },
   });
 
@@ -247,7 +247,7 @@ export const mockLocalStorage = () => {
       delete store[key];
     }),
     clear: vi.fn(() => {
-      Object.keys(store).forEach(key => delete store[key]);
+      Object.keys(store).forEach((key) => delete store[key]);
     }),
     store,
   };
@@ -256,7 +256,7 @@ export const mockLocalStorage = () => {
 // Form test utilities
 export const fillForm = async (
   getByLabelText: (matcher: RegExp) => HTMLElement,
-  formData: Record<string, string>
+  formData: Record<string, string>,
 ) => {
   const { userEvent } = await import("@testing-library/user-event");
   const user = userEvent.setup();
@@ -276,8 +276,8 @@ export const mockFetch = <T,>(response: T, ok = true, status = 200) => {
         status,
         statusText: ok ? "OK" : "Error",
         headers: { "Content-Type": "application/json" },
-      })
-    )
+      }),
+    ),
   );
 };
 
@@ -287,7 +287,7 @@ export const mockIntersectionObserver = (isIntersecting = true) => {
   const mockUnobserve = vi.fn();
   const mockDisconnect = vi.fn();
 
-  const mockIntersectionObserver = vi.fn().mockImplementation(callback => {
+  const mockIntersectionObserver = vi.fn().mockImplementation((callback) => {
     // Call callback immediately with mock entry
     setTimeout(() => {
       (callback as (entries: IntersectionObserverEntry[]) => void)([
@@ -363,7 +363,7 @@ export const ThrowError = ({
 // Wait for async operations
 export const waitFor = (
   callback: () => void | Promise<void>,
-  timeout = 1000
+  timeout = 1000,
 ) => {
   return new Promise<void>((resolve, reject) => {
     const startTime = Date.now();

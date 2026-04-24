@@ -16,6 +16,6 @@ if (import.meta.env.DEV) {
   createRoot(rootEl).render(
     <StrictMode>
       <App />
-    </StrictMode>
+    </StrictMode>,
   );
 }

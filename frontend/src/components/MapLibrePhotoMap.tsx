@@ -58,8 +58,8 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
   const [lastModalZoomKey, setLastModalZoomKey] = useState<string | null>(null);
 
   const photosWithLocation = useMemo(
-    () => photos.filter(p => hasLocation(p)),
-    [photos]
+    () => photos.filter((p) => hasLocation(p)),
+    [photos],
   );
 
   const idToPhoto = useMemo(() => {
@@ -83,7 +83,7 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
 
   const pointFeatures = useMemo<GeoJSON.Feature<GeoJSON.Point, PointProps>[]>(
     () =>
-      photosWithLocation.map(p => ({
+      photosWithLocation.map((p) => ({
         type: "Feature",
         geometry: {
           type: "Point",
@@ -91,7 +91,7 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
         },
         properties: { id: p.id, title: p.title ?? "Untitled" },
       })),
-    [photosWithLocation]
+    [photosWithLocation],
   );
 
   const clusterIndex = useMemo(() => {
@@ -144,12 +144,12 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
       outer.appendChild(inner);
       return outer;
     },
-    [getThumbnailUrl]
+    [getThumbnailUrl],
   );
 
   const createClusterMarkerElement = (
     imageUrls: string[],
-    count: number
+    count: number,
   ): HTMLDivElement => {
     // Outer wrapper keeps constant size so the marker anchor doesn't shift
     const container = document.createElement("div");
@@ -266,7 +266,7 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
     mapRef.current = map;
 
     // Fallback if style fails to load
-    map.on("error", e => {
+    map.on("error", (e) => {
       const maybeErr = (e as { error?: unknown })?.error;
       const msg = String((maybeErr as { message?: string })?.message ?? "");
       if (msg.includes("404") || msg.includes("Failed to fetch")) {
@@ -282,7 +282,7 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
       // Zoom/navigation controls
       map.addControl(
         new maplibregl.NavigationControl({ visualizePitch: false }),
-        "top-right"
+        "top-right",
       );
       // Add attribution control with compact option
       map.addControl(new maplibregl.AttributionControl({ compact: true }));
@@ -290,7 +290,7 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
         lat1: number,
         lon1: number,
         lat2: number,
-        lon2: number
+        lon2: number,
       ) => {
         const toRad = (v: number) => (v * Math.PI) / 180;
         const R = 6371000; // meters
@@ -310,7 +310,7 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
         const b = map.getBounds();
         const clusters: ClusterFeature[] = clusterIndex.getClusters(
           [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()],
-          Math.floor(map.getZoom())
+          Math.floor(map.getZoom()),
         );
 
         const visibleClusterIds = new Set<number>();
@@ -328,15 +328,17 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
               const leaves = clusterIndex.getLeaves(
                 clusterId,
                 4,
-                0
+                0,
               ) as ClusterFeature[];
               const urls = leaves
-                .map(leaf => idToPhoto.get((leaf.properties as PointProps).id))
+                .map((leaf) =>
+                  idToPhoto.get((leaf.properties as PointProps).id),
+                )
                 .filter((p): p is Photo => Boolean(p))
-                .map(p => getThumbnailUrl(p));
+                .map((p) => getThumbnailUrl(p));
               const el = createClusterMarkerElement(
                 urls,
-                clusterProps.point_count
+                clusterProps.point_count,
               );
               const marker = new maplibregl.Marker({ element: el })
                 .setLngLat(coords)
@@ -415,12 +417,12 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
           centerLat,
           b.getWest(),
           centerLat,
-          b.getEast()
+          b.getEast(),
         );
         const widthKm = widthMeters / 1000;
         if (widthKm <= 10 && visiblePhotoIds.size > 1) {
           const key = `${Math.round(widthKm * 10) / 10}-${Array.from(
-            visiblePhotoIds
+            visiblePhotoIds,
           )
             .sort()
             .slice(0, 4)
@@ -428,7 +430,7 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
           if (!modalOpen && key !== lastModalZoomKey) {
             setLastModalZoomKey(key);
             const photosToShow: Photo[] = Array.from(visiblePhotoIds)
-              .map(id => idToPhoto.get(id))
+              .map((id) => idToPhoto.get(id))
               .filter((p): p is Photo => Boolean(p));
             setModalPhotos(photosToShow);
             setModalOpen(true);
@@ -497,7 +499,7 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {modalPhotos.map(p => (
+            {modalPhotos.map((p) => (
               <button
                 key={p.id}
                 className="relative group rounded-md overflow-hidden border"

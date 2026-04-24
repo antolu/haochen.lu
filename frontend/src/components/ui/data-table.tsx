@@ -50,12 +50,12 @@ export function DataTable<T extends Record<string, unknown>>({
   const filteredData = React.useMemo(() => {
     if (!search) return data;
 
-    return data.filter(item =>
-      columns.some(column => {
+    return data.filter((item) =>
+      columns.some((column) => {
         if (!column.searchable) return false;
         const value = String(item[column.key] || "").toLowerCase();
         return value.includes(search.toLowerCase());
-      })
+      }),
     );
   }, [data, search, columns]);
 
@@ -75,7 +75,7 @@ export function DataTable<T extends Record<string, unknown>>({
   }, [filteredData, sortState]);
 
   const handleSort = (columnKey: string) => {
-    setSortState(prev => ({
+    setSortState((prev) => ({
       column: columnKey,
       direction:
         prev?.column === columnKey && prev.direction === "asc" ? "desc" : "asc",
@@ -91,7 +91,7 @@ export function DataTable<T extends Record<string, unknown>>({
           <Input
             placeholder={searchPlaceholder}
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={(e) => setSearch(e.target.value)}
             className="pl-10"
           />
         </div>
@@ -102,14 +102,14 @@ export function DataTable<T extends Record<string, unknown>>({
         <Table>
           <TableHeader>
             <TableRow>
-              {columns.map(column => (
+              {columns.map((column) => (
                 <TableHead
                   key={String(column.key)}
                   className={cn(
                     "font-medium",
                     column.sortable &&
                       "cursor-pointer hover:bg-muted/50 select-none",
-                    column.width && `w-${column.width}`
+                    column.width && `w-${column.width}`,
                   )}
                   onClick={() =>
                     column.sortable && handleSort(String(column.key))
@@ -125,7 +125,7 @@ export function DataTable<T extends Record<string, unknown>>({
                             sortState?.column === String(column.key) &&
                               sortState.direction === "asc"
                               ? "text-foreground"
-                              : "text-muted-foreground"
+                              : "text-muted-foreground",
                           )}
                         />
                         <ChevronDown
@@ -134,7 +134,7 @@ export function DataTable<T extends Record<string, unknown>>({
                             sortState?.column === String(column.key) &&
                               sortState.direction === "desc"
                               ? "text-foreground"
-                              : "text-muted-foreground"
+                              : "text-muted-foreground",
                           )}
                         />
                       </div>
@@ -159,11 +159,11 @@ export function DataTable<T extends Record<string, unknown>>({
                 <TableRow
                   key={index}
                   className={cn(
-                    onRowClick && "cursor-pointer hover:bg-muted/50"
+                    onRowClick && "cursor-pointer hover:bg-muted/50",
                   )}
                   onClick={() => onRowClick?.(item)}
                 >
-                  {columns.map(column => {
+                  {columns.map((column) => {
                     const value = item[column.key];
                     return (
                       <TableCell key={String(column.key)}>

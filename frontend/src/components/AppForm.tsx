@@ -89,7 +89,7 @@ const AppForm: React.FC<AppFormProps> = ({
       transition={{ duration: 0.2 }}
     >
       <form
-        onSubmit={e => {
+        onSubmit={(e) => {
           void handleSubmit(handleFormSubmit)(e);
         }}
         className="space-y-6"
@@ -176,7 +176,7 @@ const AppForm: React.FC<AppFormProps> = ({
               }`}
               placeholder="https://example.com/admin"
               {...register("admin_url", {
-                validate: value => {
+                validate: (value) => {
                   if (!value) {
                     return true;
                   }
@@ -371,7 +371,7 @@ const AppForm: React.FC<AppFormProps> = ({
                           type="button"
                           onClick={() => {
                             void navigator.clipboard.writeText(
-                              application.client_id ?? ""
+                              application.client_id ?? "",
                             );
                           }}
                           className="px-2 py-2 text-xs text-muted-foreground hover:text-foreground border border-border rounded-lg transition-colors"
@@ -396,7 +396,7 @@ const AppForm: React.FC<AppFormProps> = ({
                           type="button"
                           onClick={() => {
                             void navigator.clipboard.writeText(
-                              application.client_secret ?? ""
+                              application.client_secret ?? "",
                             );
                           }}
                           className="px-2 py-2 text-xs text-muted-foreground hover:text-foreground border border-border rounded-lg transition-colors"

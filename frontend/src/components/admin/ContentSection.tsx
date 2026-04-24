@@ -52,7 +52,7 @@ export const ContentSection: React.FC<ContentSectionProps> = ({
       <div
         className={cn(
           "overflow-hidden transition-all duration-200",
-          isExpanded ? "max-h-none" : "max-h-0"
+          isExpanded ? "max-h-none" : "max-h-0",
         )}
       >
         <div className="p-4 space-y-3">

@@ -64,7 +64,7 @@ vi.mock("react-dropzone", () => ({
 const createTestFile = (
   name: string = "test.jpg",
   size: number = 1024 * 1024,
-  type: string = "image/jpeg"
+  type: string = "image/jpeg",
 ): File => {
   return new File(["test content".repeat(size / 12)], name, { type });
 };
@@ -125,7 +125,7 @@ describe("PhotoUpload Component Tests", () => {
         }),
         getInputProps: () => ({ "data-testid": "file-input", type: "file" }),
         isDragActive: false,
-      })
+      }),
     );
   });
 
@@ -138,7 +138,7 @@ describe("PhotoUpload Component Tests", () => {
           onCancel={mockOnCancel}
           {...props}
         />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
   };
 
@@ -167,7 +167,7 @@ describe("PhotoUpload Component Tests", () => {
       expect(screen.getByLabelText(/description/i)).toHaveValue("");
       expect(screen.getByLabelText(/tags/i)).toHaveValue("");
       expect(
-        screen.getByLabelText(/mark as featured photo/i)
+        screen.getByLabelText(/mark as featured photo/i),
       ).not.toBeChecked();
     });
   });
@@ -192,7 +192,7 @@ describe("PhotoUpload Component Tests", () => {
       const largeFile = createTestFile(
         "large.jpg",
         60 * 1024 * 1024,
-        "image/jpeg"
+        "image/jpeg",
       ); // 60MB
 
       // Override the mock to simulate file rejection by react-dropzone
@@ -289,7 +289,7 @@ describe("PhotoUpload Component Tests", () => {
               tags: "",
               featured: false,
             },
-          })
+          }),
         );
         expect(mockOnComplete).toHaveBeenCalled();
         expect(mockUpload).not.toHaveBeenCalled();
@@ -322,7 +322,7 @@ describe("PhotoUpload Component Tests", () => {
               tags: "",
               featured: false,
             }),
-          })
+          }),
         );
       });
     });
@@ -354,7 +354,7 @@ describe("PhotoUpload Component Tests", () => {
               tags: "",
               featured: true,
             }),
-          })
+          }),
         );
       });
     });
@@ -385,7 +385,7 @@ describe("PhotoUpload Component Tests", () => {
               tags: "",
               featured: false,
             }),
-          })
+          }),
         );
       });
     });
@@ -507,7 +507,7 @@ describe("PhotoUpload Component Tests", () => {
           }),
           getInputProps: () => ({ "data-testid": "file-input" }),
           isDragActive: false,
-        })
+        }),
       );
 
       renderPhotoUpload();
@@ -524,7 +524,7 @@ describe("PhotoUpload Component Tests", () => {
       // Fill form with some data
       await user.type(
         screen.getByLabelText(/description/i),
-        "Batch upload test"
+        "Batch upload test",
       );
       await user.type(screen.getByLabelText(/title/i), "Batch Title");
 
@@ -541,7 +541,7 @@ describe("PhotoUpload Component Tests", () => {
               title: "Batch Title",
               description: "Batch upload test",
             }),
-          })
+          }),
         );
         expect(mockAddToQueue).toHaveBeenNthCalledWith(
           2,
@@ -551,7 +551,7 @@ describe("PhotoUpload Component Tests", () => {
               title: "Batch Title",
               description: "Batch upload test",
             }),
-          })
+          }),
         );
         expect(mockAddToQueue).toHaveBeenNthCalledWith(
           3,
@@ -561,7 +561,7 @@ describe("PhotoUpload Component Tests", () => {
               title: "Batch Title",
               description: "Batch upload test",
             }),
-          })
+          }),
         );
       });
     });
@@ -592,7 +592,7 @@ describe("PhotoUpload Component Tests", () => {
       // Should not be able to submit without files
       // With no files queued, there is no Upload button rendered
       expect(
-        screen.queryByRole("button", { name: /upload/i })
+        screen.queryByRole("button", { name: /upload/i }),
       ).not.toBeInTheDocument();
       expect(mockAddToQueue).not.toHaveBeenCalled();
     });
@@ -671,7 +671,7 @@ describe("PhotoUpload Component Tests", () => {
           }),
           getInputProps: () => ({ "data-testid": "file-input" }),
           isDragActive: false,
-        })
+        }),
       );
 
       renderPhotoUpload();
@@ -697,7 +697,7 @@ describe("PhotoUpload Component Tests", () => {
           }),
           getInputProps: () => ({ "data-testid": "file-input" }),
           isDragActive: false,
-        })
+        }),
       );
 
       renderPhotoUpload();
@@ -729,7 +729,7 @@ describe("PhotoUpload Component Tests", () => {
             metadata: expect.objectContaining({
               title: "Long Title",
             }),
-          })
+          }),
         );
       });
     });
@@ -761,7 +761,7 @@ describe("PhotoUpload Component Tests", () => {
           }),
           getInputProps: () => ({ "data-testid": "file-input" }),
           isDragActive: false,
-        })
+        }),
       );
 
       const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -780,8 +780,8 @@ describe("PhotoUpload Component Tests", () => {
 
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining(
-          "Only processing 2 of 3 files due to upload limit"
-        )
+          "Only processing 2 of 3 files due to upload limit",
+        ),
       );
 
       consoleSpy.mockRestore();

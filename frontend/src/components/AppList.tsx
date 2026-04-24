@@ -65,7 +65,7 @@ function OverflowMenu({
   return (
     <div ref={ref} className="relative">
       <button
-        onClick={() => setOpen(v => !v)}
+        onClick={() => setOpen((v) => !v)}
         className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
       >
         <MoreVertical className="h-4 w-4" />
@@ -334,15 +334,15 @@ const AppList: React.FC<AppListProps> = ({
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { delay: 150, tolerance: 5 },
-    })
+    }),
   );
 
   const handleDragEnd = (event: DragEndEvent) => {
     if (!reorderEnabled) return;
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    const oldIndex = localApps.findIndex(a => a.id === active.id);
-    const newIndex = localApps.findIndex(a => a.id === over.id);
+    const oldIndex = localApps.findIndex((a) => a.id === active.id);
+    const newIndex = localApps.findIndex((a) => a.id === over.id);
     const reordered = arrayMove(localApps, oldIndex, newIndex);
     setLocalApps(reordered);
     onReorder(reordered.map((a, i) => ({ id: a.id, order: i })));
@@ -359,10 +359,10 @@ const AppList: React.FC<AppListProps> = ({
 
   const filtered = searchTerm
     ? localApps.filter(
-        app =>
+        (app) =>
           app.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           app.url.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          app.description?.toLowerCase().includes(searchTerm.toLowerCase())
+          app.description?.toLowerCase().includes(searchTerm.toLowerCase()),
       )
     : localApps;
 
@@ -395,7 +395,7 @@ const AppList: React.FC<AppListProps> = ({
           type="text"
           placeholder="Search apps..."
           value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
+          onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full pl-9 pr-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
         />
         <svg
@@ -426,11 +426,11 @@ const AppList: React.FC<AppListProps> = ({
           onDragEnd={handleDragEnd}
         >
           <SortableContext
-            items={filtered.map(a => a.id)}
+            items={filtered.map((a) => a.id)}
             strategy={verticalListSortingStrategy}
           >
             <div className="space-y-3">
-              {filtered.map(app => (
+              {filtered.map((app) => (
                 <SortableAppCard
                   key={app.id}
                   application={app}

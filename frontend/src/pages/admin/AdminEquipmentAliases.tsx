@@ -82,7 +82,7 @@ const AdminEquipmentAliases: React.FC = () => {
   const [lensBrandFilter, setLensBrandFilter] = useState("");
   const [lensMountFilter, setLensMountFilter] = useState("");
   const [lensActiveFilter, setLensActiveFilter] = useState<boolean | undefined>(
-    undefined
+    undefined,
   );
   const [lensCurrentPage, setLensCurrentPage] = useState(1);
 
@@ -208,7 +208,7 @@ const AdminEquipmentAliases: React.FC = () => {
             <Input
               placeholder="Filter by brand..."
               value={cameraBrandFilter}
-              onChange={e => setCameraBrandFilter(e.target.value)}
+              onChange={(e) => setCameraBrandFilter(e.target.value)}
             />
             <Select
               value={
@@ -216,9 +216,9 @@ const AdminEquipmentAliases: React.FC = () => {
                   ? "all"
                   : cameraActiveFilter.toString()
               }
-              onValueChange={value =>
+              onValueChange={(value) =>
                 setCameraActiveFilter(
-                  value === "all" ? undefined : value === "true"
+                  value === "all" ? undefined : value === "true",
                 )
               }
             >
@@ -309,12 +309,12 @@ const AdminEquipmentAliases: React.FC = () => {
             <Input
               placeholder="Filter by brand..."
               value={lensBrandFilter}
-              onChange={e => setLensBrandFilter(e.target.value)}
+              onChange={(e) => setLensBrandFilter(e.target.value)}
             />
             <Input
               placeholder="Filter by mount..."
               value={lensMountFilter}
-              onChange={e => setLensMountFilter(e.target.value)}
+              onChange={(e) => setLensMountFilter(e.target.value)}
             />
             <Select
               value={
@@ -322,9 +322,9 @@ const AdminEquipmentAliases: React.FC = () => {
                   ? "all"
                   : lensActiveFilter.toString()
               }
-              onValueChange={value =>
+              onValueChange={(value) =>
                 setLensActiveFilter(
-                  value === "all" ? undefined : value === "true"
+                  value === "all" ? undefined : value === "true",
                 )
               }
             >
@@ -386,7 +386,7 @@ const AdminEquipmentAliases: React.FC = () => {
       {/* Tabs */}
       <Tabs
         value={activeTab}
-        onValueChange={value => setActiveTab(value as EquipmentType)}
+        onValueChange={(value) => setActiveTab(value as EquipmentType)}
       >
         <TabsList className="grid w-full max-w-md grid-cols-2">
           <TabsTrigger value="cameras" className="gap-2">
@@ -414,7 +414,7 @@ const AdminEquipmentAliases: React.FC = () => {
                 <Input
                   placeholder={currentConfig.filters.searchPlaceholder}
                   value={currentSearchQuery}
-                  onChange={e => setCurrentSearchQuery(e.target.value)}
+                  onChange={(e) => setCurrentSearchQuery(e.target.value)}
                   style={{ paddingLeft: "2.5rem" }}
                 />
                 <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
@@ -456,7 +456,7 @@ const AdminEquipmentAliases: React.FC = () => {
                         <Table>
                           <TableHeader>
                             <TableRow>
-                              {currentConfig.columns.map(column => (
+                              {currentConfig.columns.map((column) => (
                                 <TableHead key={column.key}>
                                   {column.title}
                                 </TableHead>
@@ -466,12 +466,12 @@ const AdminEquipmentAliases: React.FC = () => {
                           </TableHeader>
                           <TableBody>
                             <AnimatePresence>
-                              {aliases.map(alias => (
+                              {aliases.map((alias) => (
                                 <TableRow
                                   key={alias.id}
                                   className="group cursor-pointer hover:bg-muted/50"
                                 >
-                                  {currentConfig.columns.map(column => (
+                                  {currentConfig.columns.map((column) => (
                                     <TableCell key={column.key}>
                                       {column.render(alias)}
                                     </TableCell>
@@ -514,7 +514,7 @@ const AdminEquipmentAliases: React.FC = () => {
                                 size="sm"
                                 onClick={() =>
                                   setCurrentPage(
-                                    Math.min(totalPages, currentPage + 1)
+                                    Math.min(totalPages, currentPage + 1),
                                   )
                                 }
                                 disabled={currentPage === totalPages}

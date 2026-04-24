@@ -37,7 +37,7 @@ const ProjectDetailPage: React.FC = () => {
   const { data: project, isLoading, error } = useProject(slug ?? "");
   const { data: readme } = useProjectReadme(
     project?.id ?? "",
-    project?.use_readme ? project?.github_url : undefined
+    project?.use_readme ? project?.github_url : undefined,
   );
   const { data: projectImages = [] } = useProjectImages(project?.id ?? "");
 
@@ -157,7 +157,7 @@ const ProjectDetailPage: React.FC = () => {
                   <Carousel className="w-full">
                     <CarouselContent>
                       {(projectImages as unknown as ProjectImageLight[]).map(
-                        pi => {
+                        (pi) => {
                           const src =
                             pi.photo?.variants?.large?.url ??
                             pi.photo?.variants?.medium?.url ??
@@ -175,7 +175,7 @@ const ProjectDetailPage: React.FC = () => {
                               </div>
                             </CarouselItem>
                           );
-                        }
+                        },
                       )}
                     </CarouselContent>
                     <CarouselPrevious />
@@ -331,7 +331,7 @@ const ProjectDetailPage: React.FC = () => {
                         <dt className="text-gray-500">README Updated</dt>
                         <dd className="text-gray-900">
                           {formatDate(
-                            (readme as ProjectReadmeResponse).last_updated
+                            (readme as ProjectReadmeResponse).last_updated,
                           )}
                         </dd>
                       </div>

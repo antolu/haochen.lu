@@ -109,7 +109,7 @@ const SidebarContent = ({
           <ChevronLeft
             className={cn(
               "h-4 w-4 transition-transform",
-              sidebarCollapsed && "rotate-180"
+              sidebarCollapsed && "rotate-180",
             )}
           />
         </Button>
@@ -128,7 +128,7 @@ const SidebarContent = ({
     {/* Navigation */}
     <ScrollArea className="flex-1 px-3 py-6">
       <nav className="space-y-2">
-        {navigation.map(item => {
+        {navigation.map((item) => {
           const Icon = item.icon;
           const isActive =
             item.href === "/admin"
@@ -144,7 +144,7 @@ const SidebarContent = ({
                 "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all",
                 isActive
                   ? "bg-primary text-primary-foreground shadow-glow-sm"
-                  : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground",
               )}
             >
               <Icon className="h-5 w-5 flex-shrink-0" />
@@ -293,7 +293,7 @@ const AdminLayoutContent: React.FC = () => {
         <aside
           className={cn(
             "hidden md:flex flex-col h-screen sticky top-0 bg-card/95 backdrop-blur-md border-r border-border/50 z-10 transition-all duration-300",
-            sidebarCollapsed ? "w-20" : "w-72"
+            sidebarCollapsed ? "w-20" : "w-72",
           )}
         >
           <SidebarContent

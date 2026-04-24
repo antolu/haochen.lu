@@ -22,13 +22,13 @@ interface OptimizationTestResult {
 export const testPhotoOptimization = (
   currentPhotos: Photo[],
   newOrderPhotos: Photo[],
-  scenario: string
+  scenario: string,
 ): OptimizationTestResult => {
-  const currentIds = new Set(currentPhotos.map(p => p.id));
-  const newIds = new Set(newOrderPhotos.map(p => p.id));
+  const currentIds = new Set(currentPhotos.map((p) => p.id));
+  const newIds = new Set(newOrderPhotos.map((p) => p.id));
 
   // Find intersection
-  const intersectionIds = [...currentIds].filter(id => newIds.has(id));
+  const intersectionIds = [...currentIds].filter((id) => newIds.has(id));
   const photosReused = intersectionIds.length;
   const totalPhotos = newOrderPhotos.length;
   const reusePercentage =

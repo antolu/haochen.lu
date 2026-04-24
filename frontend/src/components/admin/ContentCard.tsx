@@ -32,7 +32,7 @@ export const ContentCard: React.FC<ContentCardProps> = ({
 }) => {
   const preview = getSmartPreview(
     item.content || "",
-    variant === "compact" ? 80 : 140
+    variant === "compact" ? 80 : 140,
   );
 
   if (variant === "compact") {
@@ -58,7 +58,7 @@ export const ContentCard: React.FC<ContentCardProps> = ({
               variant="ghost"
               size="icon"
               className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={e => {
+              onClick={(e) => {
                 e.stopPropagation();
                 onEdit(item);
               }}
@@ -94,7 +94,7 @@ export const ContentCard: React.FC<ContentCardProps> = ({
               variant="ghost"
               size="icon"
               className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={e => {
+              onClick={(e) => {
                 e.stopPropagation();
                 onEdit(item);
               }}

@@ -79,7 +79,7 @@ describe("MarkdownRenderer", () => {
       const content = "Test content";
 
       const { container } = renderWithProviders(
-        <MarkdownRenderer content={content} />
+        <MarkdownRenderer content={content} />,
       );
 
       const proseContainer = container.querySelector(".prose");
@@ -93,7 +93,7 @@ describe("MarkdownRenderer", () => {
       const content = "Test content";
 
       const { container } = renderWithProviders(
-        <MarkdownRenderer content={content} compact />
+        <MarkdownRenderer content={content} compact />,
       );
 
       const proseContainer = container.querySelector(".prose");
@@ -104,7 +104,7 @@ describe("MarkdownRenderer", () => {
       const content = "Test content";
 
       const { container } = renderWithProviders(
-        <MarkdownRenderer content={content} className="custom-class" />
+        <MarkdownRenderer content={content} className="custom-class" />,
       );
 
       expect(container.firstChild).toHaveClass("custom-class");
@@ -119,13 +119,13 @@ describe("MarkdownRenderer", () => {
     it("handles null/undefined content gracefully", () => {
       expect(() => {
         renderWithProviders(
-          <MarkdownRenderer content={null as unknown as string} />
+          <MarkdownRenderer content={null as unknown as string} />,
         );
       }).not.toThrow();
 
       expect(() => {
         renderWithProviders(
-          <MarkdownRenderer content={undefined as unknown as string} />
+          <MarkdownRenderer content={undefined as unknown as string} />,
         );
       }).not.toThrow();
     });
@@ -209,7 +209,7 @@ print("Second block")
               Copy
             </button>
           </div>
-        </div>
+        </div>,
       );
 
       const copyButton = screen.getByTestId("copy-button");
@@ -239,7 +239,7 @@ print("Second block")
           >
             Copy
           </button>
-        </div>
+        </div>,
       );
 
       const copyButton = screen.getByTestId("copy-button");
@@ -268,7 +268,7 @@ print("Second block")
           >
             Copy
           </button>
-        </div>
+        </div>,
       );
 
       const copyButton = screen.getByTestId("copy-button");
@@ -483,7 +483,7 @@ function hello() {
 
     it("handles rapid content updates", () => {
       const { rerender } = renderWithProviders(
-        <MarkdownRenderer content="Initial content" />
+        <MarkdownRenderer content="Initial content" />,
       );
 
       // Rapidly update content
@@ -527,7 +527,7 @@ This is a paragraph with a [link](https://example.com).
           <a href="https://example.com" data-testid="external-link">
             Link
           </a>
-        </div>
+        </div>,
       );
 
       // Test keyboard navigation with timeout handling
@@ -536,7 +536,7 @@ This is a paragraph with a [link](https://example.com).
           await user.tab();
           expect(screen.getByTestId("copy-button")).toHaveFocus();
         },
-        { timeout: 1000 }
+        { timeout: 1000 },
       );
 
       await waitFor(
@@ -544,7 +544,7 @@ This is a paragraph with a [link](https://example.com).
           await user.tab();
           expect(screen.getByTestId("external-link")).toHaveFocus();
         },
-        { timeout: 1000 }
+        { timeout: 1000 },
       );
     });
   });

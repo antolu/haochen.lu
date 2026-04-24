@@ -21,7 +21,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
 }) => {
   const [showMap, setShowMap] = useState(false);
   const [manualLocationName, setManualLocationName] = useState(
-    locationName ?? ""
+    locationName ?? "",
   );
   const [searchQuery, setSearchQuery] = useState("");
   type SearchResult = {
@@ -74,7 +74,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
       // Try to get location name from coordinates
       try {
         const response = await fetch(
-          `/api/locations/reverse?lat=${lat}&lng=${lng}`
+          `/api/locations/reverse?lat=${lat}&lng=${lng}`,
         );
         if (response.ok) {
           const data = (await response.json()) as { location_name?: string };
@@ -88,7 +88,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
         onLocationChange?.(lat, lng);
       }
     },
-    [onLocationChange]
+    [onLocationChange],
   );
 
   const searchLocations = useCallback(
@@ -102,7 +102,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
       setIsSearching(true);
       try {
         const response = await fetch(
-          `/api/locations/search?q=${encodeURIComponent(query)}&limit=5`
+          `/api/locations/search?q=${encodeURIComponent(query)}&limit=5`,
         );
         if (response.ok) {
           const data = (await response.json()) as SearchResult[];
@@ -117,7 +117,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
         setIsSearching(false);
       }
     },
-    [updateDropdownPosition]
+    [updateDropdownPosition],
   );
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -241,7 +241,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
             id="location-name-input"
             type="text"
             value={manualLocationName}
-            onChange={e => {
+            onChange={(e) => {
               setManualLocationName(e.target.value);
               if (latitude !== undefined && longitude !== undefined) {
                 onLocationChange?.(latitude, longitude, e.target.value);
@@ -271,7 +271,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
               type="number"
               step="any"
               value={latitude ?? ""}
-              onChange={e => {
+              onChange={(e) => {
                 const lat = parseFloat(e.target.value);
                 if (!isNaN(lat) && longitude !== undefined) {
                   void handleLocationSelect(lat, longitude);
@@ -295,7 +295,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
               type="number"
               step="any"
               value={longitude ?? ""}
-              onChange={e => {
+              onChange={(e) => {
                 const lng = parseFloat(e.target.value);
                 if (!isNaN(lng) && latitude !== undefined) {
                   void handleLocationSelect(latitude, lng);
@@ -369,18 +369,18 @@ const LocationInput: React.FC<LocationInputProps> = ({
             onClick={() => {
               if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
-                  position => {
+                  (position) => {
                     void handleLocationSelect(
                       position.coords.latitude,
-                      position.coords.longitude
+                      position.coords.longitude,
                     );
                   },
-                  error => {
+                  (error) => {
                     console.error("Error getting current location:", error);
                     alert(
-                      "Unable to get your current location. Please check your browser permissions."
+                      "Unable to get your current location. Please check your browser permissions.",
                     );
-                  }
+                  },
                 );
               } else {
                 alert("Geolocation is not supported by this browser.");
@@ -449,7 +449,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
               )}
             </div>
           </>,
-          document.body
+          document.body,
         )}
     </div>
   );

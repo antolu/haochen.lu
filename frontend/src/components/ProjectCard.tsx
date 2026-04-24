@@ -129,12 +129,12 @@ const ProjectCard: React.FC<ProjectCardProps> = memo(
             <div className="flex items-center gap-3">
               {project.github_url && (
                 <button
-                  onClick={e => {
+                  onClick={(e) => {
                     e.stopPropagation();
                     window.open(
                       project.github_url,
                       "_blank",
-                      "noopener,noreferrer"
+                      "noopener,noreferrer",
                     );
                   }}
                   className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 transition-colors cursor-pointer z-10 relative"
@@ -152,12 +152,12 @@ const ProjectCard: React.FC<ProjectCardProps> = memo(
 
               {project.demo_url && (
                 <button
-                  onClick={e => {
+                  onClick={(e) => {
                     e.stopPropagation();
                     window.open(
                       project.demo_url,
                       "_blank",
-                      "noopener,noreferrer"
+                      "noopener,noreferrer",
                     );
                   }}
                   className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 transition-colors cursor-pointer z-10 relative"
@@ -190,7 +190,7 @@ const ProjectCard: React.FC<ProjectCardProps> = memo(
         </div>
       </div>
     );
-  }
+  },
 );
 
 ProjectCard.displayName = "ProjectCard";

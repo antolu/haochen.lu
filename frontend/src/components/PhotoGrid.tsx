@@ -85,11 +85,11 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
         paddingBottom: `${aspectRatio}%`,
         position: "relative",
       }}
-      onMouseEnter={e => {
+      onMouseEnter={(e) => {
         // Ensure hovered element is always on top
         (e.currentTarget as HTMLElement).style.zIndex = "100";
       }}
-      onMouseLeave={e => {
+      onMouseLeave={(e) => {
         // Reset z-index when not hovered
         (e.currentTarget as HTMLElement).style.zIndex = isHighlighted
           ? "50"
@@ -206,7 +206,7 @@ const PhotoGrid = memo(
         className = "",
         highlightedPhotoId = null,
       },
-      ref
+      ref,
     ) => {
       const parentRef = useRef<HTMLDivElement>(null);
       const containerRef =
@@ -284,8 +284,8 @@ const PhotoGrid = memo(
           </div>
         </div>
       );
-    }
-  )
+    },
+  ),
 );
 
 PhotoGrid.displayName = "PhotoGrid";

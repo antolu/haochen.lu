@@ -26,30 +26,30 @@ const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
 }) => {
   const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([]);
   const [uploadedPhotos, setUploadedPhotos] = useState<Map<string, Photo>>(
-    new Map()
+    new Map(),
   );
   const uploadMutation = useUploadPhoto();
 
   const handleUpload = useCallback(
     async (file: UploadFile) => {
       // Update status to uploading
-      setUploadFiles(prev =>
-        prev.map(f => (f.id === file.id ? { ...f, status: "uploading" } : f))
+      setUploadFiles((prev) =>
+        prev.map((f) => (f.id === file.id ? { ...f, status: "uploading" } : f)),
       );
 
       // If a custom uploader is provided (e.g., project images), use it
       if (customUpload) {
         try {
           const uploaded = await customUpload(file.file);
-          setUploadFiles(prev =>
-            prev.map(f =>
+          setUploadFiles((prev) =>
+            prev.map((f) =>
               f.id === file.id
                 ? { ...f, status: "completed", progress: 100 }
-                : f
-            )
+                : f,
+            ),
           );
           setUploadedPhotos(
-            prev => new Map(prev.set(file.id, uploaded as Photo))
+            (prev) => new Map(prev.set(file.id, uploaded as Photo)),
           );
         } catch (error) {
           console.error("Upload failed:", error);
@@ -57,16 +57,16 @@ const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
           const detail = (axiosError.response?.data as { detail?: string })
             ?.detail;
           const errorMessage = detail ?? axiosError.message ?? "Upload failed";
-          setUploadFiles(prev =>
-            prev.map(f =>
+          setUploadFiles((prev) =>
+            prev.map((f) =>
               f.id === file.id
                 ? {
                     ...f,
                     status: "error",
                     error: errorMessage,
                   }
-                : f
-            )
+                : f,
+            ),
           );
         }
         return;
@@ -84,48 +84,50 @@ const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
           },
         },
         {
-          onSuccess: uploadedPhoto => {
-            setUploadFiles(prev =>
-              prev.map(f =>
+          onSuccess: (uploadedPhoto) => {
+            setUploadFiles((prev) =>
+              prev.map((f) =>
                 f.id === file.id
                   ? { ...f, status: "completed", progress: 100 }
-                  : f
-              )
+                  : f,
+              ),
             );
             setUploadedPhotos(
-              prev => new Map(prev.set(file.id, uploadedPhoto))
+              (prev) => new Map(prev.set(file.id, uploadedPhoto)),
             );
           },
-          onError: error => {
+          onError: (error) => {
             console.error("Upload failed:", error);
             const axiosError = error as AxiosError;
             const detail = (axiosError.response?.data as { detail?: string })
               ?.detail;
             const errorMessage =
               detail ?? axiosError.message ?? "Upload failed";
-            setUploadFiles(prev =>
-              prev.map(f =>
+            setUploadFiles((prev) =>
+              prev.map((f) =>
                 f.id === file.id
                   ? {
                       ...f,
                       status: "error",
                       error: errorMessage,
                     }
-                  : f
-              )
+                  : f,
+              ),
             );
           },
-        }
+        },
       );
     },
-    [uploadMutation, setUploadFiles, setUploadedPhotos, customUpload]
+    [uploadMutation, setUploadFiles, setUploadedPhotos, customUpload],
   );
 
   // Auto-upload files when they're added (if enabled)
   useEffect(() => {
     if (!autoUpload) return;
 
-    const pendingFiles = uploadFiles.filter(file => file.status === "pending");
+    const pendingFiles = uploadFiles.filter(
+      (file) => file.status === "pending",
+    );
     if (pendingFiles.length === 0) return;
 
     // Upload the first pending file - deferred to avoid synchronous setState in effect
@@ -136,7 +138,7 @@ const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
 
   // Call onComplete when upload is finished
   useEffect(() => {
-    const completedFiles = uploadFiles.filter(f => f.status === "completed");
+    const completedFiles = uploadFiles.filter((f) => f.status === "completed");
     if (completedFiles.length > 0 && onComplete) {
       const fileId = completedFiles[0].id;
       const photo = uploadedPhotos.get(fileId);
@@ -152,12 +154,12 @@ const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
   };
 
   const handleRemove = (fileId: string) => {
-    const file = uploadFiles.find(f => f.id === fileId);
+    const file = uploadFiles.find((f) => f.id === fileId);
     if (file?.preview) {
       URL.revokeObjectURL(file.preview);
     }
-    setUploadFiles(prev => prev.filter(f => f.id !== fileId));
-    setUploadedPhotos(prev => {
+    setUploadFiles((prev) => prev.filter((f) => f.id !== fileId));
+    setUploadedPhotos((prev) => {
       const newMap = new Map(prev);
       newMap.delete(fileId);
       return newMap;
@@ -165,12 +167,12 @@ const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
   };
 
   const handleRetry = (fileId: string) => {
-    const file = uploadFiles.find(f => f.id === fileId);
+    const file = uploadFiles.find((f) => f.id === fileId);
     if (file) {
-      setUploadFiles(prev =>
-        prev.map(f =>
-          f.id === fileId ? { ...f, status: "pending", error: undefined } : f
-        )
+      setUploadFiles((prev) =>
+        prev.map((f) =>
+          f.id === fileId ? { ...f, status: "pending", error: undefined } : f,
+        ),
       );
       void handleUpload(file);
     }
@@ -178,7 +180,7 @@ const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
 
   const handleCancel = () => {
     // Clean up any preview URLs
-    uploadFiles.forEach(file => {
+    uploadFiles.forEach((file) => {
       if (file.preview) {
         URL.revokeObjectURL(file.preview);
       }
@@ -190,8 +192,9 @@ const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
 
   const hasFiles = uploadFiles.length > 0;
   const allCompleted =
-    uploadFiles.length > 0 && uploadFiles.every(f => f.status === "completed");
-  const hasErrors = uploadFiles.some(f => f.status === "error");
+    uploadFiles.length > 0 &&
+    uploadFiles.every((f) => f.status === "completed");
+  const hasErrors = uploadFiles.some((f) => f.status === "error");
 
   return (
     <div className="space-y-4">
@@ -207,7 +210,7 @@ const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
 
       {/* File Previews */}
       <AnimatePresence>
-        {uploadFiles.map(file => (
+        {uploadFiles.map((file) => (
           <PhotoPreview
             key={file.id}
             uploadFile={file}
@@ -229,9 +232,9 @@ const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
             <Button
               onClick={() => {
                 const pendingFiles = uploadFiles.filter(
-                  f => f.status === "pending"
+                  (f) => f.status === "pending",
                 );
-                pendingFiles.forEach(f => void handleUpload(f));
+                pendingFiles.forEach((f) => void handleUpload(f));
               }}
               disabled={uploadMutation.isPending}
             >

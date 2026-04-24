@@ -174,7 +174,7 @@ const ProfilePictureManager: React.FC = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {profilePictures.map(profilePicture => {
+              {profilePictures.map((profilePicture) => {
                 const isActive = profilePicture.id === activeProfilePicture?.id;
 
                 return (
@@ -218,7 +218,7 @@ const ProfilePictureManager: React.FC = () => {
                       </p>
                       <p className="text-xs text-muted-foreground/70 mt-1">
                         {new Date(
-                          profilePicture.created_at
+                          profilePicture.created_at,
                         ).toLocaleDateString()}
                       </p>
 

@@ -31,7 +31,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({
       (import.meta as unknown as { env: { VITE_MAP_STYLE_URL?: string } }).env
         .VITE_MAP_STYLE_URL ??
       "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
-    []
+    [],
   );
 
   useEffect(() => {

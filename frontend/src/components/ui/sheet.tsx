@@ -3,13 +3,13 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { cn } from "../../lib/utils";
 
 export const Sheet = (
-  props: React.ComponentProps<typeof DialogPrimitive.Root>
+  props: React.ComponentProps<typeof DialogPrimitive.Root>,
 ) => <DialogPrimitive.Root {...props} />;
 export const SheetTrigger = (
-  props: React.ComponentProps<typeof DialogPrimitive.Trigger>
+  props: React.ComponentProps<typeof DialogPrimitive.Trigger>,
 ) => <DialogPrimitive.Trigger {...props} />;
 export const SheetClose = (
-  props: React.ComponentProps<typeof DialogPrimitive.Close>
+  props: React.ComponentProps<typeof DialogPrimitive.Close>,
 ) => <DialogPrimitive.Close {...props} />;
 
 export const SheetContent = React.forwardRef<
@@ -21,7 +21,7 @@ export const SheetContent = React.forwardRef<
 >(
   (
     { className, side = "right", widthClassName = "w-full max-w-md", ...props },
-    ref
+    ref,
   ) => (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50" />
@@ -34,11 +34,11 @@ export const SheetContent = React.forwardRef<
             cn("top-0 left-0 h-full border-l-0 border-r", widthClassName),
           side === "top" && "top-0 left-0 w-full border-l-0 border-b",
           side === "bottom" && "bottom-0 left-0 w-full border-l-0 border-t",
-          className
+          className,
         )}
         {...props}
       />
     </DialogPrimitive.Portal>
-  )
+  ),
 );
 SheetContent.displayName = "SheetContent";

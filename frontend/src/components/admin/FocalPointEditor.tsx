@@ -36,7 +36,7 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
 
   // Preview focal point (shows during mouse movement, before click)
   const [previewFocalPoint, setPreviewFocalPoint] = useState<FocalPoint | null>(
-    null
+    null,
   );
   const [isHovering, setIsHovering] = useState(false);
 
@@ -74,30 +74,30 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
   const setCurrentFocalPoint = useCallback(
     (point: FocalPoint) => {
       if (activeDevice === "mobile") {
-        setFocalPoints(prev => ({
+        setFocalPoints((prev) => ({
           ...prev,
           responsive: { ...prev.responsive, mobile: point },
         }));
       } else if (activeDevice === "tablet") {
-        setFocalPoints(prev => ({
+        setFocalPoints((prev) => ({
           ...prev,
           responsive: { ...prev.responsive, tablet: point },
         }));
       } else if (activeDevice === "desktop") {
-        setFocalPoints(prev => ({
+        setFocalPoints((prev) => ({
           ...prev,
           responsive: { ...prev.responsive, desktop: point },
         }));
       }
       // Also update default to match desktop
       if (activeDevice === "desktop") {
-        setFocalPoints(prev => ({
+        setFocalPoints((prev) => ({
           ...prev,
           default: point,
         }));
       }
     },
-    [activeDevice]
+    [activeDevice],
   );
 
   // Utility function to calculate focal point from mouse/touch position
@@ -115,7 +115,7 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
 
       return { x: clampedX, y: clampedY };
     },
-    []
+    [],
   );
 
   const handleImageClick = useCallback(
@@ -126,7 +126,7 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
         setPreviewFocalPoint(null); // Clear preview on commit
       }
     },
-    [calculateFocalPoint, setCurrentFocalPoint]
+    [calculateFocalPoint, setCurrentFocalPoint],
   );
 
   const handleImageMouseMove = useCallback(
@@ -144,7 +144,7 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
         setPreviewFocalPoint(focalPoint);
       }
     },
-    [calculateFocalPoint, isHovering]
+    [calculateFocalPoint, isHovering],
   );
 
   const handleImageMouseEnter = useCallback(() => {
@@ -189,7 +189,7 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
   const displayedFocalPoint = previewFocalPoint ?? currentFocalPoint; // Show preview if available, otherwise show current
   const optimalImage = selectOptimalImage(
     heroImage.photo,
-    ImageUseCase.LIGHTBOX
+    ImageUseCase.LIGHTBOX,
   );
 
   const deviceStyles = {
@@ -230,7 +230,7 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
 
           {/* Device Tabs */}
           <div className="flex space-x-1 mb-6 bg-muted p-1 rounded-lg">
-            {(["mobile", "tablet", "desktop"] as DeviceType[]).map(device => (
+            {(["mobile", "tablet", "desktop"] as DeviceType[]).map((device) => (
               <button
                 key={device}
                 onClick={() => setActiveDevice(device)}
@@ -375,7 +375,7 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
                       max="100"
                       step="0.1"
                       value={currentFocalPoint.x}
-                      onChange={e => {
+                      onChange={(e) => {
                         setCurrentFocalPoint({
                           ...currentFocalPoint,
                           x: parseFloat(e.target.value),
@@ -395,7 +395,7 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
                       max="100"
                       step="0.1"
                       value={currentFocalPoint.y}
-                      onChange={e => {
+                      onChange={(e) => {
                         setCurrentFocalPoint({
                           ...currentFocalPoint,
                           y: parseFloat(e.target.value),
@@ -422,7 +422,7 @@ const FocalPointEditor: React.FC<FocalPointEditorProps> = ({
                     { label: "Bottom Left", x: 25, y: 75 },
                     { label: "Bottom Center", x: 50, y: 75 },
                     { label: "Bottom Right", x: 75, y: 75 },
-                  ].map(preset => (
+                  ].map((preset) => (
                     <button
                       key={preset.label}
                       onClick={() => {

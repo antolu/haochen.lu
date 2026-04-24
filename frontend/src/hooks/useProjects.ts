@@ -215,7 +215,7 @@ export function useProjectReadme(projectId: string, repoUrl?: string) {
       // First check if we have cached README
       try {
         const response = await apiClient.get<ProjectReadmeResponse>(
-          `/projects/${projectId}/readme`
+          `/projects/${projectId}/readme`,
         );
         return response.data;
       } catch (error) {
@@ -225,7 +225,7 @@ export function useProjectReadme(projectId: string, repoUrl?: string) {
             `/projects/${projectId}/fetch-readme`,
             {
               repo_url: repoUrl,
-            }
+            },
           );
           return fetchResponse.data;
         }
@@ -249,7 +249,7 @@ export function useProjectStats() {
     queryKey: projectKeys.stats(),
     queryFn: async () => {
       const response = await apiClient.get<ProjectStatsSummary>(
-        "/projects/stats/summary"
+        "/projects/stats/summary",
       );
       return response.data;
     },
@@ -278,7 +278,7 @@ export function useCreateProject() {
       const response = await apiClient.post("/projects", projectData);
       return response.data as Project;
     },
-    onSuccess: newProject => {
+    onSuccess: (newProject) => {
       // Invalidate and refetch project lists
       void queryClient.invalidateQueries({ queryKey: projectKeys.lists() });
       void queryClient.invalidateQueries({ queryKey: projectKeys.featured() });
@@ -302,15 +302,15 @@ export function useUpdateProject() {
       const response = await apiClient.put(`/projects/${id}`, data);
       return response.data as Project;
     },
-    onSuccess: updatedProject => {
+    onSuccess: (updatedProject) => {
       // Update the project in all relevant caches
       queryClient.setQueryData(
         projectKeys.detail(updatedProject.id),
-        updatedProject
+        updatedProject,
       );
       queryClient.setQueryData(
         projectKeys.detail(updatedProject.slug),
-        updatedProject
+        updatedProject,
       );
 
       // Invalidate lists to reflect changes
@@ -359,7 +359,7 @@ export function useReorderProjects() {
       return await (
         projectsApi.reorder as (
           items: { id: string; order: number }[],
-          normalize: boolean
+          normalize: boolean,
         ) => Promise<{ message: string }>
       )(items, normalize);
     },
@@ -461,7 +461,7 @@ export function usePreviewReadme() {
         "/projects/preview-readme",
         {
           repo_url: repoUrl,
-        }
+        },
       );
       return response.data;
     },
@@ -490,7 +490,7 @@ export function useRefreshReadme() {
         `/projects/${projectId}/refresh-readme`,
         {
           repo_url: repoUrl,
-        }
+        },
       );
       return response.data;
     },
@@ -516,7 +516,7 @@ export function parseTechnologies(technologies?: string): string[] {
     // Fallback to comma-separated parsing
     return technologies
       .split(",")
-      .map(tech => tech.trim())
+      .map((tech) => tech.trim())
       .filter(Boolean);
   }
 }

@@ -11,7 +11,7 @@ const MainLayout: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const location = useLocation();
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   // Enhanced scroll detection with granular positioning
   useEffect(() => {
@@ -35,7 +35,7 @@ const MainLayout: React.FC = () => {
   });
 
   const visibleApps = (subAppsData?.applications ?? []).filter(
-    app => !app.logged_in_only || isAuthenticated
+    (app) => !app.logged_in_only || isAuthenticated,
   );
 
   // Fetch footer content
@@ -76,7 +76,7 @@ const MainLayout: React.FC = () => {
     window.open(
       app.url,
       app.is_external ? "_blank" : "_self",
-      "noopener,noreferrer"
+      "noopener,noreferrer",
     );
   };
 
@@ -107,7 +107,7 @@ const MainLayout: React.FC = () => {
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex space-x-8">
-              {navigation.map(item => (
+              {navigation.map((item) => (
                 <Link
                   key={item.name}
                   to={item.href}
@@ -131,7 +131,7 @@ const MainLayout: React.FC = () => {
                   </button>
                   <div className="absolute left-0 mt-2 w-56 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                     <div className="py-1">
-                      {visibleApps.map(app => {
+                      {visibleApps.map((app) => {
                         return (
                           <button
                             key={app.id}
@@ -233,7 +233,7 @@ const MainLayout: React.FC = () => {
               className="md:hidden border-t border-border bg-white"
             >
               <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                {navigation.map(item => (
+                {navigation.map((item) => (
                   <Link
                     key={item.name}
                     to={item.href}
@@ -255,7 +255,7 @@ const MainLayout: React.FC = () => {
                       <div className="px-3 py-2 text-sm font-medium text-muted-foreground uppercase tracking-wider">
                         Applications
                       </div>
-                      {visibleApps.map(app => {
+                      {visibleApps.map((app) => {
                         return (
                           <button
                             key={app.id}
@@ -310,7 +310,7 @@ const MainLayout: React.FC = () => {
             <div>
               <h4 className="text-lg font-semibold mb-4">Navigation</h4>
               <ul className="space-y-2">
-                {navigation.map(item => (
+                {navigation.map((item) => (
                   <li key={item.name}>
                     <Link
                       to={item.href}

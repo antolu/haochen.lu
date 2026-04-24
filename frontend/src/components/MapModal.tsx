@@ -27,7 +27,7 @@ const MapModal: React.FC<MapModalProps> = ({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-[2100] flex items-center justify-center p-4 bg-black bg-opacity-50"
-          onClick={e => {
+          onClick={(e) => {
             if (e.target === e.currentTarget) {
               onClose();
             }
@@ -38,7 +38,7 @@ const MapModal: React.FC<MapModalProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden"
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
             <div className="flex justify-between items-center p-4 border-b border-gray-200">

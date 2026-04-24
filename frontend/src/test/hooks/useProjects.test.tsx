@@ -117,7 +117,7 @@ describe("useProjects Hook", () => {
       const filters2: ProjectFilters = { status: "active" };
 
       expect(projectKeys.list(filters1)).not.toEqual(
-        projectKeys.list(filters2)
+        projectKeys.list(filters2),
       );
     });
   });
@@ -150,7 +150,7 @@ describe("useProjects Hook", () => {
       });
 
       expect(vi.mocked(mockApiClient.get)).toHaveBeenCalledWith(
-        "/projects?featured_only=true&status=active&search=test+project"
+        "/projects?featured_only=true&status=active&search=test+project",
       );
     });
 
@@ -216,7 +216,7 @@ describe("useProjects Hook", () => {
       });
 
       expect(vi.mocked(mockApiClient.get)).toHaveBeenCalledWith(
-        "/projects?page=1&per_page=12"
+        "/projects?page=1&per_page=12",
       );
       expect(result.current.data?.pages).toHaveLength(1);
     });
@@ -266,7 +266,7 @@ describe("useProjects Hook", () => {
       });
 
       expect(vi.mocked(mockApiClient.get)).toHaveBeenCalledWith(
-        "/projects?page=1&per_page=12&featured_only=true"
+        "/projects?page=1&per_page=12&featured_only=true",
       );
     });
   });
@@ -288,7 +288,7 @@ describe("useProjects Hook", () => {
 
       expect(result.current.data).toEqual(mockProject);
       expect(vi.mocked(mockApiClient.get)).toHaveBeenCalledWith(
-        "/projects/test-id"
+        "/projects/test-id",
       );
     });
 
@@ -301,7 +301,7 @@ describe("useProjects Hook", () => {
       });
 
       expect(vi.mocked(mockApiClient.get)).toHaveBeenCalledWith(
-        "/projects/test-slug"
+        "/projects/test-slug",
       );
     });
 
@@ -352,7 +352,7 @@ describe("useProjects Hook", () => {
 
       expect(result.current.data).toEqual(featuredProjects);
       expect(vi.mocked(mockApiClient.get)).toHaveBeenCalledWith(
-        "/projects/featured"
+        "/projects/featured",
       );
     });
 
@@ -386,7 +386,7 @@ describe("useProjects Hook", () => {
       const wrapper = createWrapper();
       const { result } = renderHook(
         () => useProjectReadme("project-1", "https://github.com/test/repo"),
-        { wrapper }
+        { wrapper },
       );
 
       await waitFor(() => {
@@ -395,7 +395,7 @@ describe("useProjects Hook", () => {
 
       expect(result.current.data).toEqual(mockReadmeContent);
       expect(vi.mocked(mockApiClient.get)).toHaveBeenCalledWith(
-        "/projects/project-1/readme"
+        "/projects/project-1/readme",
       );
     });
 
@@ -410,7 +410,7 @@ describe("useProjects Hook", () => {
       const wrapper = createWrapper();
       const { result } = renderHook(
         () => useProjectReadme("project-1", "https://github.com/test/repo"),
-        { wrapper }
+        { wrapper },
       );
 
       await waitFor(() => {
@@ -421,7 +421,7 @@ describe("useProjects Hook", () => {
         "/projects/project-1/fetch-readme",
         {
           repo_url: "https://github.com/test/repo",
-        }
+        },
       );
     });
 
@@ -430,11 +430,11 @@ describe("useProjects Hook", () => {
 
       const { result: result1 } = renderHook(
         () => useProjectReadme("", "https://github.com/test/repo"),
-        { wrapper }
+        { wrapper },
       );
       const { result: result2 } = renderHook(
         () => useProjectReadme("project-1", ""),
-        { wrapper }
+        { wrapper },
       );
 
       expect(vi.mocked(mockApiClient.get)).not.toHaveBeenCalled();
@@ -466,7 +466,7 @@ describe("useProjects Hook", () => {
 
       expect(result.current.data).toEqual(mockStats);
       expect(vi.mocked(mockApiClient.get)).toHaveBeenCalledWith(
-        "/projects/stats/summary"
+        "/projects/stats/summary",
       );
     });
   });
@@ -495,20 +495,20 @@ describe("useProjects Hook", () => {
       expect(createdProject).toEqual(mockProject);
       expect(vi.mocked(mockApiClient.post)).toHaveBeenCalledWith(
         "/projects",
-        projectData
+        projectData,
       );
     });
 
     it("handles create errors", async () => {
       vi.mocked(mockApiClient.post).mockRejectedValue(
-        new Error("Validation error")
+        new Error("Validation error"),
       );
 
       const wrapper = createWrapper();
       const { result } = renderHook(() => useCreateProject(), { wrapper });
 
       await expect(result.current.mutateAsync(projectData)).rejects.toThrow(
-        "Validation error"
+        "Validation error",
       );
     });
   });
@@ -537,7 +537,7 @@ describe("useProjects Hook", () => {
       expect(updatedProject).toEqual(mockProject);
       expect(vi.mocked(mockApiClient.put)).toHaveBeenCalledWith(
         "/projects/project-1",
-        updateData
+        updateData,
       );
     });
 
@@ -548,7 +548,7 @@ describe("useProjects Hook", () => {
       const { result } = renderHook(() => useUpdateProject(), { wrapper });
 
       await expect(
-        result.current.mutateAsync({ id: "nonexistent", data: updateData })
+        result.current.mutateAsync({ id: "nonexistent", data: updateData }),
       ).rejects.toThrow("Not found");
     });
   });
@@ -570,7 +570,7 @@ describe("useProjects Hook", () => {
       // Hook returns void on success
       expect(response).toBeUndefined();
       expect(vi.mocked(mockApiClient.delete)).toHaveBeenCalledWith(
-        "/projects/project-1"
+        "/projects/project-1",
       );
     });
 
@@ -581,7 +581,7 @@ describe("useProjects Hook", () => {
       const { result } = renderHook(() => useDeleteProject(), { wrapper });
 
       await expect(result.current.mutateAsync("nonexistent")).rejects.toThrow(
-        "Not found"
+        "Not found",
       );
     });
   });
@@ -609,20 +609,20 @@ describe("useProjects Hook", () => {
         "/projects/preview-readme",
         {
           repo_url: "https://github.com/test/repo",
-        }
+        },
       );
     });
 
     it("handles preview errors", async () => {
       vi.mocked(mockApiClient.post).mockRejectedValue(
-        new Error("Repository not accessible")
+        new Error("Repository not accessible"),
       );
 
       const wrapper = createWrapper();
       const { result } = renderHook(() => usePreviewReadme(), { wrapper });
 
       await expect(
-        result.current.mutateAsync("https://github.com/private/repo")
+        result.current.mutateAsync("https://github.com/private/repo"),
       ).rejects.toThrow("Repository not accessible");
     });
   });
@@ -651,7 +651,7 @@ describe("useProjects Hook", () => {
         "/projects/project-1/refresh-readme",
         {
           repo_url: "https://github.com/test/repo",
-        }
+        },
       );
     });
   });
@@ -680,7 +680,7 @@ describe("useProjects Hook", () => {
 
       it("trims whitespace from comma-separated values", () => {
         const result = parseTechnologies(
-          "  React  ,  TypeScript  ,  Node.js  "
+          "  React  ,  TypeScript  ,  Node.js  ",
         );
         expect(result).toEqual(["React", "TypeScript", "Node.js"]);
       });
@@ -805,7 +805,7 @@ describe("useProjects Hook", () => {
   describe("Error Handling", () => {
     it("handles network errors in queries", async () => {
       vi.mocked(mockApiClient.get).mockRejectedValue(
-        new Error("Network error")
+        new Error("Network error"),
       );
 
       const wrapper = createWrapper();
@@ -833,7 +833,7 @@ describe("useProjects Hook", () => {
         result.current.mutateAsync({
           title: "",
           description: "",
-        } as ProjectCreate)
+        } as ProjectCreate),
       ).rejects.toEqual({
         response: {
           status: 422,

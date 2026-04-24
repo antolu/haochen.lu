@@ -38,7 +38,7 @@ describe("ProjectCard", () => {
 
       expect(screen.getByText("Test Project")).toBeInTheDocument();
       expect(
-        screen.getByText("A comprehensive test project")
+        screen.getByText("A comprehensive test project"),
       ).toBeInTheDocument();
       expect(screen.getByText("Active")).toBeInTheDocument();
       expect(screen.getByText("⭐ Featured")).toBeInTheDocument();
@@ -51,14 +51,14 @@ describe("ProjectCard", () => {
       const projectLink = screen.getByRole("link");
       expect(projectLink).toHaveAttribute(
         "href",
-        "/projects/test-project-slug"
+        "/projects/test-project-slug",
       );
     });
 
     it("applies custom className", () => {
       const project = createMockProject();
       const { container } = renderWithProviders(
-        <ProjectCard project={project} className="custom-class" />
+        <ProjectCard project={project} className="custom-class" />,
       );
 
       expect(container.firstChild).toHaveClass("custom-class");
@@ -188,7 +188,7 @@ describe("ProjectCard", () => {
       renderWithProviders(<ProjectCard project={project} />);
 
       expect(
-        screen.queryByRole("link", { name: /view live demo/i })
+        screen.queryByRole("link", { name: /view live demo/i }),
       ).not.toBeInTheDocument();
     });
 
@@ -197,7 +197,7 @@ describe("ProjectCard", () => {
       renderWithProviders(<ProjectCard project={project} />);
 
       expect(
-        screen.queryByRole("link", { name: /view source/i })
+        screen.queryByRole("link", { name: /view source/i }),
       ).not.toBeInTheDocument();
     });
   });
@@ -213,7 +213,7 @@ describe("ProjectCard", () => {
       const image = screen.getByRole("img", { name: "Test Project" });
       expect(image).toHaveAttribute(
         "src",
-        "https://example.com/project-image.jpg"
+        "https://example.com/project-image.jpg",
       );
       expect(image).toHaveAttribute("alt", "Test Project");
       expect(image).toHaveAttribute("loading", "lazy");
