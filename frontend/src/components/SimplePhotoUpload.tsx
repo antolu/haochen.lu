@@ -130,9 +130,10 @@ const SimplePhotoUpload: React.FC<SimplePhotoUploadProps> = ({
     );
     if (pendingFiles.length === 0) return;
 
-    // Upload the first pending file
+    // Upload the first pending file - deferred to avoid synchronous setState in effect
     const file = pendingFiles[0];
-    void handleUpload(file);
+    const id = setTimeout(() => void handleUpload(file), 0);
+    return () => clearTimeout(id);
   }, [uploadFiles, autoUpload, handleUpload]);
 
   // Call onComplete when upload is finished

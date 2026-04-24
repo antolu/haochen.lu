@@ -107,7 +107,7 @@ export default class LgSidebar {
     // Get reference to the created button for event handling
     this.toggleBtnEl = this.core.$toolbar
       .get()
-      .querySelector("#lg-sidebar-toggle") as HTMLButtonElement;
+      .querySelector("#lg-sidebar-toggle");
   }
 
   private addEventListeners(): void {

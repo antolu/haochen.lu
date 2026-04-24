@@ -97,7 +97,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
         ),
       );
     };
-    window.addEventListener("upload:progress", onProgress as EventListener);
+    window.addEventListener("upload:progress", onProgress);
 
     uploadMutation.mutate(
       {
@@ -118,10 +118,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
                 : f,
             ),
           );
-          window.removeEventListener(
-            "upload:progress",
-            onProgress as EventListener,
-          );
+          window.removeEventListener("upload:progress", onProgress);
         },
         onError: (error) => {
           const axiosError = error as AxiosError;
@@ -168,10 +165,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
                 : f,
             ),
           );
-          window.removeEventListener(
-            "upload:progress",
-            onProgress as EventListener,
-          );
+          window.removeEventListener("upload:progress", onProgress);
         },
       },
     );

@@ -33,7 +33,7 @@ const PhotographyPage: React.FC = () => {
   const orderBy = useMemo<OrderByOption>(() => {
     const param = searchParams.get("order_by");
     if (param === "created_at" || param === "date_taken" || param === "order") {
-      return param as OrderByOption;
+      return param;
     }
     // Default to manual order when no param
     return "order";

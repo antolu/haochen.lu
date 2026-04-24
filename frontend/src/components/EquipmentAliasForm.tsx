@@ -1,15 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import {
   useUpdateCameraAlias,
   type CameraAlias,
-  type CameraAliasUpdate,
 } from "../hooks/useCameraAliases";
-import {
-  useUpdateLensAlias,
-  type LensAlias,
-  type LensAliasUpdate,
-} from "../hooks/useLensAliases";
+import { useUpdateLensAlias, type LensAlias } from "../hooks/useLensAliases";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
@@ -152,8 +147,13 @@ const EquipmentAliasForm: React.FC<EquipmentAliasFormProps> = ({
 
   const currentFields = FIELD_CONFIGS[type];
 
-  // Initialize form data when alias changes
-  useEffect(() => {
+  // Initialize form data when alias changes (adjusting state during render)
+  const [prevAlias, setPrevAlias] = useState(alias);
+  const [prevCurrentFields, setPrevCurrentFields] = useState(currentFields);
+
+  if (prevAlias !== alias || prevCurrentFields !== currentFields) {
+    setPrevAlias(alias);
+    setPrevCurrentFields(currentFields);
     if (alias) {
       const initialData: Record<string, string | boolean> = { is_active: true };
 
@@ -165,7 +165,7 @@ const EquipmentAliasForm: React.FC<EquipmentAliasFormProps> = ({
       initialData.is_active = alias.is_active ?? true;
       setFormData(initialData);
     }
-  }, [alias, currentFields]);
+  }
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -207,12 +207,12 @@ const EquipmentAliasForm: React.FC<EquipmentAliasFormProps> = ({
       if (type === "cameras") {
         await cameraUpdateMutation.mutateAsync({
           id: alias.id,
-          data: submitData as CameraAliasUpdate,
+          data: submitData,
         });
       } else {
         await lensUpdateMutation.mutateAsync({
           id: alias.id,
-          data: submitData as LensAliasUpdate,
+          data: submitData,
         });
       }
 

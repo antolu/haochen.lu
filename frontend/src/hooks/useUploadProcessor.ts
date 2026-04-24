@@ -66,10 +66,7 @@ export const useUploadProcessor = () => {
         }
       };
 
-      window.addEventListener(
-        "upload:progress",
-        handleProgress as EventListener,
-      );
+      window.addEventListener("upload:progress", handleProgress);
 
       // Start upload
       uploadMutation.mutate(
@@ -93,10 +90,7 @@ export const useUploadProcessor = () => {
             });
             activeUploadsRef.current.delete(upload.id);
             abortControllersRef.current.delete(upload.id);
-            window.removeEventListener(
-              "upload:progress",
-              handleProgress as EventListener,
-            );
+            window.removeEventListener("upload:progress", handleProgress);
           },
           onError: (error) => {
             const axiosError = error as AxiosError;
@@ -142,10 +136,7 @@ export const useUploadProcessor = () => {
             });
             activeUploadsRef.current.delete(upload.id);
             abortControllersRef.current.delete(upload.id);
-            window.removeEventListener(
-              "upload:progress",
-              handleProgress as EventListener,
-            );
+            window.removeEventListener("upload:progress", handleProgress);
           },
         },
       );

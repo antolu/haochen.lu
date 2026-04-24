@@ -296,7 +296,7 @@ export const useUploadPhoto = () => {
               page: 1,
               per_page: 0,
               pages: 1,
-            } as PhotoListResponse;
+            };
 
           const optimisticPhoto: Partial<Photo> = {
             id: `temp-${Date.now()}`,
@@ -376,7 +376,7 @@ export const useUpdatePhoto = () => {
       queryClient.setQueryData<PhotoListResponse>(
         photoKeys.list("admin-order"),
         (old) => {
-          if (!old) return old as unknown as PhotoListResponse;
+          if (!old) return old;
           return {
             ...old,
             photos: old.photos.map((photo: Photo) =>
@@ -390,12 +390,12 @@ export const useUpdatePhoto = () => {
 
       // Optimistically update the detail
       queryClient.setQueryData<Photo>(photoKeys.detail(id), (old) => {
-        if (!old) return old as unknown as Photo;
+        if (!old) return old;
         return {
           ...old,
           ...data,
           updated_at: new Date().toISOString(),
-        } as Photo;
+        };
       });
 
       return { previousListData, previousDetailData };
@@ -455,7 +455,7 @@ export const useDeletePhoto = () => {
       queryClient.setQueryData<PhotoListResponse>(
         photoKeys.list("admin-order"),
         (old) => {
-          if (!old) return old as unknown as PhotoListResponse;
+          if (!old) return old;
           return {
             ...old,
             photos: old.photos.filter((photo: Photo) => photo.id !== id),
@@ -510,7 +510,7 @@ export const useTogglePhotoFeatured = () => {
       queryClient.setQueryData<PhotoListResponse>(
         photoKeys.list("admin-order"),
         (old) => {
-          if (!old) return old as unknown as PhotoListResponse;
+          if (!old) return old;
           return {
             ...old,
             photos: old.photos.map((photo: Photo) =>
@@ -572,7 +572,7 @@ export const useReorderPhotos = () => {
       queryClient.setQueryData<PhotoListResponse>(
         photoKeys.list("admin-order"),
         (old) => {
-          if (!old) return old as unknown as PhotoListResponse;
+          if (!old) return old;
           const orderMap = new Map(items.map((item) => [item.id, item.order]));
           const updated = old.photos.map((photo) =>
             orderMap.has(photo.id)
