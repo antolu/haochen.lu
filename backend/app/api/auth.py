@@ -216,7 +216,7 @@ async def _consume_authorization_code(code: str) -> dict[str, str]:
 async def _fetch_oidc_tokens(code: str) -> dict[str, typing.Any]:
     async with httpx.AsyncClient(timeout=10.0) as client:
         response = await client.post(
-            f"{settings.oidc_endpoint}/api/oidc/token",
+            f"{settings.oidc_base_url}/protocol/openid-connect/token",
             data={
                 "grant_type": "authorization_code",
                 "client_id": settings.oidc_client_id,
@@ -245,9 +245,8 @@ async def _fetch_oidc_tokens(code: str) -> dict[str, typing.Any]:
 
 async def _fetch_oidc_profile(access_token: str) -> dict[str, object]:
     async with httpx.AsyncClient(timeout=10.0) as client:
-        # Authelia OIDC userinfo endpoint is typically /api/oidc/userinfo
         response = await client.get(
-            f"{settings.oidc_endpoint}/api/oidc/userinfo",
+            f"{settings.oidc_base_url}/protocol/openid-connect/userinfo",
             headers={"Authorization": f"Bearer {access_token}"},
         )
 
@@ -277,7 +276,7 @@ async def _sync_user(session: AsyncSession, oidc_profile: dict[str, object]) -> 
         or oidc_id
     )
     groups = oidc_profile.get("groups") or []
-    is_admin = isinstance(groups, list) and "admins" in groups
+    is_admin = isinstance(groups, list) and "/admins" in groups
 
     if not oidc_id or not email:
         raise HTTPException(
@@ -352,10 +351,10 @@ async def login_redirect(
         "client_id": settings.oidc_client_id,
         "response_type": "code",
         "redirect_uri": settings.oidc_redirect_uri,
-        "scope": "openid profile email groups",
+        "scope": "openid profile email",
         "state": state_token,
     })
-    url = f"{settings.oidc_public_endpoint}/api/oidc/authorization?{query}"
+    url = f"{settings.oidc_public_base_url}/protocol/openid-connect/auth?{query}"
 
     # Return JSON for the frontend/tests, or redirect for direct browser access
     if (
@@ -462,7 +461,7 @@ async def refresh_session(
 
     async with httpx.AsyncClient(timeout=10.0) as client:
         token_response = await client.post(
-            f"{settings.oidc_endpoint}/api/oidc/token",
+            f"{settings.oidc_base_url}/protocol/openid-connect/token",
             data={
                 "grant_type": "refresh_token",
                 "refresh_token": old_refresh_token,
@@ -528,13 +527,13 @@ async def logout(
                 access_payload["jti"], remaining_ttl
             )
 
-    # Revoke refresh token at Authelia (best-effort)
+    # Revoke refresh token at Keycloak (best-effort)
     refresh_token = request.cookies.get(settings.refresh_cookie_name)
     if refresh_token:
         try:
             async with httpx.AsyncClient(timeout=5.0) as client:
                 await client.post(
-                    f"{settings.oidc_endpoint}/api/oidc/revocation",
+                    f"{settings.oidc_base_url}/protocol/openid-connect/revoke",
                     data={
                         "token": refresh_token,
                         "client_id": settings.oidc_client_id,
@@ -542,7 +541,7 @@ async def logout(
                     },
                 )
         except Exception:
-            logger.debug("Authelia revocation request failed (ignored)")
+            logger.debug("Keycloak revocation request failed (ignored)")
 
     _clear_refresh_cookie(response)
     return {"message": "Logged out"}

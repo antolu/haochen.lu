@@ -20,9 +20,7 @@ class OidcValidator:
         self._cache_ttl: int = settings.oidc_jwks_cache_ttl
 
     async def _refresh_jwks(self) -> None:
-        discovery_url = (
-            f"{settings.oidc_endpoint}/api/oidc/.well-known/openid-configuration"
-        )
+        discovery_url = f"{settings.oidc_base_url}/.well-known/openid-configuration"
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 discovery_resp = await client.get(discovery_url)
@@ -55,7 +53,7 @@ class OidcValidator:
             return {
                 "sub": oidc_id,
                 "jti": f"jti-{oidc_id}",
-                "iss": settings.oidc_issuer,
+                "iss": settings.oidc_issuer_url,
             }
 
         now = time.monotonic()
@@ -71,7 +69,7 @@ class OidcValidator:
                     token,
                     key,
                     algorithms=["RS256"],
-                    issuer=settings.oidc_issuer,
+                    issuer=settings.oidc_issuer_url,
                     options={"require": ["exp", "iss", "sub"]},
                 )
             except jwt.ExpiredSignatureError:

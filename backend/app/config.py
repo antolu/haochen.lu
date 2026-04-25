@@ -23,7 +23,16 @@ class Settings(BaseSettings):
     )
 
     # Redis
-    redis_url: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+    redis_host: str = os.getenv("REDIS_HOST", "localhost")
+    redis_port: int = int(os.getenv("REDIS_PORT", "6379"))
+    redis_password: str | None = os.getenv("REDIS_PASSWORD") or None
+    redis_db: int = int(os.getenv("REDIS_DB", "0"))
+
+    @property
+    def redis_url(self) -> str:
+        if self.redis_password:
+            return f"redis://:{self.redis_password}@{self.redis_host}:{self.redis_port}/{self.redis_db}"
+        return f"redis://{self.redis_host}:{self.redis_port}/{self.redis_db}"
 
     # Security - REQUIRED
     secret_key: str = os.getenv("SECRET_KEY") or ""
@@ -126,15 +135,14 @@ class Settings(BaseSettings):
     # User agent for external API calls
     user_agent: str = os.getenv("USER_AGENT", "photography-portfolio/1.0")
 
-    # OIDC setup (Authelia)
+    # OIDC provider (Keycloak)
     oidc_endpoint: str = os.getenv("OIDC_ENDPOINT", "http://localhost:9091")
     oidc_public_endpoint: str = os.getenv(
         "OIDC_PUBLIC_ENDPOINT", "http://auth.localhost"
     )
-    # Authelia's issuer is its public URL; override if it differs from oidc_public_endpoint
-    oidc_issuer: str = os.getenv(
-        "OIDC_ISSUER", os.getenv("OIDC_PUBLIC_ENDPOINT", "http://auth.localhost")
-    )
+    oidc_realm: str = os.getenv("OIDC_REALM", "arcadia")
+    # Keycloak issuer is {public_endpoint}/realms/{realm}; override if needed
+    oidc_issuer: str = os.getenv("OIDC_ISSUER", "")
     oidc_client_id: str = os.getenv("OIDC_CLIENT_ID", "")
     oidc_client_secret: str = os.getenv("OIDC_CLIENT_SECRET", "")
     oidc_redirect_uri: str = os.getenv(
@@ -142,6 +150,18 @@ class Settings(BaseSettings):
         "http://localhost:8000/api/auth/callback",
     )
     oidc_jwks_cache_ttl: int = int(os.getenv("OIDC_JWKS_CACHE_TTL", "3600"))
+
+    @property
+    def oidc_base_url(self) -> str:
+        return f"{self.oidc_endpoint}/realms/{self.oidc_realm}"
+
+    @property
+    def oidc_public_base_url(self) -> str:
+        return f"{self.oidc_public_endpoint}/realms/{self.oidc_realm}"
+
+    @property
+    def oidc_issuer_url(self) -> str:
+        return self.oidc_issuer or self.oidc_public_base_url
 
     # External API timeouts (in seconds)
     repository_request_timeout: int = int(os.getenv("REPOSITORY_TIMEOUT", "10"))

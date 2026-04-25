@@ -1,57 +1,56 @@
 # Authentication
 
-Two-layer system: Authelia handles user identity; haochen.lu acts as an OAuth2 broker for downstream apps.
+Two-layer system: Keycloak handles user identity; haochen.lu acts as an OAuth2 broker for downstream apps.
 
 ---
 
-## User session layer (Authelia OIDC → RS256 passthrough)
+## User session layer (Keycloak OIDC → RS256 passthrough)
 
-Users authenticate directly with Authelia. After the OIDC callback, Authelia's own tokens are used for the browser session — no internal JWTs are minted for users.
+Users authenticate directly with Keycloak. After the OIDC callback, Keycloak's own tokens are used for the browser session — no internal JWTs are minted for users.
 
 ### Login flow
 
 ```
 Browser → GET /api/auth/login
-        → backend redirects to Authelia /api/oidc/authorization
-        → user authenticates with Authelia
-        → Authelia redirects to /api/auth/callback?code=...&state=...
-        → backend exchanges code for Authelia access + refresh tokens
+        → backend redirects to Keycloak /realms/arcadia/protocol/openid-connect/auth
+        → user authenticates with Keycloak
+        → Keycloak redirects to /api/auth/callback?code=...&state=...
+        → backend exchanges code for Keycloak access + refresh tokens
         → backend syncs user to DB (creates/updates based on OIDC sub claim)
-        → Authelia refresh token stored in httpOnly cookie
-        → browser uses Authelia access token as Bearer for all API requests
+        → Keycloak refresh token stored in httpOnly cookie
+        → browser uses Keycloak access token as Bearer for all API requests
 ```
 
 ### Token validation
 
 Every protected endpoint validates the Bearer token via JWKS:
 
-1. `OidcValidator` fetches Authelia's JWKS from `{OIDC_ENDPOINT}/api/oidc/.well-known/openid-configuration` → `jwks_uri`
+1. `OidcValidator` fetches Keycloak's JWKS from `{OIDC_ENDPOINT}/realms/{OIDC_REALM}/.well-known/openid-configuration` → `jwks_uri`
 2. Keys are cached in memory for `OIDC_JWKS_CACHE_TTL` seconds (default 3600)
 3. Token signature is verified with RS256 against the cached public keys
-4. `iss`, `exp`, `sub` claims are validated; issuer must match `OIDC_ISSUER`
-5. `sub` claim is the Authelia user ID (`oidc_id`), used to look up the local user record
+4. `iss`, `exp`, `sub` claims are validated; issuer must match `{OIDC_PUBLIC_ENDPOINT}/realms/{OIDC_REALM}`
+5. `sub` claim is the Keycloak user ID (`oidc_id`), used to look up the local user record
 
 ### Refresh flow
 
-`POST /api/auth/refresh` proxies to Authelia's token endpoint with `grant_type=refresh_token`. The new access and refresh tokens are returned to the frontend; the new refresh token replaces the old cookie.
+`POST /api/auth/refresh` proxies to Keycloak's token endpoint with `grant_type=refresh_token`. The new access and refresh tokens are returned to the frontend; the new refresh token replaces the old cookie.
 
 ### Logout
 
 `POST /api/auth/logout`:
 - Blocklists the current access token's `jti` in Redis (valid until natural expiry)
-- Best-effort revocation call to Authelia's `/api/oidc/revocation`
+- Best-effort revocation call to Keycloak's `/realms/{realm}/protocol/openid-connect/revoke`
 - Clears the refresh cookie
 
-### Key material
+### Admin group
 
-- Authelia signs tokens with RS256 (private key in `/authelia/config/secrets/oidc_issuer_key.pem`)
-- Backend only needs Authelia's public JWKS — no shared secret for user session validation
+Users in the Keycloak group `/admins` are granted `is_admin=true` in the local DB. Group membership is read from the `groups` claim in the OIDC token (full path format, e.g. `/admins`). This requires the groups mapper to be configured on the Keycloak client — see [Keycloak setup](#keycloak-setup) below.
 
 ---
 
 ## App OAuth broker layer (internal HS256)
 
-haochen.lu acts as an OAuth2 authorization server for downstream apps. Downstream apps never talk to Authelia — they only interact with haochen.lu.
+haochen.lu acts as an OAuth2 authorization server for downstream apps. Downstream apps never talk to Keycloak — they only interact with haochen.lu.
 
 ### App registration
 
@@ -63,8 +62,6 @@ Apps are registered via the admin UI at `/admin/applications`. Each app has:
 
 ### Authorization code flow for downstream apps
 
-Step by step:
-
 **1. Redirect the user to haochen.lu to authenticate**
 
 ```
@@ -75,7 +72,7 @@ GET /api/auth/login
   &state=<random-nonce>
 ```
 
-The backend validates `client_id` and `redirect_uri` against the app registry, then redirects the user through Authelia if they're not already logged in.
+The backend validates `client_id` and `redirect_uri` against the app registry, then redirects the user through Keycloak if they're not already logged in.
 
 **2. Receive the authorization code**
 
@@ -134,11 +131,11 @@ Authorization: Bearer <access-token>
 
 Response is the same `UserRead` shape as above. Returns 401 if the token is invalid, expired, or revoked.
 
-This endpoint uses `decode_token` (HS256) — not OIDC JWKS validation — so it only accepts tokens issued by `/api/auth/oauth/token`, not Authelia session tokens.
+This endpoint uses `decode_token` (HS256) — not OIDC JWKS validation — so it only accepts tokens issued by `/api/auth/oauth/token`, not Keycloak session tokens.
 
 ### Jump links
 
-`GET /api/auth/jump/{slug}?target=app|admin` — for users already logged into haochen.lu. Generates an auth code and returns the full redirect URL to the app's callback, skipping the Authelia round-trip. Useful for "open in app" links from the haochen.lu admin UI.
+`GET /api/auth/jump/{slug}?target=app|admin` — for users already logged into haochen.lu. Generates an auth code and returns the full redirect URL to the app's callback, skipping the Keycloak round-trip. Useful for "open in app" links from the haochen.lu admin UI.
 
 ### Key material
 
@@ -147,18 +144,66 @@ This endpoint uses `decode_token` (HS256) — not OIDC JWKS validation — so it
 
 ---
 
+## Keycloak setup
+
+Keycloak configuration is managed via Terraform in the `arcadia-terraform` repo (`../arcadia-terraform/keycloak/`). Apply once after spinning up the Keycloak container.
+
+### Prerequisites
+
+- Keycloak running and accessible (port 9091 in docker-compose)
+- Bootstrap admin credentials set via `KEYCLOAK_ADMIN_USER` / `KEYCLOAK_ADMIN_PASSWORD`
+
+### Apply Terraform
+
+```bash
+cd terraform/keycloak
+
+terraform init
+
+terraform apply \
+  -var="keycloak_url=http://localhost:9091" \
+  -var="keycloak_admin_password=<your-admin-password>" \
+  -var='oidc_redirect_uris=["https://example.com/api/auth/callback"]'
+```
+
+After apply, retrieve the client secret:
+
+```bash
+terraform output -raw client_secret
+```
+
+Set this as `OIDC_CLIENT_SECRET` in your `.env`.
+
+### What Terraform creates
+
+- Realm `arcadia`
+- Group `/admins`
+- OIDC client `haochen-lu` (confidential, authorization_code flow)
+- Groups protocol mapper — injects `groups` claim with full paths (e.g. `/admins`) into tokens
+
+### Adding users
+
+Users are created in the Keycloak admin UI (`http://localhost:9091`) under the `arcadia` realm. To make a user an admin, assign them to the `admins` group.
+
+---
+
 ## Environment variables
 
 | Variable | Purpose |
 |---|---|
-| `OIDC_ENDPOINT` | Internal Authelia URL (e.g. `http://authelia:9091`) |
-| `OIDC_PUBLIC_ENDPOINT` | Public-facing Authelia URL (e.g. `https://auth.example.com`) |
-| `OIDC_ISSUER` | Expected `iss` claim in tokens — defaults to `OIDC_PUBLIC_ENDPOINT` |
-| `OIDC_CLIENT_ID` | haochen.lu's client ID registered in Authelia |
-| `OIDC_CLIENT_SECRET` | haochen.lu's client secret registered in Authelia |
-| `OIDC_REDIRECT_URI` | Callback URL registered in Authelia |
+| `OIDC_ENDPOINT` | Internal Keycloak URL (e.g. `http://keycloak:8080`) |
+| `OIDC_PUBLIC_ENDPOINT` | Public-facing Keycloak URL (e.g. `https://auth.example.com`) |
+| `OIDC_REALM` | Keycloak realm name (default: `arcadia`) |
+| `OIDC_ISSUER` | Expected `iss` claim — defaults to `{OIDC_PUBLIC_ENDPOINT}/realms/{OIDC_REALM}` |
+| `OIDC_CLIENT_ID` | haochen.lu's client ID registered in Keycloak |
+| `OIDC_CLIENT_SECRET` | haochen.lu's client secret (from `terraform output -raw client_secret`) |
+| `OIDC_REDIRECT_URI` | Callback URL registered in Keycloak |
 | `OIDC_JWKS_CACHE_TTL` | Seconds to cache JWKS keys (default 3600) |
 | `SECRET_KEY` | Signing key for app OAuth tokens (HS256) |
+| `KEYCLOAK_ADMIN_USER` | Keycloak bootstrap admin username |
+| `KEYCLOAK_ADMIN_PASSWORD` | Keycloak bootstrap admin password |
+| `KEYCLOAK_DB_PASSWORD` | Password for Keycloak's dedicated PostgreSQL database |
+| `KEYCLOAK_PUBLIC_URL` | Public URL passed to Keycloak as `KC_HOSTNAME` |
 | `COOKIE_SECURE` | Set `true` in production |
 | `COOKIE_DOMAIN` | Cookie domain if needed |
 
