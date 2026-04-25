@@ -22,7 +22,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         period: int = 3600,  # Time period in seconds (1 hour)
         file_calls: int = 20,  # Calls for file endpoints
         file_period: int = 60,  # Period for file endpoints (1 minute)
-        auth_calls: int = 10,  # Calls for auth endpoints
+        auth_calls: int = 60,  # Calls for auth endpoints
         auth_period: int = 60,  # Period for auth endpoints (1 minute)
     ):
         super().__init__(app)
