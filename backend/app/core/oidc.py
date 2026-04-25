@@ -31,6 +31,11 @@ class OidcValidator:
                 if not jwks_uri:
                     logger.error("OIDC discovery missing jwks_uri")
                     return
+                # Rewrite the public hostname to the internal endpoint so the
+                # backend can reach Keycloak over the container network.
+                jwks_uri = jwks_uri.replace(
+                    settings.oidc_public_base_url, settings.oidc_base_url
+                )
                 jwks_resp = await client.get(jwks_uri)
                 if jwks_resp.status_code != 200:
                     logger.error("JWKS fetch failed: %s", jwks_resp.text)
