@@ -39,7 +39,9 @@ docker:
   backend_port: 8001
   redis_db: 1
   environment:
-    - "REDIS_URL=redis://redis:6379/1"
+    - "REDIS_HOST=redis"
+    - "REDIS_PORT=6379"
+    - "REDIS_DB=1"
     - "DATABASE_URL=postgresql+asyncpg://postgres:\${POSTGRES_PASSWORD}@db:5432/portfolio"
     - "SECRET_KEY=\${SECRET_KEY}"
     - "SESSION_SECRET_KEY=\${SESSION_SECRET_KEY}"

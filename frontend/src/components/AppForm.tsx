@@ -349,8 +349,8 @@ const AppForm: React.FC<AppFormProps> = ({
               OIDC Integration
             </h3>
             <p className="text-sm text-muted-foreground mb-4">
-              These credentials are used to register this app with Authelia.
-              Client ID and secret are auto-generated on creation.
+              These credentials are used by haochen.lu to issue OAuth tokens to
+              this app. Client ID and secret are auto-generated on creation.
             </p>
             <div className="space-y-4">
               {isEditing && application?.client_id && (
@@ -439,8 +439,7 @@ const AppForm: React.FC<AppFormProps> = ({
                   {...register("redirect_uris")}
                 />
                 <p className="mt-1 text-xs text-muted-foreground">
-                  One URI per line. Used by Authelia to validate OAuth
-                  callbacks.
+                  One URI per line. Used to validate OAuth callback URLs.
                 </p>
               </div>
             </div>

@@ -130,7 +130,7 @@ const AppContent: React.FC = () => {
           />
 
           {/* Auth routes */}
-          {/* Redirect /login to /admin which now handles the Authelia jump */}
+          {/* Redirect /login to /admin which handles the Keycloak jump */}
           <Route path="/login" element={<Navigate to="/admin" replace />} />
 
           {/* Admin routes */}
