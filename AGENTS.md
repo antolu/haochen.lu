@@ -251,6 +251,13 @@ Test configuration in `backend/pyproject.toml` with coverage requirements (40% m
 - Virtualized photo grids for large collections
 - Database indexes on location and timestamp fields
 
+## Infrastructure & Deployment
+
+This repo is deployed on TrueNAS via a separate Terraform repository. When adding new configuration or deployment parameters (new env vars, new services, new volumes), always:
+
+1. Add the parameter to the dev environment first (`docker-compose.dev.yml` and `.env.example`)
+2. Prompt the user to update their Terraform configuration accordingly
+
 ## Common Development Issues
 
 ### Tailwind CSS Classes Not Applied
@@ -315,3 +322,17 @@ If getting "File is too large" errors for files under 50MB:
 - JWT tokens stored in browser localStorage
 - Clear localStorage if auth issues persist
 - normally there is no need to restart if we are doing superficial changes without new files
+
+## Infrastructure (Terraform)
+
+Terraform configuration lives in a **separate repo**: `../arcadia-terraform` (i.e. `/Users/antonlu/code/arcadia-terraform`).
+
+**IMPORTANT**: Whenever a task involves changes that affect infrastructure settings — such as:
+- OIDC client configuration (redirect URIs, scopes, grant types)
+- Keycloak realm, group, or role definitions
+- New services added to docker-compose that need external configuration
+- Any change to `OIDC_*` environment variables that reflects a Keycloak-side setting
+
+— you MUST ask the user: *"This change has an infrastructure side. Should I update the Terraform config in `../arcadia-terraform`?"* before proceeding. Do not silently skip the Terraform update.
+
+If the user says yes, make the changes in `../arcadia-terraform/keycloak/` (or the appropriate subdirectory). If they say no, note what would need to be applied manually.

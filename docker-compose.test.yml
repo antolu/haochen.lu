@@ -39,7 +39,9 @@ services:
       ENVIRONMENT: test
       TESTING: "true"
       DATABASE_URL: postgresql+asyncpg://testuser:testpassword@db:5432/testdb
-      REDIS_URL: redis://redis:6379/0
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_DB: "0"
       SECRET_KEY: test_secret_key_for_integration_min_32_chars
       SESSION_SECRET_KEY: test_session_secret_for_integration_min_32_chars
       ADMIN_PASSWORD: testpassword123
@@ -85,7 +87,9 @@ services:
     environment:
       ENVIRONMENT: test
       DATABASE_URL: postgresql+asyncpg://testuser:testpassword@db:5432/testdb
-      REDIS_URL: redis://redis:6379/0
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_DB: "0"
       SECRET_KEY: test_secret_key_for_integration_min_32_chars
       SESSION_SECRET_KEY: test_session_secret_for_integration_min_32_chars
       ADMIN_PASSWORD: testpassword123

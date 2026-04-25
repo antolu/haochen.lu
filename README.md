@@ -72,12 +72,12 @@ POSTGRES_DB=portfolio
 POSTGRES_PASSWORD=portfolio_password
 CORS_ORIGINS=http://localhost,http://auth.localhost
 
-# Authelia/OIDC SSO (for local development via subdomain proxy)
-# Authelia manages the SSO session and OIDC flow.
-# OIDC_ENDPOINT=http://authelia:9091
-# OIDC_PUBLIC_ENDPOINT=http://auth.localhost
-# OIDC_CLIENT_ID=your_oidc_client_id
-# OIDC_CLIENT_SECRET=your_oidc_client_secret
+# Keycloak OIDC (auto-started with ./dev.sh start, admin UI at http://localhost:9091)
+OIDC_ENDPOINT=http://keycloak:8080
+OIDC_PUBLIC_ENDPOINT=http://localhost:9091
+OIDC_REALM=arcadia
+# OIDC_CLIENT_ID=haochen-lu
+# OIDC_CLIENT_SECRET=  # from: terraform output -raw client_secret
 # OIDC_REDIRECT_URI=http://localhost/api/auth/callback
 ```
 
@@ -99,6 +99,7 @@ The dev environment runs with live reload on both backend (uvicorn) and frontend
 | http://localhost/api/docs | Interactive API docs (Swagger) |
 | http://localhost/api/redoc | API docs (ReDoc) |
 | http://localhost:8000 | Backend direct access (debugging) |
+| http://localhost:9091 | Keycloak admin UI |
 
 Default admin credentials: `admin` / the `ADMIN_PASSWORD` you set.
 
@@ -129,7 +130,7 @@ Full interactive documentation available at `/api/docs` when running.
 
 - The browser is redirected to `/login` on `haochen.lu` with `client_id`,
   `redirect_uri`, `response_type=code`, and `state`.
-- After Authelia login, `haochen.lu` returns the browser to the sub-app callback
+- After Keycloak login, `haochen.lu` returns the browser to the sub-app callback
   with a short-lived auth code.
 - The sub-app backend exchanges that code at `/api/auth/oauth/token` using its
   own `client_secret`.
