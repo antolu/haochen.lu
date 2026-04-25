@@ -72,13 +72,14 @@ POSTGRES_DB=portfolio
 POSTGRES_PASSWORD=portfolio_password
 CORS_ORIGINS=http://localhost,http://auth.localhost
 
-# Keycloak OIDC (auto-started with ./dev.sh start, admin UI at http://localhost:9091)
+# Keycloak OIDC — dev realm is bootstrapped automatically on first start
+# (see keycloak/arcadia-realm.json and docs/AUTH.md)
 OIDC_ENDPOINT=http://keycloak:8080
 OIDC_PUBLIC_ENDPOINT=http://localhost:9091
 OIDC_REALM=arcadia
-# OIDC_CLIENT_ID=haochen-lu
-# OIDC_CLIENT_SECRET=  # from: terraform output -raw client_secret
-# OIDC_REDIRECT_URI=http://localhost/api/auth/callback
+OIDC_CLIENT_ID=haochen-lu
+OIDC_CLIENT_SECRET=dev-client-secret
+OIDC_REDIRECT_URI=http://localhost/api/auth/callback
 ```
 
 Start everything:
@@ -101,7 +102,8 @@ The dev environment runs with live reload on both backend (uvicorn) and frontend
 | http://localhost:8000 | Backend direct access (debugging) |
 | http://localhost:9091 | Keycloak admin UI |
 
-Default admin credentials: `admin` / the `ADMIN_PASSWORD` you set.
+Default app login: `admin` / `adminadmin` (pre-loaded in the dev Keycloak realm, member of `admins` group).
+Keycloak admin UI (`http://localhost:9091`): `admin` / `admin` (bootstrap credentials).
 
 ## API
 

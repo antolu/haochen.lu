@@ -25,11 +25,12 @@ Browser → GET /api/auth/login
 
 Every protected endpoint validates the Bearer token via JWKS:
 
-1. `OidcValidator` fetches Keycloak's JWKS from `{OIDC_ENDPOINT}/realms/{OIDC_REALM}/.well-known/openid-configuration` → `jwks_uri`
-2. Keys are cached in memory for `OIDC_JWKS_CACHE_TTL` seconds (default 3600)
-3. Token signature is verified with RS256 against the cached public keys
-4. `iss`, `exp`, `sub` claims are validated; issuer must match `{OIDC_PUBLIC_ENDPOINT}/realms/{OIDC_REALM}`
-5. `sub` claim is the Keycloak user ID (`oidc_id`), used to look up the local user record
+1. `OidcValidator` fetches the OIDC discovery doc from `{OIDC_ENDPOINT}/realms/{OIDC_REALM}/.well-known/openid-configuration` (internal URL)
+2. The `jwks_uri` returned by discovery uses the public hostname — it is rewritten to the internal `OIDC_ENDPOINT` before fetching, so validation works inside the container network
+3. Keys are cached in memory for `OIDC_JWKS_CACHE_TTL` seconds (default 3600)
+4. Token signature is verified with RS256 against the cached public keys
+5. `iss`, `exp`, `sub` claims are validated; issuer must match `{OIDC_PUBLIC_ENDPOINT}/realms/{OIDC_REALM}`
+6. `sub` claim is the Keycloak user ID (`oidc_id`), used to look up the local user record
 
 ### Refresh flow
 
@@ -146,44 +147,53 @@ This endpoint uses `decode_token` (HS256) — not OIDC JWKS validation — so it
 
 ## Keycloak setup
 
-Keycloak configuration is managed via Terraform in the `arcadia-terraform` repo (`../arcadia-terraform/keycloak/`). Apply once after spinning up the Keycloak container.
+### Development
 
-### Prerequisites
+The dev stack (`docker-compose.dev.yml`) bootstraps Keycloak automatically. On first start, `--import-realm` imports `keycloak/arcadia-realm.json`, which creates:
 
-- Keycloak running and accessible (port 9091 in docker-compose)
-- Bootstrap admin credentials set via `KEYCLOAK_ADMIN_USER` / `KEYCLOAK_ADMIN_PASSWORD`
+- Realm `arcadia` (SSL disabled for HTTP dev)
+- Group `/admins`
+- OIDC client `haochen-lu` (secret: `dev-client-secret`)
+- Groups protocol mapper on the client
+- User `admin` / `adminadmin` in the `/admins` group
 
-### Apply Terraform
+Required `.env` entries for dev:
 
-```bash
-cd terraform/keycloak
-
-terraform init
-
-terraform apply \
-  -var="keycloak_url=http://localhost:9091" \
-  -var="keycloak_admin_password=<your-admin-password>" \
-  -var='oidc_redirect_uris=["https://example.com/api/auth/callback"]'
+```env
+OIDC_ENDPOINT=http://keycloak:8080
+OIDC_PUBLIC_ENDPOINT=http://localhost:9091
+OIDC_REALM=arcadia
+OIDC_CLIENT_ID=haochen-lu
+OIDC_CLIENT_SECRET=dev-client-secret
+OIDC_REDIRECT_URI=http://localhost/api/auth/callback
 ```
 
-After apply, retrieve the client secret:
+Keycloak admin UI: `http://localhost:9091` — bootstrap credentials `admin` / `admin` (configurable via `KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD`).
+
+To reset the realm to a clean state:
 
 ```bash
-terraform output -raw client_secret
+docker compose -f docker-compose.dev.yml down -v
+./dev.sh start
 ```
 
-Set this as `OIDC_CLIENT_SECRET` in your `.env`.
+### Production
 
-### What Terraform creates
+Production Keycloak is managed via Terraform in the `arcadia-terraform` repo (`../arcadia-terraform/truenas/apps/keycloak/`). Apply once after spinning up the Keycloak container.
+
+Terraform creates the same objects as the dev realm JSON:
 
 - Realm `arcadia`
 - Group `/admins`
 - OIDC client `haochen-lu` (confidential, authorization_code flow)
-- Groups protocol mapper — injects `groups` claim with full paths (e.g. `/admins`) into tokens
+- Groups protocol mapper — injects `groups` claim with full paths into tokens
+- User `anton` in the `/admins` group (credentials managed via SOPS secrets)
+
+After applying, set `OIDC_CLIENT_SECRET` in production `.env` to the client secret configured in Terraform.
 
 ### Adding users
 
-Users are created in the Keycloak admin UI (`http://localhost:9091`) under the `arcadia` realm. To make a user an admin, assign them to the `admins` group.
+Users are created in the Keycloak admin UI under the `arcadia` realm. To grant admin access, assign the user to the `admins` group.
 
 ---
 
