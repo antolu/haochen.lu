@@ -143,7 +143,9 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:26
     container_name: keycloak
-    command: start-dev
+    command: start-dev --import-realm
+    volumes:
+      - ./keycloak/dev-realm.json:/opt/keycloak/data/import/dev-realm.json:ro
     environment:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
