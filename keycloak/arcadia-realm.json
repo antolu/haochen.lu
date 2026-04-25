@@ -2,6 +2,7 @@
   "realm": "arcadia",
   "enabled": true,
   "displayName": "Arcadia",
+  "sslRequired": "none",
   "loginTheme": "keycloak",
   "registrationAllowed": false,
   "resetPasswordAllowed": false,
@@ -21,9 +22,12 @@
   "users": [
     {
       "username": "admin",
-      "email": "admin@localhost",
+      "email": "admin@localhost.dev",
+      "firstName": "Admin",
+      "lastName": "User",
       "enabled": true,
       "emailVerified": true,
+      "requiredActions": [],
       "credentials": [
         {
           "type": "password",
