@@ -141,11 +141,11 @@ services:
       retries: 5
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26
+    image: keycloak/keycloak:26.6.1
     container_name: keycloak
     command: start-dev --import-realm
     volumes:
-      - ./keycloak/dev-realm.json:/opt/keycloak/data/import/dev-realm.json:ro
+      - ./keycloak/arcadia-realm.json:/opt/keycloak/data/import/arcadia-realm.json:ro
     environment:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak

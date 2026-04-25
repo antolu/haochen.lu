@@ -66,7 +66,7 @@ services:
       - "8000"
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26
+    image: keycloak/keycloak:26.6.1
     container_name: keycloak
     command: start
     environment:
