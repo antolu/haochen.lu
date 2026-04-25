@@ -39,7 +39,7 @@ async def test_callback_creates_local_session_and_redirects(
             "sub": "oidc-user-1",
             "email": "sso@example.com",
             "preferred_username": "sso-user",
-            "groups": ["admins"],
+            "groups": ["/admins"],
         }
 
     monkeypatch.setattr(auth_api, "_fetch_oidc_tokens", fake_fetch_tokens)
@@ -249,7 +249,7 @@ async def test_mock_first_party_subapp_contract_flow(
             "sub": "oidc-subapp-user",
             "email": "subapp@example.com",
             "preferred_username": "subapp-user",
-            "groups": ["admins"],
+            "groups": ["/admins"],
         }
 
     monkeypatch.setattr(auth_api, "_fetch_oidc_tokens", fake_fetch_tokens)
@@ -265,11 +265,11 @@ async def test_mock_first_party_subapp_contract_flow(
         },
         headers={"Accept": "application/json"},
     )
-    authelia_state = parse_qs(urlparse(login_response.json()["url"]).query)["state"][0]
+    oidc_state = parse_qs(urlparse(login_response.json()["url"]).query)["state"][0]
 
     callback_response = await async_client.get(
         "/api/auth/callback",
-        params={"code": "oidc-code", "state": authelia_state},
+        params={"code": "oidc-code", "state": oidc_state},
         follow_redirects=False,
     )
 
@@ -306,7 +306,7 @@ async def test_refresh_rotates_refresh_cookie(
     admin_user: User,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    fake_refresh_token = "authelia-refresh-token-123"
+    fake_refresh_token = "keycloak-refresh-token-123"
     async_client.cookies.set("refresh_token", fake_refresh_token)
 
     async def fake_validate(token: str) -> dict | None:

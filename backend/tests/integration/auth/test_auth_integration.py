@@ -26,9 +26,9 @@ async def test_login_returns_oidc_authorize_url(async_client: AsyncClient) -> No
     parsed = urlparse(login_url)
     query = parse_qs(parsed.query)
 
-    assert parsed.path.endswith("/api/oidc/authorization")
+    assert parsed.path.endswith("/protocol/openid-connect/auth")
     assert query["response_type"] == ["code"]
-    assert query["scope"] == ["openid profile email groups"]
+    assert query["scope"] == ["openid profile email"]
     assert query["state"]
 
 
@@ -77,7 +77,7 @@ async def test_protected_endpoint_with_valid_token_succeeds(
 async def test_logout_succeeds_with_valid_token_and_refresh_cookie(
     async_client: AsyncClient, admin_user: User, admin_token: str
 ) -> None:
-    async_client.cookies.set("refresh_token", "some-authelia-refresh-token")
+    async_client.cookies.set("refresh_token", "some-keycloak-refresh-token")
 
     response = await async_client.post(
         "/api/auth/logout",

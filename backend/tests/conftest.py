@@ -95,8 +95,10 @@ def test_settings() -> Settings:
     """Override settings for testing."""
     return Settings(
         database_url="sqlite+aiosqlite:///:memory:",
-        # Prefer docker redis service if available; override with REDIS_URL env
-        redis_url=os.getenv("REDIS_URL", "redis://redis:6379/1"),
+        redis_host=os.getenv("REDIS_HOST", "redis"),
+        redis_port=int(os.getenv("REDIS_PORT", "6379")),
+        redis_db=int(os.getenv("REDIS_DB", "1")),
+        redis_password=os.getenv("REDIS_PASSWORD") or None,
         secret_key=os.getenv(
             "SECRET_KEY", "test_secret_key_for_testing_minimum_32_chars"
         ),
@@ -221,8 +223,9 @@ def _is_service_available(url: str, timeout: float = 0.2) -> bool:
 
 def pytest_collection_modifyitems(config, items):
     """Skip integration tests that depend on external services if unavailable."""
-    redis_url = os.getenv("REDIS_URL", "redis://redis:6379/1")
-    redis_up = _is_service_available(redis_url)
+    redis_host = os.getenv("REDIS_HOST", "redis")
+    redis_port = int(os.getenv("REDIS_PORT", "6379"))
+    redis_up = _is_service_available(f"redis://{redis_host}:{redis_port}/1")
 
     for item in items:
         # Markers in our suite that depend on Redis/services
@@ -595,7 +598,7 @@ def patch_oidc_validator(monkeypatch: pytest.MonkeyPatch) -> None:
     """
     Replace oidc_validator.validate_token with a test-friendly version that
     accepts tokens of the form "test-token-{oidc_id}" and returns a minimal
-    payload. This avoids needing a real Authelia JWKS endpoint in integration
+    payload. This avoids needing a real Keycloak JWKS endpoint in integration
     tests for the user-session layer.
 
     Tokens issued by create_access_token (HS256, 'sub' = user UUID) are used
