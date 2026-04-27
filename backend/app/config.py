@@ -6,21 +6,20 @@ from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
 
-def normalize_async_database_url(url: str) -> str:
-    """Ensure SQLAlchemy async URLs use asyncpg for PostgreSQL."""
-    if url.startswith("postgresql://"):
-        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
-    if url.startswith("postgres://"):
-        return url.replace("postgres://", "postgresql+asyncpg://", 1)
-    return url
-
-
 class Settings(BaseSettings):
     # Database
-    database_url: str = os.getenv(
-        "DATABASE_URL",
-        "postgresql+asyncpg://postgres:password@localhost:5432/portfolio",
-    )
+    postgres_user: str = "postgres"
+    postgres_password: str = "password"
+    postgres_host: str = "localhost"
+    postgres_port: int = 5432
+    postgres_db: str = "portfolio"
+
+    @property
+    def database_url(self) -> str:
+        return (
+            f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}"
+            f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
+        )
 
     # Redis
     redis_host: str = os.getenv("REDIS_HOST", "localhost")
@@ -83,11 +82,6 @@ class Settings(BaseSettings):
                 raise ValueError(msg)
 
         return validated
-
-    @field_validator("database_url")
-    @classmethod
-    def _normalize_database_url(cls, v: str) -> str:
-        return normalize_async_database_url(v)
 
     @property
     def cors_origins_list(self) -> list[str]:
