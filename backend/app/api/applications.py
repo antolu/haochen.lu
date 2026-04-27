@@ -2,9 +2,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-import yaml
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.application import (
@@ -15,7 +13,6 @@ from app.crud.application import (
     get_application_by_slug,
     get_application_count,
     get_applications,
-    regenerate_application_credentials,
     update_application,
 )
 from app.dependencies import (
@@ -136,19 +133,6 @@ async def update_application_endpoint(
     return ApplicationResponse.model_validate(application)
 
 
-@router.post("/{application_id}/regenerate-credentials")
-async def regenerate_credentials(
-    application_id: UUID,
-    db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
-) -> ApplicationResponse:
-    """Regenerate client ID and secret for an application (admin only)."""
-    application = await regenerate_application_credentials(db, application_id)
-    if not application:
-        raise HTTPException(status_code=404, detail="Application not found")
-    return ApplicationResponse.model_validate(application)
-
-
 @router.post("/reorder")
 async def reorder_applications(
     payload: ApplicationReorderRequest,
@@ -175,57 +159,6 @@ async def delete_application_endpoint(
         raise HTTPException(status_code=404, detail="Application not found")
 
     return {"message": "Application deleted successfully"}
-
-
-@router.get("/{application_id}/export")
-async def export_application(
-    application_id: UUID,
-    db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
-) -> Response:
-    """Export application as YAML config (admin only)."""
-    application = await get_application(db, application_id)
-    if not application:
-        raise HTTPException(status_code=404, detail="Application not found")
-
-    config: dict = {
-        "meta": {
-            "name": application.name,
-            "slug": application.slug,
-            "description": application.description or "",
-        },
-        "ui": {
-            "icon": application.icon or "",
-            "color": application.color or "#3B82F6",
-        },
-        "integration": {
-            "url": application.url,
-            "admin_url": application.admin_url or "",
-            "is_external": application.is_external,
-            "requires_auth": application.requires_auth,
-            "admin_only": application.admin_only,
-            "menu_order": application.order,
-            "has_admin": bool(application.admin_url),
-        },
-    }
-
-    if application.requires_auth:
-        config["oidc"] = {
-            "client_id": application.client_id or "",
-            "client_secret": application.client_secret or "",
-            "redirect_uris": application.redirect_uris or "",
-        }
-
-    content = yaml.dump(
-        config, default_flow_style=False, allow_unicode=True, sort_keys=False
-    )
-    return Response(
-        content=content,
-        media_type="application/x-yaml",
-        headers={
-            "Content-Disposition": f'attachment; filename="{application.slug}.yml"'
-        },
-    )
 
 
 @router.get("/stats/summary")

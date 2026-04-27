@@ -6,7 +6,6 @@ import uuid
 import fakeredis
 import pytest
 
-import app.api.auth as auth_mod
 import app.core.security as sec_mod
 from app.core import redis as redis_mod
 from app.core.redis import TokenManager
@@ -51,12 +50,6 @@ def test_verify_password_bcrypt_direct() -> None:
     hashed = get_password_hash(password)
     assert verify_password(password, hashed) is True
     assert verify_password("wrong-password", hashed) is False
-
-
-@pytest.mark.unit
-def test_timing_safe_client_secret_comparison() -> None:
-    source = inspect.getsource(auth_mod)
-    assert "hmac.compare_digest" in source
 
 
 @pytest.mark.unit
