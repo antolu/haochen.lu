@@ -34,7 +34,6 @@ const AdminEquipmentAliases = lazy(
   () => import("./pages/admin/AdminEquipmentAliases"),
 );
 const AdminApplications = lazy(() => import("./pages/admin/AdminApplications"));
-const AdminAppImport = lazy(() => import("./pages/admin/AdminAppImport"));
 const AdminContent = lazy(() => import("./pages/admin/AdminContent"));
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 
@@ -205,14 +204,6 @@ const AppContent: React.FC = () => {
               element={
                 <Suspense fallback={<AdminLoadingFallback />}>
                   <AdminApplications />
-                </Suspense>
-              }
-            />
-            <Route
-              path="applications/import"
-              element={
-                <Suspense fallback={<AdminLoadingFallback />}>
-                  <AdminAppImport />
                 </Suspense>
               }
             />

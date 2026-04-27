@@ -1,10 +1,7 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, FileCode2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Switch } from "../../components/ui/switch";
-import { cn } from "../../lib/utils";
-
 import AppForm from "../../components/AppForm";
 import AppList from "../../components/AppList";
 import { Button } from "../../components/ui/button";
@@ -12,7 +9,6 @@ import {
   useApplications,
   useCreateApplication,
   useDeleteApplication,
-  useRegenerateCredentials,
   useReorderApplications,
   useToggleAppEnabled,
   useUpdateApplication,
@@ -53,7 +49,6 @@ const AdminApplications: React.FC = () => {
   const deleteMutation = useDeleteApplication();
   const toggleEnabledMutation = useToggleAppEnabled();
   const reorderMutation = useReorderApplications();
-  const regenerateCredentialsMutation = useRegenerateCredentials();
 
   const apps = applicationsData?.applications ?? [];
 
@@ -184,18 +179,6 @@ const AdminApplications: React.FC = () => {
             </div>
 
             <Button
-              variant="outline"
-              size="lg"
-              className={cn("rounded-full px-6")}
-              asChild
-            >
-              <Link to="/admin/applications/import">
-                <FileCode2 className="h-4 w-4 mr-2" />
-                Import via YAML
-              </Link>
-            </Button>
-
-            <Button
               variant="gradient"
               size="lg"
               onClick={() => handleCreateApplication()}
@@ -263,14 +246,6 @@ const AdminApplications: React.FC = () => {
                     await handleFormSubmit(data);
                   }}
                   onCancel={() => handleFormCancel()}
-                  onRegenerateCredentials={
-                    editingApplication
-                      ? () =>
-                          regenerateCredentialsMutation.mutate(
-                            editingApplication.id,
-                          )
-                      : undefined
-                  }
                   isLoading={isFormLoading}
                 />
               </div>
