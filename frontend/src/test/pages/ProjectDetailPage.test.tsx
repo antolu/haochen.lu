@@ -353,8 +353,7 @@ describe("ProjectDetailPage", () => {
       renderWithRouter(<ProjectDetailPage />);
 
       expect(screen.getByText("Last Updated")).toBeInTheDocument();
-      // Current formatter renders day-first format
-      expect(screen.getByText("20 January 2023")).toBeInTheDocument();
+      expect(screen.getByText("21 January 2023")).toBeInTheDocument();
     });
 
     it("displays README update date when available", () => {

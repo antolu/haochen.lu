@@ -65,7 +65,9 @@ async def test_validates_valid_rs256_token() -> None:
     token = _make_token(private_key)
     validator = _make_validator_with_keys([public_key])
 
-    result = await validator.validate_token(token)
+    with patch("app.core.oidc.settings") as mock_settings:
+        mock_settings.oidc_issuer_url = "http://auth.localhost"
+        result = await validator.validate_token(token)
 
     assert result is not None
     assert result["sub"] == "user-1"
