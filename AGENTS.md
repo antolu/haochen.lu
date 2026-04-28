@@ -21,6 +21,11 @@ Required environment variables (create `.env` file):
 - `SECRET_KEY`: signing key for app OAuth tokens (minimum 32 characters)
 - `SESSION_SECRET_KEY`: session encryption key (minimum 32 characters)
 - `ADMIN_PASSWORD`: backend admin password (minimum 8 characters)
+- `POSTGRES_USER`: database role name (default: `postgres`)
+- `POSTGRES_PASSWORD`: database role password (required)
+- `POSTGRES_HOST`: database host (default: `localhost`; use `db` in Docker)
+- `POSTGRES_PORT`: database port (default: `5432`)
+- `POSTGRES_DB`: database name (default: `portfolio`)
 
 Keycloak OIDC variables (dev defaults — match `keycloak/arcadia-realm.json`):
 - `OIDC_ENDPOINT=http://keycloak:8080` — internal container URL for token validation
