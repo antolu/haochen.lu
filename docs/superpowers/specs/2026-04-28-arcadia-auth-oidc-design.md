@@ -123,7 +123,7 @@ Replace `if payload is None` checks with `try/except TokenExpiredError, TokenInv
 ### `pyproject.toml`
 
 - Remove `PyJWT`
-- Add `arcadia-auth @ file:///../arcadia-auth` (local editable install for dev; will be a versioned package reference in prod)
+- Add `arcadia-auth @ file://${PROJECT_ROOT}/../arcadia-auth` or install via `pip install -e ../arcadia-auth` in dev. In prod/CI, reference a published version tag once the package is released to the private registry.
 
 ## Testing
 
