@@ -1,16 +1,11 @@
-"""
-Integration test configuration and fixtures.
-
-These fixtures are specifically for integration tests that run against
-the full stack in Docker Compose.
-"""
-
 from __future__ import annotations
 
 import os
+import time
 from collections.abc import AsyncGenerator
 from pathlib import Path
 
+import jwt as pyjwt
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
@@ -19,14 +14,58 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from app.models.user import User
 
-# Test fixture paths
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"
 IMAGES_DIR = FIXTURES_DIR / "images"
+
+# Fixed private key for signing integration test tokens.
+# The corresponding public key is served by mock-oidc in docker-compose.test.yml.
+_INTEGRATION_PRIVATE_KEY_PEM = b"""-----BEGIN RSA PRIVATE KEY-----
+MIIEowIBAAKCAQEAyJjF4HzwTd0al4Soi6iu9Dt8pfQc9o2QK23a6GlLpd1gjro1
+QnY6s1D+nVhEwtubCC1G5bTQ8x8pwlydcTlfd8w8Dr2G4WjbCXV6dAMgpDZQuBS0
+SoFJYWivMMqZE5cRcm3IMe1MQIyurVLLgzp3BiP9ff5Xnv2Q4dc9TumY5xRa96WU
+2bHG7x5enKXvi3nqHdB2rZuS8zFJdEaB8JppcE/ra71HLmpJuYINQcI28KU5e3rM
+Wvpi9bx/MGDjhsQjU8QSrQkjKJA/RbWBpO2fbz0mUcvWTKbOJuZH06Kk6sS8fmhi
+1AMtrfuSyHB9fMVpJU7jNuF1v8LnW39W4jAm9QIDAQABAoIBABOuvdfBmpihRc8x
+MpKFiiknvxrPgZoFmOxR+qVMU6JiPuuyRLCRRkA7BcitlQ2jm6opOygl3kzEtYW/
+Lami7gWksg3mNdpfPgLHFq1Uczr5o2D0kx4uYmNe8LWyY2PDMnCOahLQDGfXBfq2
+wYZOUch19pUKxFEy4yjtxDO+gwTFU2Bwucs1Vz7RJ6waMKgNPmu9CZLax6mcKY3C
+xcHERy0vLkm198LldWTu97b6qj3Ieb4Zchhs2loeTJJO21+Hwa2nb3wriYRu01FV
+arnytAjHKsrmSXV/vOiBEviEoD0vsuLkiADG/kF7lKxGPHjcryk/45fVdNBeVyXM
+Cbd/wiECgYEA+I9dzdFdlr7a+bfxXcvvhqX3eGnp+B49ri3ihrTol0B0QGaL9IUj
+P5SZutMW8USXrszdDTlV6waBY6L1JdsyPRHKIj1zNy7zljaUJmGOfXGM/8fNzMfK
+azdVRu6EfiKzEmMlC/BPO7js6D7v/ewfH1CU4ERdYMA+HhvBhXdfhOUCgYEAzpnh
+QbXldTGAWBWJw1KBEvPbukrs14HQlj31KzP4U8pyc1mUjRaWeC8f1N9vuiOdS63p
+elgqKQgbNkfgChcsBEIhi34iqd8Le3M5UeSqb0NylMVi16pGU0fdx1NeVdhBHY17
+ZXzQOqHCwvyEeDI7tyH5+RXdkdSJkA5ZdK1/iNECgYB6AKTiaWmunG+PMyJeD8O6
+K6yUhig5iV5tKEiQJiwkUZa+JZd8pfzvMFlkwkf4lNp/Cj9WRlZNzhukdFAwDK9U
+Gm9E7zSmWX1mtdNyI2B1Yk77HW9+nHJWvgo1js2pvA55cAC3I3VAszxVos7ZrBR6
+omrwyZ2r57CVxrnucPGJoQKBgCyWiUblOuBQDqL0AwdkhvbQKlvKT9My8RF7za3F
+SZLL3meGrcjFVzQY94W5syM5DHmIzxrYbEDuvvC4EmIbHiTNIPA6CMEgohnChFxo
+PWBF7jStZOemmAbhO7wJAhME2QjHwBnnFgmRX7c1SGGodbrQWmKnlWojtIyijCvi
+ReQBAoGBAJO/fd8Gi6irc2OkTG1AKEDbt42a0+FYuFksiLjOFz2MMUWqg0JorpSk
+TbCoLxU36sk2QVYn4RjOmhTqf1L0lZbQiYkMxP3RDrC+hcf9eC1RQThQUxXyJnP4
+u7ffjAQlfBS+YWAszg+DY8aZ+f71JfnAkcl+WZaf8+rlKUShHyGC
+-----END RSA PRIVATE KEY-----"""
+
+
+def _sign_integration_token(sub: str) -> str:
+    now = int(time.time())
+    return pyjwt.encode(
+        {
+            "sub": sub,
+            "iss": "http://mock-oidc:80/realms/arcadia",
+            "exp": now + 3600,
+            "iat": now,
+            "jti": f"integration-{sub}",
+        },
+        _INTEGRATION_PRIVATE_KEY_PEM,
+        algorithm="RS256",
+        headers={"kid": "integration-key-1"},
+    )
 
 
 @pytest.fixture
 def fixture_images() -> dict[str, Path]:
-    """Provide paths to test fixture images."""
     return {
         "landscape": IMAGES_DIR / "test-landscape.jpg",
         "portrait": IMAGES_DIR / "test-portrait.jpg",
@@ -39,40 +78,26 @@ def fixture_images() -> dict[str, Path]:
 
 @pytest.fixture
 def sample_image_path(fixture_images: dict[str, Path]) -> Path:
-    """Return path to a sample landscape test image."""
     return fixture_images["landscape"]
 
 
 @pytest.fixture
 def sample_exif_image_path(fixture_images: dict[str, Path]) -> Path:
-    """Return path to test image with EXIF data."""
     return fixture_images["with_exif"]
 
 
 @pytest_asyncio.fixture
 async def integration_engine():
-    """
-    Create an async engine for integration tests.
-
-    Uses the same database as the running backend service.
-    """
     database_url = os.getenv(
         "DATABASE_URL", "postgresql+asyncpg://testuser:testpassword@db:5432/testdb"
     )
-
-    engine = create_async_engine(
-        database_url,
-        echo=False,
-    )
-
+    engine = create_async_engine(database_url, echo=False)
     yield engine
-
     await engine.dispose()
 
 
 @pytest.fixture
 def integration_session_maker(integration_engine):
-    """Return a session factory for integration tests."""
     return async_sessionmaker(
         integration_engine, class_=AsyncSession, expire_on_commit=False
     )
@@ -82,20 +107,13 @@ def integration_session_maker(integration_engine):
 async def integration_session(
     integration_session_maker,
 ) -> AsyncGenerator[AsyncSession, None]:
-    """Create an integration test database session."""
     async with integration_session_maker() as session:
         yield session
 
 
 @pytest_asyncio.fixture
 async def integration_client() -> AsyncGenerator[AsyncClient, None]:
-    """
-    Create an async HTTP client for integration tests.
-
-    This client connects to the backend service running in Docker.
-    """
     backend_url = os.getenv("BACKEND_URL", "http://backend:8000")
-
     async with AsyncClient(base_url=backend_url, timeout=30.0) as client:
         yield client
 
@@ -109,8 +127,8 @@ async def admin_auth_headers(integration_session: AsyncSession) -> dict[str, str
     if admin_user is None:
         msg = "Integration admin user not found"
         raise RuntimeError(msg)
-
-    return {"Authorization": f"Bearer test-token-{admin_user.oidc_id}"}
+    token = _sign_integration_token(str(admin_user.oidc_id))
+    return {"Authorization": f"Bearer {token}"}
 
 
 @pytest_asyncio.fixture
@@ -122,8 +140,8 @@ async def user_auth_headers(integration_session: AsyncSession) -> dict[str, str]
     if regular_user is None:
         msg = "Integration regular user not found"
         raise RuntimeError(msg)
-
-    return {"Authorization": f"Bearer test-token-{regular_user.oidc_id}"}
+    token = _sign_integration_token(str(regular_user.oidc_id))
+    return {"Authorization": f"Bearer {token}"}
 
 
 @pytest.fixture
@@ -131,9 +149,6 @@ def authenticated_admin_client(
     integration_client: AsyncClient,
     admin_auth_headers: dict[str, str],
 ) -> AsyncClient:
-    """
-    Create an authenticated async client with admin credentials.
-    """
     integration_client.headers.update(admin_auth_headers)
     return integration_client
 
@@ -143,16 +158,11 @@ def authenticated_user_client(
     integration_client: AsyncClient,
     user_auth_headers: dict[str, str],
 ) -> AsyncClient:
-    """
-    Create an authenticated async client with regular user credentials.
-    """
     integration_client.headers.update(user_auth_headers)
     return integration_client
 
 
-# Pytest markers for integration tests
-def pytest_configure(config):
-    """Configure custom pytest markers for integration tests."""
+def pytest_configure(config) -> None:
     config.addinivalue_line(
         "markers", "integration: marks tests as integration tests (requires full stack)"
     )

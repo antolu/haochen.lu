@@ -3,6 +3,19 @@
 # This creates an isolated test environment with seeded data
 
 services:
+  mock-oidc:
+    image: nginx:alpine
+    volumes:
+      - ./backend/tests/fixtures/mock-oidc:/usr/share/nginx/html/realms/arcadia/protocol/openid-connect:ro
+      - ./backend/tests/fixtures/mock-oidc/discovery.json:/usr/share/nginx/html/realms/arcadia/.well-known/openid-configuration:ro
+    networks:
+      - test-network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:80/realms/arcadia/.well-known/openid-configuration"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   db:
     image: postgres:15
     environment:
@@ -37,7 +50,6 @@ services:
         BUILD_TYPE: development
     environment:
       ENVIRONMENT: test
-      TESTING: "true"
       DATABASE_URL: postgresql+asyncpg://testuser:testpassword@db:5432/testdb
       REDIS_HOST: redis
       REDIS_PORT: "6379"
@@ -49,6 +61,12 @@ services:
       COOKIE_SECURE: "false"
       COOKIE_DOMAIN: ""
       MAX_FILE_SIZE: 52428800
+      OIDC_ENDPOINT: http://mock-oidc:80
+      OIDC_PUBLIC_ENDPOINT: http://mock-oidc:80
+      OIDC_REALM: arcadia
+      OIDC_CLIENT_ID: test-client
+      OIDC_CLIENT_SECRET: test-secret
+      OIDC_REDIRECT_URI: http://localhost/api/auth/callback
     volumes:
       - ./backend:/app
       - ./backend/tests/fixtures:/app/tests/fixtures:ro
@@ -58,6 +76,8 @@ services:
       db:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      mock-oidc:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
