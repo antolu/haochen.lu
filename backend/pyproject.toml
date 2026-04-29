@@ -263,6 +263,8 @@ module = [
   "httpx.*",
   "yaml",
   "bcrypt",
+  "arcadia_auth",
+  "arcadia_auth.*",
 ]
 ignore_missing_imports = true
 
