@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from arcadia_auth import JwksError, TokenExpiredError, TokenInvalidError
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,11 +22,17 @@ async def current_active_user(
     token: str = _token_dependency,
     session: AsyncSession = _session_dependency,
 ) -> User:
-    payload = await oidc_validator.validate_token(token)
-    if payload is None:
+    try:
+        payload = await oidc_validator.validate_token(token)
+    except (TokenExpiredError, TokenInvalidError) as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
-        )
+        ) from exc
+    except JwksError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Auth service unavailable",
+        ) from exc
 
     jti = payload.get("jti")
     if isinstance(jti, str) and await TokenManager.is_access_token_blocked(jti):
