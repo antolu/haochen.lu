@@ -3,16 +3,15 @@ from __future__ import annotations
 import logging
 import secrets
 import typing
-from urllib.parse import urlencode
 
-import httpx
+from arcadia_auth import OidcError
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config import settings
-from app.core.oidc import oidc_validator
+from app.config import oidc_settings, settings
+from app.core.oidc import oidc_client, oidc_validator
 from app.core.redis import TokenManager, redis_client
 from app.core.security import decode_token
 from app.crud.user import (
@@ -116,59 +115,6 @@ async def _consume_login_state(state_token: str) -> SessionContext:
     return SessionContext.model_validate_json(value)
 
 
-async def _fetch_oidc_tokens(code: str) -> dict[str, typing.Any]:
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        response = await client.post(
-            f"{settings.oidc_base_url}/protocol/openid-connect/token",
-            data={
-                "grant_type": "authorization_code",
-                "client_id": settings.oidc_client_id,
-                "client_secret": settings.oidc_client_secret,
-                "code": code,
-                "redirect_uri": settings.oidc_redirect_uri,
-            },
-        )
-
-    if response.status_code != status.HTTP_200_OK:
-        logger.error("OIDC token exchange failed: %s", response.text)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Authentication failed",
-        )
-
-    data: dict[str, typing.Any] = response.json()
-    access_token = data.get("access_token")
-    if not isinstance(access_token, str) or not access_token:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="OIDC token missing",
-        )
-    return data
-
-
-async def _fetch_oidc_profile(access_token: str) -> dict[str, object]:
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        response = await client.get(
-            f"{settings.oidc_base_url}/protocol/openid-connect/userinfo",
-            headers={"Authorization": f"Bearer {access_token}"},
-        )
-
-    if response.status_code != status.HTTP_200_OK:
-        logger.error("OIDC userinfo fetch failed: %s", response.text)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Authentication failed",
-        )
-
-    payload = response.json()
-    if not isinstance(payload, dict):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid OIDC profile",
-        )
-    return payload
-
-
 async def _sync_user(session: AsyncSession, oidc_profile: dict[str, object]) -> User:
     oidc_id = str(oidc_profile.get("sub") or "")
     email = str(oidc_profile.get("email") or "")
@@ -219,14 +165,11 @@ async def login_redirect(
 ) -> RedirectResponse | AuthorizeResponse:
     context = SessionContext(next=_normalize_next(next_path))
     state_token = await _store_login_state(context)
-    query = urlencode({
-        "client_id": settings.oidc_client_id,
-        "response_type": "code",
-        "redirect_uri": settings.oidc_redirect_uri,
-        "scope": "openid profile email",
-        "state": state_token,
-    })
-    url = f"{settings.oidc_public_base_url}/protocol/openid-connect/auth?{query}"
+    url = oidc_client.authorization_url(
+        redirect_uri=oidc_settings.oidc_redirect_uri,
+        state=state_token,
+        scope="openid profile email",
+    )
 
     # Return JSON for the frontend/tests, or redirect for direct browser access
     if (
@@ -245,8 +188,15 @@ async def auth_callback(
     session: AsyncSession = _session_dependency,
 ) -> Response:
     context = await _consume_login_state(state)
-    oidc_tokens = await _fetch_oidc_tokens(code)
-    oidc_profile = await _fetch_oidc_profile(oidc_tokens["access_token"])
+    try:
+        oidc_tokens = await oidc_client.fetch_tokens(
+            code, oidc_settings.oidc_redirect_uri
+        )
+        oidc_profile = await oidc_client.fetch_userinfo(oidc_tokens["access_token"])
+    except OidcError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Authentication failed"
+        ) from exc
     await _sync_user(session, oidc_profile)
     refresh_token = oidc_tokens.get("refresh_token") or ""
     if not isinstance(refresh_token, str) or not refresh_token:
@@ -321,23 +271,12 @@ async def refresh_session(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
         )
 
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        token_response = await client.post(
-            f"{settings.oidc_base_url}/protocol/openid-connect/token",
-            data={
-                "grant_type": "refresh_token",
-                "refresh_token": old_refresh_token,
-                "client_id": settings.oidc_client_id,
-                "client_secret": settings.oidc_client_secret,
-            },
-        )
-
-    if token_response.status_code != status.HTTP_200_OK:
+    try:
+        token_data = await oidc_client.refresh_token(old_refresh_token)
+    except OidcError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token revoked"
-        )
-
-    token_data = token_response.json()
+        ) from exc
     new_access_token = token_data.get("access_token")
     new_refresh_token = token_data.get("refresh_token")
     if not isinstance(new_access_token, str) or not isinstance(new_refresh_token, str):
@@ -389,21 +328,9 @@ async def logout(
                 access_payload["jti"], remaining_ttl
             )
 
-    # Revoke refresh token at Keycloak (best-effort)
     refresh_token = request.cookies.get(settings.refresh_cookie_name)
     if refresh_token:
-        try:
-            async with httpx.AsyncClient(timeout=5.0) as client:
-                await client.post(
-                    f"{settings.oidc_base_url}/protocol/openid-connect/revoke",
-                    data={
-                        "token": refresh_token,
-                        "client_id": settings.oidc_client_id,
-                        "client_secret": settings.oidc_client_secret,
-                    },
-                )
-        except Exception:
-            logger.debug("Keycloak revocation request failed (ignored)")
+        await oidc_client.revoke_token(refresh_token)
 
     _clear_refresh_cookie(response)
     return {"message": "Logged out"}

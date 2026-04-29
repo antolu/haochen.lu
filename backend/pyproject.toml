@@ -265,6 +265,8 @@ module = [
   "bcrypt",
   "arcadia_auth",
   "arcadia_auth.*",
+  "jwt",
+  "jwt.*",
 ]
 ignore_missing_imports = true
 

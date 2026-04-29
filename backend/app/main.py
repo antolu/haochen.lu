@@ -32,6 +32,7 @@ from app.api import (
     settings as settings_api,
 )
 from app.config import settings
+from app.core.oidc import oidc_client, oidc_validator
 from app.core.progress import progress_manager
 from app.core.rate_limiter import RateLimitMiddleware
 from app.core.redis import close_redis, init_redis
@@ -54,10 +55,10 @@ class NoCacheMiddleware(BaseHTTPMiddleware):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> typing.AsyncGenerator[None, None]:
-    # Startup
     await init_redis()
+    await oidc_client.initialize()
+    await oidc_validator.initialize()
     yield
-    # Shutdown
     await close_redis()
 
 
