@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from arcadia_auth import JwksError, TokenExpiredError, TokenInvalidError
+from arcadia_auth import DiscoveryError, JwksError, TokenExpiredError, TokenInvalidError
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,7 +28,7 @@ async def current_active_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
         ) from exc
-    except JwksError as exc:
+    except (JwksError, DiscoveryError) as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Auth service unavailable",

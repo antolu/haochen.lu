@@ -4,7 +4,13 @@ import logging
 import secrets
 import typing
 
-from arcadia_auth import OidcError
+from arcadia_auth import (
+    DiscoveryError,
+    JwksError,
+    OidcError,
+    TokenExpiredError,
+    TokenInvalidError,
+)
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, ConfigDict
@@ -204,7 +210,7 @@ async def auth_callback(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="OIDC refresh token missing",
         )
-    cookie_ttl = oidc_tokens.get("expires_in")
+    cookie_ttl = oidc_tokens.get("refresh_expires_in")
     if not isinstance(cookie_ttl, int):
         cookie_ttl = _refresh_token_ttl_seconds()
 
@@ -284,11 +290,17 @@ async def refresh_session(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token response"
         )
 
-    access_payload = await oidc_validator.validate_token(new_access_token)
-    if access_payload is None:
+    try:
+        access_payload = await oidc_validator.validate_token(new_access_token)
+    except (TokenExpiredError, TokenInvalidError) as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid access token"
-        )
+        ) from exc
+    except (JwksError, DiscoveryError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Auth service unavailable",
+        ) from exc
 
     oidc_id = access_payload.get("sub")
     if not isinstance(oidc_id, str):
@@ -321,8 +333,11 @@ async def logout(
     auth_header = request.headers.get("authorization", "")
     if auth_header.lower().startswith("bearer "):
         access_token = auth_header.split(" ", 1)[1]
-        access_payload = await oidc_validator.validate_token(access_token)
-        if access_payload is not None and isinstance(access_payload.get("jti"), str):
+        try:
+            access_payload = await oidc_validator.validate_token(access_token)
+        except (TokenExpiredError, TokenInvalidError, JwksError, DiscoveryError):
+            access_payload = {}
+        if isinstance(access_payload.get("jti"), str):
             remaining_ttl = settings.access_token_expire_minutes * 60
             await TokenManager.blocklist_access_token(
                 access_payload["jti"], remaining_ttl
