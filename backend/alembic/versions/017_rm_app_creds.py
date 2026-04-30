@@ -3,7 +3,7 @@ from __future__ import annotations
 import sqlalchemy as sa
 from alembic import op
 
-revision = "017_remove_application_credentials"
+revision = "017_rm_app_creds"
 down_revision = "016_add_logged_in_only"
 branch_labels = None
 depends_on = None
