@@ -14,9 +14,14 @@ import time
 import sys
 
 async def check_db():
-    database_url = os.getenv('DATABASE_URL', '')
-    if not database_url:
-        print("No DATABASE_URL found, skipping DB check")
+    import sys
+    from pathlib import Path
+    sys.path.append(str(Path.cwd()))
+    try:
+        from app.config import settings
+        database_url = settings.database_url
+    except Exception as e:
+        print(f"Could not load settings: {e}")
         return True
 
     # Extract connection details from DATABASE_URL

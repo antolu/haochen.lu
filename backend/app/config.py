@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 
 from arcadia_auth import OidcSettings
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings
 
 
@@ -14,25 +14,14 @@ class Settings(BaseSettings):
     postgres_host: str = "localhost"
     postgres_port: int = 5432
     postgres_db: str = "portfolio"
-
-    @property
-    def database_url(self) -> str:
-        return (
-            f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}"
-            f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
-        )
+    database_url: str | None = None
 
     # Redis
-    redis_host: str = os.getenv("REDIS_HOST", "localhost")
-    redis_port: int = int(os.getenv("REDIS_PORT", "6379"))
-    redis_password: str | None = os.getenv("REDIS_PASSWORD") or None
-    redis_db: int = int(os.getenv("REDIS_DB", "0"))
-
-    @property
-    def redis_url(self) -> str:
-        if self.redis_password:
-            return f"redis://:{self.redis_password}@{self.redis_host}:{self.redis_port}/{self.redis_db}"
-        return f"redis://{self.redis_host}:{self.redis_port}/{self.redis_db}"
+    redis_host: str = "localhost"
+    redis_port: int = 6379
+    redis_password: str | None = None
+    redis_db: int = 0
+    redis_url: str | None = None
 
     # Security - REQUIRED
     secret_key: str = os.getenv("SECRET_KEY") or ""
@@ -140,6 +129,22 @@ class Settings(BaseSettings):
     @property
     def is_development(self) -> bool:
         return self.environment.lower() in ("development", "dev")
+
+    @model_validator(mode="after")
+    def _assemble_urls(self) -> Settings:
+        if not self.database_url:
+            self.database_url = (
+                f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}"
+                f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
+            )
+        if not self.redis_url:
+            if self.redis_password:
+                self.redis_url = f"redis://:{self.redis_password}@{self.redis_host}:{self.redis_port}/{self.redis_db}"
+            else:
+                self.redis_url = (
+                    f"redis://{self.redis_host}:{self.redis_port}/{self.redis_db}"
+                )
+        return self
 
     def validate_settings(self) -> None:
         """Validate required settings."""

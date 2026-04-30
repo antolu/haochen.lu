@@ -85,7 +85,11 @@ jobs:
 
     - name: Set up environment variables
       run: |
-        echo "DATABASE_URL=postgresql://testuser:testpassword@localhost:5432/testdb" >> $GITHUB_ENV
+        echo "POSTGRES_USER=testuser" >> $GITHUB_ENV
+        echo "POSTGRES_PASSWORD=testpassword" >> $GITHUB_ENV
+        echo "POSTGRES_HOST=localhost" >> $GITHUB_ENV
+        echo "POSTGRES_PORT=5432" >> $GITHUB_ENV
+        echo "POSTGRES_DB=testdb" >> $GITHUB_ENV
         echo "REDIS_HOST=localhost" >> $GITHUB_ENV
         echo "REDIS_PORT=6379" >> $GITHUB_ENV
         echo "REDIS_DB=0" >> $GITHUB_ENV

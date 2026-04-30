@@ -12,6 +12,7 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from app.config import settings
 from app.models.user import User
 
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"
@@ -88,10 +89,7 @@ def sample_exif_image_path(fixture_images: dict[str, Path]) -> Path:
 
 @pytest_asyncio.fixture
 async def integration_engine():
-    database_url = os.getenv(
-        "DATABASE_URL", "postgresql+asyncpg://testuser:testpassword@db:5432/testdb"
-    )
-    engine = create_async_engine(database_url, echo=False)
+    engine = create_async_engine(settings.database_url, echo=False)
     yield engine
     await engine.dispose()
 

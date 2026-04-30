@@ -25,7 +25,11 @@ services:
     container_name: portfolio-backend
     environment:
       - ENVIRONMENT=${ENVIRONMENT:-development}
-      - DATABASE_URL=postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-portfolio}
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-portfolio}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD:-}
@@ -156,7 +160,11 @@ services:
     image: antonlu/arcadia-backend:latest
     container_name: portfolio-migrate
     environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-portfolio}
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-portfolio}
       - SECRET_KEY=${SECRET_KEY}
       - SESSION_SECRET_KEY=${SESSION_SECRET_KEY}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
