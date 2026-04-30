@@ -9,7 +9,7 @@ This is a full-stack photography portfolio platform with FastAPI backend and Rea
 - **Backend**: FastAPI with SQLAlchemy 2.0, PostgreSQL 15, Redis 7, async operations
 - **Frontend**: React 19 with TypeScript, Vite, TanStack Query, Zustand, MapLibre, Tailwind CSS v4
 - **Auth**: Keycloak 26 (OIDC, RS256 tokens via JWKS). Dev realm bootstrapped automatically; prod managed via Terraform.
-- **Infrastructure**: Docker Compose with nginx reverse proxy
+- **Infrastructure**: Docker Compose with nginx and supervisord
 - **Image Processing**: Multi-variant WebP generation (400px-2400px) with EXIF extraction
 
 Core features include interactive photo mapping with clustering, location-based photo organization, project portfolio with GitHub integration, blog system, and comprehensive admin interface.
@@ -39,7 +39,7 @@ Keycloak OIDC variables (dev defaults — match `keycloak/arcadia-realm.json`):
 
 **Primary development workflow:**
 ```bash
-# Start development environment with live reload
+# Start development environment (nginx, Vite, and Uvicorn in one container)
 ./dev.sh start
 
 # View logs (optional service name and -f to follow)
@@ -60,9 +60,8 @@ docker compose -f docker-compose.dev.yml up -d
 # Stop all services
 docker compose -f docker-compose.dev.yml down
 
-# View logs for specific service
-docker compose -f docker-compose.dev.yml logs -f backend
-docker compose -f docker-compose.dev.yml logs -f frontend
+# View logs for the main application
+docker compose -f docker-compose.dev.yml logs -f app
 ```
 
 **Local development (without Docker):**
@@ -79,21 +78,18 @@ npm install
 npm run dev
 ```
 
-**Production Image Builds:**
+**Production Image Build:**
 ```bash
-# Build production images with git context for proper versioning (local development)
+# Build production image with git context
 docker compose -f docker-compose.build.yml build
 
-# Build production images with custom tag
+# Build production image with custom tag
 docker compose -f docker-compose.build.yml build
-docker tag antonlu/arcadia-backend:latest antonlu/arcadia-backend:v1.0.0
-docker tag antonlu/arcadia-frontend:latest antonlu/arcadia-frontend:v1.0.0
+docker tag antonlu/arcadia-app:latest antonlu/arcadia-app:v1.0.0
 
 # Push to registry
-docker push antonlu/arcadia-backend:latest
-docker push antonlu/arcadia-backend:v1.0.0
-docker push antonlu/arcadia-frontend:latest
-docker push antonlu/arcadia-frontend:v1.0.0
+docker push antonlu/arcadia-app:latest
+docker push antonlu/arcadia-app:v1.0.0
 ```
 
 **Note:** Multi-platform builds and releases are automated via GitHub Actions when pushing version tags (e.g., `git tag v1.0.0 && git push origin v1.0.0`).
@@ -102,13 +98,13 @@ docker push antonlu/arcadia-frontend:v1.0.0
 
 ```bash
 # Create new migration
-docker compose -f docker-compose.dev.yml exec backend alembic revision --autogenerate -m "description"
+docker compose -f docker-compose.dev.yml exec app alembic revision --autogenerate -m "description"
 
 # Apply migrations
-docker compose -f docker-compose.dev.yml exec backend alembic upgrade head
+docker compose -f docker-compose.dev.yml exec app alembic upgrade head
 
 # View migration history
-docker compose -f docker-compose.dev.yml exec backend alembic history
+docker compose -f docker-compose.dev.yml exec app alembic history
 ```
 
 ### Testing
@@ -116,8 +112,8 @@ docker compose -f docker-compose.dev.yml exec backend alembic history
 **Backend unit tests:**
 ```bash
 # Via Docker
-docker compose -f docker-compose.dev.yml exec backend python -m pytest tests/unit/
-docker compose -f docker-compose.dev.yml exec backend python -m pytest tests/security/
+docker compose -f docker-compose.dev.yml exec app pytest /app/backend/tests/unit/
+docker compose -f docker-compose.dev.yml exec app pytest /app/backend/tests/security/
 
 # Local
 cd backend

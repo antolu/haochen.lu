@@ -28,9 +28,11 @@ Personal portfolio and photography platform. Built with FastAPI and React.
 
 ## Stack
 
+## Stack
+
 - **Backend**: FastAPI, SQLAlchemy 2.0, PostgreSQL 15, Redis 7
 - **Frontend**: React 19, TypeScript, Vite, TanStack Query, Zustand, MapLibre, Tailwind CSS v4, Framer Motion
-- **Infrastructure**: Docker Compose, nginx
+- **Infrastructure**: Docker Compose, nginx, supervisord
 
 ## Project structure
 
@@ -87,11 +89,10 @@ Start everything:
 ```bash
 ./dev.sh start
 ./dev.sh logs          # view logs
-./dev.sh logs backend  # specific service
 ./dev.sh stop
 ```
 
-The dev environment runs with live reload on both backend (uvicorn) and frontend (Vite).
+The dev environment runs with live reload on both backend (uvicorn) and frontend (Vite) within a single container.
 
 | URL | Description |
 |-----|-------------|
@@ -100,6 +101,7 @@ The dev environment runs with live reload on both backend (uvicorn) and frontend
 | http://localhost/api/docs | Interactive API docs (Swagger) |
 | http://localhost/api/redoc | API docs (ReDoc) |
 | http://localhost:8000 | Backend direct access (debugging) |
+| http://localhost:3000 | Frontend direct access (debugging) |
 | http://localhost:9091 | Keycloak admin UI |
 
 Default app login: `admin` / `adminadmin` (pre-loaded in the dev Keycloak realm, member of `admins` group).
@@ -148,22 +150,22 @@ See [docs/AUTH.md](./docs/AUTH.md).
 
 To connect a sibling app like `moviedb-manager` locally:
 
-1. Start `haochen.lu` with `docker compose -f docker-compose.dev.yml up -d`.
+1. Start `haochen.lu` with `./dev.sh start`.
 2. Start the sibling app with its own dev compose.
 3. Both stacks join the shared Docker network `first-party-auth-network`.
 4. Inside sibling app containers, the auth broker is available at
-   `http://auth-broker:8000`.
+   `http://auth-broker:80`.
 5. In the browser, the login entrypoint stays `http://localhost/login`.
 
 ## Deployment
 
-Production uses pre-built images from Docker Hub (`antonlu/arcadia-backend`, `antonlu/arcadia-frontend`). Pushing a version tag triggers a GitHub Actions build:
+Production uses a single pre-built image from Docker Hub (`antonlu/arcadia-app`). Pushing a version tag triggers a GitHub Actions build:
 
 ```bash
 git tag v1.0.0 && git push origin v1.0.0
 ```
 
-This builds multi-arch images (`linux/amd64` + `linux/arm64`) and pushes them with both the version tag and `latest`.
+This builds a multi-arch image (`linux/amd64` + `linux/arm64`) containing both frontend and backend, and pushes it with both the version tag and `latest`.
 
 To run production locally:
 
