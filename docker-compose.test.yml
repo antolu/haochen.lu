@@ -66,7 +66,7 @@ services:
       COOKIE_DOMAIN: ""
       MAX_FILE_SIZE: 52428800
       OIDC_ENDPOINT: http://mock-oidc:80
-      OIDC_PUBLIC_ENDPOINT: http://mock-oidc:80
+      OIDC_PUBLIC_ENDPOINT: http://mock-oidc:8080
       OIDC_REALM: arcadia
       OIDC_CLIENT_ID: test-client
       OIDC_CLIENT_SECRET: test-secret
