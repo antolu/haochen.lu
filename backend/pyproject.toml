@@ -263,8 +263,6 @@ module = [
   "httpx.*",
   "yaml",
   "bcrypt",
-  "arcadia_auth",
-  "arcadia_auth.*",
   "jwt",
   "jwt.*",
 ]
