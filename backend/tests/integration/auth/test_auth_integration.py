@@ -34,25 +34,6 @@ async def test_login_returns_oidc_authorize_url(async_client: AsyncClient) -> No
 
 @pytest.mark.integration
 @pytest.mark.auth
-async def test_login_rejects_invalid_oauth_parameters(
-    async_client: AsyncClient,
-) -> None:
-    response = await async_client.get(
-        "/api/auth/login",
-        params={
-            "oidc_id": "test-oidc-id",
-            "redirect_uri": "https://sub.example.com/callback",
-            "response_type": "token",
-            "state": "state-1",
-        },
-    )
-
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json()["detail"] == "Unsupported response_type"
-
-
-@pytest.mark.integration
-@pytest.mark.auth
 async def test_protected_endpoint_requires_token(async_client: AsyncClient) -> None:
     response = await async_client.get("/api/auth/me")
 

@@ -5,7 +5,6 @@ Factory classes for creating test data.
 from __future__ import annotations
 
 import random
-import secrets
 import uuid
 from typing import Any
 
@@ -228,8 +227,6 @@ class SubAppFactory(AsyncSQLAlchemyModelFactory):
 
     requires_auth = True
     admin_only = False
-    client_id = factory.LazyFunction(lambda: secrets.token_urlsafe(12))
-    client_secret = factory.LazyFunction(lambda: secrets.token_urlsafe(24))
     redirect_uris = LazyAttribute(lambda obj: f"{obj.url}/callback")
     enabled = True
 

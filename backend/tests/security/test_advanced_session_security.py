@@ -46,43 +46,20 @@ async def test_authentication_response_headers(
 async def test_error_response_information_disclosure(
     async_client: AsyncClient, test_session
 ):
-    """Test that error responses don't disclose sensitive information."""
+    """Test that auth error responses don't disclose sensitive information."""
     error_scenarios = [
-        {
-            "client_id": "missing-client",
-            "redirect_uri": "https://sub.example.com/callback",
-            "response_type": "code",
-            "state": "state-1",
-        },
-        {
-            "client_id": "missing-client",
-            "redirect_uri": "https://sub.example.com/callback",
-            "response_type": "token",
-            "state": "state-2",
-        },
-        {
-            "client_id": "",
-            "redirect_uri": "",
-            "response_type": "code",
-            "state": "",
-        },
-        {
-            "client_id": "admin' OR '1'='1",
-            "redirect_uri": "https://sub.example.com/callback",
-            "response_type": "code",
-            "state": "state-3",
-        },
+        {"Authorization": "Bearer invalid.token.here"},
+        {"Authorization": "Bearer " + "x" * 100},
+        {"Authorization": "Token notbearer"},
     ]
 
-    for scenario in error_scenarios:
-        response = await async_client.get("/api/auth/login", params=scenario)
+    for headers in error_scenarios:
+        response = await async_client.get("/api/auth/me", headers=headers)
 
-        assert response.status_code in [400, 422]
+        assert response.status_code == 401
 
-        # Check for information disclosure
         disclosure_analysis = SecurityTestUtils.detect_information_disclosure(response)
 
-        # Should not reveal system information
         assert not disclosure_analysis["content_disclosures"]["stack_traces"]["found"]
         assert not disclosure_analysis["content_disclosures"]["database_errors"][
             "found"
@@ -91,9 +68,7 @@ async def test_error_response_information_disclosure(
             "found"
         ]
 
-        # Error messages should be generic
-        detail_obj = response.json().get("detail", "")
-        detail_str = str(detail_obj).lower()
+        detail_str = str(response.json().get("detail", "")).lower()
         assert "traceback" not in detail_str
         assert "exception" not in detail_str
 
