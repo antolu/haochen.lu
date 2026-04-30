@@ -54,7 +54,7 @@ def _sign_integration_token(sub: str) -> str:
     return pyjwt.encode(
         {
             "sub": sub,
-            "iss": "http://mock-oidc:80/realms/arcadia",
+            "iss": "http://mock-oidc:8080/realms/arcadia",
             "exp": now + 3600,
             "iat": now,
             "jti": f"integration-{sub}",
