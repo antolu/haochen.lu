@@ -71,9 +71,11 @@ COPY backend/pyproject.toml ./
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install --no-cache-dir --upgrade pip && \
     if [ "$BUILD_TYPE" = "development" ]; then \
-        pip install --no-cache-dir $(python -c "import tomllib; data = tomllib.load(open('pyproject.toml', 'rb')); deps = data['project'].get('dependencies', []) + data.get('project', {}).get('optional-dependencies', {}).get('test', []); print(' '.join([d for d in deps if 'photography-portfolio' not in d]))"); \
+        python -c "import tomllib; data = tomllib.load(open('pyproject.toml', 'rb')); deps = data['project'].get('dependencies', []) + data.get('project', {}).get('optional-dependencies', {}).get('test', []); print('\n'.join([d for d in deps if 'photography-portfolio' not in d]))" > requirements.txt && \
+        pip install --no-cache-dir -r requirements.txt; \
     else \
-        pip install --no-cache-dir $(python -c "import tomllib; data = tomllib.load(open('pyproject.toml', 'rb')); deps = data['project'].get('dependencies', []); print(' '.join([d for d in deps if 'photography-portfolio' not in d]))"); \
+        python -c "import tomllib; data = tomllib.load(open('pyproject.toml', 'rb')); deps = data['project'].get('dependencies', []); print('\n'.join([d for d in deps if 'photography-portfolio' not in d]))" > requirements.txt && \
+        pip install --no-cache-dir -r requirements.txt; \
     fi
 
 # Copy application code after dependencies are cached
