@@ -12,7 +12,11 @@ class Base(DeclarativeBase):
     pass
 
 
-engine = create_async_engine(settings.database_url, echo=True, future=True)
+if not settings.database_url:
+    msg = "Database URL must be configured"
+    raise ValueError(msg)
+
+engine = create_async_engine(str(settings.database_url), echo=True, future=True)
 
 async_session_maker = async_sessionmaker(
     engine, class_=AsyncSession, expire_on_commit=False

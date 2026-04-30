@@ -83,8 +83,8 @@ describe("ProjectDetailPage", () => {
     demo_url: "https://demo.example.com",
     github_url: "https://github.com/test/project",
     image_url: "https://example.com/project-image.jpg",
-    created_at: "2023-01-15T10:00:00Z",
-    updated_at: "2023-01-20T15:30:00Z",
+    created_at: "2023-01-15T12:00:00Z",
+    updated_at: "2023-01-20T12:00:00Z",
     use_readme: true,
   });
 
@@ -353,7 +353,6 @@ describe("ProjectDetailPage", () => {
       renderWithRouter(<ProjectDetailPage />);
 
       expect(screen.getByText("Last Updated")).toBeInTheDocument();
-      // Current formatter renders day-first format
       expect(screen.getByText("20 January 2023")).toBeInTheDocument();
     });
 

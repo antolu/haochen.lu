@@ -26,29 +26,10 @@ async def test_login_returns_oidc_authorize_url(async_client: AsyncClient) -> No
     parsed = urlparse(login_url)
     query = parse_qs(parsed.query)
 
-    assert parsed.path.endswith("/api/oidc/authorization")
+    assert parsed.path.endswith("/protocol/openid-connect/auth")
     assert query["response_type"] == ["code"]
-    assert query["scope"] == ["openid profile email groups"]
+    assert query["scope"] == ["openid profile email"]
     assert query["state"]
-
-
-@pytest.mark.integration
-@pytest.mark.auth
-async def test_login_rejects_invalid_oauth_parameters(
-    async_client: AsyncClient,
-) -> None:
-    response = await async_client.get(
-        "/api/auth/login",
-        params={
-            "oidc_id": "test-oidc-id",
-            "redirect_uri": "https://sub.example.com/callback",
-            "response_type": "token",
-            "state": "state-1",
-        },
-    )
-
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json()["detail"] == "Unsupported response_type"
 
 
 @pytest.mark.integration
@@ -77,7 +58,7 @@ async def test_protected_endpoint_with_valid_token_succeeds(
 async def test_logout_succeeds_with_valid_token_and_refresh_cookie(
     async_client: AsyncClient, admin_user: User, admin_token: str
 ) -> None:
-    async_client.cookies.set("refresh_token", "some-authelia-refresh-token")
+    async_client.cookies.set("refresh_token", "some-keycloak-refresh-token")
 
     response = await async_client.post(
         "/api/auth/logout",

@@ -28,8 +28,6 @@ class ApplicationBase(BaseModel):
     admin_only: bool = False
     logged_in_only: bool = False
     enabled: bool = True
-    client_id: str | None = None
-    client_secret: str | None = None
     redirect_uris: str | None = None
 
 
@@ -45,8 +43,6 @@ class ApplicationUpdate(BaseModel):
     requires_auth: bool | None = None
     admin_only: bool | None = None
     logged_in_only: bool | None = None
-    client_id: str | None = None
-    client_secret: str | None = None
     redirect_uris: str | None = None
     enabled: bool | None = None
 

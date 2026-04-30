@@ -34,7 +34,6 @@ const AdminEquipmentAliases = lazy(
   () => import("./pages/admin/AdminEquipmentAliases"),
 );
 const AdminApplications = lazy(() => import("./pages/admin/AdminApplications"));
-const AdminAppImport = lazy(() => import("./pages/admin/AdminAppImport"));
 const AdminContent = lazy(() => import("./pages/admin/AdminContent"));
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 
@@ -130,7 +129,7 @@ const AppContent: React.FC = () => {
           />
 
           {/* Auth routes */}
-          {/* Redirect /login to /admin which now handles the Authelia jump */}
+          {/* Redirect /login to /admin which handles the Keycloak jump */}
           <Route path="/login" element={<Navigate to="/admin" replace />} />
 
           {/* Admin routes */}
@@ -205,14 +204,6 @@ const AppContent: React.FC = () => {
               element={
                 <Suspense fallback={<AdminLoadingFallback />}>
                   <AdminApplications />
-                </Suspense>
-              }
-            />
-            <Route
-              path="applications/import"
-              element={
-                <Suspense fallback={<AdminLoadingFallback />}>
-                  <AdminAppImport />
                 </Suspense>
               }
             />

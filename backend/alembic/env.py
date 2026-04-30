@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import os
 from logging.config import fileConfig
 
 from alembic import context
@@ -10,7 +9,7 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 # Import your models here
-from app.config import normalize_async_database_url
+from app.config import settings
 from app.database import Base
 from app.models import *  # noqa: F403
 
@@ -18,10 +17,7 @@ from app.models import *  # noqa: F403
 # access to the values within the .ini file in use.
 config = context.config
 
-# Override the sqlalchemy.url with environment variable if available
-database_url = os.getenv("DATABASE_URL")
-if database_url:
-    config.set_main_option("sqlalchemy.url", normalize_async_database_url(database_url))
+config.set_main_option("sqlalchemy.url", settings.database_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

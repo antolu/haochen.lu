@@ -55,11 +55,6 @@ http {
         server backend:8000;
     }
 
-    # Upstream for Authelia
-    upstream authelia_service {
-        server authelia:9091;
-    }
-
     # Main server block
     server {
         listen 80;
@@ -138,31 +133,4 @@ http {
         }
     }
 
-    # Authelia server (HTTP redirect)
-    server {
-        listen 80;
-        server_name localhost.localdomain;
-        return 301 https://$host$request_uri;
-    }
-
-    # Authelia server (HTTPS)
-    server {
-        listen 443 ssl;
-        server_name localhost.localdomain;
-
-        ssl_certificate /etc/nginx/certs/cert.pem;
-        ssl_certificate_key /etc/nginx/certs/key.pem;
-
-        location / {
-            proxy_pass http://authelia_service;
-            proxy_http_version 1.1;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto https;
-
-            proxy_set_header X-Forwarded-Host $host;
-            proxy_set_header X-Forwarded-Port 443;
-        }
-    }
 }

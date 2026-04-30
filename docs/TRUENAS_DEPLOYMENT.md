@@ -14,7 +14,8 @@ This guide provides step-by-step instructions for deploying the Portfolio applic
 The application consists of 5 separate services:
 1. **PostgreSQL Database** (port 5432) - *Generic database server for multiple applications*
 2. **Redis Cache/Session Store** (port 6379) - *Generic cache/session store for multiple applications*
-3. **Authelia SSO Service** (port 9091) - *Full-featured OIDC provider and SSO broker*
+3. **Keycloak SSO Service** (port 9091) - *OIDC identity provider*
+3.5. **Keycloak Database** (internal) - *PostgreSQL database for Keycloak*
 4. **Backend API Service** (port 8000) - *Portfolio app backend*
 5. **Frontend Web Service** (port 80/443) - *Portfolio app frontend*
 
@@ -120,56 +121,73 @@ Mount this at `/usr/local/etc/redis/redis.conf` and add `redis-server /usr/local
 - 📊 **Database Separation**: Each application can use a different database number (e.g., photography app uses DB 0, another app uses DB 1)
 - 🚀 **Shared Cache**: Multiple applications can share the same Redis instance for caching and sessions
 
-## 🔑 Step 3: Deploy Authelia SSO Service
+## 🔑 Step 3: Deploy Keycloak Database
+
+Keycloak requires its own dedicated PostgreSQL instance.
 
 ### Service Configuration
-- **Application Name**: `authelia-server`
-- **Image**: `authelia/authelia:latest`
+- **Application Name**: `keycloak-db`
+- **Image**: `postgres:15-alpine`
 - **Restart Policy**: `Always`
 
 ### Environment Variables
 ```
-TZ=Europe/Vienna
-AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE=/config/secrets/jwt
-AUTHELIA_SESSION_SECRET_FILE=/config/secrets/session
-AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE=/config/secrets/storage
+POSTGRES_DB=keycloak
+POSTGRES_USER=keycloak
+POSTGRES_PASSWORD=your_keycloak_db_password
 ```
 
 ### Volume Mounts
 ```
-Host Path: /mnt/pool/apps/portfolio/authelia/config
-Mount Path: /config
+Host Path: /mnt/pool/apps/portfolio/keycloak-db
+Mount Path: /var/lib/postgresql/data
+```
+
+## 🔑 Step 3.1: Deploy Keycloak SSO Service
+
+### Service Configuration
+- **Application Name**: `keycloak-server`
+- **Image**: `quay.io/keycloak/keycloak:26`
+- **Command**: `start`
+- **Restart Policy**: `Always`
+
+### Environment Variables
+```
+KC_DB=postgres
+KC_DB_URL=jdbc:postgresql://<TRUENAS_IP>:5433/keycloak
+KC_DB_USERNAME=keycloak
+KC_DB_PASSWORD=your_keycloak_db_password
+KC_HOSTNAME=https://auth.yourdomain.com
+KC_BOOTSTRAP_ADMIN_USERNAME=admin
+KC_BOOTSTRAP_ADMIN_PASSWORD=your_keycloak_admin_password
+KC_PROXY_HEADERS=xforwarded
+KC_HTTP_ENABLED=true
 ```
 
 ### Port Configuration
-- **Container Port**: `9091`
-- **Host Port**: `9091` (or proxied via 80/443)
+- **Container Port**: `8080`
+- **Host Port**: `9091`
 - **Protocol**: `TCP`
 
-## 🔑 Step 3.1: Authelia Initial Configuration
+## 🔑 Step 3.2: Configure Keycloak via Terraform
 
-Authelia is configuration-file based. Ensure your `configuration.yml` has the OIDC client defined:
+After Keycloak is running, apply the Terraform configuration to create the `arcadia` realm, client, and groups:
 
-```yaml
-identity_providers:
-  oidc:
-    clients:
-      - client_id: 'arcadia-client'
-        client_secret: '$argon2id$v=19$m=65536,t=3,p=4$...' # Your hashed secret
-        public: false
-        authorization_policy: 'one_factor'
-        redirect_uris:
-          - 'https://yourdomain.com/api/auth/callback'
-        scopes:
-          - 'openid'
-          - 'profile'
-          - 'email'
-          - 'groups'
+```bash
+cd terraform/keycloak
+
+terraform init
+
+terraform apply \
+  -var="keycloak_url=https://auth.yourdomain.com" \
+  -var="keycloak_admin_password=your_keycloak_admin_password" \
+  -var='oidc_redirect_uris=["https://yourdomain.com/api/auth/callback"]'
+
+# Get the generated client secret
+terraform output -raw client_secret
 ```
 
-> [!NOTE]
-> **Authelia Configuration**
-> Unlike Casdoor, Authelia does not have a web UI for configuration. All settings must be edited in `/config/configuration.yml` and `/config/users_database.yml`.
+Set the client secret as `OIDC_CLIENT_SECRET` in your backend environment.
 
 ## 🔧 Step 4: Deploy Backend API Service
 
@@ -190,16 +208,22 @@ ADMIN_PASSWORD=your_admin_panel_password
 
 # Database and Services
 DATABASE_URL=postgresql+asyncpg://postgres:your_secure_db_password_here@<TRUENAS_IP>:5432/portfolio
-REDIS_URL=redis://<TRUENAS_IP>:6379/0
+REDIS_HOST=<TRUENAS_IP>
+REDIS_PORT=30059
+REDIS_PASSWORD=your_redis_password
+REDIS_DB=0
 
 # Application Configuration
 ENVIRONMENT=production
 CORS_ORIGINS=http://<TRUENAS_IP>,https://<TRUENAS_IP>,http://auth.yourdomain.com
 COOKIE_SECURE=false
 
-OIDC_CLIENT_ID=your_oidc_client_id
+OIDC_ENDPOINT=http://<TRUENAS_IP>:9091
+OIDC_PUBLIC_ENDPOINT=https://auth.yourdomain.com
+OIDC_REALM=arcadia
+OIDC_CLIENT_ID=haochen-lu
 OIDC_CLIENT_SECRET=your_oidc_client_secret
-OIDC_REDIRECT_URI=http://yourdomain.com/api/auth/callback
+OIDC_REDIRECT_URI=https://yourdomain.com/api/auth/callback
 ```
 
 ### 🔐 **Critical Security Note**
@@ -353,12 +377,12 @@ Deploy services in this order to ensure proper dependencies:
 2. **Redis**: `redis-cli -h <TRUENAS_IP> -p 6379 ping`
 3. **Backend**: `curl http://<TRUENAS_IP>:8000/health`
 4. **Frontend**: `curl http://<TRUENAS_IP>/`
-5. **Casdoor**: `curl http://<TRUENAS_IP>:8008/` (or your proxied auth URL)
+5. **Keycloak**: `curl http://<TRUENAS_IP>:9091/realms/arcadia/.well-known/openid-configuration`
 
 ### Application Access
 1. Open `http://<TRUENAS_IP>` in browser.
-2. The page should automatically redirect to the Authelia login page at `https://auth.yourdomain.com`.
-3. Login with your Authelia credentials.
+2. The page should redirect to Keycloak login at `https://auth.yourdomain.com`.
+3. Login with your Keycloak credentials.
 
 ## 🛠️ Troubleshooting
 
@@ -372,7 +396,7 @@ Deploy services in this order to ensure proper dependencies:
 
 #### Backend Cannot Connect to Redis
 - Verify Redis service is running and healthy
-- Check `REDIS_URL` environment variable format
+- Check `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` environment variables
 - Ensure TrueNAS IP is correct in connection string
 - Verify port 6379 is accessible
 
@@ -411,7 +435,10 @@ Access logs through TrueNAS Scale web interface:
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
 | `DATABASE_URL` | PostgreSQL connection string | - | ✅ |
-| `REDIS_URL` | Redis connection string | - | ✅ |
+| `REDIS_HOST` | Redis host | - | ✅ |
+| `REDIS_PORT` | Redis port | `6379` | ✅ |
+| `REDIS_PASSWORD` | Redis password | - | ✅ |
+| `REDIS_DB` | Redis database number | `0` | - |
 | `SECRET_KEY` | JWT signing key (min 32 chars) | - | ✅ |
 | `SESSION_SECRET_KEY` | Session encryption key (min 32 chars) | - | ✅ |
 | `ADMIN_PASSWORD` | Admin password (min 8 chars) | - | ✅ |

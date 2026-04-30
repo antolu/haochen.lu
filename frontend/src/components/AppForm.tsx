@@ -22,7 +22,6 @@ interface AppFormProps {
   application?: Application;
   onSubmit: (data: AppFormData) => Promise<void>;
   onCancel: () => void;
-  onRegenerateCredentials?: () => void;
   isLoading?: boolean;
 }
 
@@ -30,7 +29,6 @@ const AppForm: React.FC<AppFormProps> = ({
   application,
   onSubmit,
   onCancel,
-  onRegenerateCredentials,
   isLoading = false,
 }) => {
   const isEditing = !!application;
@@ -59,10 +57,6 @@ const AppForm: React.FC<AppFormProps> = ({
 
   const watchUrl = useWatch<AppFormData, "url">({ control, name: "url" });
   const watchColor = useWatch<AppFormData, "color">({ control, name: "color" });
-  const watchRequiresAuth = useWatch<AppFormData, "requires_auth">({
-    control,
-    name: "requires_auth",
-  });
 
   const validateUrl = (value: string) => {
     try {
@@ -342,110 +336,27 @@ const AppForm: React.FC<AppFormProps> = ({
           </div>
         </div>
 
-        {/* OIDC Section */}
-        {watchRequiresAuth && (
-          <div className="border-t pt-6">
-            <h3 className="text-lg font-medium text-foreground mb-1">
-              OIDC Integration
-            </h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              These credentials are used to register this app with Authelia.
-              Client ID and secret are auto-generated on creation.
+        {/* Redirect URIs */}
+        <div className="border-t pt-6">
+          <div>
+            <label
+              htmlFor="redirect_uris"
+              className="block text-sm font-medium text-foreground mb-1"
+            >
+              Redirect URIs
+            </label>
+            <textarea
+              id="redirect_uris"
+              rows={2}
+              className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="https://yourapp.example.com/auth/callback"
+              {...register("redirect_uris")}
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              One URI per line. Used to validate OAuth callback URLs.
             </p>
-            <div className="space-y-4">
-              {isEditing && application?.client_id && (
-                <div className="space-y-3">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-1">
-                        Client ID
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          readOnly
-                          value={application.client_id}
-                          className="w-full px-3 py-2 border border-border rounded-lg bg-muted text-foreground font-mono text-sm"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            void navigator.clipboard.writeText(
-                              application.client_id ?? "",
-                            );
-                          }}
-                          className="px-2 py-2 text-xs text-muted-foreground hover:text-foreground border border-border rounded-lg transition-colors"
-                          title="Copy"
-                        >
-                          Copy
-                        </button>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-1">
-                        Client Secret
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          readOnly
-                          value={application.client_secret ?? ""}
-                          className="w-full px-3 py-2 border border-border rounded-lg bg-muted text-foreground font-mono text-sm"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            void navigator.clipboard.writeText(
-                              application.client_secret ?? "",
-                            );
-                          }}
-                          className="px-2 py-2 text-xs text-muted-foreground hover:text-foreground border border-border rounded-lg transition-colors"
-                          title="Copy"
-                        >
-                          Copy
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  {onRegenerateCredentials && (
-                    <button
-                      type="button"
-                      onClick={onRegenerateCredentials}
-                      className="text-xs text-amber-600 hover:text-amber-700 underline underline-offset-2 transition-colors"
-                    >
-                      Regenerate client ID &amp; secret
-                    </button>
-                  )}
-                </div>
-              )}
-              {!isEditing && (
-                <p className="text-sm text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
-                  Client ID and secret will be generated automatically when the
-                  app is created.
-                </p>
-              )}
-              <div>
-                <label
-                  htmlFor="redirect_uris"
-                  className="block text-sm font-medium text-foreground mb-1"
-                >
-                  Redirect URIs
-                </label>
-                <textarea
-                  id="redirect_uris"
-                  rows={2}
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="https://yourapp.example.com/auth/callback"
-                  {...register("redirect_uris")}
-                />
-                <p className="mt-1 text-xs text-muted-foreground">
-                  One URI per line. Used by Authelia to validate OAuth
-                  callbacks.
-                </p>
-              </div>
-            </div>
           </div>
-        )}
+        </div>
 
         {/* Form Actions */}
         <div className="flex justify-end space-x-3 pt-6 border-t">

@@ -25,8 +25,15 @@ services:
     container_name: portfolio-backend
     environment:
       - ENVIRONMENT=${ENVIRONMENT:-development}
-      - DATABASE_URL=postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-portfolio}
-      - REDIS_URL=redis://redis:6379/0
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-portfolio}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - REDIS_DB=0
       - SECRET_KEY=${SECRET_KEY}
       - SESSION_SECRET_KEY=${SESSION_SECRET_KEY}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
@@ -36,8 +43,9 @@ services:
       - WEBP_QUALITY=${WEBP_QUALITY:-85}
       - THUMBNAIL_SIZE=${THUMBNAIL_SIZE:-400}
       - MAX_FILE_SIZE=${MAX_FILE_SIZE:-52428800}
-      - OIDC_ENDPOINT=${OIDC_ENDPOINT:-http://authelia:9091}
+      - OIDC_ENDPOINT=${OIDC_ENDPOINT}
       - OIDC_PUBLIC_ENDPOINT=${OIDC_PUBLIC_ENDPOINT:-https://auth.example.com}
+      - OIDC_REALM=${OIDC_REALM:-arcadia}
       - OIDC_CLIENT_ID=${OIDC_CLIENT_ID:-}
       - OIDC_CLIENT_SECRET=${OIDC_CLIENT_SECRET:-}
       - OIDC_REDIRECT_URI=${OIDC_REDIRECT_URI:-https://example.com/api/auth/callback}
@@ -61,25 +69,53 @@ services:
     expose:
       - "8000"
 
-  authelia:
-    image: authelia/authelia:latest
-    container_name: authelia
-    restart: unless-stopped
+  keycloak:
+    image: keycloak/keycloak:26.6.1
+    container_name: keycloak
+    command: start
     environment:
-      TZ: "Europe/Vienna"
-      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: /config/secrets/jwt
-      AUTHELIA_SESSION_SECRET_FILE: /config/secrets/session
-      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /config/secrets/storage
-    volumes:
-      - ./authelia/config:/config
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      KC_HOSTNAME: ${KEYCLOAK_PUBLIC_URL:-https://auth.haochen.lu}
+      KC_PROXY_HEADERS: xforwarded
+      KC_HTTP_ENABLED: "true"
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+    ports:
+      - "9091:8080"
     networks:
       - portfolio-network
       - first-party-auth-network
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD", "authelia", "healthcheck"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/health/ready || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 5
+      start_period: 60s
+
+  keycloak-db:
+    image: postgres:15-alpine
+    container_name: keycloak-db
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+    volumes:
+      - keycloak_db_data:/var/lib/postgresql/data
+    networks:
+      - portfolio-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   db:
     image: postgres:15-alpine
@@ -124,7 +160,11 @@ services:
     image: antonlu/arcadia-backend:latest
     container_name: portfolio-migrate
     environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-portfolio}
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-portfolio}
       - SECRET_KEY=${SECRET_KEY}
       - SESSION_SECRET_KEY=${SESSION_SECRET_KEY}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
@@ -147,4 +187,6 @@ volumes:
   postgres_data:
     driver: local
   redis_data:
+    driver: local
+  keycloak_db_data:
     driver: local

@@ -12,12 +12,10 @@ services:
     ports:
       - "80:80"
       - "443:443"
-    volumes:
-      - ./authelia/certs:/etc/nginx/certs:ro
     depends_on:
       - backend
       - frontend
-      - authelia
+      - keycloak
     networks:
       - portfolio-network
 
@@ -40,8 +38,15 @@ services:
       - /app/.pytest_cache
     environment:
       - ENVIRONMENT=development
-      - DATABASE_URL=postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-portfolio}
-      - REDIS_URL=redis://redis:6379/0
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB:-portfolio}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - REDIS_DB=0
       - SECRET_KEY=${SECRET_KEY}
       - SESSION_SECRET_KEY=${SESSION_SECRET_KEY}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
@@ -51,10 +56,11 @@ services:
       - WEBP_QUALITY=85
       - THUMBNAIL_SIZE=400
       - MAX_FILE_SIZE=52428800
-      - OIDC_ENDPOINT=http://authelia:9091
-      - OIDC_PUBLIC_ENDPOINT=https://localhost.localdomain
-      - OIDC_CLIENT_ID=arcadia-client
-      - OIDC_CLIENT_SECRET=arcadia-secret
+      - OIDC_ENDPOINT=http://keycloak:8080
+      - OIDC_PUBLIC_ENDPOINT=http://localhost:9091
+      - OIDC_REALM=arcadia
+      - OIDC_CLIENT_ID=${OIDC_CLIENT_ID:-haochen-lu}
+      - OIDC_CLIENT_SECRET=${OIDC_CLIENT_SECRET:-}
       - OIDC_REDIRECT_URI=http://localhost/api/auth/callback
     command:
       - "uvicorn"
@@ -138,27 +144,51 @@ services:
       timeout: 5s
       retries: 5
 
-  authelia:
-    image: authelia/authelia:latest
-    container_name: authelia
-    restart: unless-stopped
-    environment:
-      TZ: "Europe/Vienna"
-      X_AUTHELIA_CONFIG_FILTERS: template
-      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: /config/secrets/jwt
-      AUTHELIA_SESSION_SECRET_FILE: /config/secrets/session
-      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /config/secrets/storage
+  keycloak:
+    image: keycloak/keycloak:26.6.1
+    container_name: keycloak
+    command: start-dev --import-realm
     volumes:
-      - ./authelia/config:/config
-      - ./authelia/assets:/assets:ro
+      - ./keycloak/arcadia-realm.json:/opt/keycloak/data/import/arcadia-realm.json:ro
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak}
+      KC_HOSTNAME: http://localhost:9091
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_ENABLED: "true"
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+    ports:
+      - "9091:8080"
     networks:
       - portfolio-network
       - first-party-auth-network
-    ports:
-      - "9091:9091"
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+
+  keycloak-db:
+    image: postgres:15-alpine
+    container_name: keycloak-db
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak}
+    volumes:
+      - keycloak_db_data:/var/lib/postgresql/data
+    networks:
+      - portfolio-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   db_data:
+  keycloak_db_data:
 
 networks:
   portfolio-network:

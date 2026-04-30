@@ -7,7 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is a full-stack photography portfolio platform with FastAPI backend and React frontend. The system features:
 
 - **Backend**: FastAPI with SQLAlchemy 2.0, PostgreSQL 15, Redis 7, async operations
-- **Frontend**: React 18 with TypeScript, Vite, TanStack Query, Zustand, Leaflet maps
+- **Frontend**: React 19 with TypeScript, Vite, TanStack Query, Zustand, MapLibre, Tailwind CSS v4
+- **Auth**: Keycloak 26 (OIDC, RS256 tokens via JWKS). Dev realm bootstrapped automatically; prod managed via Terraform.
 - **Infrastructure**: Docker Compose with nginx reverse proxy
 - **Image Processing**: Multi-variant WebP generation (400px-2400px) with EXIF extraction
 
@@ -17,9 +18,22 @@ Core features include interactive photo mapping with clustering, location-based 
 
 ### Environment Setup
 Required environment variables (create `.env` file):
-- `SECRET_KEY`: JWT signing key (minimum 32 characters)
-- `SESSION_SECRET_KEY`: Session encryption key (minimum 32 characters)
-- `ADMIN_PASSWORD`: Admin user password (minimum 8 characters)
+- `SECRET_KEY`: signing key for app OAuth tokens (minimum 32 characters)
+- `SESSION_SECRET_KEY`: session encryption key (minimum 32 characters)
+- `ADMIN_PASSWORD`: backend admin password (minimum 8 characters)
+- `POSTGRES_USER`: database role name (default: `postgres`)
+- `POSTGRES_PASSWORD`: database role password (required)
+- `POSTGRES_HOST`: database host (default: `localhost`; use `db` in Docker)
+- `POSTGRES_PORT`: database port (default: `5432`)
+- `POSTGRES_DB`: database name (default: `portfolio`)
+
+Keycloak OIDC variables (dev defaults — match `keycloak/arcadia-realm.json`):
+- `OIDC_ENDPOINT=http://keycloak:8080` — internal container URL for token validation
+- `OIDC_PUBLIC_ENDPOINT=http://localhost:9091` — browser-facing URL, also used for `iss` claim validation
+- `OIDC_REALM=arcadia`
+- `OIDC_CLIENT_ID=haochen-lu`
+- `OIDC_CLIENT_SECRET=dev-client-secret`
+- `OIDC_REDIRECT_URI=http://localhost/api/auth/callback`
 
 ### Development Commands
 
@@ -234,6 +248,10 @@ Test configuration in `backend/pyproject.toml` with coverage requirements (40% m
 - Admin interface: http://localhost/admin
 - API documentation: http://localhost/api/docs
 - Direct backend: http://localhost:8000 (debugging)
+- Keycloak admin UI: http://localhost:9091 (credentials: `admin` / `admin`)
+
+**Dev login credentials (pre-loaded in Keycloak realm):**
+- Username: `admin`, password: `adminadmin`, member of `admins` group → `is_admin=true`
 
 ## Code Conventions
 
@@ -250,6 +268,13 @@ Test configuration in `backend/pyproject.toml` with coverage requirements (40% m
 - Redis caching for sessions and geocoding responses
 - Virtualized photo grids for large collections
 - Database indexes on location and timestamp fields
+
+## Infrastructure & Deployment
+
+This repo is deployed on TrueNAS via a separate Terraform repository. When adding new configuration or deployment parameters (new env vars, new services, new volumes), always:
+
+1. Add the parameter to the dev environment first (`docker-compose.dev.yml` and `.env.example`)
+2. Prompt the user to update their Terraform configuration accordingly
 
 ## Common Development Issues
 
@@ -311,7 +336,37 @@ If getting "File is too large" errors for files under 50MB:
 - **Frontend**: Use relative API base `/api` in development and production
 
 ### Authentication
-- Default admin credentials: `admin` / `adminpassword`
-- JWT tokens stored in browser localStorage
-- Clear localStorage if auth issues persist
-- normally there is no need to restart if we are doing superficial changes without new files
+
+Auth uses Keycloak OIDC (RS256). The backend never mints its own JWTs for users — it validates Keycloak's access tokens via JWKS and stores the Keycloak refresh token in an httpOnly cookie.
+
+Two-URL pattern is critical:
+- `OIDC_ENDPOINT` — used by the backend to reach Keycloak over the Docker network (e.g. `http://keycloak:8080`)
+- `OIDC_PUBLIC_ENDPOINT` — browser-facing URL and expected `iss` claim (e.g. `http://localhost:9091`)
+
+The JWKS URI returned by Keycloak's discovery doc uses the public hostname. The backend rewrites it to the internal `OIDC_ENDPOINT` before fetching (`backend/app/core/oidc.py`).
+
+**Dev credentials:**
+- App login: `admin` / `adminadmin`
+- Keycloak admin UI: `admin` / `admin`
+
+**Resetting dev Keycloak state:**
+```bash
+docker compose -f docker-compose.dev.yml down -v
+./dev.sh start
+```
+
+Clear browser localStorage if the frontend shows stale auth state after a realm reset.
+
+## Infrastructure (Terraform)
+
+Terraform configuration lives in a **separate repo**: `../arcadia-terraform` (i.e. `/Users/antonlu/code/arcadia-terraform`).
+
+**IMPORTANT**: Whenever a task involves changes that affect infrastructure settings — such as:
+- OIDC client configuration (redirect URIs, scopes, grant types)
+- Keycloak realm, group, or role definitions
+- New services added to docker-compose that need external configuration
+- Any change to `OIDC_*` environment variables that reflects a Keycloak-side setting
+
+— you MUST ask the user: *"This change has an infrastructure side. Should I update the Terraform config in `../arcadia-terraform`?"* before proceeding. Do not silently skip the Terraform update.
+
+If the user says yes, make the changes in `../arcadia-terraform/truenas/apps/keycloak/` (or the appropriate subdirectory). If they say no, note what would need to be applied manually.

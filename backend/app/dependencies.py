@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from arcadia_auth import DiscoveryError, JwksError, TokenExpiredError, TokenInvalidError
 from fastapi import Depends, File, Form, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -33,8 +34,9 @@ async def get_current_user_optional(
         return None
 
     token = auth_header.split(" ")[1]
-    payload = await oidc_validator.validate_token(token)
-    if payload is None:
+    try:
+        payload = await oidc_validator.validate_token(token)
+    except (TokenExpiredError, TokenInvalidError, JwksError, DiscoveryError):
         return None
     jti = payload.get("jti")
     if isinstance(jti, str) and await TokenManager.is_access_token_blocked(jti):

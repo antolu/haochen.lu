@@ -82,7 +82,7 @@ import app.core.file_access as fa_mod  # noqa: E402
 import app.core.image_processor as ip_mod  # noqa: E402
 from app import config as app_config  # noqa: E402
 from app.config import Settings  # noqa: E402
-from app.core.oidc import oidc_validator  # noqa: E402
+from app.core.oidc import oidc_client, oidc_validator  # noqa: E402
 from app.core.redis import redis_client  # noqa: E402
 from app.database import Base, get_session  # noqa: E402
 from app.main import app  # noqa: E402
@@ -95,8 +95,10 @@ def test_settings() -> Settings:
     """Override settings for testing."""
     return Settings(
         database_url="sqlite+aiosqlite:///:memory:",
-        # Prefer docker redis service if available; override with REDIS_URL env
-        redis_url=os.getenv("REDIS_URL", "redis://redis:6379/1"),
+        redis_host=os.getenv("REDIS_HOST", "redis"),
+        redis_port=int(os.getenv("REDIS_PORT", "6379")),
+        redis_db=int(os.getenv("REDIS_DB", "1")),
+        redis_password=os.getenv("REDIS_PASSWORD") or None,
         secret_key=os.getenv(
             "SECRET_KEY", "test_secret_key_for_testing_minimum_32_chars"
         ),
@@ -221,8 +223,9 @@ def _is_service_available(url: str, timeout: float = 0.2) -> bool:
 
 def pytest_collection_modifyitems(config, items):
     """Skip integration tests that depend on external services if unavailable."""
-    redis_url = os.getenv("REDIS_URL", "redis://redis:6379/1")
-    redis_up = _is_service_available(redis_url)
+    redis_host = os.getenv("REDIS_HOST", "redis")
+    redis_port = int(os.getenv("REDIS_PORT", "6379"))
+    redis_up = _is_service_available(f"redis://{redis_host}:{redis_port}/1")
 
     for item in items:
         # Markers in our suite that depend on Redis/services
@@ -595,16 +598,20 @@ def patch_oidc_validator(monkeypatch: pytest.MonkeyPatch) -> None:
     """
     Replace oidc_validator.validate_token with a test-friendly version that
     accepts tokens of the form "test-token-{oidc_id}" and returns a minimal
-    payload. This avoids needing a real Authelia JWKS endpoint in integration
-    tests for the user-session layer.
+    payload. Raises TokenInvalidError for anything else to match the real
+    contract (validate_token never returns None).
+
+    Also stubs out oidc_client methods that need a live Keycloak endpoint
+    (authorization_url, revoke_token) so tests don't hit DiscoveryError.
 
     Tokens issued by create_access_token (HS256, 'sub' = user UUID) are used
     only for the app OAuth broker layer (/authorize, /oauth/token, /jump/*) and
     are validated via decode_token, not oidc_validator. Those paths remain
     unchanged.
     """
+    from arcadia_auth.exceptions import TokenInvalidError  # noqa: PLC0415
 
-    async def fake_validate(token: str) -> dict[str, Any] | None:
+    async def fake_validate(token: str) -> dict[str, Any]:
         await asyncio.sleep(0)
         prefix = "test-token-"
         if token.startswith(prefix):
@@ -614,6 +621,19 @@ def patch_oidc_validator(monkeypatch: pytest.MonkeyPatch) -> None:
                 "jti": f"jti-{oidc_id}",
                 "iss": "http://auth.localhost",
             }
-        return None
+        msg = "invalid token"
+        raise TokenInvalidError(msg)
+
+    def fake_authorization_url(redirect_uri: str, state: str, scope: str) -> str:
+        return (
+            f"http://keycloak:8080/realms/arcadia/protocol/openid-connect/auth"
+            f"?response_type=code&client_id=test&redirect_uri={redirect_uri}"
+            f"&state={state}&scope={scope}"
+        )
+
+    async def fake_revoke_token(token: str) -> None:
+        await asyncio.sleep(0)
 
     monkeypatch.setattr(oidc_validator, "validate_token", fake_validate)
+    monkeypatch.setattr(oidc_client, "authorization_url", fake_authorization_url)
+    monkeypatch.setattr(oidc_client, "revoke_token", fake_revoke_token)

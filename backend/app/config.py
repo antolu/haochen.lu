@@ -2,28 +2,26 @@ from __future__ import annotations
 
 import os
 
-from pydantic import field_validator
+from arcadia_auth import OidcSettings
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings
-
-
-def normalize_async_database_url(url: str) -> str:
-    """Ensure SQLAlchemy async URLs use asyncpg for PostgreSQL."""
-    if url.startswith("postgresql://"):
-        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
-    if url.startswith("postgres://"):
-        return url.replace("postgres://", "postgresql+asyncpg://", 1)
-    return url
 
 
 class Settings(BaseSettings):
     # Database
-    database_url: str = os.getenv(
-        "DATABASE_URL",
-        "postgresql+asyncpg://postgres:password@localhost:5432/portfolio",
-    )
+    postgres_user: str = "postgres"
+    postgres_password: str = "password"
+    postgres_host: str = "localhost"
+    postgres_port: int = 5432
+    postgres_db: str = "portfolio"
+    database_url: str | None = None
 
     # Redis
-    redis_url: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+    redis_host: str = "localhost"
+    redis_port: int = 6379
+    redis_password: str | None = None
+    redis_db: int = 0
+    redis_url: str | None = None
 
     # Security - REQUIRED
     secret_key: str = os.getenv("SECRET_KEY") or ""
@@ -75,11 +73,6 @@ class Settings(BaseSettings):
 
         return validated
 
-    @field_validator("database_url")
-    @classmethod
-    def _normalize_database_url(cls, v: str) -> str:
-        return normalize_async_database_url(v)
-
     @property
     def cors_origins_list(self) -> list[str]:
         return list(self.cors_origins) if isinstance(self.cors_origins, list) else []
@@ -126,23 +119,6 @@ class Settings(BaseSettings):
     # User agent for external API calls
     user_agent: str = os.getenv("USER_AGENT", "photography-portfolio/1.0")
 
-    # OIDC setup (Authelia)
-    oidc_endpoint: str = os.getenv("OIDC_ENDPOINT", "http://localhost:9091")
-    oidc_public_endpoint: str = os.getenv(
-        "OIDC_PUBLIC_ENDPOINT", "http://auth.localhost"
-    )
-    # Authelia's issuer is its public URL; override if it differs from oidc_public_endpoint
-    oidc_issuer: str = os.getenv(
-        "OIDC_ISSUER", os.getenv("OIDC_PUBLIC_ENDPOINT", "http://auth.localhost")
-    )
-    oidc_client_id: str = os.getenv("OIDC_CLIENT_ID", "")
-    oidc_client_secret: str = os.getenv("OIDC_CLIENT_SECRET", "")
-    oidc_redirect_uri: str = os.getenv(
-        "OIDC_REDIRECT_URI",
-        "http://localhost:8000/api/auth/callback",
-    )
-    oidc_jwks_cache_ttl: int = int(os.getenv("OIDC_JWKS_CACHE_TTL", "3600"))
-
     # External API timeouts (in seconds)
     repository_request_timeout: int = int(os.getenv("REPOSITORY_TIMEOUT", "10"))
 
@@ -153,6 +129,22 @@ class Settings(BaseSettings):
     @property
     def is_development(self) -> bool:
         return self.environment.lower() in ("development", "dev")
+
+    @model_validator(mode="after")
+    def _assemble_urls(self) -> Settings:
+        if not self.database_url:
+            self.database_url = (
+                f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}"
+                f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
+            )
+        if not self.redis_url:
+            if self.redis_password:
+                self.redis_url = f"redis://:{self.redis_password}@{self.redis_host}:{self.redis_port}/{self.redis_db}"
+            else:
+                self.redis_url = (
+                    f"redis://{self.redis_host}:{self.redis_port}/{self.redis_db}"
+                )
+        return self
 
     def validate_settings(self) -> None:
         """Validate required settings."""
@@ -193,3 +185,5 @@ class Settings(BaseSettings):
 # Initialize settings and validate
 settings = Settings()
 settings.validate_settings()
+
+oidc_settings = OidcSettings()

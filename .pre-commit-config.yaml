@@ -57,6 +57,8 @@ repos:
           - 'fastapi>=0.136.1'
           - 'starlette>=1.0.0'
           - 'bcrypt>=5.0.0'
+          - 'PyJWT>=2.8'
+          - 'arcadia-auth @ git+https://github.com/antolu/arcadia-auth@v0.1'
 
   # ESLint for TypeScript/JavaScript linting
   - repo: https://github.com/pre-commit/mirrors-eslint

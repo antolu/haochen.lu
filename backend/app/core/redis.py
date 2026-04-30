@@ -16,7 +16,6 @@ except ImportError:
     redis_module = typing.cast(typing.Any, None)
 
 import inspect
-from urllib.parse import urlparse
 
 from app.config import settings
 
@@ -59,20 +58,11 @@ class RedisClient:
         self._connection_attempted = True
 
         try:
-            # Parse URL and construct client using Redis() so tests can patch redis.Redis
-            parsed = urlparse(settings.redis_url)
-            host = parsed.hostname or "localhost"
-            port = int(parsed.port or 6379)
-            try:
-                db_str = (parsed.path or "/0").lstrip("/")
-                db = int(db_str) if db_str else 0
-            except Exception:
-                db = 0
-
             self._redis = redis_module.Redis(
-                host=host,
-                port=port,
-                db=db,
+                host=settings.redis_host,
+                port=settings.redis_port,
+                db=settings.redis_db,
+                password=settings.redis_password,
                 decode_responses=True,
                 socket_connect_timeout=5,
                 health_check_interval=30,
@@ -207,7 +197,7 @@ async def close_redis() -> None:
 class TokenManager:
     """Redis operations for access token blocklisting.
 
-    Refresh tokens are owned by Authelia — only access token revocation
+    Refresh tokens are owned by Keycloak — only access token revocation
     (on logout) is tracked here.
     """
 

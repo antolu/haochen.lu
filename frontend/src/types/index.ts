@@ -131,8 +131,6 @@ export interface Application {
   logged_in_only: boolean;
   enabled: boolean;
   order: number;
-  client_id?: string;
-  client_secret?: string;
   redirect_uris?: string;
   created_at: string;
   updated_at: string;
