@@ -72,38 +72,26 @@ jobs:
         env:
           VERSION_TAG: ${{ steps.vars.outputs.version_tag }}
 
-      - name: Build and push backend image (multi-arch)
+      - name: Build and push app image (multi-arch)
         run: |
           docker buildx build \
             --platform linux/amd64,linux/arm64 \
             --build-arg BUILD_TYPE=production \
-            --file backend/Dockerfile \
-            --tag antonlu/arcadia-backend:latest \
-            --tag antonlu/arcadia-backend:${{ steps.vars.outputs.version_tag }} \
+            --file Dockerfile \
+            --tag antonlu/arcadia-app:latest \
+            --tag antonlu/arcadia-app:${{ steps.vars.outputs.version_tag }} \
             --push \
             .
 
-      - name: Build and push frontend image (multi-arch)
-        run: |
-          docker buildx build \
-            --platform linux/amd64,linux/arm64 \
-            --file frontend/Dockerfile \
-            --tag antonlu/arcadia-frontend:latest \
-            --tag antonlu/arcadia-frontend:${{ steps.vars.outputs.version_tag }} \
-            --push \
-            frontend
-
       - name: Summary
         run: |
-          echo "## Images Built and Pushed" >> $GITHUB_STEP_SUMMARY
+          echo "## Image Built and Pushed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Source git tag: ${{ steps.vars.outputs.raw_tag }}" >> $GITHUB_STEP_SUMMARY
           echo "Published image tag: ${{ steps.vars.outputs.version_tag }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Images" >> $GITHUB_STEP_SUMMARY
+          echo "### Image" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          echo "antonlu/arcadia-frontend:latest" >> $GITHUB_STEP_SUMMARY
-          echo "antonlu/arcadia-frontend:${{ steps.vars.outputs.version_tag }}" >> $GITHUB_STEP_SUMMARY
-          echo "antonlu/arcadia-backend:latest" >> $GITHUB_STEP_SUMMARY
-          echo "antonlu/arcadia-backend:${{ steps.vars.outputs.version_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "antonlu/arcadia-app:latest" >> $GITHUB_STEP_SUMMARY
+          echo "antonlu/arcadia-app:${{ steps.vars.outputs.version_tag }}" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
