@@ -1,28 +1,9 @@
 # Removed version as it's obsolete in modern Docker Compose
 
 services:
-  frontend:
-    image: antonlu/arcadia-frontend:latest
-    container_name: portfolio-frontend
-    environment:
-      - BACKEND_URL=http://backend:8000
-    ports:
-      - "80:80"
-      - "443:443"
-    depends_on:
-      - backend
-    networks:
-      - portfolio-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  backend:
-    image: antonlu/arcadia-backend:latest
-    container_name: portfolio-backend
+  app:
+    image: antonlu/arcadia-app:latest
+    container_name: portfolio-app
     environment:
       - ENVIRONMENT=${ENVIRONMENT:-development}
       - POSTGRES_USER=postgres
@@ -52,6 +33,9 @@ services:
     volumes:
       - ./uploads:/app/uploads
       - ./compressed:/app/compressed
+    ports:
+      - "80:80"
+      - "443:443"
     depends_on:
       - db
       - redis
@@ -62,12 +46,10 @@ services:
           - auth-broker
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-    expose:
-      - "8000"
 
   keycloak:
     image: keycloak/keycloak:26.6.1
@@ -157,7 +139,7 @@ services:
 
   # Database migration service
   migrate:
-    image: antonlu/arcadia-backend:latest
+    image: antonlu/arcadia-app:latest
     container_name: portfolio-migrate
     environment:
       - POSTGRES_USER=postgres
