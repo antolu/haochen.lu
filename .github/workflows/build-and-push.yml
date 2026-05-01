@@ -1,4 +1,4 @@
-name: Build and Push Multi-Platform Images
+name: Build and Push App Image
 
 on:
   push:
@@ -7,8 +7,7 @@ on:
 
 env:
   REGISTRY: docker.io
-  IMAGE_FRONTEND: antonlu/arcadia-frontend
-  IMAGE_BACKEND: antonlu/arcadia-backend
+  IMAGE_APP: antonlu/arcadia-app
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
