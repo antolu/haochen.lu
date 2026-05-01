@@ -176,35 +176,21 @@ jobs:
     steps:
     - uses: actions/checkout@v6
 
-    - name: Build backend Docker image
+    - name: Build app Docker image
       run: |
-        docker build -f backend/Dockerfile -t portfolio-backend:security-scan .
+        docker build -f Dockerfile -t arcadia-app:security-scan .
 
-    - name: Build frontend Docker image
-      run: |
-        docker build -f frontend/Dockerfile -t portfolio-frontend:security-scan frontend
-
-    - name: Run Trivy vulnerability scanner on backend
+    - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@v0.36.0
       with:
-        image-ref: 'portfolio-backend:security-scan'
+        image-ref: 'arcadia-app:security-scan'
         format: 'json'
-        output: 'backend-trivy-report.json'
-      continue-on-error: true
-
-    - name: Run Trivy vulnerability scanner on frontend
-      uses: aquasecurity/trivy-action@v0.36.0
-      with:
-        image-ref: 'portfolio-frontend:security-scan'
-        format: 'json'
-        output: 'frontend-trivy-report.json'
+        output: 'trivy-report.json'
       continue-on-error: true
 
     - name: Run Docker Scout (if available)
       run: |
-        # Docker Scout analysis
-        docker scout cves portfolio-backend:security-scan > backend-scout-report.txt 2>&1 || echo "Docker Scout not available"
-        docker scout cves portfolio-frontend:security-scan > frontend-scout-report.txt 2>&1 || echo "Docker Scout not available"
+        docker scout cves arcadia-app:security-scan > scout-report.txt 2>&1 || echo "Docker Scout not available"
 
     - name: Check Dockerfile best practices (De-duplicated)
       run: |
@@ -216,12 +202,8 @@ jobs:
       with:
         name: container-security-reports
         path: |
-          backend-trivy-report.json
-          frontend-trivy-report.json
-          backend-scout-report.txt
-          frontend-scout-report.txt
-          backend-dockerfile-check.txt
-          frontend-dockerfile-check.txt
+          trivy-report.json
+          scout-report.txt
 
   infrastructure-security:
     runs-on: ubuntu-latest

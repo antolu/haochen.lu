@@ -3,39 +3,23 @@
 # This will mount source code, run development servers, and proxy through nginx
 
 services:
-  nginx:
-    # Use the same nginx config but proxy to dev servers
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.nginx.dev
-    image: antonlu/arcadia-nginx:dev
-    ports:
-      - "80:80"
-      - "443:443"
-    depends_on:
-      - backend
-      - frontend
-      - keycloak
-    networks:
-      - portfolio-network
-
-  backend:
-    # Override the image to use a development base
+  app:
     build:
       context: .
-      dockerfile: backend/Dockerfile
-      args:
-        BUILD_TYPE: development
-    image: antonlu/arcadia-backend:dev
+      dockerfile: Dockerfile.dev
+    image: antonlu/arcadia-app:dev
+    container_name: portfolio-app-dev
+    ports:
+      - "80:80"
+      - "8000:8000"
     volumes:
-      # Mount source code for live reload
-      - ./backend:/app
-      - ./.git:/app/.git
+      - ./backend:/app/backend
+      - ./frontend:/app/frontend
+      - /app/frontend/node_modules
+      - /app/frontend/.vite
       - ./uploads:/app/uploads
       - ./compressed:/app/compressed
-      # Preserve build artifacts
-      - /app/__pycache__
-      - /app/.pytest_cache
+      - ./.git:/app/.git
     environment:
       - ENVIRONMENT=development
       - POSTGRES_USER=postgres
@@ -62,57 +46,18 @@ services:
       - OIDC_CLIENT_ID=${OIDC_CLIENT_ID:-haochen-lu}
       - OIDC_CLIENT_SECRET=${OIDC_CLIENT_SECRET:-}
       - OIDC_REDIRECT_URI=http://localhost/api/auth/callback
-    command:
-      - "uvicorn"
-      - "app.main:app"
-      - "--host"
-      - "0.0.0.0"
-      - "--port"
-      - "8000"
-      - "--reload"
-      - "--reload-dir"
-      - "/app"
-    ports:
-      - "8000:8000"  # Expose backend directly for debugging
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+      - WORKDIR=/app/backend
     depends_on:
       - db
       - redis
+      - keycloak
     networks:
       portfolio-network:
       first-party-auth-network:
         aliases:
           - auth-broker
-
-  frontend:
-    # Override the image to use a development base
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev
-    image: antonlu/arcadia-frontend:dev
-    volumes:
-      # Mount source code for live reload
-      - ./frontend:/app
-      # Preserve node_modules
-      - /app/node_modules
-      # Preserve build cache
-      - /app/.vite
-    environment:
-      - NODE_ENV=development
-      - VITE_API_URL=/api  # Use relative URLs since nginx will proxy
-      - CHOKIDAR_USEPOLLING=true  # For Docker file watching
-    command:
-      - "npm"
-      - "run"
-      - "dev"
-      - "--"
-      - "--host"
-      - "0.0.0.0"
-      - "--port"
-      - "3000"
-    depends_on:
-      - backend
-    networks:
-      - portfolio-network
 
   db:
     image: postgres:15-alpine

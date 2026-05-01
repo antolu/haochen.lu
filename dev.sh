@@ -42,15 +42,14 @@ start_dev() {
     print_status "This will:"
     print_status "  - Mount source code for live reload"
     print_status "  - Use nginx proxy on standard ports"
-    print_status "  - Frontend (Vite dev server) with HMR"
-    print_status "  - Backend (Uvicorn) with auto-reload"
+    print_status "  - Combined container with nginx, Vite, and Uvicorn"
     print_status "  - Keycloak on http://localhost:9091 (admin: admin/admin)"
 
     # Stop any existing containers
     docker compose -f docker-compose.dev.yml down
 
-    # Build development images (BuildKit on, provenance off for speed)
-    print_status "Building development images..."
+    # Build development image
+    print_status "Building development image..."
     DOCKER_BUILDKIT=1 BUILDKIT_PROVENANCE=0 docker compose -f docker-compose.dev.yml build
 
     # Start development environment
@@ -60,7 +59,8 @@ start_dev() {
     print_status "Development environment started!"
     print_status "Application: http://localhost"
     print_status "API: http://localhost/api"
-    print_status "Direct backend: http://localhost:8000 (debugging)"
+    print_status "Backend Debug: http://localhost:8000"
+    print_status "Frontend Debug: http://localhost:3000"
     print_status ""
     print_status "To view logs: ./dev.sh logs"
     print_status "To stop: ./dev.sh stop"
@@ -154,18 +154,8 @@ rebuild_dev() {
         print_warning "Cache disabled for this build"
     fi
 
-    # Build/push backend and frontend (targets specified for Docker Hub)
-    build_one "." "backend/Dockerfile" "antonlu/arcadia-backend:dev" "BUILD_TYPE=development" "$extra_build_flags"
-    build_one "./frontend" "frontend/Dockerfile.dev" "antonlu/arcadia-frontend:dev" "" "$extra_build_flags"
-
-    # Always build nginx for local dev (load only)
-    if [ "$push_mode" -eq 1 ]; then
-        print_status "Also building nginx images locally for host arch"
-        # shellcheck disable=SC2086
-        docker buildx build --builder devbuilder --platform "$host_platform" --load --pull $extra_build_flags -t "antonlu/arcadia-nginx:dev" -f "frontend/Dockerfile.nginx.dev" "./frontend"
-    else
-        build_one "./frontend" "frontend/Dockerfile.nginx.dev" "antonlu/arcadia-nginx:dev" "" "$extra_build_flags"
-    fi
+    # Build/push app image
+    build_one "." "Dockerfile.dev" "antonlu/arcadia-app:dev" "BUILD_TYPE=development" "$extra_build_flags"
 
     if [ "$push_mode" -eq 1 ]; then
         print_status "Push mode complete: images pushed to Docker Hub under antonlu/arcadia-*-dev"
@@ -227,8 +217,8 @@ build_frontend() {
 # Function to run tests
 run_tests() {
     print_status "Running tests in development environment..."
-    docker compose -f docker-compose.yml -f docker-compose.dev.yml exec backend python -m pytest
-    docker compose -f docker-compose.yml -f docker-compose.dev.yml exec frontend npm run test
+    docker compose -f docker-compose.dev.yml exec app pytest /app/backend
+    docker compose -f docker-compose.dev.yml exec app npm run --prefix /app/frontend test
 }
 
 # Function to show help

@@ -1,12 +1,9 @@
 #!/bin/bash
 set -e
 
-echo "Starting backend container..."
-
-# Function to wait for database
 wait_for_db() {
     echo "Waiting for database to be ready..."
-    python << END
+    python <<END
 import asyncio
 import asyncpg
 import os
@@ -14,18 +11,11 @@ import time
 import sys
 
 async def check_db():
-    import sys
-    from pathlib import Path
-    sys.path.append(str(Path.cwd()))
-    try:
-        from app.config import settings
-        database_url = settings.database_url
-    except Exception as e:
-        print(f"Could not load settings: {e}")
+    database_url = os.getenv('DATABASE_URL', '')
+    if not database_url:
+        print("No DATABASE_URL found, skipping DB check")
         return True
 
-    # Extract connection details from DATABASE_URL
-    # Format: postgresql+asyncpg://user:pass@host:port/dbname
     url_parts = database_url.replace('postgresql+asyncpg://', '').split('/')
     db_name = url_parts[-1] if len(url_parts) > 1 else 'postgres'
     user_host_part = url_parts[0]
@@ -52,12 +42,8 @@ async def check_db():
     while attempt < max_attempts:
         try:
             conn = await asyncpg.connect(
-                host=host,
-                port=port,
-                user=user,
-                password=password,
-                database=db_name,
-                timeout=5
+                host=host, port=port, user=user, password=password,
+                database=db_name, timeout=5
             )
             await conn.close()
             print(f"Database is ready! (attempt {attempt + 1})")
@@ -77,33 +63,29 @@ if __name__ == "__main__":
 END
 }
 
-# Function to run migrations
-run_migrations() {
-    echo "Running database migrations..."
-
-    # Check if alembic is available and migrations exist
-    if [ -d "alembic" ] && [ -f "alembic.ini" ]; then
-        echo "Found Alembic configuration, running migrations..."
-        alembic upgrade head
-        echo "Migrations completed successfully"
-    else
-        echo "No Alembic configuration found, skipping migrations"
-        echo "Database tables will be created automatically on first request"
+# If a command was passed (e.g. from migrate service), run it directly after DB wait
+if [ $# -gt 0 ]; then
+    if ! wait_for_db; then
+        echo "Failed to connect to database, exiting"
+        exit 1
     fi
-}
+    exec "$@"
+fi
 
-# Main execution
-echo "Backend startup sequence initiated"
+echo "Starting application..."
 
-# Wait for database to be ready
 if ! wait_for_db; then
     echo "Failed to connect to database, exiting"
     exit 1
 fi
 
-# Run migrations
-run_migrations
+echo "Running database migrations..."
+WORKDIR="${WORKDIR:-/app}"
+cd "$WORKDIR"
+if [ -d "alembic" ] && [ -f "alembic.ini" ]; then
+    alembic upgrade head
+    echo "Migrations completed"
+fi
 
-# Start the application
-echo "Starting FastAPI application..."
-exec uvicorn app.main:app --host 0.0.0.0 --port 8000
+echo "Starting supervisord..."
+exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
