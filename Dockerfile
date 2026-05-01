@@ -59,10 +59,11 @@ FROM python-base AS final
 
 # Install Python dependencies
 COPY backend/pyproject.toml ./
-# hadolint ignore=DL3013,SC2046
+# hadolint ignore=DL3013
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir $(python -c "import tomllib; data = tomllib.load(open('pyproject.toml', 'rb')); deps = data['project'].get('dependencies', []); print(' '.join([d for d in deps if 'photography-portfolio' not in d]))")
+    python -c "import tomllib; data = tomllib.load(open('pyproject.toml', 'rb')); deps = [d for d in data['project'].get('dependencies', []) if 'photography-portfolio' not in d]; open('/tmp/requirements.txt', 'w').write('\n'.join(deps))" && \
+    pip install --no-cache-dir -r /tmp/requirements.txt
 
 # Copy backend application code
 COPY backend/ .
