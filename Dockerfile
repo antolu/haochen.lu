@@ -62,13 +62,18 @@ ARG BUILD_TYPE=production
 # Install Python dependencies
 COPY backend/pyproject.toml ./
 # hadolint ignore=DL3013
-RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install --no-cache-dir --upgrade pip
-COPY collect_deps.py ./
-# hadolint ignore=DL3013
-RUN --mount=type=cache,target=/root/.cache/pip \
-    BUILD_TYPE="${BUILD_TYPE}" python collect_deps.py && \
-    pip install --no-cache-dir -r /tmp/requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip <<EOF
+pip install --no-cache-dir --upgrade pip
+BUILD_TYPE="${BUILD_TYPE}" python -c "
+import tomllib, os
+data = tomllib.load(open('pyproject.toml', 'rb'))
+deps = [d for d in data['project'].get('dependencies', []) if 'photography-portfolio' not in d]
+if os.environ.get('BUILD_TYPE') == 'development':
+    deps += [d for d in data['project'].get('optional-dependencies', {}).get('test', []) if 'photography-portfolio' not in d]
+open('/tmp/requirements.txt', 'w').write('\n'.join(deps))
+"
+pip install --no-cache-dir -r /tmp/requirements.txt
+EOF
 
 # Copy backend application code
 COPY backend/ .
