@@ -58,6 +58,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 FROM python-base AS final
 
 ARG BUILD_TYPE=production
+ARG SETUPTOOLS_SCM_PRETEND_VERSION=""
 
 # Install Python dependencies
 COPY backend/pyproject.toml ./
@@ -81,6 +82,7 @@ COPY backend/ .
 # Install the package with git context for setuptools-scm versioning
 RUN --mount=type=bind,source=.git,target=/app/.git \
     --mount=type=cache,target=/root/.cache/pip \
+    SETUPTOOLS_SCM_PRETEND_VERSION=${SETUPTOOLS_SCM_PRETEND_VERSION} \
     pip install --no-cache-dir --no-deps .
 
 RUN mkdir -p uploads compressed

@@ -48,6 +48,7 @@ services:
       dockerfile: Dockerfile
       args:
         BUILD_TYPE: development
+        SETUPTOOLS_SCM_PRETEND_VERSION: "0.0.0"
     environment:
       ENVIRONMENT: test
       POSTGRES_USER: testuser
@@ -108,6 +109,7 @@ services:
       dockerfile: Dockerfile
       args:
         BUILD_TYPE: development
+        SETUPTOOLS_SCM_PRETEND_VERSION: "0.0.0"
     environment:
       ENVIRONMENT: test
       POSTGRES_USER: testuser
