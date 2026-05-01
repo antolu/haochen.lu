@@ -313,6 +313,7 @@ skips = [
 # keep this for dynamic versioning
 [tool.setuptools_scm]
 write_to = "app/_version.py"
+version_scheme = "no-guess-dev"
 local_scheme = "no-local-version"
 fallback_version = "0.1.0.dev0"
 
