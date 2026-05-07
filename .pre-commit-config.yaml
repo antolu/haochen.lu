@@ -48,14 +48,14 @@ repos:
 
   # Python type checking
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.20.2
+    rev: v2.0.0
     hooks:
       - id: mypy
         files: ^backend/
         exclude: ^backend/(tests/.*|alembic/.*|app/_version\.py)$
         args: [--config-file=backend/pyproject.toml]
         additional_dependencies:
-          - "pydantic>=2.13.3"
+          - "pydantic>=2.13.4"
           - "pydantic-settings>=2.14.0"
           - "sqlalchemy[mypy]>=2.0.49"
           - "types-PyYAML"
@@ -64,12 +64,12 @@ repos:
           - "fastapi>=0.136.1"
           - "starlette>=1.0.0"
           - "bcrypt>=5.0.0"
-          - "PyJWT>=2.8"
+          - "PyJWT>=2.12.1"
           - "arcadia-auth @ git+https://github.com/antolu/arcadia-auth@v0.1"
 
   # ESLint for TypeScript/JavaScript linting
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v10.2.1
+    rev: v10.3.0
     hooks:
       - id: eslint
         files: ^frontend/.*\.(ts|tsx|js|jsx)$ # Explicitly match TypeScript and JavaScript files
@@ -77,12 +77,12 @@ repos:
         types: [file]
         args: [--fix, --config, frontend/eslint.config.js]
         additional_dependencies:
-          - eslint@10.2.1
+          - eslint@10.3.0
           - "@eslint/js@10.0.1"
-          - "typescript-eslint@8.59.1"
+          - "typescript-eslint@8.59.2"
           - "eslint-plugin-react-hooks@7.1.1"
           - "eslint-plugin-react-refresh@0.5.2"
-          - "globals@17.5.0"
+          - "globals@17.6.0"
           - "typescript@6.0.3"
 
   # Prettier for code formatting
