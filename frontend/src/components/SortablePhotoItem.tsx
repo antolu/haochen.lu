@@ -52,9 +52,9 @@ const SortablePhotoCard: React.FC<SortablePhotoCardProps> = ({
     zIndex: isDragging ? 20 : undefined,
   };
 
-  const optimalImage = selectOptimalImage(photo, ImageUseCase.GALLERY, {
-    width: 400,
-    height: 400,
+  const optimalImage = selectOptimalImage(photo, ImageUseCase.THUMBNAIL, {
+    width: 300,
+    height: 300,
   });
 
   const handleClick = () => {
@@ -191,6 +191,7 @@ const SortablePhotoCard: React.FC<SortablePhotoCardProps> = ({
           sizes={optimalImage.sizes}
           alt={photo.title ?? "Photo"}
           className="h-full w-full object-cover"
+          loading="lazy"
           draggable={false}
         />
         <div className="absolute inset-0 bg-black/0 transition group-hover:bg-black/10" />
@@ -202,10 +203,11 @@ const SortablePhotoCard: React.FC<SortablePhotoCardProps> = ({
         )}
       </div>
       <div className="space-y-2 p-4">
-        <div className="text-sm font-semibold text-card-foreground">
-          <span className="truncate" title={photo.title ?? "Untitled"}>
-            {photo.title ?? "Untitled"}
-          </span>
+        <div
+          className="truncate text-sm font-semibold text-card-foreground"
+          title={photo.title ?? "Untitled"}
+        >
+          {photo.title ?? "Untitled"}
         </div>
         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           {photo.date_taken && (
