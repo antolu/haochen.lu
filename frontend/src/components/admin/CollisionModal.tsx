@@ -1,4 +1,15 @@
 import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Button } from "../ui/button";
 
 interface Props {
   filename: string;
@@ -16,48 +27,41 @@ export function CollisionModal({
   const [newName, setNewName] = useState(filename);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-        <h2 className="text-lg font-semibold mb-2">File already exists</h2>
-        <p className="text-sm text-gray-600 mb-4">
-          A file named <span className="font-mono font-medium">{filename}</span>{" "}
-          already exists. Choose an action:
-        </p>
+    <Dialog open onOpenChange={(open) => !open && onCancel()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>File already exists</DialogTitle>
+          <DialogDescription>
+            A file named{" "}
+            <span className="font-mono font-medium">{filename}</span> already
+            exists. Choose an action:
+          </DialogDescription>
+        </DialogHeader>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Rename to
-          </label>
-          <input
-            type="text"
+        <div className="space-y-2">
+          <Label htmlFor="rename-input">Rename to</Label>
+          <Input
+            id="rename-input"
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
-        <div className="flex gap-2 justify-end">
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50"
-          >
+        <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
+          <Button variant="outline" onClick={onCancel}>
             Cancel
-          </button>
-          <button
-            onClick={() => onReplace()}
-            className="px-4 py-2 text-sm text-white bg-red-600 rounded hover:bg-red-700"
-          >
+          </Button>
+          <Button variant="destructive" onClick={onReplace}>
             Replace existing
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => onRename(newName)}
             disabled={!newName || newName === filename}
-            className="px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50"
           >
             Upload as renamed
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
