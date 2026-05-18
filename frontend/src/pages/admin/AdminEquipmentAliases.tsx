@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { AdminPageLayout } from "../../components/admin/AdminPageLayout";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -372,15 +373,10 @@ const AdminEquipmentAliases: React.FC = () => {
   const Icon = currentConfig.icon;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-3">
-          <h1 className="admin-page-title">Equipment Aliases</h1>
-          <p className="text-muted-foreground text-xl">
-            Manage display names for cameras and lenses found in photo metadata
-          </p>
-        </div>
+    <AdminPageLayout
+      title="Equipment Aliases"
+      description="Manage display names for cameras and lenses found in photo metadata"
+      actions={
         <Button
           variant="gradient"
           size="lg"
@@ -389,8 +385,8 @@ const AdminEquipmentAliases: React.FC = () => {
           <Plus className="h-5 w-5 mr-2" />
           Add Alias
         </Button>
-      </div>
-
+      }
+    >
       {/* Tabs */}
       <Tabs
         value={activeTab}
@@ -563,7 +559,7 @@ const AdminEquipmentAliases: React.FC = () => {
           </div>
         </motion.div>
       )}
-    </div>
+    </AdminPageLayout>
   );
 };
 
