@@ -220,13 +220,15 @@ Test configuration in `backend/pyproject.toml` with coverage requirements (40% m
 
 **Storage:**
 - `uploads/`: Original uploaded images
-- `compressed/`: Processed WebP image variants
+- `compressed/`: Processed WebP/AVIF photo variants
+- `file_uploads/`: Arbitrary uploaded files (PDFs, docs, ZIPs, etc.)
 
 ## API Architecture
 
 **Key endpoints:**
 - Authentication: `/api/auth/login`, `/api/auth/logout`, `/api/auth/me`
 - Photos: `/api/photos`, `/api/photos/locations` (optimized for map clustering)
+- Files: `GET /files/{filename}` (public, rate limited), `POST /api/files`, `GET /api/files`, `PATCH /api/files/{id}`, `DELETE /api/files/{id}`
 - Location Services: `/api/locations/search`, `/api/locations/geocode`, `/api/locations/reverse`
 - Projects: `/api/projects` (with GitHub/GitLab integration)
 - Blog: `/api/blog`
@@ -325,6 +327,8 @@ If getting "File is too large" errors for files under 50MB:
 - **Rebuild required**: Frontend container must be rebuilt after nginx config changes
 
 ### API Routing Issues
+**`/files/` not found (404 from nginx):** The `/files/` location block must appear before the SPA catch-all `location /` in both `nginx.conf` and `nginx.conf.dev`. Files are proxied to the backend, not served statically.
+
 **Double API Prefix Problem** (`/api/api/endpoint`):
 - **Root Cause**: Frontend base URL already includes `/api` while backend/proxy paths add another `/api`
 - **Solution**: Keep backend routes mounted at `/api` in `main.py` and keep frontend `VITE_API_URL=/api`
