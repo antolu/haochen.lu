@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Search, Eye, EyeOff, Camera, Settings } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Eye,
+  EyeOff,
+  Camera,
+  Settings,
+  Pencil,
+} from "lucide-react";
 import {
   useCameraAliases,
   type CameraAlias,
@@ -479,11 +487,10 @@ const AdminEquipmentAliases: React.FC = () => {
                                   <TableCell>
                                     <Button
                                       variant="ghost"
-                                      size="sm"
+                                      size="icon"
                                       onClick={() => handleEditAlias(alias)}
-                                      className="opacity-0 group-hover:opacity-100 transition-opacity"
                                     >
-                                      Edit
+                                      <Pencil className="h-4 w-4" />
                                     </Button>
                                   </TableCell>
                                 </TableRow>

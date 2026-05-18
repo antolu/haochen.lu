@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   useUpdateCameraAlias,
@@ -136,9 +136,9 @@ const EquipmentAliasForm: React.FC<EquipmentAliasFormProps> = ({
   onSuccess,
   onCancel,
 }) => {
-  const [formData, setFormData] = useState<Record<string, string | boolean>>({
-    is_active: true,
-  });
+  const [formData, setFormData] = useState<Record<string, string | boolean>>(
+    {},
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -147,25 +147,17 @@ const EquipmentAliasForm: React.FC<EquipmentAliasFormProps> = ({
 
   const currentFields = FIELD_CONFIGS[type];
 
-  // Initialize form data when alias changes (adjusting state during render)
-  const [prevAlias, setPrevAlias] = useState(alias);
-  const [prevCurrentFields, setPrevCurrentFields] = useState(currentFields);
-
-  if (prevAlias !== alias || prevCurrentFields !== currentFields) {
-    setPrevAlias(alias);
-    setPrevCurrentFields(currentFields);
-    if (alias) {
-      const initialData: Record<string, string | boolean> = { is_active: true };
-
-      currentFields.forEach((field) => {
-        const value = (alias as unknown as Record<string, unknown>)[field.key];
-        initialData[field.key] = (value as string) ?? "";
-      });
-
-      initialData.is_active = alias.is_active ?? true;
-      setFormData(initialData);
-    }
-  }
+  useEffect(() => {
+    if (!alias) return;
+    const initialData: Record<string, string | boolean> = { is_active: true };
+    currentFields.forEach((field) => {
+      const value = (alias as unknown as Record<string, unknown>)[field.key];
+      initialData[field.key] = (value as string) ?? "";
+    });
+    initialData.is_active = alias.is_active ?? true;
+    setFormData(initialData);
+    setErrors({});
+  }, [alias, type]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
