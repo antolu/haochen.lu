@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import logging
 import math
 import time
@@ -27,6 +26,7 @@ from app.config import settings
 from app.core.file_access import file_access_controller
 from app.core.file_validation import file_validator
 from app.core.rate_limiter import FileAccessRateLimiter
+from app.core.upload_pipeline import run_upload_pipeline
 from app.core.vips_processor import VipsImageProcessor
 from app.core.vips_processor import vips_image_processor as image_processor
 from app.crud.photo import (
@@ -65,27 +65,6 @@ from app.types.access_control import FileType
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
-
-# Global semaphore to limit concurrent uploads (prevent resource exhaustion)
-_upload_semaphore = asyncio.Semaphore(3)
-
-
-def _ensure_success(
-    processed_data: dict[str, typing.Any] | None,
-    processing_error: Exception | None,
-) -> dict[str, typing.Any]:
-    """Ensure image processing succeeded or raise the appropriate error."""
-    if processed_data is None:
-        if processing_error is None:
-            raise HTTPException(
-                status_code=500, detail="Unknown image processing error"
-            )
-        # Log the final error before raising
-        logger.error(f"Image processing failed: {processing_error}")
-        raise HTTPException(
-            status_code=500, detail=f"Image processing failed: {processing_error!s}"
-        )
-    return processed_data
 
 
 def _negotiate_variant_file_type(
@@ -460,98 +439,62 @@ async def upload_photo(
     request: Request,
 ) -> PhotoResponse:
     """Upload a new photo (admin only)."""
+    upload_id = request.headers.get("X-Upload-Id")
+    filename = file.filename or "image.jpg"
 
-    # Limit concurrent uploads to prevent resource exhaustion
-    async with _upload_semaphore:
-        # Validate file type using magic number detection
-        await file_validator.validate_image_file(file)
+    try:
+        processor = VipsImageProcessor(
+            settings.upload_dir,
+            settings.compressed_dir,
+            upload_id=upload_id,
+        )
+        valid_processed_data = await run_upload_pipeline(
+            file, file_validator, processor
+        )
 
-        # Validate file size
-        if file.size and file.size > settings.max_file_size:
-            max_mb = settings.max_file_size / (1024 * 1024)
-            raise HTTPException(
-                status_code=400,
-                detail=f"File too large. Maximum size is {max_mb:.0f}MB",
-            )
+        if location_lat is not None:
+            valid_processed_data["location_lat"] = location_lat
+        if location_lon is not None:
+            valid_processed_data["location_lon"] = location_lon
+        if location_name is not None:
+            valid_processed_data["location_name"] = location_name
 
+        default_title = (file.filename or "image").rsplit(".", 1)[0]
+        normalized_title = title.strip() if title and title.strip() else None
+
+        photo_data = PhotoCreate(
+            title=normalized_title or default_title,
+            description=description or None,
+            tags=tags or None,
+            featured=featured,
+        )
+
+        photo = await create_photo(db, photo_data, **valid_processed_data)
+
+        alias_warnings = []
         try:
-            upload_id = request.headers.get("X-Upload-Id")
-            filename = file.filename or "image.jpg"
-            processing_error: Exception | None = None
-            processed_data: dict[str, typing.Any] | None = None
-
-            for attempt in range(3):
-                try:
-                    file.file.seek(0)
-                    processor = VipsImageProcessor(
-                        settings.upload_dir,
-                        settings.compressed_dir,
-                        upload_id=upload_id,
-                    )
-                    processed_data = await processor.process_image(
-                        file.file, filename, title or file.filename
-                    )
-                    processing_error = None
-                    break
-                except Exception as e:
-                    processing_error = e
-                    logger.warning(
-                        f"Image processing attempt {attempt + 1} failed for {filename}: {e}"
-                    )
-                    if attempt < 2:
-                        # Exponential backoff: 0.5s, 1.0s
-                        await asyncio.sleep(0.5 * (attempt + 1))
-
-            valid_processed_data = _ensure_success(processed_data, processing_error)
-
-            # Apply location overrides if provided
-            if location_lat is not None:
-                valid_processed_data["location_lat"] = location_lat
-            if location_lon is not None:
-                valid_processed_data["location_lon"] = location_lon
-            if location_name is not None:
-                valid_processed_data["location_name"] = location_name
-
-            # Compute default title from filename stem if empty
-            default_title = (file.filename or "image").rsplit(".", 1)[0]
-            normalized_title = title.strip() if title and title.strip() else None
-
-            # Create photo record
-            photo_data = PhotoCreate(
-                title=normalized_title or default_title,
-                description=description or None,
-                tags=tags or None,
-                featured=featured,
+            await _create_aliases_for_photo(db, photo)
+        except Exception as e:
+            alias_warnings.append(
+                f"Could not create equipment aliases: {e!s}. "
+                "You can manually create them in Equipment Aliases settings."
             )
 
-            photo = await create_photo(db, photo_data, **valid_processed_data)
+        photo_dict = PhotoResponse.model_validate(photo).model_dump()
+        photo_dict = populate_photo_urls(photo_dict, str(photo.id))
 
-            # Auto-create aliases for camera and lens if they don't exist
-            alias_warnings = []
-            try:
-                await _create_aliases_for_photo(db, photo)
-            except Exception as e:
-                # Log error but don't fail upload
-                alias_warnings.append(
-                    f"Could not create equipment aliases: {e!s}. "
-                    "You can manually create them in Equipment Aliases settings."
-                )
+        if alias_warnings:
+            photo_dict["warnings"] = alias_warnings
 
-            # Add secure URLs to response
-            photo_dict = PhotoResponse.model_validate(photo).model_dump()
-            photo_dict = populate_photo_urls(photo_dict, str(photo.id))
+        return PhotoResponse.model_validate(photo_dict)
 
-            # Add warnings if any
-            if alias_warnings:
-                photo_dict["warnings"] = alias_warnings
-
-            return PhotoResponse.model_validate(photo_dict)
-
-        except Exception as e:
-            logger.exception(f"Upload failed for {filename}")
-            raise HTTPException(
-                status_code=500, detail=f"Error processing image: {e!s}"
-            ) from e
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Upload failed for %s", filename)
+        raise HTTPException(
+            status_code=500, detail=f"Error processing image: {e!s}"
+        ) from e
 
 
 @router.put("/{photo_id}", response_model=PhotoResponse)
