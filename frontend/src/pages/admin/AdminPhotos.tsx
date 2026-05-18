@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { AdminPageLayout } from "../../components/admin/AdminPageLayout";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   RefreshCcw,
@@ -203,98 +204,88 @@ const AdminPhotos: React.FC = () => {
   }
 
   return (
-    <div>
-      {/* Header */}
-      <div className="mb-12">
-        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between border-b pb-8">
-          <div className="space-y-2">
-            <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-              Photos
-            </h1>
-            <p className="text-muted-foreground text-lg">
-              Manage and organize your visual portfolio
-            </p>
+    <AdminPageLayout
+      title="Photos"
+      description="Manage and organize your visual portfolio"
+      actions={
+        <>
+          <div className="flex bg-muted/50 p-1 rounded-xl border border-border/50">
+            <button
+              onClick={() => handleViewModeChange("grid")}
+              className={cn(
+                "px-6 py-2 text-sm font-semibold rounded-lg transition-all duration-200",
+                viewMode === "grid"
+                  ? "bg-background text-foreground shadow-sm ring-1 ring-border/50"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/30",
+              )}
+            >
+              Grid
+            </button>
+            <button
+              onClick={() => handleViewModeChange("list")}
+              className={cn(
+                "px-6 py-2 text-sm font-semibold rounded-lg transition-all duration-200",
+                viewMode === "list"
+                  ? "bg-background text-foreground shadow-sm ring-1 ring-border/50"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/30",
+              )}
+            >
+              List
+            </button>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex bg-muted/50 p-1 rounded-xl border border-border/50">
-              <button
-                onClick={() => handleViewModeChange("grid")}
-                className={cn(
-                  "px-6 py-2 text-sm font-semibold rounded-lg transition-all duration-200",
-                  viewMode === "grid"
-                    ? "bg-background text-foreground shadow-sm ring-1 ring-border/50"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/30",
-                )}
-              >
-                Grid
-              </button>
-              <button
-                onClick={() => handleViewModeChange("list")}
-                className={cn(
-                  "px-6 py-2 text-sm font-semibold rounded-lg transition-all duration-200",
-                  viewMode === "list"
-                    ? "bg-background text-foreground shadow-sm ring-1 ring-border/50"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/30",
-                )}
-              >
-                List
-              </button>
-            </div>
+          <div className="h-8 w-[1px] bg-border/60 hidden sm:block mx-2" />
 
-            <div className="h-8 w-[1px] bg-border/60 hidden sm:block mx-2" />
+          <div className="flex items-center gap-3 bg-muted/30 px-4 py-2 rounded-xl border border-dashed border-border/60">
+            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
+              Reorder
+            </span>
+            <Switch
+              checked={reorderEnabled}
+              onCheckedChange={(checked) => {
+                if (!photos.length && checked) {
+                  toast.error("Add some photos before reordering.");
+                  return;
+                }
+                setReorderEnabled(checked);
+              }}
+            />
+          </div>
 
-            <div className="flex items-center gap-3 bg-muted/30 px-4 py-2 rounded-xl border border-dashed border-border/60">
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
-                Reorder
-              </span>
-              <Switch
-                checked={reorderEnabled}
-                onCheckedChange={(checked) => {
-                  if (!photos.length && checked) {
-                    toast.error("Add some photos before reordering.");
-                    return;
-                  }
-                  setReorderEnabled(checked);
-                }}
-              />
-            </div>
-
+          <Button
+            variant="gradient"
+            size="lg"
+            onClick={() => setShowUpload(true)}
+            disabled={showUpload || reorderEnabled || isReordering}
+            className="rounded-full px-8 shadow-xl shadow-primary/20"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Upload Photos
+          </Button>
+        </>
+      }
+    >
+      {/* Reorder Reset Button - Floating / Contextual */}
+      <AnimatePresence>
+        {reorderEnabled && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="mt-4 flex justify-end"
+          >
             <Button
-              variant="gradient"
-              size="lg"
-              onClick={() => setShowUpload(true)}
-              disabled={showUpload || reorderEnabled || isReordering}
-              className="rounded-full px-8 shadow-xl shadow-primary/20"
+              variant="outline"
+              size="sm"
+              onClick={() => void handleResetOrder()}
+              className="rounded-full bg-background/50 backdrop-blur-sm border-dashed border-primary/30 text-primary hover:bg-primary/5"
             >
-              <Plus className="h-5 w-5 mr-2" />
-              Upload Photos
+              <RefreshCcw className="h-3.5 w-3.5 mr-2" />
+              Reset to Upload Order
             </Button>
-          </div>
-        </div>
-
-        {/* Reorder Reset Button - Floating / Contextual */}
-        <AnimatePresence>
-          {reorderEnabled && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="mt-4 flex justify-end"
-            >
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => void handleResetOrder()}
-                className="rounded-full bg-background/50 backdrop-blur-sm border-dashed border-primary/30 text-primary hover:bg-primary/5"
-              >
-                <RefreshCcw className="h-3.5 w-3.5 mr-2" />
-                Reset to Upload Order
-              </Button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Stats Cards - Collapsible */}
       {!isLoadingStats && (
@@ -636,7 +627,7 @@ const AdminPhotos: React.FC = () => {
           />
         )}
       </div>
-    </div>
+    </AdminPageLayout>
   );
 };
 
