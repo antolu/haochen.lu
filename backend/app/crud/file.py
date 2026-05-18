@@ -39,6 +39,7 @@ async def list_files(
 
     sort_col = {
         "name": FileRecord.original_name,
+        "extension": func.split_part(FileRecord.original_name, ".", -1),
         "created_at": FileRecord.created_at,
         "file_size": FileRecord.file_size,
     }.get(sort_by, FileRecord.created_at)

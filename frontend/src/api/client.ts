@@ -910,7 +910,13 @@ export interface FileRecord {
   url: string;
   mime_type: string;
   file_size: number;
+  access_level: string;
   created_at: string;
+}
+
+export interface FileListResponse {
+  items: FileRecord[];
+  total: number;
 }
 
 export interface FileConflict {
@@ -922,7 +928,7 @@ export interface FileListParams {
   skip?: number;
   limit?: number;
   search?: string;
-  sort_by?: "name" | "created_at" | "file_size";
+  sort_by?: "name" | "extension" | "created_at" | "file_size";
   order?: "asc" | "desc";
 }
 
@@ -938,8 +944,10 @@ export const files = {
     return response.data;
   },
 
-  async list(params: FileListParams = {}): Promise<FileRecord[]> {
-    const response = await apiClient.get<FileRecord[]>("/files", { params });
+  async list(params: FileListParams = {}): Promise<FileListResponse> {
+    const response = await apiClient.get<FileListResponse>("/files", {
+      params,
+    });
     return response.data;
   },
 

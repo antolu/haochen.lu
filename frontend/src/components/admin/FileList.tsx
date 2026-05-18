@@ -13,11 +13,13 @@ function getExtension(name: string): string {
   return parts.length > 1 ? `.${parts[parts.length - 1]}` : "";
 }
 
+type SortCol = "name" | "extension" | "created_at" | "file_size";
+
 interface Props {
   fileRecords: FileRecord[];
-  sortBy: "name" | "created_at" | "file_size";
+  sortBy: SortCol;
   order: "asc" | "desc";
-  onSort: (col: "name" | "created_at" | "file_size") => void;
+  onSort: (col: SortCol) => void;
   search: string;
   onSearch: (v: string) => void;
 }
@@ -56,13 +58,7 @@ export function FileList({
     setTimeout(() => setCopiedId(null), 1500);
   }
 
-  function SortHeader({
-    col,
-    label,
-  }: {
-    col: "name" | "created_at" | "file_size";
-    label: string;
-  }) {
+  function SortHeader({ col, label }: { col: SortCol; label: string }) {
     return (
       <th
         className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:text-gray-700 select-none"
@@ -90,9 +86,7 @@ export function FileList({
           <thead className="bg-gray-50">
             <tr>
               <SortHeader col="name" label="Name" />
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                Ext
-              </th>
+              <SortHeader col="extension" label="Ext" />
               <SortHeader col="file_size" label="Size" />
               <SortHeader col="created_at" label="Uploaded" />
               <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
@@ -111,23 +105,25 @@ export function FileList({
                         value={editingName}
                         onChange={(e) => setEditingName(e.target.value)}
                         onKeyDown={(e) => {
-                          if (e.key === "Enter")
+                          if (e.key === "Enter" && editingName.trim())
                             renameMutation.mutate({
                               id: record.id,
-                              name: editingName,
+                              name: editingName.trim(),
                             });
                           if (e.key === "Escape") setEditingId(null);
                         }}
                         className="border border-gray-300 rounded px-2 py-1 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                       <button
-                        onClick={() =>
-                          renameMutation.mutate({
-                            id: record.id,
-                            name: editingName,
-                          })
-                        }
-                        className="text-xs text-blue-600 hover:underline"
+                        onClick={() => {
+                          if (editingName.trim())
+                            renameMutation.mutate({
+                              id: record.id,
+                              name: editingName.trim(),
+                            });
+                        }}
+                        disabled={!editingName.trim()}
+                        className="text-xs text-blue-600 hover:underline disabled:opacity-40"
                       >
                         Save
                       </button>

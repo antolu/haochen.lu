@@ -34,12 +34,14 @@ async def run_upload_pipeline(
         await validator.validate_file(file)
 
         max_size = getattr(validator, "max_size", settings.max_file_size)
-        if file.size and file.size > max_size:
+        content = await file.read()
+        if len(content) > max_size:
             max_mb = max_size / (1024 * 1024)
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"File too large. Maximum size is {max_mb:.0f}MB",
             )
+        await file.seek(0)
 
         filename = file.filename or "upload"
         last_error: Exception | None = None

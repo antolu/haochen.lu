@@ -25,10 +25,11 @@ class FailingProcessor:
         raise RuntimeError(msg)
 
 
-def _make_upload(filename: str = "test.pdf", size: int = 100) -> UploadFile:
+def _make_upload(filename: str = "test.pdf", content: bytes = b"data") -> UploadFile:
     f = MagicMock(spec=UploadFile)
     f.filename = filename
-    f.size = size
+    f.read = AsyncMock(return_value=content)
+    f.seek = AsyncMock()
     f.file = MagicMock()
     f.file.seek = MagicMock()
     return f
@@ -61,7 +62,8 @@ async def test_pipeline_retries_on_failure():
 
 @pytest.mark.asyncio
 async def test_pipeline_rejects_oversized_file():
-    upload = _make_upload(size=100 * 1024 * 1024)
+    big_content = b"x" * (100 * 1024 * 1024)
+    upload = _make_upload(content=big_content)
     validator = MagicMock()
     validator.validate_file = AsyncMock()
     validator.max_size = 50 * 1024 * 1024

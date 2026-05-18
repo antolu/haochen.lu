@@ -103,3 +103,21 @@ async def test_delete_file(async_client, admin_headers, pdf_bytes):
 async def test_serve_nonexistent_file_returns_404(async_client):
     response = await async_client.get("/files/does-not-exist.pdf")
     assert response.status_code == 404
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_list_files_returns_items_and_total(
+    async_client, admin_headers, pdf_bytes
+):
+    files = {"file": ("list-test.pdf", io.BytesIO(pdf_bytes), "application/pdf")}
+    await async_client.post("/api/files", files=files, headers=admin_headers)
+
+    response = await async_client.get("/api/files", headers=admin_headers)
+    assert response.status_code == 200
+    body = response.json()
+    assert "items" in body
+    assert "total" in body
+    assert isinstance(body["total"], int)
+    assert body["total"] >= 1
+    assert any(f["original_name"] == "list-test.pdf" for f in body["items"])

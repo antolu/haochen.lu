@@ -1,7 +1,11 @@
 import { useCallback, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { files as filesApi, type FileRecord } from "../../api/client";
+import {
+  files as filesApi,
+  type FileListResponse,
+  type FileRecord,
+} from "../../api/client";
 import { CollisionModal } from "../../components/admin/CollisionModal";
 import { FileList } from "../../components/admin/FileList";
 
@@ -9,9 +13,9 @@ export default function AdminFiles() {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [sortBy, setSortBy] = useState<"name" | "created_at" | "file_size">(
-    "created_at",
-  );
+  const [sortBy, setSortBy] = useState<
+    "name" | "extension" | "created_at" | "file_size"
+  >("created_at");
   const [order, setOrder] = useState<"asc" | "desc">("desc");
   const [search, setSearch] = useState("");
   const [dragging, setDragging] = useState(false);
@@ -21,13 +25,14 @@ export default function AdminFiles() {
     existingId: string;
   } | null>(null);
 
-  const { data: fileRecords = [] } = useQuery<FileRecord[]>({
+  const { data } = useQuery<FileListResponse>({
     queryKey: ["admin-files", sortBy, order, search],
     queryFn: () =>
       filesApi.list({ sort_by: sortBy, order, search: search || undefined }),
   });
+  const fileRecords: FileRecord[] = data?.items ?? [];
 
-  function handleSort(col: "name" | "created_at" | "file_size") {
+  function handleSort(col: "name" | "extension" | "created_at" | "file_size") {
     if (sortBy === col) {
       setOrder((o) => (o === "asc" ? "desc" : "asc"));
     } else {

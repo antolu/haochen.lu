@@ -24,6 +24,7 @@ from app.crud.file import (
 from app.dependencies import _current_admin_user_dependency, _session_dependency
 from app.models.file import FileRecord
 from app.models.user import User
+from app.schemas.file import FileListResponse as FileListResponseSchema
 from app.schemas.file import FileResponse as FileResponseSchema
 from app.schemas.file import FileUpdate
 
@@ -42,6 +43,7 @@ def _build_response(record: FileRecord, original_name: str) -> FileResponseSchem
         "url": f"/files/{original_name}",
         "mime_type": record.mime_type,
         "file_size": record.file_size,
+        "access_level": record.access_level,
         "created_at": record.created_at,
     }
     return FileResponseSchema.model_validate(data)
@@ -67,14 +69,14 @@ async def upload_file(
             detail={"conflict": True, "existing_id": str(existing.id)},
         )
 
-    if existing and replace:
-        disk_path = Path(existing.original_path)
-        if disk_path.exists():
-            disk_path.unlink()
-        await delete_file_record(db, existing)
-
     processor = FilePassthroughProcessor(upload_dir=settings.file_upload_dir)
     processed = await run_upload_pipeline(file, _file_validator, processor)
+
+    if existing and replace:
+        old_disk_path = Path(existing.original_path)
+        await delete_file_record(db, existing)
+        if old_disk_path.exists():
+            old_disk_path.unlink()
 
     record = await create_file_record(
         db,
@@ -87,21 +89,26 @@ async def upload_file(
     return _build_response(record, original_name)
 
 
-@router.get("", response_model=list[FileResponseSchema])
+@router.get("", response_model=FileListResponseSchema)
 async def list_files_endpoint(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
     search: str | None = Query(None),
-    sort_by: str = Query("created_at", pattern="^(name|created_at|file_size)$"),
+    sort_by: str = Query(
+        "created_at", pattern="^(name|extension|created_at|file_size)$"
+    ),
     order: str = Query("desc", pattern="^(asc|desc)$"),
     db: AsyncSession = _session_dependency,
     current_user: User = _current_admin_user_dependency,
-) -> list[FileResponseSchema]:
+) -> FileListResponseSchema:
     """List uploaded files (admin only)."""
-    records, _ = await list_files(
+    records, total = await list_files(
         db, skip=skip, limit=limit, search=search, sort_by=sort_by, order=order
     )
-    return [_build_response(r, r.original_name) for r in records]
+    return FileListResponseSchema(
+        items=[_build_response(r, r.original_name) for r in records],
+        total=total,
+    )
 
 
 @router.patch("/{file_id}", response_model=FileResponseSchema)
