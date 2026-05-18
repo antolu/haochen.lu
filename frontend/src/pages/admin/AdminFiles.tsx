@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import { Upload } from "lucide-react";
 import {
   files as filesApi,
   type FileListResponse,
@@ -8,6 +9,7 @@ import {
 } from "../../api/client";
 import { CollisionModal } from "../../components/admin/CollisionModal";
 import { FileList } from "../../components/admin/FileList";
+import { Button } from "../../components/ui/button";
 
 export default function AdminFiles() {
   const queryClient = useQueryClient();
@@ -95,15 +97,24 @@ export default function AdminFiles() {
       )}
 
       <div className="max-w-5xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Files</h1>
-          <button
+        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between border-b pb-8 mb-8">
+          <div className="space-y-2">
+            <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              Files
+            </h1>
+            <p className="text-muted-foreground text-lg">
+              Drag and drop anywhere on this page to upload
+            </p>
+          </div>
+          <Button
+            variant="gradient"
+            size="lg"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-sm"
           >
+            <Upload className="h-5 w-5 mr-2" />
             {uploading ? "Uploading..." : "Upload file"}
-          </button>
+          </Button>
           <input
             ref={fileInputRef}
             type="file"
@@ -111,11 +122,6 @@ export default function AdminFiles() {
             onChange={(e) => handleFiles(e.target.files)}
           />
         </div>
-
-        <p className="text-sm text-gray-500 mb-6">
-          Drag and drop anywhere on this page to upload, or click the button
-          above.
-        </p>
 
         <FileList
           fileRecords={fileRecords}
