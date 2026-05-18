@@ -36,6 +36,7 @@ const AdminEquipmentAliases = lazy(
 const AdminApplications = lazy(() => import("./pages/admin/AdminApplications"));
 const AdminContent = lazy(() => import("./pages/admin/AdminContent"));
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
+const AdminFiles = lazy(() => import("./pages/admin/AdminFiles"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -212,6 +213,14 @@ const AppContent: React.FC = () => {
               element={
                 <Suspense fallback={<AdminLoadingFallback />}>
                   <AdminContent />
+                </Suspense>
+              }
+            />
+            <Route
+              path="files"
+              element={
+                <Suspense fallback={<AdminLoadingFallback />}>
+                  <AdminFiles />
                 </Suspense>
               }
             />
