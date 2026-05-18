@@ -93,6 +93,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if path.startswith("/api/photos/"):
             return True
 
+        # Public file downloads
+        if path.startswith("/files/"):
+            return True
+
         # File serving endpoints
         return bool("/file" in path or "/download" in path)
 
