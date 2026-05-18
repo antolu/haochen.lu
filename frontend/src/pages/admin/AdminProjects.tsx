@@ -16,6 +16,8 @@ import {
 } from "../../components/ui/select";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
+import { Switch } from "../../components/ui/switch";
+import { AdminPageLayout } from "../../components/admin/AdminPageLayout";
 import { Plus } from "lucide-react";
 
 type ViewMode = "list" | "create" | "edit";
@@ -111,23 +113,16 @@ const AdminProjects: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="mb-10">
-        <div className="flex items-center justify-between">
-          <div className="space-y-3">
-            <h1 className="admin-page-title">Project Management</h1>
-            <p className="text-muted-foreground text-xl">
-              Create and manage your project portfolio
-            </p>
-          </div>
-          <Button variant="gradient" size="lg" onClick={handleCreateProject}>
-            <Plus className="h-5 w-5 mr-2" />
-            New Project
-          </Button>
-        </div>
-      </div>
-
+    <AdminPageLayout
+      title="Project Management"
+      description="Create and manage your project portfolio"
+      actions={
+        <Button variant="gradient" size="lg" onClick={handleCreateProject}>
+          <Plus className="h-5 w-5 mr-2" />
+          New Project
+        </Button>
+      }
+    >
       {/* Filters */}
       <div className="mb-6 bg-muted/30 p-6 rounded-xl">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
@@ -157,15 +152,15 @@ const AdminProjects: React.FC = () => {
                 <SelectItem value="archived">Archived</SelectItem>
               </SelectContent>
             </Select>
-            <label className="text-sm text-muted-foreground flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
+            <div className="flex items-center gap-3 bg-muted/30 px-4 py-2 rounded-xl border border-dashed border-border/60">
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
+                Reorder
+              </span>
+              <Switch
                 checked={reorderEnabled}
-                onChange={(e) => setReorderEnabled(e.target.checked)}
-                className="cursor-pointer"
+                onCheckedChange={setReorderEnabled}
               />
-              Reorder
-            </label>
+            </div>
           </div>
         </div>
       </div>
@@ -239,7 +234,7 @@ const AdminProjects: React.FC = () => {
           />
         )}
       </div>
-    </div>
+    </AdminPageLayout>
   );
 };
 
