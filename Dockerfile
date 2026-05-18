@@ -2,7 +2,7 @@
 # hadolint ignore=DL3008
 
 # Stage 1: build React frontend
-FROM node:25-bookworm AS frontend-build
+FROM node:26-bookworm AS frontend-build
 
 WORKDIR /app/frontend
 
@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY frontend/package*.json ./
-RUN npm install --legacy-peer-deps
+RUN npm install
 
 COPY frontend/ .
 RUN npm run build
