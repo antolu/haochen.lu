@@ -5,6 +5,7 @@ import {
   Home,
   Camera,
   FolderOpen,
+  Paperclip,
   PenTool,
   Layers,
   FileText,
@@ -248,6 +249,12 @@ const AdminLayoutContent: React.FC = () => {
       name: "Projects",
       href: "/admin/projects",
       icon: FolderOpen,
+      badge: null,
+    },
+    {
+      name: "Files",
+      href: "/admin/files",
+      icon: Paperclip,
       badge: null,
     },
     {

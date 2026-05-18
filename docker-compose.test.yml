@@ -17,7 +17,7 @@ services:
       retries: 5
 
   db:
-    image: postgres:15
+    image: postgres:18
     environment:
       POSTGRES_USER: testuser
       POSTGRES_PASSWORD: testpassword
@@ -30,10 +30,10 @@ services:
     networks:
       - test-network
     tmpfs:
-      - /var/lib/postgresql/data  # Use tmpfs for faster I/O
+      - /var/lib/postgresql  # Use tmpfs for faster I/O
 
   redis:
-    image: redis:7
+    image: redis:8
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -45,10 +45,7 @@ services:
   backend:
     build:
       context: .
-      dockerfile: Dockerfile
-      args:
-        BUILD_TYPE: development
-        SETUPTOOLS_SCM_PRETEND_VERSION: "0.0.0"
+      dockerfile: Dockerfile.dev
     environment:
       ENVIRONMENT: test
       POSTGRES_USER: testuser
@@ -106,10 +103,7 @@ services:
   test-runner:
     build:
       context: .
-      dockerfile: Dockerfile
-      args:
-        BUILD_TYPE: development
-        SETUPTOOLS_SCM_PRETEND_VERSION: "0.0.0"
+      dockerfile: Dockerfile.dev
     environment:
       ENVIRONMENT: test
       POSTGRES_USER: testuser

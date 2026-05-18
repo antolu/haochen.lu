@@ -13,6 +13,8 @@ from fastapi import (
     WebSocketDisconnect,
 )
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.api import (
@@ -29,6 +31,9 @@ from app.api import (
     projects,
 )
 from app.api import (
+    files as files_api,
+)
+from app.api import (
     settings as settings_api,
 )
 from app.config import settings
@@ -37,6 +42,7 @@ from app.core.progress import progress_manager
 from app.core.rate_limiter import RateLimitMiddleware
 from app.core.redis import close_redis, init_redis
 from app.core.security import decode_token
+from app.dependencies import _session_dependency
 
 
 class NoCacheMiddleware(BaseHTTPMiddleware):
@@ -122,8 +128,19 @@ api_router.include_router(
 )
 api_router.include_router(content.router)
 api_router.include_router(locations.router, prefix="/locations", tags=["locations"])
+api_router.include_router(files_api.router, prefix="/files", tags=["files"])
 
 app.include_router(api_router, prefix="/api")
+
+
+@app.get("/files/{filename}")
+async def serve_file(
+    filename: str,
+    request: Request,
+    db: AsyncSession = _session_dependency,
+) -> FileResponse:
+    return await files_api.serve_public_file(filename, request, db)
+
 
 # Static files removed - now served through API with access control
 # Files are now accessed via /api/photos/{photo_id}/file/{variant} endpoints

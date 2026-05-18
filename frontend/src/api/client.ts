@@ -904,6 +904,65 @@ export const heroImages = {
   },
 };
 
+export interface FileRecord {
+  id: string;
+  original_name: string;
+  url: string;
+  mime_type: string;
+  file_size: number;
+  access_level: string;
+  created_at: string;
+}
+
+export interface FileListResponse {
+  items: FileRecord[];
+  total: number;
+}
+
+export interface FileConflict {
+  conflict: true;
+  existing_id: string;
+}
+
+export interface FileListParams {
+  skip?: number;
+  limit?: number;
+  search?: string;
+  sort_by?: "name" | "extension" | "created_at" | "file_size";
+  order?: "asc" | "desc";
+}
+
+export const files = {
+  async upload(file: File, replace = false): Promise<FileRecord> {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await apiClient.post<FileRecord>(
+      `/files${replace ? "?replace=true" : ""}`,
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } },
+    );
+    return response.data;
+  },
+
+  async list(params: FileListParams = {}): Promise<FileListResponse> {
+    const response = await apiClient.get<FileListResponse>("/files", {
+      params,
+    });
+    return response.data;
+  },
+
+  async rename(id: string, originalName: string): Promise<FileRecord> {
+    const response = await apiClient.patch<FileRecord>(`/files/${id}`, {
+      original_name: originalName,
+    });
+    return response.data;
+  },
+
+  async remove(id: string): Promise<void> {
+    await apiClient.delete(`/files/${id}`);
+  },
+};
+
 export default apiClient;
 export { apiClient };
 export const api = apiClient;

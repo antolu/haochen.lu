@@ -19,6 +19,7 @@ services:
       - /app/frontend/.vite
       - ./uploads:/app/uploads
       - ./compressed:/app/compressed
+      - ./file_uploads:/app/file_uploads
       - ./.git:/app/.git
     environment:
       - ENVIRONMENT=development
@@ -40,6 +41,7 @@ services:
       - WEBP_QUALITY=85
       - THUMBNAIL_SIZE=400
       - MAX_FILE_SIZE=52428800
+      - FILE_UPLOAD_DIR=/app/file_uploads
       - OIDC_ENDPOINT=http://keycloak:8080
       - OIDC_PUBLIC_ENDPOINT=http://localhost:9091
       - OIDC_REALM=arcadia
@@ -60,7 +62,7 @@ services:
           - auth-broker
 
   db:
-    image: postgres:15-alpine
+    image: postgres:18-alpine
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-portfolio}
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
@@ -68,7 +70,8 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
     networks:
       - portfolio-network
     healthcheck:
@@ -78,7 +81,7 @@ services:
       retries: 5
 
   redis:
-    image: redis:7-alpine
+    image: redis:8-alpine
     ports:
       - "6380:6379"
     networks:
@@ -97,9 +100,9 @@ services:
       - ./keycloak/arcadia-realm.json:/opt/keycloak/data/import/arcadia-realm.json:ro
     environment:
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
-      KC_DB_USERNAME: keycloak
-      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak}
+      KC_DB_URL: jdbc:postgresql://db:5432/keycloak
+      KC_DB_USERNAME: ${POSTGRES_USER:-postgres}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-password}
       KC_HOSTNAME: http://localhost:9091
       KC_HOSTNAME_STRICT: "false"
       KC_HTTP_ENABLED: "true"
@@ -111,29 +114,11 @@ services:
       - portfolio-network
       - first-party-auth-network
     depends_on:
-      keycloak-db:
+      db:
         condition: service_healthy
-
-  keycloak-db:
-    image: postgres:15-alpine
-    container_name: keycloak-db
-    environment:
-      POSTGRES_DB: keycloak
-      POSTGRES_USER: keycloak
-      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak}
-    volumes:
-      - keycloak_db_data:/var/lib/postgresql/data
-    networks:
-      - portfolio-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U keycloak"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
 volumes:
   db_data:
-  keycloak_db_data:
 
 networks:
   portfolio-network:

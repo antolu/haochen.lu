@@ -80,6 +80,7 @@ class Settings(BaseSettings):
     # File uploads
     upload_dir: str = os.getenv("UPLOAD_DIR", "uploads")
     compressed_dir: str = os.getenv("COMPRESSED_DIR", "compressed")
+    file_upload_dir: str = os.getenv("FILE_UPLOAD_DIR", "file_uploads")
     max_file_size: int = int(
         os.getenv("MAX_FILE_SIZE", str(50 * 1024 * 1024))
     )  # 50MB default

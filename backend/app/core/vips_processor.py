@@ -492,6 +492,9 @@ class VipsImageProcessor:
             "effort": int(effort_map.get(size_name, avif_effort_default)),
         }
 
+    async def process(self, file: BinaryIO, filename: str) -> dict:
+        return await self.process_image(file, filename)
+
     async def delete_image_files(self, photo_data: dict):
         """Delete all files associated with a photo."""
         files_to_delete = [

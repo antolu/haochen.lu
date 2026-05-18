@@ -1,5 +1,7 @@
 uploads/
 compressed/
+backend/file_uploads/
+docs/superpowers/
 **/cookies.txt
 
 ### Intellij ###
