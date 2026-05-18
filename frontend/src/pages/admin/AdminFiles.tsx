@@ -50,7 +50,8 @@ export default function AdminFiles() {
         setCollision(null);
       } catch (err) {
         if (axios.isAxiosError(err) && err.response?.status === 409) {
-          const detail = err.response.data?.detail as
+          const responseData = err.response.data as Record<string, unknown>;
+          const detail = responseData?.detail as
             | { conflict: boolean; existing_id: string }
             | undefined;
           if (detail?.conflict) {

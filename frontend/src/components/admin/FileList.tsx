@@ -15,6 +15,29 @@ function getExtension(name: string): string {
 
 type SortCol = "name" | "extension" | "created_at" | "file_size";
 
+function SortHeader({
+  col,
+  label,
+  sortBy,
+  order,
+  onSort,
+}: {
+  col: SortCol;
+  label: string;
+  sortBy: SortCol;
+  order: "asc" | "desc";
+  onSort: (col: SortCol) => void;
+}) {
+  return (
+    <th
+      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:text-gray-700 select-none"
+      onClick={() => onSort(col)}
+    >
+      {label} {sortBy === col ? (order === "asc" ? "↑" : "↓") : ""}
+    </th>
+  );
+}
+
 interface Props {
   fileRecords: FileRecord[];
   sortBy: SortCol;
@@ -58,17 +81,6 @@ export function FileList({
     setTimeout(() => setCopiedId(null), 1500);
   }
 
-  function SortHeader({ col, label }: { col: SortCol; label: string }) {
-    return (
-      <th
-        className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:text-gray-700 select-none"
-        onClick={() => onSort(col)}
-      >
-        {label} {sortBy === col ? (order === "asc" ? "↑" : "↓") : ""}
-      </th>
-    );
-  }
-
   return (
     <div>
       <div className="mb-4">
@@ -85,10 +97,34 @@ export function FileList({
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <SortHeader col="name" label="Name" />
-              <SortHeader col="extension" label="Ext" />
-              <SortHeader col="file_size" label="Size" />
-              <SortHeader col="created_at" label="Uploaded" />
+              <SortHeader
+                col="name"
+                label="Name"
+                sortBy={sortBy}
+                order={order}
+                onSort={onSort}
+              />
+              <SortHeader
+                col="extension"
+                label="Ext"
+                sortBy={sortBy}
+                order={order}
+                onSort={onSort}
+              />
+              <SortHeader
+                col="file_size"
+                label="Size"
+                sortBy={sortBy}
+                order={order}
+                onSort={onSort}
+              />
+              <SortHeader
+                col="created_at"
+                label="Uploaded"
+                sortBy={sortBy}
+                order={order}
+                onSort={onSort}
+              />
               <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                 Actions
               </th>
