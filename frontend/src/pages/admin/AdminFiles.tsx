@@ -10,6 +10,7 @@ import {
 import { CollisionModal } from "../../components/admin/CollisionModal";
 import { FileList } from "../../components/admin/FileList";
 import { Button } from "../../components/ui/button";
+import { AdminPageLayout } from "../../components/admin/AdminPageLayout";
 
 export default function AdminFiles() {
   const queryClient = useQueryClient();
@@ -96,34 +97,31 @@ export default function AdminFiles() {
         </div>
       )}
 
-      <div className="max-w-5xl mx-auto">
-        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between border-b pb-8 mb-8">
-          <div className="space-y-2">
-            <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-              Files
-            </h1>
-            <p className="text-muted-foreground text-lg">
-              Drag and drop anywhere on this page to upload
-            </p>
-          </div>
-          <Button
-            variant="gradient"
-            size="lg"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="rounded-full px-8 shadow-xl shadow-primary/20"
-          >
-            <Upload className="h-5 w-5 mr-2" />
-            {uploading ? "Uploading..." : "Upload file"}
-          </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            className="hidden"
-            onChange={(e) => handleFiles(e.target.files)}
-          />
-        </div>
-
+      <AdminPageLayout
+        title="Files"
+        description="Drag and drop anywhere on this page to upload"
+        maxWidth="max-w-5xl"
+        actions={
+          <>
+            <Button
+              variant="gradient"
+              size="lg"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="rounded-full px-8 shadow-xl shadow-primary/20"
+            >
+              <Upload className="h-5 w-5 mr-2" />
+              {uploading ? "Uploading..." : "Upload file"}
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              onChange={(e) => handleFiles(e.target.files)}
+            />
+          </>
+        }
+      >
         <FileList
           fileRecords={fileRecords}
           sortBy={sortBy}
@@ -132,7 +130,7 @@ export default function AdminFiles() {
           search={search}
           onSearch={setSearch}
         />
-      </div>
+      </AdminPageLayout>
 
       {collision && (
         <CollisionModal
