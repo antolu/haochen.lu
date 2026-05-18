@@ -48,7 +48,7 @@ repos:
 
   # Python type checking
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v2.0.0
+    rev: v2.1.0
     hooks:
       - id: mypy
         files: ^backend/
@@ -56,7 +56,7 @@ repos:
         args: [--config-file=backend/pyproject.toml]
         additional_dependencies:
           - "pydantic>=2.13.4"
-          - "pydantic-settings>=2.14.0"
+          - "pydantic-settings>=2.14.1"
           - "sqlalchemy[mypy]>=2.0.49"
           - "types-PyYAML"
           - "types-redis>=4.6.0.20241004"
@@ -79,7 +79,7 @@ repos:
         additional_dependencies:
           - eslint@10.3.0
           - "@eslint/js@10.0.1"
-          - "typescript-eslint@8.59.2"
+          - "typescript-eslint@8.59.3"
           - "eslint-plugin-react-hooks@7.1.1"
           - "eslint-plugin-react-refresh@0.5.2"
           - "globals@17.6.0"
