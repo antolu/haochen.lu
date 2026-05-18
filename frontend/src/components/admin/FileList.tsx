@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Check, Clipboard, Trash2, X } from "lucide-react";
 import { files as filesApi, type FileRecord } from "../../api/client";
 
 function formatBytes(bytes: number): string {
@@ -13,6 +14,14 @@ function getExtension(name: string): string {
   return parts.length > 1 ? `.${parts[parts.length - 1]}` : "";
 }
 
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
 type SortCol = "name" | "extension" | "created_at" | "file_size";
 
 function SortHeader({
@@ -21,16 +30,18 @@ function SortHeader({
   sortBy,
   order,
   onSort,
+  className,
 }: {
   col: SortCol;
   label: string;
   sortBy: SortCol;
   order: "asc" | "desc";
   onSort: (col: SortCol) => void;
+  className?: string;
 }) {
   return (
     <th
-      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:text-gray-700 select-none"
+      className={`px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 select-none ${className ?? ""}`}
       onClick={() => onSort(col)}
     >
       {label} {sortBy === col ? (order === "asc" ? "↑" : "↓") : ""}
@@ -89,13 +100,13 @@ export function FileList({
           placeholder="Search by name..."
           value={search}
           onChange={(e) => onSearch(e.target.value)}
-          className="w-full max-w-xs border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full max-w-xs border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      <div className="rounded-lg border border-gray-200 dark:border-gray-700">
+        <table className="w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-800/60">
             <tr>
               <SortHeader
                 col="name"
@@ -110,6 +121,7 @@ export function FileList({
                 sortBy={sortBy}
                 order={order}
                 onSort={onSort}
+                className="w-16"
               />
               <SortHeader
                 col="file_size"
@@ -117,6 +129,7 @@ export function FileList({
                 sortBy={sortBy}
                 order={order}
                 onSort={onSort}
+                className="w-24"
               />
               <SortHeader
                 col="created_at"
@@ -124,18 +137,20 @@ export function FileList({
                 sortBy={sortBy}
                 order={order}
                 onSort={onSort}
+                className="w-36"
               />
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                Actions
-              </th>
+              <th className="px-4 py-3 w-24" />
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
             {fileRecords.map((record) => (
-              <tr key={record.id} className="hover:bg-gray-50">
+              <tr
+                key={record.id}
+                className="hover:bg-gray-50 dark:hover:bg-gray-800/50"
+              >
                 <td className="px-4 py-3 text-sm">
                   {editingId === record.id ? (
-                    <div className="flex gap-2 items-center">
+                    <div className="flex gap-1 items-center">
                       <input
                         autoFocus
                         value={editingName}
@@ -148,7 +163,7 @@ export function FileList({
                             });
                           if (e.key === "Escape") setEditingId(null);
                         }}
-                        className="border border-gray-300 rounded px-2 py-1 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm font-mono w-64 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                       <button
                         onClick={() => {
@@ -159,62 +174,62 @@ export function FileList({
                             });
                         }}
                         disabled={!editingName.trim()}
-                        className="text-xs text-blue-600 hover:underline disabled:opacity-40"
+                        title="Confirm"
+                        className="inline-flex items-center justify-center w-7 h-7 rounded text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 disabled:opacity-40 transition-colors"
                       >
-                        Save
+                        <Check className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => setEditingId(null)}
-                        className="text-xs text-gray-500 hover:underline"
+                        title="Cancel"
+                        className="inline-flex items-center justify-center w-7 h-7 rounded text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
                       >
-                        Cancel
+                        <X className="w-4 h-4" />
                       </button>
                     </div>
                   ) : (
-                    <a
-                      href={record.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline font-mono text-xs"
-                    >
-                      {record.original_name}
-                    </a>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-500 font-mono">
-                  {getExtension(record.original_name)}
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-500">
-                  {formatBytes(record.file_size)}
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-500">
-                  {new Date(record.created_at).toLocaleDateString()}
-                </td>
-                <td className="px-4 py-3 text-sm text-right">
-                  <div className="flex gap-2 justify-end">
-                    <button
-                      onClick={() => copyUrl(record)}
-                      className="text-xs px-2 py-1 border border-gray-300 rounded hover:bg-gray-50"
-                    >
-                      {copiedId === record.id ? "Copied!" : "Copy URL"}
-                    </button>
                     <button
                       onClick={() => {
                         setEditingId(record.id);
                         setEditingName(record.original_name);
                       }}
-                      className="text-xs px-2 py-1 border border-gray-300 rounded hover:bg-gray-50"
+                      className="text-blue-600 dark:text-blue-400 hover:underline font-mono text-xs text-left"
                     >
-                      Rename
+                      {record.original_name}
+                    </button>
+                  )}
+                </td>
+                <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 font-mono">
+                  {getExtension(record.original_name)}
+                </td>
+                <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                  {formatBytes(record.file_size)}
+                </td>
+                <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                  {formatDate(record.created_at)}
+                </td>
+                <td className="px-4 py-3 text-sm text-right">
+                  <div className="flex gap-1 justify-end">
+                    <button
+                      onClick={() => copyUrl(record)}
+                      title="Copy URL"
+                      className="inline-flex items-center justify-center w-7 h-7 rounded text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      {copiedId === record.id ? (
+                        <Check className="w-4 h-4 text-green-500" />
+                      ) : (
+                        <Clipboard className="w-4 h-4" />
+                      )}
                     </button>
                     <button
                       onClick={() => {
                         if (confirm(`Delete ${record.original_name}?`))
                           deleteMutation.mutate(record.id);
                       }}
-                      className="text-xs px-2 py-1 border border-red-200 text-red-600 rounded hover:bg-red-50"
+                      title="Delete"
+                      className="inline-flex items-center justify-center w-7 h-7 rounded text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
                     >
-                      Delete
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </td>
@@ -224,7 +239,7 @@ export function FileList({
               <tr>
                 <td
                   colSpan={5}
-                  className="px-4 py-8 text-center text-sm text-gray-400"
+                  className="px-4 py-8 text-center text-sm text-gray-400 dark:text-gray-500"
                 >
                   No files uploaded yet.
                 </td>
