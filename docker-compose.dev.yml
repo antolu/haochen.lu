@@ -19,6 +19,7 @@ services:
       - /app/frontend/.vite
       - ./uploads:/app/uploads
       - ./compressed:/app/compressed
+      - ./file_uploads:/app/file_uploads
       - ./.git:/app/.git
     environment:
       - ENVIRONMENT=development
@@ -40,6 +41,7 @@ services:
       - WEBP_QUALITY=85
       - THUMBNAIL_SIZE=400
       - MAX_FILE_SIZE=52428800
+      - FILE_UPLOAD_DIR=/app/file_uploads
       - OIDC_ENDPOINT=http://keycloak:8080
       - OIDC_PUBLIC_ENDPOINT=http://localhost:9091
       - OIDC_REALM=arcadia
