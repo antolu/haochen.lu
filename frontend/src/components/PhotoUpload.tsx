@@ -303,6 +303,21 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
             onCancel={handleCancel}
             submitLabel={`Upload ${pendingFiles.length} Photo${pendingFiles.length !== 1 ? "s" : ""}`}
             isSubmitting={isSubmitting || uploadMutation.isPending}
+            fields={
+              pendingFiles.length === 1
+                ? {
+                    showTitle: true,
+                    showDescription: true,
+                    showTags: true,
+                    showFeatured: true,
+                  }
+                : {
+                    showTitle: false,
+                    showDescription: false,
+                    showTags: true,
+                    showFeatured: false,
+                  }
+            }
           />
         </div>
       )}

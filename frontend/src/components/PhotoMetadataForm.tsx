@@ -73,17 +73,12 @@ const PhotoMetadataForm: React.FC<PhotoMetadataFormProps> = ({
       {/* Title Field */}
       {fields.showTitle && (
         <div className="space-y-2">
-          <Label htmlFor="title">
-            Title <span className="text-destructive">*</span>
-          </Label>
+          <Label htmlFor="title">Title</Label>
           <Input
             id="title"
             type="text"
-            {...register("title", {
-              required: "Title is required",
-              minLength: { value: 1, message: "Title cannot be empty" },
-            })}
-            placeholder="Enter photo title..."
+            {...register("title")}
+            placeholder="Defaults to filename if left empty"
           />
           {errors.title && (
             <p className="text-destructive text-sm">{errors.title.message}</p>
