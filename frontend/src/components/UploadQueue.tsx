@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUploadQueue } from "../stores/uploadQueue";
 import {
@@ -45,8 +45,15 @@ export const UploadQueue: React.FC = () => {
   const completedCount = getCompletedCount();
   const errorCount = getErrorCount();
 
-  // Don't show if queue is empty
-  if (queue.length === 0) {
+  const allDone = queue.length > 0 && pendingCount === 0 && errorCount === 0;
+  const [dismissed, setDismissed] = useState(false);
+
+  // Auto-dismiss disabled for now — queue doubles as a shortcut to recently uploaded files
+  useEffect(() => {
+    if (allDone) setDismissed(false); // reset if re-used
+  }, [allDone]);
+
+  if (queue.length === 0 || dismissed) {
     return null;
   }
 
@@ -64,10 +71,10 @@ export const UploadQueue: React.FC = () => {
       initial={{ opacity: 0, y: 100 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 100 }}
-      className="fixed bottom-4 right-4 w-96 max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border dark:border-gray-700 z-50"
+      className="fixed bottom-4 right-4 w-96 max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 z-50"
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border dark:border-gray-700">
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-3">
           <div className="relative">
             <Upload className="h-5 w-5 text-blue-600 dark:text-blue-400" />
@@ -117,7 +124,7 @@ export const UploadQueue: React.FC = () => {
             className="overflow-hidden"
           >
             {/* Filter Tabs */}
-            <div className="flex gap-1 p-2 bg-muted dark:bg-gray-900/50 border-b border dark:border-gray-700">
+            <div className="flex gap-1 p-2 bg-muted dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
               {[
                 { key: "all", label: "All" },
                 { key: "active", label: "Active" },
@@ -147,7 +154,7 @@ export const UploadQueue: React.FC = () => {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="border-b border dark:border-gray-700 last:border-b-0"
+                    className="border-b border-gray-200 dark:border-gray-700 last:border-b-0"
                   >
                     <div className="p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50">
                       <div className="flex items-start gap-3">

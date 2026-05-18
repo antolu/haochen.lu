@@ -32,7 +32,7 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className="bg-white border border-gray-200 rounded-lg p-4"
+      className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4"
     >
       <div className="flex items-center space-x-4">
         {/* Preview Image */}
@@ -48,10 +48,10 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({
 
         {/* File Info */}
         <div className="flex-1 min-w-0">
-          <div className="font-medium text-gray-900 truncate">
+          <div className="font-medium text-gray-900 dark:text-gray-100 truncate">
             {uploadFile.file?.name ?? "Unknown file"}
           </div>
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-gray-500 dark:text-gray-400">
             {uploadFile.file?.size
               ? formatFileSize(uploadFile.file.size)
               : "Unknown size"}
@@ -60,11 +60,11 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({
           {/* Progress Bar - Only show when uploading */}
           {uploadFile.status === "uploading" && (
             <div className="mt-2">
-              <div className="flex justify-between text-xs text-gray-600 mb-1">
+              <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
                 <span>Uploading...</span>
                 <span>{Math.round(uploadFile.progress)}%</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                 <div
                   className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${uploadFile.progress}%` }}
@@ -94,7 +94,9 @@ const PhotoPreview: React.FC<PhotoPreviewProps> = ({
           )}
 
           {uploadFile.status === "pending" && (
-            <div className="mt-2 text-sm text-gray-500">Ready to upload</div>
+            <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              Ready to upload
+            </div>
           )}
         </div>
 
