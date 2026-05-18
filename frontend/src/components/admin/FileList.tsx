@@ -2,6 +2,16 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, Clipboard, Trash2, X } from "lucide-react";
 import { files as filesApi, type FileRecord } from "../../api/client";
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../ui/table";
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -24,7 +34,7 @@ function formatDate(iso: string): string {
 
 type SortCol = "name" | "extension" | "created_at" | "file_size";
 
-function SortHeader({
+function SortHead({
   col,
   label,
   sortBy,
@@ -40,12 +50,12 @@ function SortHeader({
   className?: string;
 }) {
   return (
-    <th
-      className={`px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 select-none ${className ?? ""}`}
+    <TableHead
+      className={`cursor-pointer select-none hover:text-foreground ${className ?? ""}`}
       onClick={() => onSort(col)}
     >
       {label} {sortBy === col ? (order === "asc" ? "↑" : "↓") : ""}
-    </th>
+    </TableHead>
   );
 }
 
@@ -92,30 +102,33 @@ export function FileList({
     setTimeout(() => setCopiedId(null), 1500);
   }
 
-  return (
-    <div>
-      <div className="mb-4">
-        <input
-          type="text"
-          placeholder="Search by name..."
-          value={search}
-          onChange={(e) => onSearch(e.target.value)}
-          className="w-full max-w-xs border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
+  function confirmRename(id: string) {
+    if (editingName.trim())
+      renameMutation.mutate({ id, name: editingName.trim() });
+  }
 
-      <div className="rounded-lg border border-gray-200 dark:border-gray-700">
-        <table className="w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className="bg-gray-50 dark:bg-gray-800/60">
-            <tr>
-              <SortHeader
+  return (
+    <div className="space-y-4">
+      <Input
+        type="text"
+        placeholder="Search by name..."
+        value={search}
+        onChange={(e) => onSearch(e.target.value)}
+        className="max-w-xs"
+      />
+
+      <div className="bg-card rounded-xl shadow-sm border border-border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <SortHead
                 col="name"
                 label="Name"
                 sortBy={sortBy}
                 order={order}
                 onSort={onSort}
               />
-              <SortHeader
+              <SortHead
                 col="extension"
                 label="Ext"
                 sortBy={sortBy}
@@ -123,7 +136,7 @@ export function FileList({
                 onSort={onSort}
                 className="w-16"
               />
-              <SortHeader
+              <SortHead
                 col="file_size"
                 label="Size"
                 sortBy={sortBy}
@@ -131,7 +144,7 @@ export function FileList({
                 onSort={onSort}
                 className="w-24"
               />
-              <SortHeader
+              <SortHead
                 col="created_at"
                 label="Uploaded"
                 sortBy={sortBy}
@@ -139,16 +152,13 @@ export function FileList({
                 onSort={onSort}
                 className="w-36"
               />
-              <th className="px-4 py-3 w-24" />
-            </tr>
-          </thead>
-          <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+              <TableHead className="w-20" />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {fileRecords.map((record) => (
-              <tr
-                key={record.id}
-                className="hover:bg-gray-50 dark:hover:bg-gray-800/50"
-              >
-                <td className="px-4 py-3 text-sm">
+              <TableRow key={record.id}>
+                <TableCell>
                   {editingId === record.id ? (
                     <div className="flex gap-1 items-center">
                       <input
@@ -156,36 +166,30 @@ export function FileList({
                         value={editingName}
                         onChange={(e) => setEditingName(e.target.value)}
                         onKeyDown={(e) => {
-                          if (e.key === "Enter" && editingName.trim())
-                            renameMutation.mutate({
-                              id: record.id,
-                              name: editingName.trim(),
-                            });
+                          if (e.key === "Enter") confirmRename(record.id);
                           if (e.key === "Escape") setEditingId(null);
                         }}
-                        className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm font-mono w-64 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="border border-input rounded-lg px-2 py-1 text-sm font-mono w-64 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                       />
-                      <button
-                        onClick={() => {
-                          if (editingName.trim())
-                            renameMutation.mutate({
-                              id: record.id,
-                              name: editingName.trim(),
-                            });
-                        }}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => confirmRename(record.id)}
                         disabled={!editingName.trim()}
                         title="Confirm"
-                        className="inline-flex items-center justify-center w-7 h-7 rounded text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 disabled:opacity-40 transition-colors"
+                        className="w-7 h-7 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30"
                       >
                         <Check className="w-4 h-4" />
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => setEditingId(null)}
                         title="Cancel"
-                        className="inline-flex items-center justify-center w-7 h-7 rounded text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+                        className="w-7 h-7 text-destructive hover:bg-destructive/10"
                       >
                         <X className="w-4 h-4" />
-                      </button>
+                      </Button>
                     </div>
                   ) : (
                     <button
@@ -193,60 +197,64 @@ export function FileList({
                         setEditingId(record.id);
                         setEditingName(record.original_name);
                       }}
-                      className="text-blue-600 dark:text-blue-400 hover:underline font-mono text-xs text-left"
+                      className="text-primary hover:underline font-mono text-xs text-left"
                     >
                       {record.original_name}
                     </button>
                   )}
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 font-mono">
+                </TableCell>
+                <TableCell className="text-muted-foreground font-mono text-sm">
                   {getExtension(record.original_name)}
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                </TableCell>
+                <TableCell className="text-muted-foreground text-sm">
                   {formatBytes(record.file_size)}
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                </TableCell>
+                <TableCell className="text-muted-foreground text-sm">
                   {formatDate(record.created_at)}
-                </td>
-                <td className="px-4 py-3 text-sm text-right">
+                </TableCell>
+                <TableCell>
                   <div className="flex gap-1 justify-end">
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => copyUrl(record)}
                       title="Copy URL"
-                      className="inline-flex items-center justify-center w-7 h-7 rounded text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      className="w-7 h-7"
                     >
                       {copiedId === record.id ? (
                         <Check className="w-4 h-4 text-green-500" />
                       ) : (
                         <Clipboard className="w-4 h-4" />
                       )}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => {
                         if (confirm(`Delete ${record.original_name}?`))
                           deleteMutation.mutate(record.id);
                       }}
                       title="Delete"
-                      className="inline-flex items-center justify-center w-7 h-7 rounded text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+                      className="w-7 h-7 hover:text-destructive hover:bg-destructive/10"
                     >
                       <Trash2 className="w-4 h-4" />
-                    </button>
+                    </Button>
                   </div>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
             {fileRecords.length === 0 && (
-              <tr>
-                <td
+              <TableRow>
+                <TableCell
                   colSpan={5}
-                  className="px-4 py-8 text-center text-sm text-gray-400 dark:text-gray-500"
+                  className="py-8 text-center text-muted-foreground"
                 >
                   No files uploaded yet.
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
     </div>
   );

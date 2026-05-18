@@ -111,6 +111,7 @@ export default function AdminFiles() {
             size="lg"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
+            className="rounded-full px-8 shadow-xl shadow-primary/20"
           >
             <Upload className="h-5 w-5 mr-2" />
             {uploading ? "Uploading..." : "Upload file"}
