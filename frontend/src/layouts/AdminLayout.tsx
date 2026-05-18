@@ -224,6 +224,21 @@ const AdminLayoutContent: React.FC = () => {
     }
   }, [authChecked, isLoading, isAuthenticated, location.pathname]);
 
+  if (isAuthenticated && user && !user.is_admin) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-foreground mb-2">
+            Access denied
+          </h2>
+          <p className="text-muted-foreground">
+            Your account ({user.email}) does not have admin privileges.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated || !user?.is_admin) {
     return (
       <div className="flex items-center justify-center min-h-screen">

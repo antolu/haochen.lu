@@ -34,7 +34,7 @@ from app.schemas.application import (
 router = APIRouter()
 
 
-@router.get("/")
+@router.get("")
 async def list_applications(
     *, db: AsyncSession = _session_dependency
 ) -> ApplicationPublicListResponse:

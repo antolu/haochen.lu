@@ -30,7 +30,7 @@ import type {
 } from "../types";
 
 const API_BASE_URL: string =
-  (import.meta.env.VITE_API_URL as string | undefined) ?? "/api";
+  (import.meta.env.VITE_API_URL as string | undefined) || "/api";
 
 // Flag to track if we're already refreshing to prevent multiple refresh attempts
 let isRefreshing = false;
