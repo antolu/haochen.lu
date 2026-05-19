@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { toast } from "react-hot-toast";
@@ -12,13 +12,19 @@ import ContentEditor from "./ContentEditor";
 import ContentSection from "./ContentSection";
 import CategoryTabs, { type ContentCategory } from "./CategoryTabs";
 import { groupContentBySections, CONTENT_SECTIONS } from "./contentSections";
+import { useLocalState } from "../../hooks/useLocalState";
 
 const ContentManager: React.FC = () => {
-  const [editorOpen, setEditorOpen] = useState(false);
-  const [editingContent, setEditingContent] = useState<Content | null>(null);
-  const [search, setSearch] = useState<string>("");
-  const [category, setCategory] = useState<ContentCategory>("all");
-  const [viewMode] = useState<"grouped" | "grid">("grouped");
+  const [editorOpen, setEditorOpen] = React.useState(false);
+  const [editingContent, setEditingContent] = React.useState<Content | null>(
+    null,
+  );
+  const [search, setSearch] = React.useState<string>("");
+  const [category, setCategory] = useLocalState<ContentCategory>(
+    "admin-content-category",
+    "all",
+  );
+  const viewMode = "grouped";
 
   const queryClient = useQueryClient();
 

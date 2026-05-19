@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { AdminPageLayout } from "../../components/admin/AdminPageLayout";
+import { useLocalState } from "../../hooks/useLocalState";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Eye, EyeOff, Camera, Settings, Pencil } from "lucide-react";
@@ -16,12 +17,7 @@ import {
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from "../../components/ui/tabs";
+import { SegmentedControl } from "../../components/admin/SegmentedControl";
 import {
   Select,
   SelectContent,
@@ -69,7 +65,10 @@ const AdminEquipmentAliases: React.FC = () => {
     return hash === "lenses" ? "lenses" : "cameras";
   };
 
-  const [activeTab, setActiveTab] = useState<EquipmentType>(getTabFromPath());
+  const [activeTab, setActiveTab] = useLocalState<EquipmentType>(
+    "admin-equipment-activeTab",
+    getTabFromPath(),
+  );
   const [editingAlias, setEditingAlias] = useState<AliasType | null>(null);
 
   // Camera state
@@ -371,35 +370,29 @@ const AdminEquipmentAliases: React.FC = () => {
       title="Equipment Aliases"
       description="Manage display names for cameras and lenses found in photo metadata"
       actions={
-        <Button
-          variant="gradient"
-          size="lg"
-          onClick={() => setEditingAlias({} as AliasType)}
-          className="rounded-full px-8 shadow-xl shadow-primary/20"
-        >
-          <Plus className="h-5 w-5 mr-2" />
-          Add Alias
-        </Button>
+        <>
+          <SegmentedControl
+            options={[
+              { value: "cameras" as const, label: "Cameras", icon: Camera },
+              { value: "lenses" as const, label: "Lenses", icon: Settings },
+            ]}
+            value={activeTab}
+            onChange={(value) => setActiveTab(value)}
+          />
+          <Button
+            variant="gradient"
+            size="lg"
+            onClick={() => setEditingAlias({} as AliasType)}
+            className="rounded-full px-8 shadow-xl shadow-primary/20"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Add Alias
+          </Button>
+        </>
       }
     >
-      {/* Tabs */}
-      <Tabs
-        value={activeTab}
-        onValueChange={(value) => setActiveTab(value as EquipmentType)}
-      >
-        <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="cameras" className="gap-2">
-            <Camera className="h-4 w-4" />
-            Cameras
-          </TabsTrigger>
-          <TabsTrigger value="lenses" className="gap-2">
-            <Settings className="h-4 w-4" />
-            Lenses
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Tab Content */}
-        <TabsContent value={activeTab} className="space-y-6">
+      <div className="space-y-6">
+        <div>
           <AdminFiltersBar
             searchValue={currentSearchQuery}
             onSearchChange={setCurrentSearchQuery}
@@ -515,8 +508,8 @@ const AdminEquipmentAliases: React.FC = () => {
               </div>
             </div>
           </div>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
 
       {/* Edit Form */}
       <AnimatePresence>

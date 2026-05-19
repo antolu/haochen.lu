@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FileText, User, Sparkles } from "lucide-react";
 import ContentManager from "../../components/admin/ContentManager";
@@ -6,11 +6,15 @@ import ProfilePictureManager from "../../components/admin/ProfilePictureManager"
 import HeroImageManager from "../../components/admin/HeroImageManager";
 import { AdminPageLayout } from "../../components/admin/AdminPageLayout";
 import { SegmentedControl } from "../../components/admin/SegmentedControl";
+import { useLocalState } from "../../hooks/useLocalState";
 
 type ContentTab = "content" | "profile" | "hero";
 
 const AdminContent: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<ContentTab>("content");
+  const [activeTab, setActiveTab] = useLocalState<ContentTab>(
+    "admin-content-activeTab",
+    "content",
+  );
 
   const tabs = [
     { id: "content" as const, label: "Text Content", icon: FileText },

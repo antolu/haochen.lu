@@ -33,11 +33,15 @@ import {
 import type { Photo } from "../../types";
 import toast from "react-hot-toast";
 import { cn } from "../../lib/utils";
+import { useLocalState } from "../../hooks/useLocalState";
 
 const AdminPhotos: React.FC = () => {
   const [showUpload, setShowUpload] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [viewMode, setViewMode] = useLocalState<"grid" | "list">(
+    "admin-photos-viewMode",
+    "grid",
+  );
   const [editingPhoto, setEditingPhoto] = useState<Photo | null>(null);
   const [reorderEnabled, setReorderEnabled] = useState(false);
   const [showStats, setShowStats] = useState(false);
@@ -194,27 +198,27 @@ const AdminPhotos: React.FC = () => {
       description="Manage and organize your visual portfolio"
       actions={
         <>
-          <SegmentedControl
-            options={[
-              { value: "grid" as const, label: "Grid" },
-              { value: "list" as const, label: "List" },
-            ]}
-            value={viewMode}
-            onChange={handleViewModeChange}
-          />
+          <div className="flex items-center gap-2">
+            <SegmentedControl
+              options={[
+                { value: "grid" as const, label: "Grid" },
+                { value: "list" as const, label: "List" },
+              ]}
+              value={viewMode}
+              onChange={handleViewModeChange}
+            />
 
-          <div className="h-8 w-[1px] bg-border/60 hidden sm:block mx-2" />
-
-          <ReorderToggle
-            checked={reorderEnabled}
-            onCheckedChange={(checked) => {
-              if (!photos.length && checked) {
-                toast.error("Add some photos before reordering.");
-                return;
-              }
-              setReorderEnabled(checked);
-            }}
-          />
+            <ReorderToggle
+              checked={reorderEnabled}
+              onCheckedChange={(checked) => {
+                if (!photos.length && checked) {
+                  toast.error("Add some photos before reordering.");
+                  return;
+                }
+                setReorderEnabled(checked);
+              }}
+            />
+          </div>
 
           <Button
             variant="gradient"
