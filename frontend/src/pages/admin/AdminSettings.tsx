@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { settings as settingsApi } from "@/api/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { AdminPageLayout } from "../../components/admin/AdminPageLayout";
 
 type ImageSettings = {
   responsive_sizes: Record<string, number>;
@@ -102,136 +103,10 @@ const AdminSettings: React.FC = () => {
   }
 
   return (
-    <div className="space-y-10">
-      <div className="space-y-3">
-        <h1 className="admin-page-title">Settings</h1>
-        <p className="text-muted-foreground text-xl">
-          Configure image processing and quality settings
-        </p>
-      </div>
-
-      {ok ? (
-        <div className="p-5 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
-          {ok}
-        </div>
-      ) : null}
-
-      {/* Responsive Sizes */}
-      <div className="bg-card p-8 rounded-xl shadow-lg border-border/40">
-        <h2 className="text-2xl font-semibold mb-6">Responsive Sizes (px)</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {responsiveEntries.map(([k, v]) => (
-            <label key={k} className="flex items-center justify-between gap-3">
-              <span className="text-sm text-foreground w-32 capitalize">
-                {k}
-              </span>
-              <Input
-                className="w-40"
-                type="number"
-                value={v}
-                onChange={(e) =>
-                  handleMapValue("responsive_sizes", k, Number(e.target.value))
-                }
-                min={100}
-                step={50}
-              />
-            </label>
-          ))}
-        </div>
-      </div>
-
-      {/* Quality Settings */}
-      <div className="bg-card p-8 rounded-xl shadow-lg border-border/40">
-        <h2 className="text-2xl font-semibold mb-6">Quality Settings</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {qualityEntries.map(([k, v]) => (
-            <label key={k} className="flex items-center justify-between gap-3">
-              <span className="text-sm text-foreground w-32 capitalize">
-                {k}
-              </span>
-              <Input
-                className="w-40"
-                type="number"
-                value={v}
-                onChange={(e) =>
-                  handleMapValue("quality_settings", k, Number(e.target.value))
-                }
-                min={50}
-                max={100}
-              />
-            </label>
-          ))}
-        </div>
-      </div>
-
-      {/* AVIF/WebP knobs */}
-      <div className="bg-card p-8 rounded-xl shadow-lg border-border/40 space-y-6">
-        <h2 className="text-2xl font-semibold">Compression Knobs</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <label className="flex items-center justify-between gap-3">
-            <span className="text-sm text-foreground">AVIF Quality Offset</span>
-            <Input
-              className="w-40"
-              type="number"
-              value={img?.avif_quality_base_offset ?? 0}
-              onChange={(e) =>
-                handleNumeric(
-                  "avif_quality_base_offset",
-                  Number(e.target.value),
-                )
-              }
-              min={-30}
-              max={10}
-            />
-          </label>
-
-          <label className="flex items-center justify-between gap-3">
-            <span className="text-sm text-foreground">AVIF Quality Floor</span>
-            <Input
-              className="w-40"
-              type="number"
-              value={img?.avif_quality_floor ?? 50}
-              onChange={(e) =>
-                handleNumeric("avif_quality_floor", Number(e.target.value))
-              }
-              min={30}
-              max={90}
-            />
-          </label>
-
-          <label className="flex items-center justify-between gap-3">
-            <span className="text-sm text-foreground">AVIF Effort Default</span>
-            <Input
-              className="w-40"
-              type="number"
-              value={img?.avif_effort_default ?? 6}
-              onChange={(e) =>
-                handleNumeric("avif_effort_default", Number(e.target.value))
-              }
-              min={1}
-              max={9}
-            />
-          </label>
-
-          <label className="flex items-center justify-between gap-3">
-            <span className="text-sm text-foreground">
-              WebP Quality (fallback)
-            </span>
-            <Input
-              className="w-40"
-              type="number"
-              value={img?.webp_quality ?? 85}
-              onChange={(e) =>
-                handleNumeric("webp_quality", Number(e.target.value))
-              }
-              min={60}
-              max={100}
-            />
-          </label>
-        </div>
-      </div>
-
-      <div className="pt-6 flex gap-4">
+    <AdminPageLayout
+      title="Settings"
+      description="Configure image processing and quality settings"
+      actions={
         <Button
           variant="gradient"
           size="lg"
@@ -240,8 +115,151 @@ const AdminSettings: React.FC = () => {
         >
           {saving ? "Saving..." : "Save Settings"}
         </Button>
+      }
+    >
+      <div className="space-y-10">
+        {ok ? (
+          <div className="p-5 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+            {ok}
+          </div>
+        ) : null}
+
+        {/* Responsive Sizes */}
+        <div className="bg-card p-8 rounded-xl shadow-lg border-border/40">
+          <h2 className="text-2xl font-semibold mb-6">Responsive Sizes (px)</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {responsiveEntries.map(([k, v]) => (
+              <label
+                key={k}
+                className="flex items-center justify-between gap-3"
+              >
+                <span className="text-sm text-foreground w-32 capitalize">
+                  {k}
+                </span>
+                <Input
+                  className="w-40"
+                  type="number"
+                  value={v}
+                  onChange={(e) =>
+                    handleMapValue(
+                      "responsive_sizes",
+                      k,
+                      Number(e.target.value),
+                    )
+                  }
+                  min={100}
+                  step={50}
+                />
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Quality Settings */}
+        <div className="bg-card p-8 rounded-xl shadow-lg border-border/40">
+          <h2 className="text-2xl font-semibold mb-6">Quality Settings</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {qualityEntries.map(([k, v]) => (
+              <label
+                key={k}
+                className="flex items-center justify-between gap-3"
+              >
+                <span className="text-sm text-foreground w-32 capitalize">
+                  {k}
+                </span>
+                <Input
+                  className="w-40"
+                  type="number"
+                  value={v}
+                  onChange={(e) =>
+                    handleMapValue(
+                      "quality_settings",
+                      k,
+                      Number(e.target.value),
+                    )
+                  }
+                  min={50}
+                  max={100}
+                />
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* AVIF/WebP knobs */}
+        <div className="bg-card p-8 rounded-xl shadow-lg border-border/40 space-y-6">
+          <h2 className="text-2xl font-semibold">Compression Knobs</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <label className="flex items-center justify-between gap-3">
+              <span className="text-sm text-foreground">
+                AVIF Quality Offset
+              </span>
+              <Input
+                className="w-40"
+                type="number"
+                value={img?.avif_quality_base_offset ?? 0}
+                onChange={(e) =>
+                  handleNumeric(
+                    "avif_quality_base_offset",
+                    Number(e.target.value),
+                  )
+                }
+                min={-30}
+                max={10}
+              />
+            </label>
+
+            <label className="flex items-center justify-between gap-3">
+              <span className="text-sm text-foreground">
+                AVIF Quality Floor
+              </span>
+              <Input
+                className="w-40"
+                type="number"
+                value={img?.avif_quality_floor ?? 50}
+                onChange={(e) =>
+                  handleNumeric("avif_quality_floor", Number(e.target.value))
+                }
+                min={30}
+                max={90}
+              />
+            </label>
+
+            <label className="flex items-center justify-between gap-3">
+              <span className="text-sm text-foreground">
+                AVIF Effort Default
+              </span>
+              <Input
+                className="w-40"
+                type="number"
+                value={img?.avif_effort_default ?? 6}
+                onChange={(e) =>
+                  handleNumeric("avif_effort_default", Number(e.target.value))
+                }
+                min={1}
+                max={9}
+              />
+            </label>
+
+            <label className="flex items-center justify-between gap-3">
+              <span className="text-sm text-foreground">
+                WebP Quality (fallback)
+              </span>
+              <Input
+                className="w-40"
+                type="number"
+                value={img?.webp_quality ?? 85}
+                onChange={(e) =>
+                  handleNumeric("webp_quality", Number(e.target.value))
+                }
+                min={60}
+                max={100}
+              />
+            </label>
+          </div>
+        </div>
       </div>
-    </div>
+    </AdminPageLayout>
   );
 };
 

@@ -1,6 +1,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
+import { AdminPageLayout } from "../../components/admin/AdminPageLayout";
 import {
   Camera,
   FolderOpen,
@@ -118,19 +119,10 @@ const AdminDashboard: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="space-y-3"
-      >
-        <h1 className="admin-page-title">Dashboard</h1>
-        <p className="text-muted-foreground text-xl">
-          Welcome back! Here's an overview of your content.
-        </p>
-      </motion.div>
-
+    <AdminPageLayout
+      title="Dashboard"
+      description="Welcome back! Here's an overview of your content."
+    >
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((item, index) => {
@@ -219,7 +211,7 @@ const AdminDashboard: React.FC = () => {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </AdminPageLayout>
   );
 };
 

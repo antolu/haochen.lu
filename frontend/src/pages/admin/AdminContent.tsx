@@ -4,6 +4,7 @@ import { FileText, User, Sparkles } from "lucide-react";
 import ContentManager from "../../components/admin/ContentManager";
 import ProfilePictureManager from "../../components/admin/ProfilePictureManager";
 import HeroImageManager from "../../components/admin/HeroImageManager";
+import { AdminPageLayout } from "../../components/admin/AdminPageLayout";
 import { cn } from "../../lib/utils";
 
 type ContentTab = "content" | "profile" | "hero";
@@ -18,19 +19,10 @@ const AdminContent: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between border-b pb-8">
-        <div className="space-y-2">
-          <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-            Website Content
-          </h1>
-          <p className="text-muted-foreground text-lg">
-            Manage your profile, hero images, and all editable text
-          </p>
-        </div>
-
-        {/* Tab Switcher - Inspired by AdminPhotos button style */}
+    <AdminPageLayout
+      title="Website Content"
+      description="Manage your profile, hero images, and all editable text"
+      actions={
         <div className="flex bg-muted/50 p-1 rounded-xl border border-border/50">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -54,10 +46,9 @@ const AdminContent: React.FC = () => {
             );
           })}
         </div>
-      </div>
-
-      {/* Content Area */}
-      <div className="pt-2">
+      }
+    >
+      <div>
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -72,7 +63,7 @@ const AdminContent: React.FC = () => {
           </motion.div>
         </AnimatePresence>
       </div>
-    </div>
+    </AdminPageLayout>
   );
 };
 
