@@ -521,12 +521,9 @@ describe("PhotoUpload Component Tests", () => {
         expect(screen.getByText("photo3.webp")).toBeInTheDocument();
       });
 
-      // Fill form with some data
-      await user.type(
-        screen.getByLabelText(/description/i),
-        "Batch upload test",
-      );
-      await user.type(screen.getByLabelText(/title/i), "Batch Title");
+      // With multiple files, only tags is shown (title/description are hidden)
+      expect(screen.queryByLabelText(/description/i)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/title/i)).not.toBeInTheDocument();
 
       const submitButton = screen.getByRole("button", { name: /upload/i });
       await user.click(submitButton);
@@ -538,8 +535,8 @@ describe("PhotoUpload Component Tests", () => {
           expect.objectContaining({
             fileName: "photo1.jpg",
             metadata: expect.objectContaining({
-              title: "Batch Title",
-              description: "Batch upload test",
+              title: "",
+              description: "",
             }),
           }),
         );
@@ -548,8 +545,8 @@ describe("PhotoUpload Component Tests", () => {
           expect.objectContaining({
             fileName: "photo2.png",
             metadata: expect.objectContaining({
-              title: "Batch Title",
-              description: "Batch upload test",
+              title: "",
+              description: "",
             }),
           }),
         );
@@ -558,8 +555,8 @@ describe("PhotoUpload Component Tests", () => {
           expect.objectContaining({
             fileName: "photo3.webp",
             metadata: expect.objectContaining({
-              title: "Batch Title",
-              description: "Batch upload test",
+              title: "",
+              description: "",
             }),
           }),
         );
