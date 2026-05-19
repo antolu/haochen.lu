@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Plus } from "lucide-react";
 import { ReorderToggle } from "../../components/admin/ReorderToggle";
 import { AdminModal } from "../../components/admin/AdminModal";
+import { AdminErrorState } from "../../components/admin/AdminErrorState";
 import AppForm from "../../components/AppForm";
 import AppList from "../../components/AppList";
 import { Button } from "../../components/ui/button";
@@ -126,28 +127,10 @@ const AdminApplications: React.FC = () => {
 
   if (applicationsError) {
     return (
-      <div className="text-center py-12">
-        <div className="text-destructive mb-4">
-          <svg
-            className="h-12 w-12 mx-auto mb-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-            />
-          </svg>
-          Error loading applications
-        </div>
-        <p className="text-muted-foreground">{applicationsError.message}</p>
-        <Button className="mt-4" onClick={() => window.location.reload()}>
-          Retry
-        </Button>
-      </div>
+      <AdminErrorState
+        message={applicationsError.message}
+        onRetry={() => window.location.reload()}
+      />
     );
   }
 
