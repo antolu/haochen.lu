@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { ReorderToggle } from "../../components/admin/ReorderToggle";
+import { AdminModal } from "../../components/admin/AdminModal";
 import StatCard from "../../components/admin/StatCard";
 // photoswipe not used in admin (editor replaces lightbox)
 
@@ -447,59 +448,17 @@ const AdminPhotos: React.FC = () => {
       </AnimatePresence>
 
       {/* Upload Modal */}
-      <AnimatePresence>
-        {showUpload && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
-            onClick={(e) => {
-              if (e.target === e.currentTarget) {
-                setShowUpload(false);
-              }
-            }}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-background rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-bold">Upload Photos</h2>
-                  <button
-                    onClick={() => setShowUpload(false)}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <svg
-                      className="h-6 w-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                </div>
-
-                <PhotoUpload
-                  onComplete={handleUploadComplete}
-                  onCancel={() => setShowUpload(false)}
-                  maxFiles={20}
-                />
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <AdminModal
+        open={showUpload}
+        title="Upload Photos"
+        onClose={() => setShowUpload(false)}
+      >
+        <PhotoUpload
+          onComplete={handleUploadComplete}
+          onCancel={() => setShowUpload(false)}
+          maxFiles={20}
+        />
+      </AdminModal>
 
       {/* Photos Display */}
       <div className="bg-card rounded-xl shadow-lg border-border/40 p-8">

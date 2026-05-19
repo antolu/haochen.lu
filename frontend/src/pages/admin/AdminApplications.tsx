@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Plus } from "lucide-react";
 import { ReorderToggle } from "../../components/admin/ReorderToggle";
+import { AdminModal } from "../../components/admin/AdminModal";
 import AppForm from "../../components/AppForm";
 import AppList from "../../components/AppList";
 import { Button } from "../../components/ui/button";
@@ -178,67 +178,21 @@ const AdminApplications: React.FC = () => {
         </>
       }
     >
-      {/* Form Modal */}
-      <AnimatePresence>
-        {showForm && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
-            onClick={(e) => {
-              if (e.target === e.currentTarget) {
-                handleFormCancel();
-              }
-            }}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-background border border-border rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-bold text-foreground">
-                    {editingApplication
-                      ? "Edit Application"
-                      : "Create Application"}
-                  </h2>
-                  <button
-                    onClick={handleFormCancel}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <svg
-                      className="h-6 w-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                </div>
-
-                <AppForm
-                  application={editingApplication ?? undefined}
-                  onSubmit={async (data) => {
-                    await handleFormSubmit(data);
-                  }}
-                  onCancel={() => handleFormCancel()}
-                  isLoading={isFormLoading}
-                />
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <AdminModal
+        open={showForm}
+        title={editingApplication ? "Edit Application" : "Create Application"}
+        onClose={handleFormCancel}
+        maxWidth="max-w-2xl"
+      >
+        <AppForm
+          application={editingApplication ?? undefined}
+          onSubmit={async (data) => {
+            await handleFormSubmit(data);
+          }}
+          onCancel={() => handleFormCancel()}
+          isLoading={isFormLoading}
+        />
+      </AdminModal>
 
       {/* Sub-Apps List */}
       <div className="bg-card rounded-xl shadow-sm p-6">
