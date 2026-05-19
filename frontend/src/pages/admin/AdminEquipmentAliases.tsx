@@ -519,27 +519,29 @@ const AdminEquipmentAliases: React.FC = () => {
       </Tabs>
 
       {/* Edit Form */}
-      {editingAlias && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-        >
-          <div className="bg-card rounded-xl shadow-sm">
-            <div className="p-6">
-              <h3 className="text-lg font-medium mb-6">
-                Edit {activeTab === "cameras" ? "Camera" : "Lens"} Alias
-              </h3>
-              <EquipmentAliasForm
-                alias={editingAlias}
-                type={activeTab}
-                onSuccess={handleFormSuccess}
-                onCancel={handleFormCancel}
-              />
+      <AnimatePresence>
+        {editingAlias && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+          >
+            <div className="bg-card rounded-xl shadow-sm">
+              <div className="p-6">
+                <h3 className="text-lg font-medium mb-6">
+                  Edit {activeTab === "cameras" ? "Camera" : "Lens"} Alias
+                </h3>
+                <EquipmentAliasForm
+                  alias={editingAlias}
+                  type={activeTab}
+                  onSuccess={handleFormSuccess}
+                  onCancel={handleFormCancel}
+                />
+              </div>
             </div>
-          </div>
-        </motion.div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </AdminPageLayout>
   );
 };
