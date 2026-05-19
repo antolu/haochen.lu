@@ -82,21 +82,21 @@ export default function AdminFiles() {
   }
 
   return (
-    <div
-      className="min-h-screen p-6"
-      onDragOver={(e) => {
-        e.preventDefault();
-        setDragging(true);
-      }}
-      onDragLeave={() => setDragging(false)}
-      onDrop={onDrop}
-    >
+    <>
+      <div
+        className="fixed inset-0 z-0"
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={onDrop}
+      />
       {dragging && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-blue-500/20 border-4 border-dashed border-blue-500 pointer-events-none">
           <p className="text-2xl font-semibold text-blue-700">Drop to upload</p>
         </div>
       )}
-
       <AdminPageLayout
         title="Files"
         description="Drag and drop anywhere on this page to upload"
@@ -131,7 +131,6 @@ export default function AdminFiles() {
           onSearch={setSearch}
         />
       </AdminPageLayout>
-
       {collision && (
         <CollisionModal
           filename={collision.file.name}
@@ -145,6 +144,6 @@ export default function AdminFiles() {
           onCancel={() => setCollision(null)}
         />
       )}
-    </div>
+    </>
   );
 }
