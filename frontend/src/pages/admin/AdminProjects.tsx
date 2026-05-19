@@ -15,11 +15,11 @@ import {
   SelectValue,
 } from "../../components/ui/select";
 import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
 import { AdminPageLayout } from "../../components/admin/AdminPageLayout";
 import { ReorderToggle } from "../../components/admin/ReorderToggle";
 import { AdminErrorState } from "../../components/admin/AdminErrorState";
 import { AdminEmptyState } from "../../components/admin/AdminEmptyState";
+import { AdminFiltersBar } from "../../components/admin/AdminFiltersBar";
 import { Plus } from "lucide-react";
 
 type ViewMode = "list" | "create" | "edit";
@@ -125,42 +125,30 @@ const AdminProjects: React.FC = () => {
         </Button>
       }
     >
-      {/* Filters */}
-      <div className="mb-6 bg-muted/30 p-6 rounded-xl">
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          {/* Search */}
-          <div className="flex-1">
-            <Input
-              type="text"
-              placeholder="Search projects..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-
-          {/* Status Filter & Reorder toggle */}
-          <div className="flex items-center gap-3">
-            <Select
-              value={statusFilter || undefined}
-              onValueChange={(value) => setStatusFilter(value || "")}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="All Statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="archived">Archived</SelectItem>
-              </SelectContent>
-            </Select>
-            <ReorderToggle
-              checked={reorderEnabled}
-              onCheckedChange={setReorderEnabled}
-            />
-          </div>
-        </div>
-      </div>
+      <AdminFiltersBar
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Search projects..."
+      >
+        <Select
+          value={statusFilter || undefined}
+          onValueChange={(value) => setStatusFilter(value || "")}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="All Statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="in_progress">In Progress</SelectItem>
+            <SelectItem value="archived">Archived</SelectItem>
+          </SelectContent>
+        </Select>
+        <ReorderToggle
+          checked={reorderEnabled}
+          onCheckedChange={setReorderEnabled}
+        />
+      </AdminFiltersBar>
 
       {/* Projects List */}
       <div className="bg-card rounded-xl shadow-lg border-border/40 overflow-hidden">

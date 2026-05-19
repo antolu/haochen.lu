@@ -2,15 +2,7 @@ import React, { useState, useEffect } from "react";
 import { AdminPageLayout } from "../../components/admin/AdminPageLayout";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Plus,
-  Search,
-  Eye,
-  EyeOff,
-  Camera,
-  Settings,
-  Pencil,
-} from "lucide-react";
+import { Plus, Eye, EyeOff, Camera, Settings, Pencil } from "lucide-react";
 import {
   useCameraAliases,
   type CameraAlias,
@@ -47,6 +39,7 @@ import {
 } from "../../components/ui/table";
 import EquipmentAliasForm from "../../components/EquipmentAliasForm";
 import { AdminEmptyState } from "../../components/admin/AdminEmptyState";
+import { AdminFiltersBar } from "../../components/admin/AdminFiltersBar";
 
 type EquipmentType = "cameras" | "lenses";
 type AliasType = CameraAlias | LensAlias;
@@ -406,27 +399,13 @@ const AdminEquipmentAliases: React.FC = () => {
 
         {/* Tab Content */}
         <TabsContent value={activeTab} className="space-y-6">
-          {/* Filters */}
-          <div className="bg-muted/30 p-6 rounded-xl">
-            <div className="mb-4">
-              <h3 className="text-lg font-medium flex items-center gap-2">
-                <Search className="h-5 w-5" />
-                Search & Filter
-              </h3>
-            </div>
-            <div className="space-y-4">
-              <div className="relative">
-                <Input
-                  placeholder={currentConfig.filters.searchPlaceholder}
-                  value={currentSearchQuery}
-                  onChange={(e) => setCurrentSearchQuery(e.target.value)}
-                  style={{ paddingLeft: "2.5rem" }}
-                />
-                <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-              </div>
-              {currentConfig.filters.additionalFilters}
-            </div>
-          </div>
+          <AdminFiltersBar
+            searchValue={currentSearchQuery}
+            onSearchChange={setCurrentSearchQuery}
+            searchPlaceholder={currentConfig.filters.searchPlaceholder}
+          >
+            {currentConfig.filters.additionalFilters}
+          </AdminFiltersBar>
 
           {/* Content */}
           <div className="bg-card rounded-xl shadow-sm">
