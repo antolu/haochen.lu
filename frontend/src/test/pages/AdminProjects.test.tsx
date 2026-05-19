@@ -570,8 +570,9 @@ describe("AdminProjects", () => {
 
       renderWithProviders(<AdminProjects />);
 
-      expect(screen.getByText(/failed to load projects/i)).toBeInTheDocument();
-      // Retry button not present in current UI
+      expect(
+        screen.getByText(/there was an error loading your projects/i),
+      ).toBeInTheDocument();
     });
 
     // Retry handled by refetch elsewhere; no explicit retry button in UI
@@ -635,7 +636,7 @@ describe("AdminProjects", () => {
       renderWithProviders(<AdminProjects />);
 
       // Should have responsive container classes
-      const containers = document.querySelectorAll(".space-y-8");
+      const containers = document.querySelectorAll(".space-y-2");
       expect(containers.length).toBeGreaterThan(0);
     });
 
