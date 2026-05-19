@@ -135,24 +135,26 @@ const AdminProjects: React.FC = () => {
         onSearchChange={setSearchQuery}
         searchPlaceholder="Search projects..."
       >
-        <Select
-          value={statusFilter || undefined}
-          onValueChange={(value) => setStatusFilter(value || "")}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="All Statuses" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="in_progress">In Progress</SelectItem>
-            <SelectItem value="archived">Archived</SelectItem>
-          </SelectContent>
-        </Select>
-        <ReorderToggle
-          checked={reorderEnabled}
-          onCheckedChange={setReorderEnabled}
-        />
+        <div className="flex items-center gap-3">
+          <Select
+            value={statusFilter || undefined}
+            onValueChange={(value) => setStatusFilter(value || "")}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="All Statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="in_progress">In Progress</SelectItem>
+              <SelectItem value="archived">Archived</SelectItem>
+            </SelectContent>
+          </Select>
+          <ReorderToggle
+            checked={reorderEnabled}
+            onCheckedChange={setReorderEnabled}
+          />
+        </div>
       </AdminFiltersBar>
 
       {/* Projects List */}

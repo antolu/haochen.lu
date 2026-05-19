@@ -30,7 +30,12 @@ export function AdminEmptyState({
         <p className="text-muted-foreground mb-4">{description}</p>
       )}
       {action && (
-        <Button onClick={action.onClick}>
+        <Button
+          variant="gradient"
+          size="lg"
+          className="rounded-full px-8 shadow-xl shadow-primary/20"
+          onClick={action.onClick}
+        >
           <Plus className="w-4 h-4 mr-2" />
           {action.label}
         </Button>
