@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus } from "lucide-react";
-import { Switch } from "../../components/ui/switch";
+import { ReorderToggle } from "../../components/admin/ReorderToggle";
 import AppForm from "../../components/AppForm";
 import AppList from "../../components/AppList";
 import { Button } from "../../components/ui/button";
@@ -157,18 +157,13 @@ const AdminApplications: React.FC = () => {
       description="Manage external and internal applications"
       actions={
         <>
-          <div className="flex items-center gap-3 bg-muted/30 px-4 py-2 rounded-xl border border-dashed border-border/60">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
-              Reorder
-            </span>
-            <Switch
-              checked={reorderEnabled}
-              onCheckedChange={(checked) => {
-                if (!apps.length && checked) return;
-                setReorderEnabled(checked);
-              }}
-            />
-          </div>
+          <ReorderToggle
+            checked={reorderEnabled}
+            onCheckedChange={(checked) => {
+              if (!apps.length && checked) return;
+              setReorderEnabled(checked);
+            }}
+          />
 
           <Button
             variant="gradient"

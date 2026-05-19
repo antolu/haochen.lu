@@ -11,8 +11,8 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { Switch } from "../../components/ui/switch";
 import { Button } from "../../components/ui/button";
+import { ReorderToggle } from "../../components/admin/ReorderToggle";
 import StatCard from "../../components/admin/StatCard";
 // photoswipe not used in admin (editor replaces lightbox)
 
@@ -236,21 +236,16 @@ const AdminPhotos: React.FC = () => {
 
           <div className="h-8 w-[1px] bg-border/60 hidden sm:block mx-2" />
 
-          <div className="flex items-center gap-3 bg-muted/30 px-4 py-2 rounded-xl border border-dashed border-border/60">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
-              Reorder
-            </span>
-            <Switch
-              checked={reorderEnabled}
-              onCheckedChange={(checked) => {
-                if (!photos.length && checked) {
-                  toast.error("Add some photos before reordering.");
-                  return;
-                }
-                setReorderEnabled(checked);
-              }}
-            />
-          </div>
+          <ReorderToggle
+            checked={reorderEnabled}
+            onCheckedChange={(checked) => {
+              if (!photos.length && checked) {
+                toast.error("Add some photos before reordering.");
+                return;
+              }
+              setReorderEnabled(checked);
+            }}
+          />
 
           <Button
             variant="gradient"

@@ -16,8 +16,8 @@ import {
 } from "../../components/ui/select";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
-import { Switch } from "../../components/ui/switch";
 import { AdminPageLayout } from "../../components/admin/AdminPageLayout";
+import { ReorderToggle } from "../../components/admin/ReorderToggle";
 import { Plus } from "lucide-react";
 
 type ViewMode = "list" | "create" | "edit";
@@ -152,15 +152,10 @@ const AdminProjects: React.FC = () => {
                 <SelectItem value="archived">Archived</SelectItem>
               </SelectContent>
             </Select>
-            <div className="flex items-center gap-3 bg-muted/30 px-4 py-2 rounded-xl border border-dashed border-border/60">
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80">
-                Reorder
-              </span>
-              <Switch
-                checked={reorderEnabled}
-                onCheckedChange={setReorderEnabled}
-              />
-            </div>
+            <ReorderToggle
+              checked={reorderEnabled}
+              onCheckedChange={setReorderEnabled}
+            />
           </div>
         </div>
       </div>
