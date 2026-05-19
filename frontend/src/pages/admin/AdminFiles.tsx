@@ -100,7 +100,6 @@ export default function AdminFiles() {
       <AdminPageLayout
         title="Files"
         description="Drag and drop anywhere on this page to upload"
-        maxWidth="max-w-5xl"
         actions={
           <>
             <Button
