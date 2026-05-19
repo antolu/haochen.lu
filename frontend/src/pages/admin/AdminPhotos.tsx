@@ -15,6 +15,7 @@ import { Button } from "../../components/ui/button";
 import { ReorderToggle } from "../../components/admin/ReorderToggle";
 import { AdminModal } from "../../components/admin/AdminModal";
 import { AdminErrorState } from "../../components/admin/AdminErrorState";
+import { SegmentedControl } from "../../components/admin/SegmentedControl";
 import StatCard from "../../components/admin/StatCard";
 // photoswipe not used in admin (editor replaces lightbox)
 
@@ -193,30 +194,14 @@ const AdminPhotos: React.FC = () => {
       description="Manage and organize your visual portfolio"
       actions={
         <>
-          <div className="flex bg-muted/50 p-1 rounded-xl border border-border/50">
-            <button
-              onClick={() => handleViewModeChange("grid")}
-              className={cn(
-                "px-6 py-2 text-sm font-semibold rounded-lg transition-all duration-200",
-                viewMode === "grid"
-                  ? "bg-background text-foreground shadow-sm ring-1 ring-border/50"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/30",
-              )}
-            >
-              Grid
-            </button>
-            <button
-              onClick={() => handleViewModeChange("list")}
-              className={cn(
-                "px-6 py-2 text-sm font-semibold rounded-lg transition-all duration-200",
-                viewMode === "list"
-                  ? "bg-background text-foreground shadow-sm ring-1 ring-border/50"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/30",
-              )}
-            >
-              List
-            </button>
-          </div>
+          <SegmentedControl
+            options={[
+              { value: "grid" as const, label: "Grid" },
+              { value: "list" as const, label: "List" },
+            ]}
+            value={viewMode}
+            onChange={handleViewModeChange}
+          />
 
           <div className="h-8 w-[1px] bg-border/60 hidden sm:block mx-2" />
 

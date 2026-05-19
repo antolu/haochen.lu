@@ -5,7 +5,7 @@ import ContentManager from "../../components/admin/ContentManager";
 import ProfilePictureManager from "../../components/admin/ProfilePictureManager";
 import HeroImageManager from "../../components/admin/HeroImageManager";
 import { AdminPageLayout } from "../../components/admin/AdminPageLayout";
-import { cn } from "../../lib/utils";
+import { SegmentedControl } from "../../components/admin/SegmentedControl";
 
 type ContentTab = "content" | "profile" | "hero";
 
@@ -23,29 +23,15 @@ const AdminContent: React.FC = () => {
       title="Website Content"
       description="Manage your profile, hero images, and all editable text"
       actions={
-        <div className="flex bg-muted/50 p-1 rounded-xl border border-border/50">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  "flex items-center gap-2 px-6 py-2 text-sm font-semibold rounded-lg transition-all duration-200",
-                  isActive
-                    ? "bg-background text-foreground shadow-sm ring-1 ring-border/50"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/30",
-                )}
-              >
-                <Icon
-                  className={cn("h-4 w-4", isActive ? "text-primary" : "")}
-                />
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
+        <SegmentedControl
+          options={tabs.map((tab) => ({
+            value: tab.id,
+            label: tab.label,
+            icon: tab.icon,
+          }))}
+          value={activeTab}
+          onChange={setActiveTab}
+        />
       }
     >
       <div>
