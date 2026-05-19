@@ -119,7 +119,12 @@ const AdminProjects: React.FC = () => {
       title="Project Management"
       description="Create and manage your project portfolio"
       actions={
-        <Button variant="gradient" size="lg" onClick={handleCreateProject}>
+        <Button
+          variant="gradient"
+          size="lg"
+          onClick={handleCreateProject}
+          className="rounded-full px-8 shadow-xl shadow-primary/20"
+        >
           <Plus className="h-5 w-5 mr-2" />
           New Project
         </Button>

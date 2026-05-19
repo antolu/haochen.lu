@@ -375,6 +375,7 @@ const AdminEquipmentAliases: React.FC = () => {
           variant="gradient"
           size="lg"
           onClick={() => setEditingAlias({} as AliasType)}
+          className="rounded-full px-8 shadow-xl shadow-primary/20"
         >
           <Plus className="h-5 w-5 mr-2" />
           Add Alias
