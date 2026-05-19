@@ -19,6 +19,7 @@ import { Input } from "../../components/ui/input";
 import { AdminPageLayout } from "../../components/admin/AdminPageLayout";
 import { ReorderToggle } from "../../components/admin/ReorderToggle";
 import { AdminErrorState } from "../../components/admin/AdminErrorState";
+import { AdminEmptyState } from "../../components/admin/AdminEmptyState";
 import { Plus } from "lucide-react";
 
 type ViewMode = "list" | "create" | "edit";
@@ -173,10 +174,10 @@ const AdminProjects: React.FC = () => {
             />
           </div>
         ) : projects.length === 0 ? (
-          <div className="p-8 text-center">
-            <div className="text-muted-foreground mb-4">
+          <AdminEmptyState
+            icon={
               <svg
-                className="w-12 h-12 mx-auto"
+                className="w-12 h-12"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -188,20 +189,22 @@ const AdminProjects: React.FC = () => {
                   d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
                 />
               </svg>
-            </div>
-            <h3 className="text-lg font-medium mb-2">No projects found</h3>
-            <p className="text-muted-foreground mb-4">
-              {searchQuery || statusFilter
+            }
+            heading="No projects found"
+            description={
+              searchQuery || statusFilter
                 ? "Try adjusting your search or filters."
-                : "Get started by creating your first project."}
-            </p>
-            {!searchQuery && !statusFilter && (
-              <Button onClick={handleCreateProject}>
-                <Plus className="w-4 h-4 mr-2" />
-                Create Your First Project
-              </Button>
-            )}
-          </div>
+                : "Get started by creating your first project."
+            }
+            action={
+              !searchQuery && !statusFilter
+                ? {
+                    label: "Create Your First Project",
+                    onClick: handleCreateProject,
+                  }
+                : undefined
+            }
+          />
         ) : (
           <SortableProjectList
             projects={projects}

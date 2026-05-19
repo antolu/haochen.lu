@@ -46,6 +46,7 @@ import {
   TableRow,
 } from "../../components/ui/table";
 import EquipmentAliasForm from "../../components/EquipmentAliasForm";
+import { AdminEmptyState } from "../../components/admin/AdminEmptyState";
 
 type EquipmentType = "cameras" | "lenses";
 type AliasType = CameraAlias | LensAlias;
@@ -451,10 +452,10 @@ const AdminEquipmentAliases: React.FC = () => {
                 ) : (
                   <>
                     {aliases.length === 0 ? (
-                      <div className="text-center py-12 text-muted-foreground">
-                        <Icon className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                        <p>No {activeTab} aliases found.</p>
-                      </div>
+                      <AdminEmptyState
+                        icon={<Icon className="h-12 w-12 opacity-50" />}
+                        heading={`No ${activeTab} aliases found`}
+                      />
                     ) : (
                       <div className="space-y-4">
                         <Table>
