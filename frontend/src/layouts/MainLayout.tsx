@@ -320,13 +320,30 @@ const MainLayout: React.FC = () => {
                     </Link>
                   </li>
                 ))}
+                {isAuthenticated && (
+                  <li>
+                    <Link
+                      to="/admin"
+                      className="text-gray-300 hover:text-white transition-colors duration-200"
+                    >
+                      Admin
+                    </Link>
+                  </li>
+                )}
               </ul>
             </div>
 
             <div>
               <h4 className="text-lg font-semibold mb-4">Contact</h4>
               <ul className="space-y-2 text-gray-300">
-                <li>Email: anton@haochen.lu</li>
+                <li>
+                  <a
+                    href="mailto:anton@haochen.lu"
+                    className="text-gray-300 hover:text-white transition-colors duration-200"
+                  >
+                    anton@haochen.lu
+                  </a>
+                </li>
                 <li>Location: Geneva, Switzerland</li>
                 {footerContent?.["contact.cv_url"]?.content && (
                   <li>
