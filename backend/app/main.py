@@ -64,8 +64,10 @@ async def lifespan(app: FastAPI) -> typing.AsyncGenerator[None, None]:
     await init_redis()
     await oidc_client.initialize()
     await oidc_validator.initialize()
-    yield
-    await close_redis()
+    try:
+        yield
+    finally:
+        await close_redis()
 
 
 app = FastAPI(

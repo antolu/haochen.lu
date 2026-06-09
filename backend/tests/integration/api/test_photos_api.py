@@ -8,6 +8,7 @@ filtering, pagination, and image upload handling.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import os
 import tempfile
 import time
@@ -19,9 +20,44 @@ from httpx import AsyncClient
 from PIL import Image
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from tests.conftest import temp_image_file
 from tests.factories import PhotoFactory
 
 from app.models import Photo
+
+
+@contextlib.contextmanager
+def temp_text_file(suffix: str = ".jpg"):
+    """Create a temporary text file pretending to be an image."""
+    with tempfile.NamedTemporaryFile(
+        encoding="utf-8", suffix=suffix, mode="w", delete=False
+    ) as temp_file:
+        temp_file.write("This is not an image file")
+        temp_file_path = temp_file.name
+    try:
+        yield temp_file_path
+    finally:
+        if os.path.exists(temp_file_path):
+            os.unlink(temp_file_path)
+
+
+async def _upload_with_invalid_text_file(
+    async_client: AsyncClient, headers: dict[str, str]
+) -> None:
+    """Helper to test uploading an invalid (text) file."""
+    with temp_text_file() as temp_file_path:
+        with open(temp_file_path, "rb") as fake_img:
+            files = {"file": ("fake_image.jpg", fake_img, "image/jpeg")}
+            data = {"title": "Invalid File Test"}
+
+            response = await async_client.post(
+                "/api/photos", headers=headers, files=files, data=data
+            )
+
+        # File validation returns 415 for unsupported media type
+        assert response.status_code == 415
+        data = response.json()
+        assert "detail" in data
 
 
 @pytest.mark.integration
@@ -174,12 +210,9 @@ async def test_upload_photo_creates_new_photo(
     headers = {"Authorization": f"Bearer {admin_token}"}
 
     # Create test image
-    img = Image.new("RGB", (800, 600), color="red")
-    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
-        img.save(temp_file, format="JPEG")
-        temp_file_path = temp_file.name
-
-    try:
+    with temp_image_file(
+        width=800, height=600, color="red", suffix=".jpg"
+    ) as temp_file_path:
         with open(temp_file_path, "rb") as img_file:
             files = {"file": ("test_upload.jpg", img_file, "image/jpeg")}
             data = {
@@ -209,10 +242,6 @@ async def test_upload_photo_creates_new_photo(
 
         assert db_photo is not None
         assert db_photo.title == "API Upload Test"
-
-    finally:
-        if os.path.exists(temp_file_path):
-            os.unlink(temp_file_path)
 
 
 @pytest.mark.integration
@@ -245,31 +274,7 @@ async def test_upload_invalid_file_returns_400(
 ):
     """Test POST /api/photos with invalid file returns 400."""
     headers = {"Authorization": f"Bearer {admin_token}"}
-
-    # Create text file pretending to be image
-    with tempfile.NamedTemporaryFile(
-        encoding="utf-8", suffix=".jpg", mode="w", delete=False
-    ) as temp_file:
-        temp_file.write("This is not an image file")
-        temp_file_path = temp_file.name
-
-    try:
-        with open(temp_file_path, "rb") as fake_img:
-            files = {"file": ("fake_image.jpg", fake_img, "image/jpeg")}
-            data = {"title": "Invalid File Test"}
-
-            response = await async_client.post(
-                "/api/photos", headers=headers, files=files, data=data
-            )
-
-        # File validation returns 415 for unsupported media type
-        assert response.status_code == 415
-        data = response.json()
-        assert "detail" in data
-
-    finally:
-        if os.path.exists(temp_file_path):
-            os.unlink(temp_file_path)
+    await _upload_with_invalid_text_file(async_client, headers)
 
 
 @pytest.mark.integration
@@ -280,12 +285,9 @@ async def test_upload_photo_with_empty_title_succeeds(
     """Test POST /api/photos with empty title should succeed with filename as title."""
     headers = {"Authorization": f"Bearer {admin_token}"}
 
-    img = Image.new("RGB", (400, 300), color="blue")
-    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
-        img.save(temp_file, format="JPEG")
-        temp_file_path = temp_file.name
-
-    try:
+    with temp_image_file(
+        width=400, height=300, color="blue", suffix=".jpg"
+    ) as temp_file_path:
         with open(temp_file_path, "rb") as img_file:
             files = {"file": ("empty_title_test.jpg", img_file, "image/jpeg")}
             data = {
@@ -308,10 +310,6 @@ async def test_upload_photo_with_empty_title_succeeds(
         assert "test" in photo_data["tags"]
         assert "empty" in photo_data["tags"]
 
-    finally:
-        if os.path.exists(temp_file_path):
-            os.unlink(temp_file_path)
-
 
 @pytest.mark.integration
 @pytest.mark.api
@@ -321,12 +319,9 @@ async def test_upload_photo_with_empty_description_succeeds(
     """Test POST /api/photos with empty description should succeed."""
     headers = {"Authorization": f"Bearer {admin_token}"}
 
-    img = Image.new("RGB", (400, 300), color="green")
-    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
-        img.save(temp_file, format="JPEG")
-        temp_file_path = temp_file.name
-
-    try:
+    with temp_image_file(
+        width=400, height=300, color="green", suffix=".jpg"
+    ) as temp_file_path:
         with open(temp_file_path, "rb") as img_file:
             files = {"file": ("empty_description_test.jpg", img_file, "image/jpeg")}
             data = {
@@ -346,10 +341,6 @@ async def test_upload_photo_with_empty_description_succeeds(
         assert photo_data["title"] == "Empty Description Test"
         assert not photo_data["description"]  # Should remain empty
 
-    finally:
-        if os.path.exists(temp_file_path):
-            os.unlink(temp_file_path)
-
 
 @pytest.mark.integration
 @pytest.mark.api
@@ -359,12 +350,9 @@ async def test_upload_photo_with_empty_tags_succeeds(
     """Test POST /api/photos with empty tags should succeed with empty tag list."""
     headers = {"Authorization": f"Bearer {admin_token}"}
 
-    img = Image.new("RGB", (400, 300), color="purple")
-    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
-        img.save(temp_file, format="JPEG")
-        temp_file_path = temp_file.name
-
-    try:
+    with temp_image_file(
+        width=400, height=300, color="purple", suffix=".jpg"
+    ) as temp_file_path:
         with open(temp_file_path, "rb") as img_file:
             files = {"file": ("empty_tags_test.jpg", img_file, "image/jpeg")}
             data = {
@@ -385,10 +373,6 @@ async def test_upload_photo_with_empty_tags_succeeds(
         # Empty tags become None
         assert photo_data["tags"] is None
 
-    finally:
-        if os.path.exists(temp_file_path):
-            os.unlink(temp_file_path)
-
 
 @pytest.mark.integration
 @pytest.mark.api
@@ -398,12 +382,9 @@ async def test_upload_photo_with_whitespace_only_fields(
     """Test POST /api/photos with whitespace-only fields should be treated as empty."""
     headers = {"Authorization": f"Bearer {admin_token}"}
 
-    img = Image.new("RGB", (400, 300), color="orange")
-    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
-        img.save(temp_file, format="JPEG")
-        temp_file_path = temp_file.name
-
-    try:
+    with temp_image_file(
+        width=400, height=300, color="orange", suffix=".jpg"
+    ) as temp_file_path:
         with open(temp_file_path, "rb") as img_file:
             files = {"file": ("whitespace_test.jpg", img_file, "image/jpeg")}
             data = {
@@ -427,10 +408,6 @@ async def test_upload_photo_with_whitespace_only_fields(
         # Tags are preserved as-is (API doesn't clean or trim tags)
         assert photo_data["tags"] == "  tag1  ,  tag2  ,   "
 
-    finally:
-        if os.path.exists(temp_file_path):
-            os.unlink(temp_file_path)
-
 
 @pytest.mark.integration
 @pytest.mark.api
@@ -440,12 +417,9 @@ async def test_upload_photo_with_all_empty_metadata_succeeds(
     """Test POST /api/photos with all empty metadata fields should succeed with defaults."""
     headers = {"Authorization": f"Bearer {admin_token}"}
 
-    img = Image.new("RGB", (400, 300), color="gray")
-    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
-        img.save(temp_file, format="JPEG")
-        temp_file_path = temp_file.name
-
-    try:
+    with temp_image_file(
+        width=400, height=300, color="gray", suffix=".jpg"
+    ) as temp_file_path:
         with open(temp_file_path, "rb") as img_file:
             files = {"file": ("all_empty_test.jpg", img_file, "image/jpeg")}
             data = {
@@ -469,10 +443,6 @@ async def test_upload_photo_with_all_empty_metadata_succeeds(
         assert photo_data["tags"] is None
         assert photo_data["featured"] is False
 
-    finally:
-        if os.path.exists(temp_file_path):
-            os.unlink(temp_file_path)
-
 
 @pytest.mark.integration
 @pytest.mark.api
@@ -482,12 +452,9 @@ async def test_upload_photo_with_no_metadata_at_all(
     """Test POST /api/photos with no metadata fields at all should succeed."""
     headers = {"Authorization": f"Bearer {admin_token}"}
 
-    img = Image.new("RGB", (400, 300), color="black")
-    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
-        img.save(temp_file, format="JPEG")
-        temp_file_path = temp_file.name
-
-    try:
+    with temp_image_file(
+        width=400, height=300, color="black", suffix=".jpg"
+    ) as temp_file_path:
         with open(temp_file_path, "rb") as img_file:
             files = {"file": ("no_metadata_test.jpg", img_file, "image/jpeg")}
             # No data dict at all, just the file
@@ -509,10 +476,6 @@ async def test_upload_photo_with_no_metadata_at_all(
         assert "featured" in photo_data
         assert isinstance(photo_data["featured"], bool)
 
-    finally:
-        if os.path.exists(temp_file_path):
-            os.unlink(temp_file_path)
-
 
 @pytest.mark.integration
 @pytest.mark.api
@@ -522,12 +485,9 @@ async def test_upload_photo_handles_malformed_tags(
     """Test POST /api/photos handles malformed tag strings gracefully."""
     headers = {"Authorization": f"Bearer {admin_token}"}
 
-    img = Image.new("RGB", (400, 300), color="cyan")
-    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
-        img.save(temp_file, format="JPEG")
-        temp_file_path = temp_file.name
-
-    try:
+    with temp_image_file(
+        width=400, height=300, color="cyan", suffix=".jpg"
+    ) as temp_file_path:
         with open(temp_file_path, "rb") as img_file:
             files = {"file": ("malformed_tags_test.jpg", img_file, "image/jpeg")}
             data = {
@@ -548,10 +508,6 @@ async def test_upload_photo_handles_malformed_tags(
         # Tags are returned as comma-separated string
         assert photo_data["tags"] == ",,,,tag1,,,tag2,,,,tag3,,,"
 
-    finally:
-        if os.path.exists(temp_file_path):
-            os.unlink(temp_file_path)
-
 
 @pytest.mark.integration
 @pytest.mark.api
@@ -561,12 +517,9 @@ async def test_upload_photo_with_special_characters_in_empty_fields(
     """Test POST /api/photos with special characters in otherwise empty fields."""
     headers = {"Authorization": f"Bearer {admin_token}"}
 
-    img = Image.new("RGB", (400, 300), color="magenta")
-    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
-        img.save(temp_file, format="JPEG")
-        temp_file_path = temp_file.name
-
-    try:
+    with temp_image_file(
+        width=400, height=300, color="magenta", suffix=".jpg"
+    ) as temp_file_path:
         with open(temp_file_path, "rb") as img_file:
             files = {"file": ("special_chars_test.jpg", img_file, "image/jpeg")}
             data = {
@@ -590,10 +543,6 @@ async def test_upload_photo_with_special_characters_in_empty_fields(
             "\u200b\u200c\u200d",
         ]
         # Other fields should be cleaned or remain as-is based on backend logic
-
-    finally:
-        if os.path.exists(temp_file_path):
-            os.unlink(temp_file_path)
 
 
 @pytest.mark.integration
@@ -732,12 +681,9 @@ async def test_upload_photo_validates_required_fields(
     """Test upload validates required fields."""
     headers = {"Authorization": f"Bearer {admin_token}"}
 
-    img = Image.new("RGB", (100, 100), color="green")
-    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
-        img.save(temp_file, format="JPEG")
-        temp_file_path = temp_file.name
-
-    try:
+    with temp_image_file(
+        width=100, height=100, color="green", suffix=".jpg"
+    ) as temp_file_path:
         # Upload without title (assuming title is required)
         with open(temp_file_path, "rb") as img_file:
             files = {"file": ("validation_test.jpg", img_file, "image/jpeg")}
@@ -753,10 +699,6 @@ async def test_upload_photo_validates_required_fields(
         if response.status_code in [400, 422]:
             data = response.json()
             assert "detail" in data
-
-    finally:
-        if os.path.exists(temp_file_path):
-            os.unlink(temp_file_path)
 
 
 @pytest.mark.integration

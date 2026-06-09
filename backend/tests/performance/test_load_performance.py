@@ -19,6 +19,7 @@ import pytest
 from httpx import AsyncClient
 from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
+from tests.conftest import temp_image_file
 from tests.factories import PhotoFactory, ProjectFactory
 
 
@@ -172,6 +173,49 @@ async def test_database_query_performance(
         assert avg_time < 0.8, f"Complex query too slow: {avg_time:.3f}s for {query}"
 
 
+def _create_memory_test_images(num_images: int = 10) -> list[str]:
+    """Helper to create temporary memory test images."""
+    temp_files = []
+    for i in range(num_images):
+        img = Image.new("RGB", (1000, 800), color=(i * 25, i * 25, i * 25))
+        with tempfile.NamedTemporaryFile(
+            suffix=f"_mem_test_{i}.jpg", delete=False
+        ) as temp_file:
+            img.save(temp_file, format="JPEG", quality=80)
+            temp_files.append(temp_file.name)
+    return temp_files
+
+
+async def _upload_and_monitor_memory(
+    async_client: AsyncClient,
+    headers: dict[str, str],
+    temp_files: list[str],
+    initial_memory: float,
+) -> tuple[float, float]:
+    """Helper to upload images and monitor memory usage."""
+    memory_readings = [initial_memory]
+
+    for i, temp_file_path in enumerate(temp_files):
+        with open(temp_file_path, "rb") as img_file:
+            files = {"file": (f"mem_test_{i}.jpg", img_file, "image/jpeg")}
+            data = {"title": f"Memory Test {i}"}
+
+            response = await async_client.post(
+                "/api/photos", headers=headers, files=files, data=data
+            )
+
+            assert response.status_code == 201
+
+            gc.collect()
+            current_memory = get_memory_usage()
+            memory_readings.append(current_memory)
+
+    final_memory = get_memory_usage()
+    memory_increase = final_memory - initial_memory
+    max_memory_increase = max(memory_readings) - initial_memory
+    return memory_increase, max_memory_increase
+
+
 @pytest.mark.performance
 @pytest.mark.slow
 async def test_memory_usage_during_batch_operations(
@@ -180,40 +224,12 @@ async def test_memory_usage_during_batch_operations(
     """Test memory usage during batch operations."""
     headers = {"Authorization": f"Bearer {admin_token}"}
     initial_memory = get_memory_usage()
+    temp_files = _create_memory_test_images()
 
-    # Create multiple test images
-    temp_files = []
     try:
-        for i in range(10):
-            img = Image.new("RGB", (1000, 800), color=(i * 25, i * 25, i * 25))
-            with tempfile.NamedTemporaryFile(
-                suffix=f"_mem_test_{i}.jpg", delete=False
-            ) as temp_file:
-                img.save(temp_file, format="JPEG", quality=80)
-                temp_files.append(temp_file.name)
-
-        # Upload images sequentially and monitor memory
-        memory_readings = [initial_memory]
-
-        for i, temp_file_path in enumerate(temp_files):
-            with open(temp_file_path, "rb") as img_file:
-                files = {"file": (f"mem_test_{i}.jpg", img_file, "image/jpeg")}
-                data = {"title": f"Memory Test {i}"}
-
-                response = await async_client.post(
-                    "/api/photos", headers=headers, files=files, data=data
-                )
-
-                assert response.status_code == 201
-
-                # Force garbage collection and measure memory
-                gc.collect()
-                current_memory = get_memory_usage()
-                memory_readings.append(current_memory)
-
-        final_memory = get_memory_usage()
-        memory_increase = final_memory - initial_memory
-        max_memory_increase = max(memory_readings) - initial_memory
+        memory_increase, max_memory_increase = await _upload_and_monitor_memory(
+            async_client, headers, temp_files, initial_memory
+        )
 
         # Memory usage should be reasonable
         assert memory_increase < 200, (
@@ -266,6 +282,51 @@ async def test_memory_leak_detection_during_requests(
     )
 
 
+async def _test_image_size_performance(
+    async_client: AsyncClient,
+    headers: dict[str, str],
+    width: int,
+    height: int,
+    size_name: str,
+) -> float:
+    """Helper to test performance for a specific image size."""
+    with temp_image_file(
+        width=width, height=height, color="red", suffix=f"_{size_name}.jpg", quality=90
+    ) as temp_file_path:
+        times = []
+
+        for i in range(3):  # 3 uploads per size
+            start_time = time.time()
+
+            with open(temp_file_path, "rb") as img_file:
+                files = {"file": (f"{size_name}_{i}.jpg", img_file, "image/jpeg")}
+                data = {"title": f"{size_name.title()} Image {i}"}
+
+                response = await async_client.post(
+                    "/api/photos",
+                    headers=headers,
+                    files=files,
+                    data=data,
+                )
+
+            end_time = time.time()
+
+            assert response.status_code == 201
+            times.append(end_time - start_time)
+
+        avg_time = sum(times) / len(times)
+
+        # Performance expectations based on image size
+        if size_name == "small":
+            assert avg_time < 3.0, f"Small image processing too slow: {avg_time:.3f}s"
+        elif size_name == "medium":
+            assert avg_time < 8.0, f"Medium image processing too slow: {avg_time:.3f}s"
+        elif size_name == "large":
+            assert avg_time < 20.0, f"Large image processing too slow: {avg_time:.3f}s"
+
+        return avg_time
+
+
 @pytest.mark.performance
 @pytest.mark.slow
 async def test_image_upload_processing_performance(
@@ -284,56 +345,10 @@ async def test_image_upload_processing_performance(
     performance_metrics = {}
 
     for width, height, size_name in image_sizes:
-        img = Image.new("RGB", (width, height), color="red")
-
-        with tempfile.NamedTemporaryFile(
-            suffix=f"_{size_name}.jpg", delete=False
-        ) as temp_file:
-            img.save(temp_file, format="JPEG", quality=90)
-            temp_file_path = temp_file.name
-
-        try:
-            times = []
-
-            for i in range(3):  # 3 uploads per size
-                start_time = time.time()
-
-                with open(temp_file_path, "rb") as img_file:
-                    files = {"file": (f"{size_name}_{i}.jpg", img_file, "image/jpeg")}
-                    data = {"title": f"{size_name.title()} Image {i}"}
-
-                    response = await async_client.post(
-                        "/api/photos",
-                        headers=headers,
-                        files=files,
-                        data=data,
-                    )
-
-                end_time = time.time()
-
-                assert response.status_code == 201
-                times.append(end_time - start_time)
-
-            avg_time = sum(times) / len(times)
-            performance_metrics[size_name] = avg_time
-
-            # Performance expectations based on image size
-            if size_name == "small":
-                assert avg_time < 3.0, (
-                    f"Small image processing too slow: {avg_time:.3f}s"
-                )
-            elif size_name == "medium":
-                assert avg_time < 8.0, (
-                    f"Medium image processing too slow: {avg_time:.3f}s"
-                )
-            elif size_name == "large":
-                assert avg_time < 20.0, (
-                    f"Large image processing too slow: {avg_time:.3f}s"
-                )
-
-        finally:
-            if os.path.exists(temp_file_path):
-                os.unlink(temp_file_path)
+        avg_time = await _test_image_size_performance(
+            async_client, headers, width, height, size_name
+        )
+        performance_metrics[size_name] = avg_time
 
     # Processing time should scale reasonably with image size
     small_time = performance_metrics["small"]
@@ -346,6 +361,77 @@ async def test_image_upload_processing_performance(
     )
 
 
+def _create_concurrent_test_images(num_images: int = 5) -> list[str]:
+    """Helper to create temporary concurrent test images."""
+    temp_files = []
+    for i in range(num_images):
+        img = Image.new("RGB", (1200, 800), color=(i * 50, i * 50, i * 50))
+        with tempfile.NamedTemporaryFile(
+            suffix=f"_concurrent_{i}.jpg", delete=False
+        ) as temp_file:
+            img.save(temp_file, format="JPEG", quality=85)
+            temp_files.append(temp_file.name)
+    return temp_files
+
+
+async def _test_concurrent_uploads(
+    async_client: AsyncClient, headers: dict[str, str], temp_files: list[str]
+) -> tuple[float, list[dict[str, Any]]]:
+    """Helper to test concurrent uploads and return timing results."""
+
+    async def upload_image(file_path: str, index: int):
+        start_time = time.time()
+
+        with open(file_path, "rb") as img_file:
+            files = {"file": (f"concurrent_{index}.jpg", img_file, "image/jpeg")}
+            data = {"title": f"Concurrent Upload {index}"}
+
+            response = await async_client.post(
+                "/api/photos", headers=headers, files=files, data=data
+            )
+
+        end_time = time.time()
+        return {
+            "index": index,
+            "status_code": response.status_code,
+            "processing_time": end_time - start_time,
+        }
+
+    # Execute concurrent uploads
+    start_time = time.time()
+    results = await asyncio.gather(*[
+        upload_image(temp_file, i) for i, temp_file in enumerate(temp_files)
+    ])
+    total_time = time.time() - start_time
+
+    return total_time, results
+
+
+def _analyze_concurrent_results(
+    total_time: float, results: list[dict[str, Any]]
+) -> None:
+    """Helper to analyze concurrent upload results."""
+    # Analyze results - allow some failures during concurrent processing
+    successful_uploads = [r for r in results if r["status_code"] == 201]
+    assert len(successful_uploads) >= 3, (
+        f"At least 3 of 5 concurrent uploads should succeed, got {len(successful_uploads)}"
+    )
+
+    avg_processing_time = sum(r["processing_time"] for r in results) / len(results)
+    max_processing_time = max(r["processing_time"] for r in results)
+
+    # Concurrent processing should be efficient
+    assert total_time < 25.0, (
+        f"Total concurrent processing time {total_time:.3f}s too slow"
+    )
+    assert avg_processing_time < 15.0, (
+        f"Average processing time {avg_processing_time:.3f}s too slow"
+    )
+    assert max_processing_time < 20.0, (
+        f"Max processing time {max_processing_time:.3f}s too slow"
+    )
+
+
 @pytest.mark.performance
 @pytest.mark.slow
 async def test_concurrent_image_processing_performance(
@@ -353,62 +439,13 @@ async def test_concurrent_image_processing_performance(
 ):
     """Test performance of concurrent image processing."""
     headers = {"Authorization": f"Bearer {admin_token}"}
+    temp_files = _create_concurrent_test_images()
 
-    # Create test images
-    temp_files = []
     try:
-        for i in range(5):
-            img = Image.new("RGB", (1200, 800), color=(i * 50, i * 50, i * 50))
-            with tempfile.NamedTemporaryFile(
-                suffix=f"_concurrent_{i}.jpg", delete=False
-            ) as temp_file:
-                img.save(temp_file, format="JPEG", quality=85)
-                temp_files.append(temp_file.name)
-
-        async def upload_image(file_path: str, index: int):
-            start_time = time.time()
-
-            with open(file_path, "rb") as img_file:
-                files = {"file": (f"concurrent_{index}.jpg", img_file, "image/jpeg")}
-                data = {"title": f"Concurrent Upload {index}"}
-
-                response = await async_client.post(
-                    "/api/photos", headers=headers, files=files, data=data
-                )
-
-            end_time = time.time()
-            return {
-                "index": index,
-                "status_code": response.status_code,
-                "processing_time": end_time - start_time,
-            }
-
-        # Execute concurrent uploads
-        start_time = time.time()
-        results = await asyncio.gather(*[
-            upload_image(temp_file, i) for i, temp_file in enumerate(temp_files)
-        ])
-        total_time = time.time() - start_time
-
-        # Analyze results - allow some failures during concurrent processing
-        successful_uploads = [r for r in results if r["status_code"] == 201]
-        assert len(successful_uploads) >= 3, (
-            f"At least 3 of 5 concurrent uploads should succeed, got {len(successful_uploads)}"
+        total_time, results = await _test_concurrent_uploads(
+            async_client, headers, temp_files
         )
-
-        avg_processing_time = sum(r["processing_time"] for r in results) / len(results)
-        max_processing_time = max(r["processing_time"] for r in results)
-
-        # Concurrent processing should be efficient
-        assert total_time < 25.0, (
-            f"Total concurrent processing time {total_time:.3f}s too slow"
-        )
-        assert avg_processing_time < 15.0, (
-            f"Average processing time {avg_processing_time:.3f}s too slow"
-        )
-        assert max_processing_time < 20.0, (
-            f"Max processing time {max_processing_time:.3f}s too slow"
-        )
+        _analyze_concurrent_results(total_time, results)
 
     finally:
         # Cleanup

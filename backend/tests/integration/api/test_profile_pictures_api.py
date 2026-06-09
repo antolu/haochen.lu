@@ -12,6 +12,7 @@ import tempfile
 import pytest
 from httpx import AsyncClient
 from PIL import Image
+from tests.conftest import temp_image_file
 
 
 def _create_temp_image(width: int, height: int) -> str:
@@ -30,8 +31,9 @@ async def test_upload_square_image_succeeds(
     """POST /api/profile-pictures accepts approximately square images."""
     headers = {"Authorization": f"Bearer {admin_token}"}
 
-    temp_file_path = _create_temp_image(400, 400)
-    try:
+    with temp_image_file(
+        width=400, height=400, color="red", suffix=".jpg"
+    ) as temp_file_path:
         with open(temp_file_path, "rb") as img_file:
             files = {"file": ("square.jpg", img_file, "image/jpeg")}
             data = {"title": "Square Avatar"}
@@ -49,11 +51,6 @@ async def test_upload_square_image_succeeds(
         # URLs should be populated
         assert data.get("original_url")
         assert data.get("download_url")
-    finally:
-        import os  # noqa: PLC0415
-
-        if os.path.exists(temp_file_path):
-            os.unlink(temp_file_path)
 
 
 @pytest.mark.integration
@@ -64,8 +61,9 @@ async def test_upload_non_square_image_rejected(
     """Non-square images should be rejected with a helpful message."""
     headers = {"Authorization": f"Bearer {admin_token}"}
 
-    temp_file_path = _create_temp_image(800, 300)
-    try:
+    with temp_image_file(
+        width=800, height=300, color="red", suffix=".jpg"
+    ) as temp_file_path:
         with open(temp_file_path, "rb") as img_file:
             files = {"file": ("rect.jpg", img_file, "image/jpeg")}
             data = {"title": "Rect Avatar"}
@@ -76,11 +74,6 @@ async def test_upload_non_square_image_rejected(
         assert response.status_code == 400
         detail = response.json().get("detail", "")
         assert "square" in detail.lower()
-    finally:
-        import os  # noqa: PLC0415
-
-        if os.path.exists(temp_file_path):
-            os.unlink(temp_file_path)
 
 
 @pytest.mark.integration
@@ -97,12 +90,10 @@ async def test_activate_and_get_active(async_client: AsyncClient, admin_token: s
     """Upload two, activate the second, and verify /active returns it."""
     headers = {"Authorization": f"Bearer {admin_token}"}
 
-    # Upload first (square)
-    path1 = _create_temp_image(300, 300)
-    # Upload second (square)
-    path2 = _create_temp_image(400, 400)
-
-    try:
+    with (
+        temp_image_file(width=300, height=300, color="red", suffix=".jpg") as path1,
+        temp_image_file(width=400, height=400, color="red", suffix=".jpg") as path2,
+    ):
         # First
         with open(path1, "rb") as f1:
             r1 = await async_client.post(
@@ -139,9 +130,3 @@ async def test_activate_and_get_active(async_client: AsyncClient, admin_token: s
         assert active is not None
         assert active["id"] == id2
         assert active.get("original_url")
-    finally:
-        import os  # noqa: PLC0415
-
-        for p in (path1, path2):
-            if os.path.exists(p):
-                os.unlink(p)

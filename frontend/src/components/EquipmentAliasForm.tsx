@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import {
   useUpdateCameraAlias,
@@ -31,6 +31,20 @@ interface FormField {
   type?: "text" | "select";
   options?: string[];
   description?: string;
+}
+
+function buildInitialFormData(
+  alias: AliasType | null,
+  fields: FormField[],
+): Record<string, string | boolean> {
+  if (!alias) return {};
+  const initialData: Record<string, string | boolean> = { is_active: true };
+  fields.forEach((field) => {
+    const value = (alias as unknown as Record<string, unknown>)[field.key];
+    initialData[field.key] = (value as string) ?? "";
+  });
+  initialData.is_active = alias.is_active ?? true;
+  return initialData;
 }
 
 // Field configurations based on equipment type
@@ -136,8 +150,10 @@ const EquipmentAliasForm: React.FC<EquipmentAliasFormProps> = ({
   onSuccess,
   onCancel,
 }) => {
+  const currentFields = FIELD_CONFIGS[type];
+
   const [formData, setFormData] = useState<Record<string, string | boolean>>(
-    {},
+    () => buildInitialFormData(alias, currentFields),
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -145,19 +161,12 @@ const EquipmentAliasForm: React.FC<EquipmentAliasFormProps> = ({
   const cameraUpdateMutation = useUpdateCameraAlias();
   const lensUpdateMutation = useUpdateLensAlias();
 
-  const currentFields = FIELD_CONFIGS[type];
-
-  useEffect(() => {
-    if (!alias) return;
-    const initialData: Record<string, string | boolean> = { is_active: true };
-    currentFields.forEach((field) => {
-      const value = (alias as unknown as Record<string, unknown>)[field.key];
-      initialData[field.key] = (value as string) ?? "";
-    });
-    initialData.is_active = alias.is_active ?? true;
-    setFormData(initialData);
+  const [prevAlias, setPrevAlias] = useState(alias);
+  if (alias !== prevAlias) {
+    setPrevAlias(alias);
+    setFormData(buildInitialFormData(alias, currentFields));
     setErrors({});
-  }, [alias, type]); // eslint-disable-line react-hooks/exhaustive-deps
+  }
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};

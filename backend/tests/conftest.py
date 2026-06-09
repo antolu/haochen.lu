@@ -298,6 +298,30 @@ async def authenticated_client(  # noqa: RUF029
     return async_client
 
 
+@contextlib.contextmanager
+def temp_image_file(
+    width: int = 100,
+    height: int = 100,
+    color: str | tuple = "red",
+    suffix: str = ".jpg",
+    img_format: str = "JPEG",
+    quality: int | None = None,
+) -> Generator[str, None, None]:
+    """Create a temporary image file, yielding its path, and clean it up afterward."""
+    img = Image.new("RGB", (width, height), color=color)
+    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as temp_file:
+        if quality is not None:
+            img.save(temp_file, format=img_format, quality=quality)
+        else:
+            img.save(temp_file, format=img_format)
+        temp_file_path = temp_file.name
+    try:
+        yield temp_file_path
+    finally:
+        if os.path.exists(temp_file_path):
+            os.unlink(temp_file_path)
+
+
 # File system fixtures
 @pytest.fixture
 def temp_upload_dir() -> Generator[Path, None, None]:

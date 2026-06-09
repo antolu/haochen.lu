@@ -96,53 +96,70 @@ class RepositoryService:
         ) as client:
             for filename in readme_files:
                 try:
-                    # First get file info to get last modified date
-                    info_url = f"https://api.github.com/repos/{repo_info.owner}/{repo_info.name}/contents/{filename}"
-                    info_response = await client.get(info_url, headers=headers)
-
-                    if info_response.status_code == 200:
-                        # Get raw content - try master branch first
-                        raw_url = f"https://raw.githubusercontent.com/{repo_info.owner}/{repo_info.name}/master/{filename}"
-                        content_response = await client.get(raw_url)
-
-                        # If master branch fails, try main branch
-                        if content_response.status_code == 404:
-                            raw_url = f"https://raw.githubusercontent.com/{repo_info.owner}/{repo_info.name}/main/{filename}"
-                            content_response = await client.get(raw_url)
-
-                        if content_response.status_code == 200:
-                            # Try to get last commit date for this file
-                            commits_url = f"https://api.github.com/repos/{repo_info.owner}/{repo_info.name}/commits"
-                            # Use the branch that worked for content
-                            branch = "master" if "master" in raw_url else "main"
-                            commits_params: dict[str, str | int] = {
-                                "path": filename,
-                                "per_page": 1,
-                                "sha": branch,
-                            }
-                            commits_response = await client.get(
-                                commits_url, headers=headers, params=commits_params
-                            )
-
-                            last_updated = None
-                            if commits_response.status_code == 200:
-                                commits = commits_response.json()
-                                if commits:
-                                    commit_date = commits[0]["commit"]["committer"][
-                                        "date"
-                                    ]
-                                    last_updated = datetime.fromisoformat(
-                                        commit_date.replace("Z", "+00:00")
-                                    )
-                                    # Convert to timezone-naive datetime (UTC)
-                                    last_updated = last_updated.replace(tzinfo=None)
-
-                            return content_response.text, last_updated
-
+                    result = await self._try_fetch_github_readme_file(
+                        client, repo_info, filename, headers
+                    )
                 except httpx.HTTPStatusError:
                     continue
+                if result is not None:
+                    return result
 
         return None, None
+
+    async def _try_fetch_github_readme_file(
+        self,
+        client: httpx.AsyncClient,
+        repo_info: RepositoryInfo,
+        filename: str,
+        headers: dict[str, str],
+    ) -> tuple[str, datetime | None] | None:
+        info_url = f"https://api.github.com/repos/{repo_info.owner}/{repo_info.name}/contents/{filename}"
+        info_response = await client.get(info_url, headers=headers)
+        if info_response.status_code != 200:
+            return None
+
+        raw_url = f"https://raw.githubusercontent.com/{repo_info.owner}/{repo_info.name}/master/{filename}"
+        content_response = await client.get(raw_url)
+        if content_response.status_code == 404:
+            raw_url = f"https://raw.githubusercontent.com/{repo_info.owner}/{repo_info.name}/main/{filename}"
+            content_response = await client.get(raw_url)
+        if content_response.status_code != 200:
+            return None
+
+        branch = "master" if "master" in raw_url else "main"
+        last_updated = await self._get_github_file_last_updated(
+            client, repo_info, filename, branch, headers
+        )
+        return content_response.text, last_updated
+
+    async def _get_github_file_last_updated(
+        self,
+        client: httpx.AsyncClient,
+        repo_info: RepositoryInfo,
+        filename: str,
+        branch: str,
+        headers: dict[str, str],
+    ) -> datetime | None:
+        commits_url = (
+            f"https://api.github.com/repos/{repo_info.owner}/{repo_info.name}/commits"
+        )
+        commits_params: dict[str, str | int] = {
+            "path": filename,
+            "per_page": 1,
+            "sha": branch,
+        }
+        commits_response = await client.get(
+            commits_url, headers=headers, params=commits_params
+        )
+        if commits_response.status_code != 200:
+            return None
+        commits = commits_response.json()
+        if not commits:
+            return None
+        commit_date = commits[0]["commit"]["committer"]["date"]
+        return datetime.fromisoformat(commit_date.replace("Z", "+00:00")).replace(
+            tzinfo=None
+        )
 
     async def _fetch_gitlab_readme(
         self, repo_info: RepositoryInfo
@@ -174,52 +191,69 @@ class RepositoryService:
         ) as client:
             for filename in readme_files:
                 try:
-                    # Get file content
-                    file_url = f"{base_url}/projects/{encoded_path}/repository/files/{filename}/raw"
-                    file_params = {"ref": "main"}
-                    file_response = await client.get(
-                        file_url, headers=headers, params=file_params
+                    result = await self._try_fetch_gitlab_readme_file(
+                        client, base_url, encoded_path, filename, headers, ref="main"
                     )
-
-                    if file_response.status_code == 200:
-                        # Get last commit date for this file
-                        commits_url = (
-                            f"{base_url}/projects/{encoded_path}/repository/commits"
-                        )
-                        commits_params: dict[str, str | int] = {
-                            "path": filename,
-                            "per_page": 1,
-                        }
-                        commits_response = await client.get(
-                            commits_url, headers=headers, params=commits_params
-                        )
-
-                        last_updated = None
-                        if commits_response.status_code == 200:
-                            commits = commits_response.json()
-                            if commits:
-                                commit_date = commits[0]["committed_date"]
-                                last_updated = datetime.fromisoformat(
-                                    commit_date.replace("Z", "+00:00")
-                                )
-                                # Convert to timezone-naive datetime (UTC)
-                                last_updated = last_updated.replace(tzinfo=None)
-
-                        return file_response.text, last_updated
-
                 except httpx.HTTPStatusError:
-                    # Try with 'master' branch
-                    try:
-                        file_params = {"ref": "master"}
-                        file_response = await client.get(
-                            file_url, headers=headers, params=file_params
-                        )
-                        if file_response.status_code == 200:
-                            return file_response.text, None
-                    except httpx.HTTPStatusError:
-                        continue
+                    result = await self._try_fetch_gitlab_readme_file_fallback(
+                        client, base_url, encoded_path, filename, headers
+                    )
+                if result is not None:
+                    return result
 
         return None, None
+
+    async def _try_fetch_gitlab_readme_file(
+        self,
+        client: httpx.AsyncClient,
+        base_url: str,
+        encoded_path: str,
+        filename: str,
+        headers: dict[str, str],
+        ref: str,
+    ) -> tuple[str, datetime | None] | None:
+        file_url = f"{base_url}/projects/{encoded_path}/repository/files/{filename}/raw"
+        file_response = await client.get(file_url, headers=headers, params={"ref": ref})
+        if file_response.status_code != 200:
+            return None
+
+        commits_url = f"{base_url}/projects/{encoded_path}/repository/commits"
+        commits_params: dict[str, str | int] = {"path": filename, "per_page": 1}
+        commits_response = await client.get(
+            commits_url, headers=headers, params=commits_params
+        )
+
+        last_updated = None
+        if commits_response.status_code == 200:
+            commits = commits_response.json()
+            if commits:
+                commit_date = commits[0]["committed_date"]
+                last_updated = datetime.fromisoformat(
+                    commit_date.replace("Z", "+00:00")
+                ).replace(tzinfo=None)
+
+        return file_response.text, last_updated
+
+    async def _try_fetch_gitlab_readme_file_fallback(
+        self,
+        client: httpx.AsyncClient,
+        base_url: str,
+        encoded_path: str,
+        filename: str,
+        headers: dict[str, str],
+    ) -> tuple[str, datetime | None] | None:
+        try:
+            file_url = (
+                f"{base_url}/projects/{encoded_path}/repository/files/{filename}/raw"
+            )
+            file_response = await client.get(
+                file_url, headers=headers, params={"ref": "master"}
+            )
+            if file_response.status_code == 200:
+                return file_response.text, None
+        except httpx.HTTPStatusError:
+            pass
+        return None
 
     async def validate_repository(self, repo_info: RepositoryInfo) -> bool:
         """Validate that a repository exists and is accessible"""

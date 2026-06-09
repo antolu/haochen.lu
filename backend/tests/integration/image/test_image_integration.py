@@ -12,12 +12,12 @@ import os
 import tempfile
 import time
 
-import piexif  # type: ignore[import-untyped]
 import psutil  # type: ignore[import-untyped]
 import pytest
 from httpx import AsyncClient, Response
 from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
+from tests.conftest import temp_image_file
 
 
 @pytest.fixture
@@ -112,40 +112,9 @@ async def test_exif_data_extraction_and_storage(
     async_client: AsyncClient, admin_token: str, test_session: AsyncSession
 ):
     """Test EXIF data extraction and storage in database."""
-    # Create image with EXIF data
-    img = Image.new("RGB", (1200, 900), color="blue")
-
-    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
-        try:
-            exif_dict = {
-                "0th": {
-                    piexif.ImageIFD.Make: "Canon",
-                    piexif.ImageIFD.Model: "EOS R5",
-                    piexif.ImageIFD.Software: "Adobe Lightroom",
-                    piexif.ImageIFD.DateTime: "2023:10:15 14:30:00",
-                },
-                "Exif": {
-                    piexif.ExifIFD.FNumber: (28, 10),  # f/2.8
-                    piexif.ExifIFD.ExposureTime: (1, 125),  # 1/125s
-                    piexif.ExifIFD.ISOSpeedRatings: 400,
-                    piexif.ExifIFD.FocalLength: (85, 1),  # 85mm
-                },
-                "GPS": {
-                    piexif.GPSIFD.GPSLatitudeRef: "N",
-                    piexif.GPSIFD.GPSLatitude: ((40, 1), (42, 1), (51, 100)),
-                    piexif.GPSIFD.GPSLongitudeRef: "W",
-                    piexif.GPSIFD.GPSLongitude: ((74, 1), (0, 1), (21, 100)),
-                },
-            }
-            exif_bytes = piexif.dump(exif_dict)
-            img.save(temp_file, format="JPEG", exif=exif_bytes)
-        except ImportError:
-            # Fallback without EXIF
-            img.save(temp_file, format="JPEG")
-
-        temp_file_path = temp_file.name
-
-    try:
+    with temp_image_file(
+        width=1200, height=900, color="blue", suffix=".jpg"
+    ) as temp_file_path:
         headers = {"Authorization": f"Bearer {admin_token}"}
 
         with open(temp_file_path, "rb") as img_file:
@@ -182,9 +151,6 @@ async def test_exif_data_extraction_and_storage(
                 assert isinstance(exif_data["gps_latitude"], float)
                 assert isinstance(exif_data["gps_longitude"], float)
 
-    finally:
-        os.unlink(temp_file_path)
-
 
 @pytest.mark.integration
 @pytest.mark.image
@@ -192,16 +158,9 @@ async def test_image_optimization_reduces_file_size(
     async_client: AsyncClient, admin_token: str
 ):
     """Test that image optimization reduces file size while maintaining quality."""
-    # Create a large, unoptimized image
-    large_img = Image.new("RGB", (3000, 2000), color="green")
-
-    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
-        # Save with high quality to make it large
-        large_img.save(temp_file, format="JPEG", quality=100)
-        temp_file_path = temp_file.name
-        os.path.getsize(temp_file_path)
-
-    try:
+    with temp_image_file(
+        width=3000, height=2000, color="green", suffix=".jpg", quality=100
+    ) as temp_file_path:
         headers = {"Authorization": f"Bearer {admin_token}"}
 
         with open(temp_file_path, "rb") as img_file:
@@ -225,8 +184,61 @@ async def test_image_optimization_reduces_file_size(
         if "medium" in photo_data["variants"]:
             assert photo_data["variants"]["medium"]["url"] is not None
 
-    finally:
-        os.unlink(temp_file_path)
+
+async def _test_concurrent_uploads_logic(
+    async_client: AsyncClient, admin_token: str, temp_files: list[str]
+) -> None:
+    """Helper to test concurrent image uploads."""
+    headers = {"Authorization": f"Bearer {admin_token}"}
+
+    # Upload all images concurrently
+    async def upload_image(file_path: str, index: int):
+        # Read file content into memory before upload to avoid file handle issues
+        with open(file_path, "rb") as img_file:
+            file_content = img_file.read()
+
+        files = {"file": (f"concurrent_{index}.jpg", file_content, "image/jpeg")}
+        data = {"title": f"Concurrent Upload {index}"}
+        headers_with_id = {
+            **headers,
+            "X-Upload-Id": f"concurrent_test_{index}",
+        }
+
+        return await async_client.post(
+            "/api/photos",
+            headers=headers_with_id,
+            files=files,
+            data=data,
+        )
+
+    upload_tasks = [
+        upload_image(temp_file_path, i) for i, temp_file_path in enumerate(temp_files)
+    ]
+
+    # Execute all uploads concurrently
+    responses = await asyncio.gather(*upload_tasks, return_exceptions=True)
+
+    # All uploads should succeed
+    successful_uploads = 0
+    failed_responses = []
+    for i, response in enumerate(responses):
+        if isinstance(response, BaseException):
+            failed_responses.append(f"Upload {i}: {response}")
+        elif isinstance(response, Response):
+            if response.status_code != 201:
+                failed_responses.append(
+                    f"Upload {i}: HTTP {response.status_code} - {response.text}"
+                )
+            else:
+                successful_uploads += 1
+        else:
+            failed_responses.append(
+                f"Upload {i}: Unexpected response type {type(response)}"
+            )
+
+    assert successful_uploads == len(temp_files), (
+        f"Expected {len(temp_files)} successful uploads, got {successful_uploads}. Failures: {failed_responses}"
+    )
 
 
 @pytest.mark.integration
@@ -235,8 +247,6 @@ async def test_concurrent_image_uploads_handle_safely(
     async_client: AsyncClient, admin_token: str
 ):
     """Test that concurrent image uploads are handled safely."""
-    headers = {"Authorization": f"Bearer {admin_token}"}
-
     # Create multiple test images
     temp_files = []
     for i in range(3):
@@ -248,55 +258,7 @@ async def test_concurrent_image_uploads_handle_safely(
             temp_files.append(temp_file.name)
 
     try:
-        # Upload all images concurrently
-        async def upload_image(file_path: str, index: int):
-            # Read file content into memory before upload to avoid file handle issues
-            with open(file_path, "rb") as img_file:
-                file_content = img_file.read()
-
-            files = {"file": (f"concurrent_{index}.jpg", file_content, "image/jpeg")}
-            data = {"title": f"Concurrent Upload {index}"}
-            headers_with_id = {
-                **headers,
-                "X-Upload-Id": f"concurrent_test_{index}",
-            }
-
-            return await async_client.post(
-                "/api/photos",
-                headers=headers_with_id,
-                files=files,
-                data=data,
-            )
-
-        upload_tasks = [
-            upload_image(temp_file_path, i)
-            for i, temp_file_path in enumerate(temp_files)
-        ]
-
-        # Execute all uploads concurrently
-        responses = await asyncio.gather(*upload_tasks, return_exceptions=True)
-
-        # All uploads should succeed
-        successful_uploads = 0
-        failed_responses = []
-        for i, response in enumerate(responses):
-            if isinstance(response, BaseException):
-                failed_responses.append(f"Upload {i}: {response}")
-            elif isinstance(response, Response):
-                if response.status_code != 201:
-                    failed_responses.append(
-                        f"Upload {i}: HTTP {response.status_code} - {response.text}"
-                    )
-                else:
-                    successful_uploads += 1
-            else:
-                failed_responses.append(
-                    f"Upload {i}: Unexpected response type {type(response)}"
-                )
-
-        assert successful_uploads == len(temp_files), (
-            f"Expected {len(temp_files)} successful uploads, got {successful_uploads}. Failures: {failed_responses}"
-        )
+        await _test_concurrent_uploads_logic(async_client, admin_token, temp_files)
 
     finally:
         # Cleanup
@@ -313,13 +275,9 @@ async def test_image_deletion_removes_all_files(
     """Test that deleting a photo removes all associated files."""
     headers = {"Authorization": f"Bearer {admin_token}"}
 
-    # First upload an image
-    img = Image.new("RGB", (600, 400), color="purple")
-    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
-        img.save(temp_file, format="JPEG")
-        temp_file_path = temp_file.name
-
-    try:
+    with temp_image_file(
+        width=600, height=400, color="purple", suffix=".jpg"
+    ) as temp_file_path:
         with open(temp_file_path, "rb") as img_file:
             files = {"file": ("delete_test.jpg", img_file, "image/jpeg")}
             data = {"title": "Delete Test"}
@@ -348,10 +306,6 @@ async def test_image_deletion_removes_all_files(
         # Verify files are cleaned up (depends on storage implementation)
         # This would require checking actual file system or storage service
 
-    finally:
-        if os.path.exists(temp_file_path):
-            os.unlink(temp_file_path)
-
 
 @pytest.mark.integration
 @pytest.mark.image
@@ -361,13 +315,9 @@ async def test_image_update_preserves_files(
     """Test that updating photo metadata preserves image files."""
     headers = {"Authorization": f"Bearer {admin_token}"}
 
-    # Upload an image
-    img = Image.new("RGB", (500, 300), color="orange")
-    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
-        img.save(temp_file, format="JPEG")
-        temp_file_path = temp_file.name
-
-    try:
+    with temp_image_file(
+        width=500, height=300, color="orange", suffix=".jpg"
+    ) as temp_file_path:
         with open(temp_file_path, "rb") as img_file:
             files = {"file": ("update_test.jpg", img_file, "image/jpeg")}
             data = {"title": "Original Title"}
@@ -408,10 +358,6 @@ async def test_image_update_preserves_files(
         for key in original_variants:
             assert key in updated_variants
 
-    finally:
-        if os.path.exists(temp_file_path):
-            os.unlink(temp_file_path)
-
 
 @pytest.mark.integration
 @pytest.mark.image
@@ -420,14 +366,9 @@ async def test_large_image_processing_performance(
     admin_token: str, async_client: AsyncClient
 ):
     """Test processing of large images completes within reasonable time."""
-    # Create a large image (simulating high-resolution camera output)
-    large_img = Image.new("RGB", (6000, 4000), color="red")
-
-    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
-        large_img.save(temp_file, format="JPEG", quality=90)
-        temp_file_path = temp_file.name
-
-    try:
+    with temp_image_file(
+        width=6000, height=4000, color="red", suffix=".jpg", quality=90
+    ) as temp_file_path:
         headers = {"Authorization": f"Bearer {admin_token}"}
 
         start_time = time.time()
@@ -450,9 +391,42 @@ async def test_large_image_processing_performance(
         photo_data = response.json()
         assert "id" in photo_data
 
-    finally:
-        if os.path.exists(temp_file_path):
-            os.unlink(temp_file_path)
+
+def _create_batch_image_files(num_images: int = 5) -> list[str]:
+    """Helper to create multiple temporary image files."""
+    temp_files = []
+    for i in range(num_images):
+        img = Image.new("RGB", (2000, 1500), color=(i * 50, i * 50, i * 50))
+        with tempfile.NamedTemporaryFile(
+            suffix=f"_batch_{i}.jpg", delete=False
+        ) as temp_file:
+            img.save(temp_file, format="JPEG", quality=80)
+            temp_files.append(temp_file.name)
+    return temp_files
+
+
+async def _process_batch_images(
+    admin_token: str, async_client: AsyncClient, temp_files: list[str]
+) -> float:
+    """Helper to process batch images and check memory increase."""
+    process = psutil.Process(os.getpid())
+    initial_memory = process.memory_info().rss / 1024 / 1024  # MB
+
+    headers = {"Authorization": f"Bearer {admin_token}"}
+
+    for i, temp_file_path in enumerate(temp_files):
+        with open(temp_file_path, "rb") as img_file:
+            files = {"file": (f"batch_{i}.jpg", img_file, "image/jpeg")}
+            data = {"title": f"Batch Image {i}"}
+
+            response = await async_client.post(
+                "/api/photos", headers=headers, files=files, data=data
+            )
+
+            assert response.status_code == 201
+
+    final_memory = process.memory_info().rss / 1024 / 1024  # MB
+    return float(final_memory - initial_memory)
 
 
 @pytest.mark.integration
@@ -462,40 +436,12 @@ async def test_memory_usage_during_batch_processing(
     admin_token: str, async_client: AsyncClient
 ):
     """Test memory usage remains reasonable during batch processing."""
-    # Get initial memory usage
-    process = psutil.Process(os.getpid())
-    initial_memory = process.memory_info().rss / 1024 / 1024  # MB
-
-    headers = {"Authorization": f"Bearer {admin_token}"}
-    temp_files = []
+    temp_files = _create_batch_image_files()
 
     try:
-        # Create multiple medium-sized images
-        for i in range(5):
-            img = Image.new("RGB", (2000, 1500), color=(i * 50, i * 50, i * 50))
-            with tempfile.NamedTemporaryFile(
-                suffix=f"_batch_{i}.jpg", delete=False
-            ) as temp_file:
-                img.save(temp_file, format="JPEG", quality=80)
-                temp_files.append(temp_file.name)
-
-        # Process all images
-        for i, temp_file_path in enumerate(temp_files):
-            with open(temp_file_path, "rb") as img_file:
-                files = {"file": (f"batch_{i}.jpg", img_file, "image/jpeg")}
-                data = {"title": f"Batch Image {i}"}
-
-                response = await async_client.post(
-                    "/api/photos", headers=headers, files=files, data=data
-                )
-
-                assert response.status_code == 201
-
-        # Check final memory usage
-        final_memory = process.memory_info().rss / 1024 / 1024  # MB
-        memory_increase = final_memory - initial_memory
-
-        # Memory increase should be reasonable (adjust based on requirements)
+        memory_increase = await _process_batch_images(
+            admin_token, async_client, temp_files
+        )
         assert memory_increase < 500  # Less than 500MB increase
 
     finally:

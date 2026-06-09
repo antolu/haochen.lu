@@ -63,33 +63,34 @@ class VipsImageProcessor:
                         progress_manager.send_progress(self.upload_id, stage, progress)
                     )
 
+    async def _read_exif_with_vips(self, image_path: str) -> dict[str, Any]:
+        vips_image = pyvips.Image.new_from_file(image_path, access="sequential")
+        exif_data: dict[str, Any] = {
+            "width": vips_image.width,
+            "height": vips_image.height,
+        }
+
+        self._update_progress("exif", 30)
+
+        try:
+            exif_dict = piexif.load(image_path)
+            comprehensive_data = await self._extract_comprehensive_exif(exif_dict)
+            exif_data.update(comprehensive_data)
+        except Exception:
+            if vips_image.get_typeof("exif") != 0:
+                vips_exif = vips_image.get("exif")
+                exif_data.update(self._extract_vips_exif(vips_exif))
+
+        self._update_progress("exif", 40)
+        return exif_data
+
     async def extract_exif_data(self, image_path: str) -> dict[str, Any]:
         """Extract comprehensive EXIF data from image including timezone and GPS."""
         self._update_progress("exif", 20)
         exif_data: dict[str, Any] = {}
 
         try:
-            # Use pyvips to get basic image info quickly
-            vips_image = pyvips.Image.new_from_file(image_path, access="sequential")
-            exif_data["width"] = vips_image.width
-            exif_data["height"] = vips_image.height
-
-            self._update_progress("exif", 30)
-
-            # Use piexif for detailed EXIF extraction (more reliable than vips)
-            try:
-                exif_dict = piexif.load(image_path)
-                comprehensive_data = await self._extract_comprehensive_exif(exif_dict)
-                exif_data.update(comprehensive_data)
-            except Exception:
-                # Fallback to vips EXIF extraction
-                if vips_image.get_typeof("exif") != 0:
-                    vips_exif = vips_image.get("exif")
-                    fallback_data = self._extract_vips_exif(vips_exif)
-                    exif_data.update(fallback_data)
-
-            self._update_progress("exif", 40)
-
+            exif_data = await self._read_exif_with_vips(image_path)
         except Exception as e:
             print(f"Error extracting EXIF data: {e}")
 
@@ -186,89 +187,70 @@ class VipsImageProcessor:
         # This is a simplified fallback - in practice, you'd parse the EXIF bytes
         return {}
 
-    def _extract_enhanced_gps_data(self, gps_info: dict) -> dict:
-        """Extract enhanced GPS coordinates and altitude from EXIF GPS info using piexif."""
-        gps_data = {}
+    @staticmethod
+    def _dms_to_decimal(dms_tuple: tuple | None) -> float | None:
+        if not dms_tuple or len(dms_tuple) != 3:
+            return None
+        degrees = (
+            float(dms_tuple[0][0] / dms_tuple[0][1]) if dms_tuple[0][1] != 0 else 0
+        )
+        minutes = (
+            float(dms_tuple[1][0] / dms_tuple[1][1]) if dms_tuple[1][1] != 0 else 0
+        )
+        seconds = (
+            float(dms_tuple[2][0] / dms_tuple[2][1]) if dms_tuple[2][1] != 0 else 0
+        )
+        return degrees + (minutes / 60.0) + (seconds / 3600.0)
 
-        try:
+    @staticmethod
+    def _decode_ref(ref: bytes | str) -> str:
+        return ref.decode().strip() if isinstance(ref, bytes) else str(ref).strip()
 
-            def convert_dms_to_decimal(dms_tuple):
-                """Convert DMS (degrees, minutes, seconds) tuple to decimal degrees."""
-                if not dms_tuple or len(dms_tuple) != 3:
-                    return None
+    def _parse_enhanced_gps(self, gps_info: dict) -> dict:
+        gps_data: dict[str, Any] = {}
 
-                degrees = (
-                    float(dms_tuple[0][0] / dms_tuple[0][1])
-                    if dms_tuple[0][1] != 0
-                    else 0
+        if (
+            piexif.GPSIFD.GPSLatitude in gps_info
+            and piexif.GPSIFD.GPSLatitudeRef in gps_info
+        ):
+            lat_decimal = self._dms_to_decimal(gps_info[piexif.GPSIFD.GPSLatitude])
+            if lat_decimal is not None:
+                lat_ref = self._decode_ref(gps_info[piexif.GPSIFD.GPSLatitudeRef])
+                gps_data["location_lat"] = (
+                    -lat_decimal if lat_ref in ("S", "s") else lat_decimal
                 )
-                minutes = (
-                    float(dms_tuple[1][0] / dms_tuple[1][1])
-                    if dms_tuple[1][1] != 0
-                    else 0
+
+        if (
+            piexif.GPSIFD.GPSLongitude in gps_info
+            and piexif.GPSIFD.GPSLongitudeRef in gps_info
+        ):
+            lon_decimal = self._dms_to_decimal(gps_info[piexif.GPSIFD.GPSLongitude])
+            if lon_decimal is not None:
+                lon_ref = self._decode_ref(gps_info[piexif.GPSIFD.GPSLongitudeRef])
+                gps_data["location_lon"] = (
+                    -lon_decimal if lon_ref in ("W", "w") else lon_decimal
                 )
-                seconds = (
-                    float(dms_tuple[2][0] / dms_tuple[2][1])
-                    if dms_tuple[2][1] != 0
-                    else 0
-                )
 
-                return degrees + (minutes / 60.0) + (seconds / 3600.0)
-
-            # Extract latitude
-            if (
-                piexif.GPSIFD.GPSLatitude in gps_info
-                and piexif.GPSIFD.GPSLatitudeRef in gps_info
-            ):
-                lat_dms = gps_info[piexif.GPSIFD.GPSLatitude]
-                lat_ref = gps_info[piexif.GPSIFD.GPSLatitudeRef]
-                if isinstance(lat_ref, bytes):
-                    lat_ref = lat_ref.decode().strip()
-                else:
-                    lat_ref = str(lat_ref).strip()
-
-                lat_decimal = convert_dms_to_decimal(lat_dms)
-                if lat_decimal is not None:
-                    if lat_ref in ["S", "s"]:
-                        lat_decimal = -lat_decimal
-                    gps_data["location_lat"] = lat_decimal
-
-            # Extract longitude
-            if (
-                piexif.GPSIFD.GPSLongitude in gps_info
-                and piexif.GPSIFD.GPSLongitudeRef in gps_info
-            ):
-                lon_dms = gps_info[piexif.GPSIFD.GPSLongitude]
-                lon_ref = gps_info[piexif.GPSIFD.GPSLongitudeRef]
-                if isinstance(lon_ref, bytes):
-                    lon_ref = lon_ref.decode().strip()
-                else:
-                    lon_ref = str(lon_ref).strip()
-
-                lon_decimal = convert_dms_to_decimal(lon_dms)
-                if lon_decimal is not None:
-                    if lon_ref in ["W", "w"]:
-                        lon_decimal = -lon_decimal
-                    gps_data["location_lon"] = lon_decimal
-
-            # Extract altitude (optional)
-            if piexif.GPSIFD.GPSAltitude in gps_info:
-                alt_tuple = gps_info[piexif.GPSIFD.GPSAltitude]
-                if alt_tuple and len(alt_tuple) == 2 and alt_tuple[1] != 0:
-                    altitude = float(alt_tuple[0] / alt_tuple[1])
-
-                    # Check altitude reference (0 = above sea level, 1 = below sea level)
-                    if piexif.GPSIFD.GPSAltitudeRef in gps_info:
-                        alt_ref = gps_info[piexif.GPSIFD.GPSAltitudeRef]
-                        if alt_ref == 1:
-                            altitude = -altitude
-
-                    gps_data["altitude"] = altitude
-
-        except Exception as e:
-            print(f"Error extracting enhanced GPS data: {e}")
+        if piexif.GPSIFD.GPSAltitude in gps_info:
+            alt_tuple = gps_info[piexif.GPSIFD.GPSAltitude]
+            if alt_tuple and len(alt_tuple) == 2 and alt_tuple[1] != 0:
+                altitude = float(alt_tuple[0] / alt_tuple[1])
+                if (
+                    piexif.GPSIFD.GPSAltitudeRef in gps_info
+                    and gps_info[piexif.GPSIFD.GPSAltitudeRef] == 1
+                ):
+                    altitude = -altitude
+                gps_data["altitude"] = altitude
 
         return gps_data
+
+    def _extract_enhanced_gps_data(self, gps_info: dict) -> dict:
+        """Extract enhanced GPS coordinates and altitude from EXIF GPS info using piexif."""
+        try:
+            return self._parse_enhanced_gps(gps_info)
+        except Exception as e:
+            print(f"Error extracting enhanced GPS data: {e}")
+            return {}
 
     async def process_image(
         self, file: BinaryIO, filename: str, title: str | None = None
@@ -315,131 +297,134 @@ class VipsImageProcessor:
             **exif_data,
         }
 
+    def _save_avif_variant(
+        self, resized_img: pyvips.Image, file_id: str, size_name: str
+    ) -> dict | None:
+        avif_filename = f"{file_id}_{size_name}.avif"
+        avif_path = self.compressed_dir / avif_filename
+        avif_quality = self._get_avif_quality(size_name)
+        try:
+            resized_img.heifsave(
+                str(avif_path),
+                Q=avif_quality["quality"],
+                effort=avif_quality["effort"],
+                compression="av1",
+            )
+        except Exception as e:
+            print(f"Error generating AVIF for {size_name}: {e}")
+            return None
+        return {
+            "path": f"/compressed/{avif_filename}",
+            "filename": avif_filename,
+            "width": resized_img.width,
+            "height": resized_img.height,
+            "size_bytes": avif_path.stat().st_size,
+            "format": "avif",
+            "mime_type": "image/avif",
+        }
+
+    def _save_webp_variant(
+        self, resized_img: pyvips.Image, file_id: str, size_name: str, webp_quality: int
+    ) -> dict | None:
+        webp_filename = f"{file_id}_{size_name}.webp"
+        webp_path = self.compressed_dir / webp_filename
+        try:
+            resized_img.webpsave(str(webp_path), Q=webp_quality, effort=6)
+        except Exception as e:
+            print(f"Error generating WebP for {size_name}: {e}")
+            return None
+        return {
+            "path": f"/compressed/{webp_filename}",
+            "filename": webp_filename,
+            "width": resized_img.width,
+            "height": resized_img.height,
+            "size_bytes": webp_path.stat().st_size,
+            "format": "webp",
+            "mime_type": "image/webp",
+        }
+
+    def _save_jpeg_variant(
+        self, resized_img: pyvips.Image, file_id: str, size_name: str, jpeg_quality: int
+    ) -> dict | None:
+        jpeg_filename = f"{file_id}_{size_name}.jpg"
+        jpeg_path = self.compressed_dir / jpeg_filename
+        try:
+            resized_img.jpegsave(
+                str(jpeg_path), Q=jpeg_quality, optimize_coding=True, interlace=True
+            )
+        except Exception as e:
+            print(f"Error generating JPEG for {size_name}: {e}")
+            return None
+        return {
+            "path": f"/compressed/{jpeg_filename}",
+            "filename": jpeg_filename,
+            "width": resized_img.width,
+            "height": resized_img.height,
+            "size_bytes": jpeg_path.stat().st_size,
+            "format": "jpeg",
+            "mime_type": "image/jpeg",
+        }
+
+    def _generate_variant_formats(
+        self,
+        vips_image: pyvips.Image,
+        file_id: str,
+        size_name: str,
+        target_size: int,
+        runtime,
+    ) -> dict:
+        resized_img = self._resize_image_vips(vips_image, target_size)
+        variant_formats = {}
+
+        avif = self._save_avif_variant(resized_img, file_id, size_name)
+        if avif is not None:
+            variant_formats["avif"] = avif
+
+        webp_quality = runtime.quality_settings.get(size_name, settings.webp_quality)
+        webp = self._save_webp_variant(resized_img, file_id, size_name, webp_quality)
+        if webp is not None:
+            variant_formats["webp"] = webp
+
+        jpeg_quality = min(webp_quality + 5, 95)
+        jpeg = self._save_jpeg_variant(resized_img, file_id, size_name, jpeg_quality)
+        if jpeg is not None:
+            variant_formats["jpeg"] = jpeg
+
+        return variant_formats
+
+    def _build_vips_variants(self, vips_image: pyvips.Image, file_id: str) -> dict:
+        vips_image = vips_image.autorot()
+        if vips_image.interpretation != "srgb":
+            vips_image = vips_image.colourspace("srgb")
+
+        original_width, original_height = vips_image.width, vips_image.height
+        runtime = get_image_settings()
+        total_variants = len(runtime.responsive_sizes)
+        progress_per_variant: float = 30.0 / total_variants if total_variants else 30.0
+        current_progress: float = 60.0
+
+        variants = {}
+        for size_name, target_size in runtime.responsive_sizes.items():
+            if target_size > max(original_width, original_height):
+                continue
+            variants[size_name] = self._generate_variant_formats(
+                vips_image, file_id, size_name, target_size, runtime
+            )
+            current_progress += progress_per_variant
+            self._update_progress("processing", int(current_progress))
+
+        return variants
+
     def _generate_responsive_variants(self, original_path: Path, file_id: str) -> dict:
         """Generate multiple responsive image sizes in AVIF, WebP, and JPEG formats."""
-        variants = {}
-
         try:
-            # Load image with vips for efficient processing
             vips_image = pyvips.Image.new_from_file(
                 str(original_path), access="sequential"
             )
-
-            # Auto-rotate based on EXIF orientation
-            vips_image = vips_image.autorot()
-
-            # Convert colorspace if necessary (vips handles this automatically)
-            if vips_image.interpretation != "srgb":
-                vips_image = vips_image.colourspace("srgb")
-
-            # Get original dimensions
-            original_width, original_height = vips_image.width, vips_image.height
-
-            current_progress: float = 60.0
-            runtime = get_image_settings()
-            total_variants = len(runtime.responsive_sizes)
-            progress_per_variant: float = (
-                30.0 / total_variants if total_variants else 30.0
-            )
-
-            # Generate each responsive size
-            for _i, (size_name, target_size) in enumerate(
-                runtime.responsive_sizes.items()
-            ):
-                # Skip if target size is larger than original
-                if target_size > max(original_width, original_height):
-                    continue
-
-                # Create resized image
-                resized_img = self._resize_image_vips(vips_image, target_size)
-
-                # Generate all three formats for this size
-                variant_formats = {}
-
-                # 1. AVIF (highest compression, best quality)
-                avif_filename = f"{file_id}_{size_name}.avif"
-                avif_path = self.compressed_dir / avif_filename
-                avif_quality = self._get_avif_quality(size_name)
-
-                try:
-                    resized_img.heifsave(
-                        str(avif_path),
-                        Q=avif_quality["quality"],
-                        effort=avif_quality["effort"],
-                        compression="av1",
-                    )
-                    variant_formats["avif"] = {
-                        "path": f"/compressed/{avif_filename}",
-                        "filename": avif_filename,
-                        "width": resized_img.width,
-                        "height": resized_img.height,
-                        "size_bytes": avif_path.stat().st_size,
-                        "format": "avif",
-                        "mime_type": "image/avif",
-                    }
-                except Exception as e:
-                    print(f"Error generating AVIF for {size_name}: {e}")
-
-                # 2. WebP (good balance)
-                webp_filename = f"{file_id}_{size_name}.webp"
-                webp_path = self.compressed_dir / webp_filename
-                webp_quality = runtime.quality_settings.get(
-                    size_name, settings.webp_quality
-                )
-
-                try:
-                    resized_img.webpsave(
-                        str(webp_path),
-                        Q=webp_quality,
-                        effort=6,  # High effort for better compression
-                    )
-                    variant_formats["webp"] = {
-                        "path": f"/compressed/{webp_filename}",
-                        "filename": webp_filename,
-                        "width": resized_img.width,
-                        "height": resized_img.height,
-                        "size_bytes": webp_path.stat().st_size,
-                        "format": "webp",
-                        "mime_type": "image/webp",
-                    }
-                except Exception as e:
-                    print(f"Error generating WebP for {size_name}: {e}")
-
-                # 3. JPEG (universal compatibility)
-                jpeg_filename = f"{file_id}_{size_name}.jpg"
-                jpeg_path = self.compressed_dir / jpeg_filename
-                jpeg_quality = min(webp_quality + 5, 95)  # Slightly higher quality
-
-                try:
-                    resized_img.jpegsave(
-                        str(jpeg_path),
-                        Q=jpeg_quality,
-                        optimize_coding=True,
-                        interlace=True,
-                    )
-                    variant_formats["jpeg"] = {
-                        "path": f"/compressed/{jpeg_filename}",
-                        "filename": jpeg_filename,
-                        "width": resized_img.width,
-                        "height": resized_img.height,
-                        "size_bytes": jpeg_path.stat().st_size,
-                        "format": "jpeg",
-                        "mime_type": "image/jpeg",
-                    }
-                except Exception as e:
-                    print(f"Error generating JPEG for {size_name}: {e}")
-
-                variants[size_name] = variant_formats
-
-                # Update progress
-                current_progress += progress_per_variant
-                self._update_progress("processing", int(current_progress))
-
+            return self._build_vips_variants(vips_image, file_id)
         except Exception as e:
             print(f"Error generating responsive variants: {e}")
             raise
-
-        return variants
 
     def _resize_image_vips(
         self, vips_image: pyvips.Image, target_size: int

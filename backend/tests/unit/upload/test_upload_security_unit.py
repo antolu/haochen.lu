@@ -261,7 +261,7 @@ def _is_valid_file_size(file_size: int, max_size: int) -> bool:
 def _get_memory_usage() -> int:
     """Helper to get current memory usage."""
     process = psutil.Process(os.getpid())
-    return process.memory_info().rss
+    return int(process.memory_info().rss)
 
 
 def _process_file_streaming(filepath: str) -> bool:
@@ -360,22 +360,29 @@ def test_streaming_upload_for_large_files(image_processor):
         assert result is not None  # Should complete successfully
 
 
+def _upload_worker_impl(
+    worker_id: int, results: list[tuple[int, bool]], errors: list[tuple[int, Exception]]
+) -> None:
+    """Helper to implement upload worker logic."""
+    with tempfile.NamedTemporaryFile() as temp_file:
+        # Create a moderately sized file
+        file_size = 5 * 1024 * 1024  # 5MB
+        temp_file.write(b"x" * file_size)
+        temp_file.flush()
+
+        result = _process_file_streaming(temp_file.name)
+        results.append((worker_id, result))
+
+
 def test_concurrent_upload_resource_management(image_processor):
     """Test resource management during concurrent uploads."""
     # This would test that concurrent uploads don't exceed memory limits
-    results = []
-    errors = []
+    results: list[tuple[int, bool]] = []
+    errors: list[tuple[int, Exception]] = []
 
     def upload_worker(worker_id):
         try:
-            with tempfile.NamedTemporaryFile() as temp_file:
-                # Create a moderately sized file
-                file_size = 5 * 1024 * 1024  # 5MB
-                temp_file.write(b"x" * file_size)
-                temp_file.flush()
-
-                result = _process_file_streaming(temp_file.name)
-                results.append((worker_id, result))
+            _upload_worker_impl(worker_id, results, errors)
         except Exception as e:
             errors.append((worker_id, e))
 
