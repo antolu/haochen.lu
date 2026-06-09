@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUploadQueue } from "../stores/uploadQueue";
 import {
@@ -45,15 +45,7 @@ export const UploadQueue: React.FC = () => {
   const completedCount = getCompletedCount();
   const errorCount = getErrorCount();
 
-  const allDone = queue.length > 0 && pendingCount === 0 && errorCount === 0;
-  const [dismissed, setDismissed] = useState(false);
-
-  // Auto-dismiss disabled for now — queue doubles as a shortcut to recently uploaded files
-  useEffect(() => {
-    if (allDone) setDismissed(false); // reset if re-used
-  }, [allDone]);
-
-  if (queue.length === 0 || dismissed) {
+  if (queue.length === 0) {
     return null;
   }
 
