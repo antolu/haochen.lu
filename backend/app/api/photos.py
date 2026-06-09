@@ -423,6 +423,63 @@ async def get_photo_detail(
     return PhotoResponse.model_validate(photo_dict)
 
 
+async def _do_upload_photo(
+    *,
+    file: UploadFile,
+    upload_id: str | None,
+    title: str,
+    description: str,
+    tags: str,
+    featured: bool,
+    location_lat: float | None,
+    location_lon: float | None,
+    location_name: str | None,
+    db: AsyncSession,
+) -> PhotoResponse:
+    processor = VipsImageProcessor(
+        settings.upload_dir,
+        settings.compressed_dir,
+        upload_id=upload_id,
+    )
+    valid_processed_data = await run_upload_pipeline(file, file_validator, processor)
+
+    if location_lat is not None:
+        valid_processed_data["location_lat"] = location_lat
+    if location_lon is not None:
+        valid_processed_data["location_lon"] = location_lon
+    if location_name is not None:
+        valid_processed_data["location_name"] = location_name
+
+    default_title = (file.filename or "image").rsplit(".", 1)[0]
+    normalized_title = title.strip() if title and title.strip() else None
+
+    photo_data = PhotoCreate(
+        title=normalized_title or default_title,
+        description=description or None,
+        tags=tags or None,
+        featured=featured,
+    )
+
+    photo = await create_photo(db, photo_data, **valid_processed_data)
+
+    alias_warnings = []
+    try:
+        await _create_aliases_for_photo(db, photo)
+    except Exception as e:
+        alias_warnings.append(
+            f"Could not create equipment aliases: {e!s}. "
+            "You can manually create them in Equipment Aliases settings."
+        )
+
+    photo_dict = PhotoResponse.model_validate(photo).model_dump()
+    photo_dict = populate_photo_urls(photo_dict, str(photo.id))
+
+    if alias_warnings:
+        photo_dict["warnings"] = alias_warnings
+
+    return PhotoResponse.model_validate(photo_dict)
+
+
 @router.post("", response_model=PhotoResponse, status_code=status.HTTP_201_CREATED)
 async def upload_photo(
     file: UploadFile = _image_file_dependency,
@@ -443,51 +500,18 @@ async def upload_photo(
     filename = file.filename or "image.jpg"
 
     try:
-        processor = VipsImageProcessor(
-            settings.upload_dir,
-            settings.compressed_dir,
+        return await _do_upload_photo(
+            file=file,
             upload_id=upload_id,
-        )
-        valid_processed_data = await run_upload_pipeline(
-            file, file_validator, processor
-        )
-
-        if location_lat is not None:
-            valid_processed_data["location_lat"] = location_lat
-        if location_lon is not None:
-            valid_processed_data["location_lon"] = location_lon
-        if location_name is not None:
-            valid_processed_data["location_name"] = location_name
-
-        default_title = (file.filename or "image").rsplit(".", 1)[0]
-        normalized_title = title.strip() if title and title.strip() else None
-
-        photo_data = PhotoCreate(
-            title=normalized_title or default_title,
-            description=description or None,
-            tags=tags or None,
+            title=title,
+            description=description,
+            tags=tags,
             featured=featured,
+            location_lat=location_lat,
+            location_lon=location_lon,
+            location_name=location_name,
+            db=db,
         )
-
-        photo = await create_photo(db, photo_data, **valid_processed_data)
-
-        alias_warnings = []
-        try:
-            await _create_aliases_for_photo(db, photo)
-        except Exception as e:
-            alias_warnings.append(
-                f"Could not create equipment aliases: {e!s}. "
-                "You can manually create them in Equipment Aliases settings."
-            )
-
-        photo_dict = PhotoResponse.model_validate(photo).model_dump()
-        photo_dict = populate_photo_urls(photo_dict, str(photo.id))
-
-        if alias_warnings:
-            photo_dict["warnings"] = alias_warnings
-
-        return PhotoResponse.model_validate(photo_dict)
-
     except HTTPException:
         raise
     except Exception as e:

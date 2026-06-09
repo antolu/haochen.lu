@@ -130,33 +130,32 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         window_start = current_time - period
 
         try:
-            # Use the underlying Redis connection for pipeline operations
-            redis_conn = redis_client._redis  # noqa: SLF001
-
-            # Use Redis sorted set to track requests in time window
-            pipe = redis_conn.pipeline()
-
-            # Remove old entries
-            pipe.zremrangebyscore(key, 0, window_start)
-
-            # Count current requests
-            pipe.zcard(key)
-
-            # Add current request - use unique identifier to avoid conflicts
-            unique_id = f"{current_time}_{uuid.uuid4().hex[:8]}"
-            pipe.zadd(key, {unique_id: current_time})
-
-            # Set expiration
-            pipe.expire(key, period + 10)  # Add buffer for cleanup
-
-            results = await pipe.execute()
-            current_calls = results[1]  # Result from zcard
+            return await self._check_rate_limit_redis(
+                key, current_time, window_start, period, calls_allowed
+            )
         except Exception as e:
-            # If Redis fails, allow the request
             print(f"Rate limiting error: {e}")
             return False
-        else:
-            return bool(current_calls >= calls_allowed)
+
+    async def _check_rate_limit_redis(
+        self,
+        key: str,
+        current_time: int,
+        window_start: int,
+        period: int,
+        calls_allowed: int,
+    ) -> bool:
+        if redis_client is None or redis_client._redis is None:  # noqa: SLF001
+            msg = "Redis client not initialized"
+            raise RuntimeError(msg)
+        pipe = redis_client._redis.pipeline()  # noqa: SLF001
+        pipe.zremrangebyscore(key, 0, window_start)
+        pipe.zcard(key)
+        unique_id = f"{current_time}_{uuid.uuid4().hex[:8]}"
+        pipe.zadd(key, {unique_id: current_time})
+        pipe.expire(key, period + 10)
+        results = await pipe.execute()
+        return bool(results[1] >= calls_allowed)
 
     async def _get_remaining_calls(
         self, client_id: str, calls_allowed: int, period: int, key_suffix: str
@@ -197,17 +196,24 @@ class FileAccessRateLimiter:
         window_start = current_time - period
 
         try:
-            # Use the underlying Redis connection for pipeline operations
-            redis_conn = redis_client._redis  # noqa: SLF001
-            pipe = redis_conn.pipeline()
-            pipe.zremrangebyscore(key, 0, window_start)
-            pipe.zcard(key)
-            pipe.zadd(key, {str(current_time): current_time})
-            pipe.expire(key, period + 10)
-
-            results = await pipe.execute()
-            current_downloads = results[1]
+            current_downloads = await FileAccessRateLimiter._record_download(
+                key, current_time, window_start, period
+            )
+            return bool(current_downloads < limit)
         except Exception:
             return True
-        else:
-            return bool(current_downloads < limit)
+
+    @staticmethod
+    async def _record_download(
+        key: str, current_time: int, window_start: int, period: int
+    ) -> int:
+        if redis_client is None or redis_client._redis is None:  # noqa: SLF001
+            msg = "Redis client not initialized"
+            raise RuntimeError(msg)
+        pipe = redis_client._redis.pipeline()  # noqa: SLF001
+        pipe.zremrangebyscore(key, 0, window_start)
+        pipe.zcard(key)
+        pipe.zadd(key, {str(current_time): current_time})
+        pipe.expire(key, period + 10)
+        results = await pipe.execute()
+        return int(results[1])

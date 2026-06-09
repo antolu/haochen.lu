@@ -161,6 +161,49 @@ async def get_profile_picture_detail(
     return ProfilePictureResponse.model_validate(profile_picture_dict)
 
 
+async def _do_upload_profile_picture(
+    *, file: UploadFile, title: str, db: AsyncSession
+) -> ProfilePictureResponse:
+    content_bytes = await file.read()
+
+    try:
+        with Image.open(io.BytesIO(content_bytes)) as im:
+            w, h = im.size
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Invalid image file") from e
+
+    if w <= 0 or h <= 0:
+        _raise_invalid_dimensions()
+
+    aspect_ratio = w / h
+    if not (0.95 <= aspect_ratio <= 1.05):
+        _raise_not_square()
+
+    processed_data = await image_processor.process_image(
+        io.BytesIO(content_bytes),
+        file.filename or "profile.jpg",
+        title or file.filename or "Profile Picture",
+    )
+
+    profile_picture_data = ProfilePictureCreate(
+        title=title or "Profile Picture",
+        is_active=False,
+    )
+
+    profile_picture = await create_profile_picture(
+        db, profile_picture_data, **processed_data
+    )
+
+    profile_picture_dict = ProfilePictureResponse.model_validate(
+        profile_picture
+    ).model_dump()
+    profile_picture_dict = populate_profile_picture_urls(
+        profile_picture_dict, str(profile_picture.id)
+    )
+
+    return ProfilePictureResponse.model_validate(profile_picture_dict)
+
+
 @router.post("", response_model=ProfilePictureResponse)
 async def upload_profile_picture(
     file: UploadFile = _profile_image_file_dependency,
@@ -170,64 +213,17 @@ async def upload_profile_picture(
 ) -> ProfilePictureResponse:
     """Upload a new profile picture (admin only). Image should be square and will be processed for optimal display."""
 
-    # Validate file type
     if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File must be an image")
 
-    # Validate file size (smaller limit for profile pictures)
-    if file.size and file.size > 10 * 1024 * 1024:  # 10MB
+    if file.size and file.size > 10 * 1024 * 1024:
         raise HTTPException(
             status_code=400, detail="File too large. Maximum size is 10MB"
         )
 
     try:
-        # Read file content once to allow pre-validation and processing
-        content_bytes = await file.read()
-
-        # Pre-validate square aspect before any heavy processing
-        try:
-            with Image.open(io.BytesIO(content_bytes)) as im:
-                w, h = im.size
-        except Exception as e:
-            raise HTTPException(status_code=400, detail="Invalid image file") from e
-
-        if w <= 0 or h <= 0:
-            _raise_invalid_dimensions()
-
-        aspect_ratio = w / h
-        # Accept 0.95-1.05 (~5% tolerance)
-        if not (0.95 <= aspect_ratio <= 1.05):
-            _raise_not_square()
-
-        # Process image using a fresh BytesIO since we've consumed the stream
-        processed_data = await image_processor.process_image(
-            io.BytesIO(content_bytes),
-            file.filename or "profile.jpg",
-            title or file.filename or "Profile Picture",
-        )
-
-        # Create profile picture record
-        profile_picture_data = ProfilePictureCreate(
-            title=title or "Profile Picture",
-            is_active=False,  # Don't activate automatically
-        )
-
-        profile_picture = await create_profile_picture(
-            db, profile_picture_data, **processed_data
-        )
-
-        # Add secure URLs to response
-        profile_picture_dict = ProfilePictureResponse.model_validate(
-            profile_picture
-        ).model_dump()
-        profile_picture_dict = populate_profile_picture_urls(
-            profile_picture_dict, str(profile_picture.id)
-        )
-
-        return ProfilePictureResponse.model_validate(profile_picture_dict)
-
+        return await _do_upload_profile_picture(file=file, title=title, db=db)
     except HTTPException:
-        # Re-raise expected HTTP errors (e.g., non-square validation)
         raise
     except Exception as e:
         raise HTTPException(

@@ -150,6 +150,26 @@ async def list_featured_projects(
     return responses
 
 
+def _parse_tech_string(s: str, techs_set: set[str]) -> None:
+    try:
+        arr = json.loads(s)
+    except json.JSONDecodeError:
+        arr = None
+
+    if isinstance(arr, list):
+        for t in arr:
+            if isinstance(t, str):
+                cleaned = t.strip()
+                if cleaned:
+                    techs_set.add(cleaned)
+        return
+
+    for t in s.split(","):
+        cleaned = t.strip()
+        if cleaned:
+            techs_set.add(cleaned)
+
+
 @router.get("/technologies", response_model=list[str])
 async def list_distinct_technologies(
     db: AsyncSession = _session_dependency,
@@ -161,24 +181,7 @@ async def list_distinct_technologies(
 
     techs_set: set[str] = set()
     for s in tech_strings:
-        # Prefer JSON arrays; fallback to comma-separated
-        try:
-            arr = json.loads(s)
-            if isinstance(arr, list):
-                for t in arr:
-                    if isinstance(t, str):
-                        cleaned = t.strip()
-                        if cleaned:
-                            techs_set.add(cleaned)
-                continue
-        except json.JSONDecodeError:
-            # Fallback to comma-separated parsing below
-            ...
-
-        for t in s.split(","):
-            cleaned = t.strip()
-            if cleaned:
-                techs_set.add(cleaned)
+        _parse_tech_string(s, techs_set)
 
     return sorted(techs_set, key=lambda x: x.lower())
 
