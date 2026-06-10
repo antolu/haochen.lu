@@ -45,7 +45,7 @@ services:
   backend:
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: docker/Dockerfile.dev
     environment:
       ENVIRONMENT: test
       POSTGRES_USER: testuser
@@ -103,7 +103,7 @@ services:
   test-runner:
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: docker/Dockerfile.dev
     environment:
       ENVIRONMENT: test
       POSTGRES_USER: testuser

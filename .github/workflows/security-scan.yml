@@ -178,7 +178,7 @@ jobs:
 
     - name: Build app Docker image
       run: |
-        docker build -f Dockerfile -t arcadia-app:security-scan .
+        docker build -f docker/Dockerfile -t arcadia-app:security-scan .
 
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@v0.36.0

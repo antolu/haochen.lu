@@ -76,7 +76,7 @@ jobs:
           docker buildx build \
             --platform linux/amd64,linux/arm64 \
             --build-arg BUILD_TYPE=production \
-            --file Dockerfile \
+            --file docker/Dockerfile \
             --tag antonlu/arcadia-app:latest \
             --tag antonlu/arcadia-app:${{ steps.vars.outputs.version_tag }} \
             --push \
