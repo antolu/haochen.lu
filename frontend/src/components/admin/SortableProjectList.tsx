@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   DndContext,
@@ -41,18 +41,25 @@ const SortableProjectList: React.FC<SortableProjectListProps> = ({
     }),
   );
 
-  const items = useMemo(() => projects.map((p) => p.id), [projects]);
+  const [localProjects, setLocalProjects] = useState<Project[]>(projects);
+
+  useEffect(() => {
+    setLocalProjects(projects);
+  }, [projects]);
+
+  const items = useMemo(() => localProjects.map((p) => p.id), [localProjects]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     if (!reorderEnabled) return;
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = projects.findIndex((p) => p.id === active.id);
-    const newIndex = projects.findIndex((p) => p.id === over.id);
+    const oldIndex = localProjects.findIndex((p) => p.id === active.id);
+    const newIndex = localProjects.findIndex((p) => p.id === over.id);
     if (oldIndex === -1 || newIndex === -1) return;
 
-    const reordered = arrayMove(projects, oldIndex, newIndex);
+    const reordered = arrayMove(localProjects, oldIndex, newIndex);
+    setLocalProjects(reordered);
     onReorder(reordered);
   };
 
@@ -76,7 +83,7 @@ const SortableProjectList: React.FC<SortableProjectListProps> = ({
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
       <SortableContext items={items} strategy={verticalListSortingStrategy}>
         <div className="divide-y">
-          {projects.map((project, index) => (
+          {localProjects.map((project, index) => (
             <SortableRow
               key={project.id}
               project={project}

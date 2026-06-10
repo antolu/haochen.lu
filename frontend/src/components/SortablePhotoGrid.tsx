@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   DndContext,
   type DragEndEvent,
@@ -47,7 +47,16 @@ const SortablePhotoGrid: React.FC<SortablePhotoGridProps> = ({
     }),
   );
 
-  const items = useMemo(() => photos.map((photo) => photo.id), [photos]);
+  const [localPhotos, setLocalPhotos] = useState<Photo[]>(photos);
+
+  useEffect(() => {
+    setLocalPhotos(photos);
+  }, [photos]);
+
+  const items = useMemo(
+    () => localPhotos.map((photo) => photo.id),
+    [localPhotos],
+  );
 
   const handleDragEnd = (event: DragEndEvent) => {
     if (disabled || !reorderEnabled) {
@@ -57,12 +66,13 @@ const SortablePhotoGrid: React.FC<SortablePhotoGridProps> = ({
     if (!over || active.id === over.id) {
       return;
     }
-    const oldIndex = photos.findIndex((photo) => photo.id === active.id);
-    const newIndex = photos.findIndex((photo) => photo.id === over.id);
+    const oldIndex = localPhotos.findIndex((photo) => photo.id === active.id);
+    const newIndex = localPhotos.findIndex((photo) => photo.id === over.id);
     if (oldIndex === -1 || newIndex === -1) {
       return;
     }
-    const reordered = arrayMove(photos, oldIndex, newIndex);
+    const reordered = arrayMove(localPhotos, oldIndex, newIndex);
+    setLocalPhotos(reordered);
     onReorder(reordered);
   };
 
@@ -75,7 +85,7 @@ const SortablePhotoGrid: React.FC<SortablePhotoGridProps> = ({
             disabled && "opacity-60",
           )}
         >
-          {photos.map((photo, index) => (
+          {localPhotos.map((photo, index) => (
             <SortablePhotoCard
               key={photo.id}
               photo={photo}
