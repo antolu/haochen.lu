@@ -1,5 +1,7 @@
 import React, { useRef, useState, memo, forwardRef } from "react";
 import { useInView } from "react-intersection-observer";
+import { RowsPhotoAlbum, RenderPhotoContext } from "react-photo-album";
+import "react-photo-album/rows.css";
 import type { Photo } from "../types";
 import { formatDateSimple } from "../utils/dateFormat";
 import { selectOptimalImage, ImageUseCase } from "../utils/imageUtils";
@@ -47,7 +49,6 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
   };
 
   const handleClick = (e: React.MouseEvent) => {
-    // Only prevent default if we have a click handler to avoid breaking accessibility
     if (onClick) {
       e.preventDefault();
       e.stopPropagation();
@@ -55,18 +56,13 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
     }
   };
 
-  // Use DPI-aware image selection for optimal quality based on device and viewport
   const optimalImage = selectOptimalImage(photo, ImageUseCase.GALLERY, {
-    width: 400, // Standard grid item size
-    height: 400,
+    width: 800, // Slightly larger base for rows layout
+    height: 800,
   });
   const imageUrl = optimalImage.url;
   const srcSet = optimalImage.srcset;
   const sizes = optimalImage.sizes;
-
-  // Calculate aspect ratio for skeleton to prevent content shift
-  const aspectRatio =
-    photo.width && photo.height ? (photo.height / photo.width) * 100 : 100; // Default to square
 
   return (
     <div
@@ -74,30 +70,25 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
       data-testid={`photo-card-${index + 1}`}
       className={`
         photo-card group relative bg-gray-100 rounded-lg overflow-hidden cursor-pointer
-        transform transition-all duration-300 hover:scale-105 md:hover:scale-110
-        ${onClick ? "hover:shadow-xl" : ""}
+        transform transition-all duration-300 hover:scale-105 md:hover:scale-110 w-full h-full
+        hover:shadow-xl
         ${isHighlighted ? "ring-4 ring-blue-500 ring-opacity-75 shadow-2xl scale-105" : ""}
         opacity-0 animate-fade-in
       `}
       style={{
         zIndex: isHighlighted ? 50 : 1,
         animationDelay: `${index * 20}ms`,
-        paddingBottom: `${aspectRatio}%`,
-        position: "relative",
       }}
       onMouseEnter={(e) => {
-        // Ensure hovered element is always on top
         (e.currentTarget as HTMLElement).style.zIndex = "100";
       }}
       onMouseLeave={(e) => {
-        // Reset z-index when not hovered
         (e.currentTarget as HTMLElement).style.zIndex = isHighlighted
           ? "50"
           : "1";
       }}
       onClick={handleClick}
     >
-      {/* Loading Skeleton */}
       {!isLoaded && !hasError && inView && (
         <div
           className="absolute inset-0 bg-gray-200 animate-pulse"
@@ -105,7 +96,6 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
         />
       )}
 
-      {/* Image */}
       {inView && !hasError && (
         <>
           <img
@@ -119,13 +109,10 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
             `}
             onLoad={handleImageLoad}
             onError={handleImageError}
-            loading="lazy"
           />
 
-          {/* Semi-transparent overlay that fades on hover */}
           <div className="absolute inset-0 bg-black/25 group-hover:bg-transparent transition-all duration-300" />
 
-          {/* Featured Badge */}
           {photo.featured && (
             <div className="absolute top-2 right-2">
               <svg
@@ -138,26 +125,17 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
             </div>
           )}
 
-          {/* Simplified Metadata Overlay */}
           {showMetadata && isLoaded && (
-            <div
-              className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-              data-testid="metadata-overlay"
-            >
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
                 <h3 className="font-medium text-sm truncate mb-1">
                   {photo.title || "Untitled"}
                 </h3>
-
                 {photo.location_name && (
-                  <p
-                    className="text-xs text-gray-300 truncate mb-1"
-                    data-testid="location-text"
-                  >
+                  <p className="text-xs text-gray-300 truncate mb-1">
                     📍 {photo.location_name}
                   </p>
                 )}
-
                 {photo.date_taken && (
                   <p className="text-xs text-gray-400 truncate">
                     📅 {formatDateSimple(photo.date_taken)}
@@ -169,7 +147,6 @@ const PhotoCard: React.FC<PhotoCardProps> = ({
         </>
       )}
 
-      {/* Error State */}
       {hasError && (
         <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
           <div className="text-center text-gray-500">
@@ -212,7 +189,6 @@ const PhotoGrid = memo(
       const containerRef =
         (ref as React.RefObject<HTMLDivElement>) || parentRef;
 
-      // Loading and transition states
       if (isLoading && photos.length === 0) {
         return (
           <div
@@ -233,7 +209,6 @@ const PhotoGrid = memo(
         );
       }
 
-      // Empty state
       if (!photos.length) {
         return (
           <div className={`text-center py-12 ${className}`}>
@@ -258,30 +233,72 @@ const PhotoGrid = memo(
         );
       }
 
+      const albumPhotos = photos.map((p) => ({
+        src: p.original_url ?? p.original_path ?? "", // react-photo-album requires src
+        width: p.width || 800,
+        height: p.height || 600,
+        key: p.id,
+        originalPhoto: p, // keep reference to our original model
+      }));
+
       return (
         <div
           ref={containerRef}
           data-testid="photo-grid-container"
-          className={`photo-grid-container ${className} ${isTransitioning ? "transitioning" : ""}`}
+          className={`photo-grid-container ${className} ${isTransitioning ? "transitioning opacity-75" : ""}`}
         >
           {isTransitioning && (
             <div className="absolute top-0 left-1/2 transform -translate-x-1/2 z-10 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium">
               Loading new order...
             </div>
           )}
-          <div className={`photo-grid ${isTransitioning ? "opacity-75" : ""}`}>
-            {photos.map((photo, index) => (
-              <div key={photo.id} className="photo-grid-item">
-                <PhotoCard
-                  photo={photo}
-                  index={index}
-                  onClick={onPhotoClick}
-                  showMetadata={showMetadata}
-                  isHighlighted={highlightedPhotoId === photo.id}
-                />
-              </div>
-            ))}
-          </div>
+          <RowsPhotoAlbum
+            photos={albumPhotos}
+            targetRowHeight={300}
+            spacing={12}
+            render={{
+              photo: (
+                _,
+                context: RenderPhotoContext<(typeof albumPhotos)[number]>,
+              ) => {
+                const p = context.photo.originalPhoto;
+                const photoIndex = context.index;
+                return (
+                  <div
+                    style={{
+                      position: "relative",
+                      width: context.width,
+                      height: context.height,
+                      cursor: "pointer",
+                      transition: "z-index 0.3s",
+                    }}
+                    onClick={(e) => {
+                      if (onPhotoClick) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onPhotoClick(p, photoIndex);
+                      }
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLElement).style.zIndex = "100";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.zIndex =
+                        highlightedPhotoId === p.id ? "50" : "1";
+                    }}
+                  >
+                    <PhotoCard
+                      photo={p}
+                      index={photoIndex}
+                      onClick={undefined} // handled by wrapper
+                      showMetadata={showMetadata}
+                      isHighlighted={highlightedPhotoId === p.id}
+                    />
+                  </div>
+                );
+              },
+            }}
+          />
         </div>
       );
     },
