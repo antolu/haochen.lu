@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   DndContext,
@@ -42,10 +42,12 @@ const SortableProjectList: React.FC<SortableProjectListProps> = ({
   );
 
   const [localProjects, setLocalProjects] = useState<Project[]>(projects);
+  const [prevProjects, setPrevProjects] = useState<Project[]>(projects);
 
-  useEffect(() => {
+  if (projects !== prevProjects) {
+    setPrevProjects(projects);
     setLocalProjects(projects);
-  }, [projects]);
+  }
 
   const items = useMemo(() => localProjects.map((p) => p.id), [localProjects]);
 

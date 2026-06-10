@@ -95,17 +95,12 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
   const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
-    if (file && isOpen) {
-      const reader = new FileReader();
-      reader.addEventListener("load", () => {
-        setImgSrc(reader.result?.toString() || "");
-      });
-      reader.readAsDataURL(file);
-    } else {
-      setImgSrc("");
-      setCrop(undefined);
-      setCompletedCrop(undefined);
-    }
+    if (!file || !isOpen) return;
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      setImgSrc(typeof reader.result === "string" ? reader.result : "");
+    });
+    reader.readAsDataURL(file);
   }, [file, isOpen]);
 
   const onImageLoad = useCallback(

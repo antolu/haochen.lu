@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState } from "react";
 import {
   DndContext,
   type DragEndEvent,
@@ -48,10 +48,12 @@ const SortablePhotoGrid: React.FC<SortablePhotoGridProps> = ({
   );
 
   const [localPhotos, setLocalPhotos] = useState<Photo[]>(photos);
+  const [prevPhotos, setPrevPhotos] = useState<Photo[]>(photos);
 
-  useEffect(() => {
+  if (photos !== prevPhotos) {
+    setPrevPhotos(photos);
     setLocalPhotos(photos);
-  }, [photos]);
+  }
 
   const items = useMemo(
     () => localPhotos.map((photo) => photo.id),

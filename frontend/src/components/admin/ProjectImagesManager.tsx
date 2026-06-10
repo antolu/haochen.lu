@@ -246,7 +246,7 @@ const ProjectImagesManager: React.FC<ProjectImagesManagerProps> = ({
 
       await attachMutation.mutateAsync({
         file: croppedFile,
-        title: title,
+        title,
       });
       void refetch();
     } catch (error) {
@@ -285,6 +285,9 @@ const ProjectImagesManager: React.FC<ProjectImagesManagerProps> = ({
       </div>
 
       <ImageCropperModal
+        key={
+          cropFile ? `crop-${cropFile.name}-${cropFile.lastModified}` : "closed"
+        }
         isOpen={isCropperOpen}
         onClose={() => {
           setIsCropperOpen(false);
