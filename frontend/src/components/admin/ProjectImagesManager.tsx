@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   DndContext,
   PointerSensor,
@@ -21,7 +21,8 @@ import {
   useReorderProjectImages,
   useUpdateProjectImage,
 } from "../../hooks/useProjects";
-import SimplePhotoUpload from "../SimplePhotoUpload";
+import PhotoDropzone, { type UploadFile } from "../PhotoDropzone";
+import { ImageCropperModal } from "./ImageCropperModal";
 
 type ProjectImage = {
   id: string;
@@ -188,6 +189,11 @@ const ProjectImagesManager: React.FC<ProjectImagesManagerProps> = ({
 
   const [editingId, setEditingId] = React.useState<string | null>(null);
 
+  // Cropper state
+  const [cropFile, setCropFile] = useState<File | null>(null);
+  const [isCropperOpen, setIsCropperOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { delay: 150, tolerance: 5 },
@@ -203,10 +209,6 @@ const ProjectImagesManager: React.FC<ProjectImagesManagerProps> = ({
     [typedImages],
   );
 
-  const handleCustomUpload = async (file: File) => {
-    return attachMutation.mutateAsync({ file });
-  };
-
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -221,20 +223,80 @@ const ProjectImagesManager: React.FC<ProjectImagesManagerProps> = ({
     void reorderMutation.mutate({ items, normalize: true });
   };
 
+  const handleFilesAdded = (files: UploadFile[]) => {
+    const file = files.find((f) => f.file)?.file;
+    if (file) {
+      setCropFile(file);
+      setIsCropperOpen(true);
+    }
+  };
+
+  const handleCrop = async (croppedFile: File) => {
+    setIsUploading(true);
+    try {
+      // Use the original filename to create a better default title
+      let title = "Project Image";
+      if (cropFile) {
+        const baseName = cropFile.name.replace(/\.[^/.]+$/, "");
+        // Clean up dashes/underscores and capitalize words
+        title = baseName
+          .replace(/[-_]/g, " ")
+          .replace(/\b\w/g, (l) => l.toUpperCase());
+      }
+
+      await attachMutation.mutateAsync({
+        file: croppedFile,
+        title,
+      });
+      void refetch();
+    } catch (error) {
+      console.error("Failed to upload cropped image:", error);
+      alert("Failed to upload image.");
+    } finally {
+      setIsUploading(false);
+      setCropFile(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="bg-card border rounded-lg p-4">
         <p className="text-sm text-muted-foreground mb-3">
-          Upload multiple images. They are processed into AVIF/WebP/JPEG
-          variants automatically.
+          Upload and crop images to a 16:9 aspect ratio.
         </p>
-        <SimplePhotoUpload
-          maxFiles={10}
-          autoUpload
-          customUpload={handleCustomUpload}
-          onComplete={() => void refetch()}
-        />
+
+        {isUploading ? (
+          <div className="flex items-center justify-center p-8 border-2 border-dashed rounded-lg bg-muted/50">
+            <div className="flex flex-col items-center gap-2">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <p className="text-sm text-muted-foreground">
+                Uploading image...
+              </p>
+            </div>
+          </div>
+        ) : (
+          <PhotoDropzone
+            onFilesAdded={handleFilesAdded}
+            maxFiles={1}
+            maxFileSize={50 * 1024 * 1024}
+            accept={{ "image/*": [".jpeg", ".jpg", ".png", ".webp", ".avif"] }}
+          />
+        )}
       </div>
+
+      <ImageCropperModal
+        key={
+          cropFile ? `crop-${cropFile.name}-${cropFile.lastModified}` : "closed"
+        }
+        isOpen={isCropperOpen}
+        onClose={() => {
+          setIsCropperOpen(false);
+          setCropFile(null);
+        }}
+        file={cropFile}
+        aspectRatio={16 / 9}
+        onCrop={handleCrop}
+      />
 
       <div className="bg-card border rounded-lg">
         <div className="p-4 border-b">

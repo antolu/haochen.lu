@@ -134,11 +134,12 @@ const AdminDashboard: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.08, duration: 0.4 }}
               whileHover={{ y: -4 }}
+              className="h-full"
             >
               <Card
-                className={`relative overflow-hidden bg-gradient-to-br ${item.gradient} border-border/30 hover:border-border/60 hover:${item.borderGlow} transition-all duration-300 group`}
+                className={`h-full relative overflow-hidden bg-gradient-to-br ${item.gradient} border-border/30 hover:border-border/60 hover:${item.borderGlow} transition-all duration-300 group`}
               >
-                <CardContent className="p-6">
+                <CardContent className="p-6 h-full">
                   <div className="flex items-start justify-between">
                     <div className="space-y-3">
                       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">
@@ -180,8 +181,9 @@ const AdminDashboard: React.FC = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.4 + index * 0.06 }}
                   whileHover={{ scale: 1.02 }}
+                  className="h-full"
                 >
-                  <Link to={action.href} className="h-full">
+                  <Link to={action.href} className="h-full block">
                     <Card
                       className={`h-full group cursor-pointer bg-gradient-to-br ${action.gradient} hover:shadow-xl hover:border-primary/20 transition-all duration-300 border-border/30`}
                     >
