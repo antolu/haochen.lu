@@ -155,7 +155,7 @@ rebuild_dev() {
     fi
 
     # Build/push app image
-    build_one "." "Dockerfile.dev" "antonlu/arcadia-app:dev" "BUILD_TYPE=development" "$extra_build_flags"
+    build_one "." "docker/Dockerfile.dev" "antonlu/arcadia-app:dev" "BUILD_TYPE=development" "$extra_build_flags"
 
     if [ "$push_mode" -eq 1 ]; then
         print_status "Push mode complete: images pushed to Docker Hub under antonlu/arcadia-*-dev"

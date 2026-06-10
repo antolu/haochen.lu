@@ -91,9 +91,9 @@ RUN mkdir -p uploads compressed
 COPY --from=frontend-build /app/frontend/dist /usr/share/nginx/html
 
 # Copy configs and entrypoint
-COPY nginx.conf /etc/nginx/nginx.conf
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-COPY docker-entrypoint.sh /docker-entrypoint.sh
+COPY docker/nginx.conf /etc/nginx/nginx.conf
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY docker/docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
 EXPOSE 80 8000

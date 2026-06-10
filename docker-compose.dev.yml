@@ -6,7 +6,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: docker/Dockerfile.dev
     image: antonlu/arcadia-app:dev
     container_name: portfolio-app-dev
     ports:

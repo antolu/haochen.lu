@@ -2,7 +2,7 @@ services:
   app:
     build:
       context: ./
-      dockerfile: Dockerfile
+      dockerfile: docker/Dockerfile
       args:
         BUILD_TYPE: production
       additional_contexts:

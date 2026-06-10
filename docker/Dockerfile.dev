@@ -51,9 +51,9 @@ RUN --mount=type=cache,target=/root/.npm \
 WORKDIR /app
 
 # Copy configs and entrypoint
-COPY nginx.conf.dev /etc/nginx/nginx.conf
-COPY supervisord.dev.conf /etc/supervisor/conf.d/supervisord.conf
-COPY docker-entrypoint.sh /docker-entrypoint.sh
+COPY docker/nginx.conf.dev /etc/nginx/nginx.conf
+COPY docker/supervisord.conf.dev /etc/supervisor/conf.d/supervisord.conf
+COPY docker/docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
 # Preserve node_modules from image when frontend source is volume-mounted
