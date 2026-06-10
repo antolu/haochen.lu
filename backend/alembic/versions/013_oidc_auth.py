@@ -34,8 +34,9 @@ def upgrade() -> None:
 
     # Users Table: Refactor for OIDC
     op.add_column("users", sa.Column("oidc_id", sa.String(length=255), nullable=True))
-    # Since we are wiping the db, we don't need to migrate legacy ids,
-    # but we'll keep the column nullable=False logic.
+    # Pre-OIDC users have no oidc_id and can't be matched to a Keycloak
+    # subject, so drop them; the app recreates accounts on first OIDC login.
+    op.execute("DELETE FROM users WHERE oidc_id IS NULL")
     op.alter_column("users", "oidc_id", nullable=False)
 
     # Remove local auth fields as we move to SSO only
