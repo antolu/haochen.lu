@@ -219,6 +219,7 @@ export const useUploadPhoto = () => {
     mutationFn: ({
       file,
       metadata,
+      uploadId: providedUploadId,
     }: {
       file: File;
       metadata: {
@@ -227,9 +228,12 @@ export const useUploadPhoto = () => {
         tags?: string;
         featured?: boolean;
       };
+      uploadId?: string;
     }) => {
       // Create an upload ID to correlate WS progress
-      const uploadId = `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+      const uploadId =
+        providedUploadId ||
+        `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
       // Attempt to open WS for progress (best-effort)
       try {
         const wsBase =

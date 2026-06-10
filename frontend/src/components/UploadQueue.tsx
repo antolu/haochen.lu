@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLocation } from "react-router-dom";
 import { useUploadQueue } from "../stores/uploadQueue";
 import {
   Upload,
@@ -45,7 +46,10 @@ export const UploadQueue: React.FC = () => {
   const completedCount = getCompletedCount();
   const errorCount = getErrorCount();
 
-  if (queue.length === 0) {
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith("/admin");
+
+  if (!isAdmin || queue.length === 0) {
     return null;
   }
 

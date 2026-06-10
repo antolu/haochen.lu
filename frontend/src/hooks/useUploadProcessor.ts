@@ -79,6 +79,7 @@ export const useUploadProcessor = () => {
             tags: upload.metadata.tags,
             featured: upload.metadata.featured,
           },
+          uploadId: upload.id,
         },
         {
           onSuccess: (data) => {

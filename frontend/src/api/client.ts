@@ -724,44 +724,33 @@ export const content = {
   },
 };
 
+export interface SystemSettings {
+  responsive_sizes: Record<string, number>;
+  quality_settings: Record<string, number>;
+  avif_quality_base_offset: number;
+  avif_quality_floor: number;
+  avif_effort_default: number;
+  webp_quality: number;
+  rate_limit_enabled: boolean;
+  rate_limit_calls: number;
+  rate_limit_period: number;
+  rate_limit_file_calls: number;
+  rate_limit_file_period: number;
+  rate_limit_auth_calls: number;
+  rate_limit_auth_period: number;
+  rate_limit_locked: boolean;
+}
+
 // Settings API (admin)
 export const settings = {
-  getImage: async (): Promise<{
-    responsive_sizes: Record<string, number>;
-    quality_settings: Record<string, number>;
-    avif_quality_base_offset: number;
-    avif_quality_floor: number;
-    avif_effort_default: number;
-    webp_quality: number;
-  }> => {
-    const res = await apiClient.get<{
-      responsive_sizes: Record<string, number>;
-      quality_settings: Record<string, number>;
-      avif_quality_base_offset: number;
-      avif_quality_floor: number;
-      avif_effort_default: number;
-      webp_quality: number;
-    }>("/settings/image");
+  getSettings: async (): Promise<SystemSettings> => {
+    const res = await apiClient.get<SystemSettings>("/settings");
     return res.data;
   },
-  updateImage: async (
-    payload: Partial<{
-      responsive_sizes: Record<string, number>;
-      quality_settings: Record<string, number>;
-      avif_quality_base_offset: number;
-      avif_quality_floor: number;
-      avif_effort_default: number;
-      webp_quality: number;
-    }>,
-  ) => {
-    const res = await apiClient.put<{
-      responsive_sizes: Record<string, number>;
-      quality_settings: Record<string, number>;
-      avif_quality_base_offset: number;
-      avif_quality_floor: number;
-      avif_effort_default: number;
-      webp_quality: number;
-    }>("/settings/image", payload);
+  updateSettings: async (
+    payload: Partial<SystemSettings>,
+  ): Promise<SystemSettings> => {
+    const res = await apiClient.put<SystemSettings>("/settings", payload);
     return res.data;
   },
 };
