@@ -16,7 +16,6 @@ import {
 } from "../../components/ui/select";
 import { Button } from "../../components/ui/button";
 import { AdminPageLayout } from "../../components/admin/AdminPageLayout";
-import { ReorderToggle } from "../../components/admin/ReorderToggle";
 import { AdminErrorState } from "../../components/admin/AdminErrorState";
 import { AdminEmptyState } from "../../components/admin/AdminEmptyState";
 import { AdminFiltersBar } from "../../components/admin/AdminFiltersBar";
@@ -29,7 +28,6 @@ const AdminProjects: React.FC = () => {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
-  const [reorderEnabled, setReorderEnabled] = useState(false);
 
   const {
     data: projectsData,
@@ -150,10 +148,6 @@ const AdminProjects: React.FC = () => {
               <SelectItem value="archived">Archived</SelectItem>
             </SelectContent>
           </Select>
-          <ReorderToggle
-            checked={reorderEnabled}
-            onCheckedChange={setReorderEnabled}
-          />
         </div>
       </AdminFiltersBar>
 
@@ -203,7 +197,7 @@ const AdminProjects: React.FC = () => {
         ) : (
           <SortableProjectList
             projects={projects}
-            reorderEnabled={reorderEnabled}
+            reorderEnabled={true}
             onReorder={(p) => void handleReorder(p)}
             onEdit={(p) => handleEditProject(p)}
             onDelete={(p) => void handleDeleteProject(p)}
