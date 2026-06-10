@@ -234,7 +234,20 @@ const ProjectImagesManager: React.FC<ProjectImagesManagerProps> = ({
   const handleCrop = async (croppedFile: File) => {
     setIsUploading(true);
     try {
-      await attachMutation.mutateAsync({ file: croppedFile });
+      // Use the original filename to create a better default title
+      let title = "Project Image";
+      if (cropFile) {
+        const baseName = cropFile.name.replace(/\.[^/.]+$/, "");
+        // Clean up dashes/underscores and capitalize words
+        title = baseName
+          .replace(/[-_]/g, " ")
+          .replace(/\b\w/g, (l) => l.toUpperCase());
+      }
+
+      await attachMutation.mutateAsync({
+        file: croppedFile,
+        title: title,
+      });
       void refetch();
     } catch (error) {
       console.error("Failed to upload cropped image:", error);
