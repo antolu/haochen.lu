@@ -41,6 +41,11 @@ from app.core.oidc import oidc_client, oidc_validator
 from app.core.progress import progress_manager
 from app.core.rate_limiter import RateLimitMiddleware
 from app.core.redis import close_redis, init_redis
+from app.core.runtime_settings import (
+    initialize_settings,
+    start_settings_refresher,
+    stop_settings_refresher,
+)
 from app.core.security import decode_token
 from app.dependencies import _session_dependency
 
@@ -64,9 +69,13 @@ async def lifespan(app: FastAPI) -> typing.AsyncGenerator[None, None]:
     await init_redis()
     await oidc_client.initialize()
     await oidc_validator.initialize()
+
+    await initialize_settings()
+    start_settings_refresher()
     try:
         yield
     finally:
+        await stop_settings_refresher()
         await close_redis()
 
 

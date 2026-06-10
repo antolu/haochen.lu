@@ -116,6 +116,7 @@ class Settings(BaseSettings):
 
     # Environment detection
     environment: str = os.getenv("ENVIRONMENT", "development")
+    rate_limit_enabled: bool | None = None
 
     # User agent for external API calls
     user_agent: str = os.getenv("USER_AGENT", "photography-portfolio/1.0")
@@ -131,8 +132,14 @@ class Settings(BaseSettings):
     def is_development(self) -> bool:
         return self.environment.lower() in ("development", "dev")
 
+    @property
+    def is_rate_limit_env_set(self) -> bool:
+        return os.getenv("RATE_LIMIT_ENABLED") is not None
+
     @model_validator(mode="after")
     def _assemble_urls(self) -> Settings:
+        if self.rate_limit_enabled is None:
+            self.rate_limit_enabled = not self.is_development
         if not self.database_url:
             self.database_url = (
                 f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}"

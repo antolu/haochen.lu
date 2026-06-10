@@ -165,6 +165,11 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
       typeof form.location_lon !== "number"
     )
       return;
+    if (
+      form.location_lat === photo.location_lat &&
+      form.location_lon === photo.location_lon
+    )
+      return;
     if (reverseTimer.current) clearTimeout(reverseTimer.current);
     reverseTimer.current = setTimeout(() => {
       void doReverseGeocode(
@@ -175,7 +180,13 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
     return () => {
       if (reverseTimer.current) clearTimeout(reverseTimer.current);
     };
-  }, [form.location_lat, form.location_lon, doReverseGeocode]);
+  }, [
+    form.location_lat,
+    form.location_lon,
+    photo.location_lat,
+    photo.location_lon,
+    doReverseGeocode,
+  ]);
 
   const handleMapSelect = (lat: number, lng: number) => {
     setForm((f) => ({ ...f, location_lat: lat, location_lon: lng }));
@@ -475,6 +486,8 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
                               ...f,
                               location_lat: photo.location_lat,
                               location_lon: photo.location_lon,
+                              location_name: photo.location_name ?? "",
+                              location_address: photo.location_address ?? "",
                             }))
                           }
                         >
