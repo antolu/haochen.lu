@@ -5,6 +5,7 @@ import os
 import uuid
 from collections.abc import Callable
 from contextlib import suppress
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any, BinaryIO
@@ -15,11 +16,21 @@ import pyvips  # type: ignore[import-untyped, import-not-found]
 from app.config import settings
 from app.core.location_service import location_service
 from app.core.progress import progress_manager
-from app.core.runtime_settings import get_image_settings
 
 # Configure pyvips global cache once at module level
 pyvips.cache_set_max(100)  # Set cache size
 pyvips.cache_set_max_mem(100 * 1024 * 1024)  # 100MB cache
+
+
+@dataclass(slots=True)
+class ImageVariantConfig:
+    """Plain image-processing configuration values, decoupled from SystemConfigService."""
+
+    responsive_sizes: dict[str, int]
+    quality_settings: dict[str, int]
+    avif_quality_base_offset: int
+    avif_quality_floor: int
+    avif_effort_default: int
 
 
 class VipsImageProcessor:
@@ -29,6 +40,7 @@ class VipsImageProcessor:
         self,
         upload_dir: str,
         compressed_dir: str,
+        config: ImageVariantConfig,
         progress_callback: Callable[[str, int], None] | None = None,
         *,
         upload_id: str | None = None,
@@ -37,6 +49,7 @@ class VipsImageProcessor:
         self.compressed_dir = Path(compressed_dir).resolve()
         self.upload_dir.mkdir(exist_ok=True, parents=True)
         self.compressed_dir.mkdir(exist_ok=True, parents=True)
+        self.config = config
         self.progress_callback = progress_callback
         self.upload_id = upload_id
         self._progress_task: asyncio.Task | None = None
@@ -371,7 +384,6 @@ class VipsImageProcessor:
         file_id: str,
         size_name: str,
         target_size: int,
-        runtime,
     ) -> dict:
         resized_img = self._resize_image_vips(vips_image, target_size)
         variant_formats = {}
@@ -380,7 +392,9 @@ class VipsImageProcessor:
         if avif is not None:
             variant_formats["avif"] = avif
 
-        webp_quality = runtime.quality_settings.get(size_name, settings.webp_quality)
+        webp_quality = self.config.quality_settings.get(
+            size_name, settings.webp_quality
+        )
         webp = self._save_webp_variant(resized_img, file_id, size_name, webp_quality)
         if webp is not None:
             variant_formats["webp"] = webp
@@ -398,17 +412,16 @@ class VipsImageProcessor:
             vips_image = vips_image.colourspace("srgb")
 
         original_width, original_height = vips_image.width, vips_image.height
-        runtime = get_image_settings()
-        total_variants = len(runtime.responsive_sizes)
+        total_variants = len(self.config.responsive_sizes)
         progress_per_variant: float = 30.0 / total_variants if total_variants else 30.0
         current_progress: float = 60.0
 
         variants = {}
-        for size_name, target_size in runtime.responsive_sizes.items():
+        for size_name, target_size in self.config.responsive_sizes.items():
             if target_size > max(original_width, original_height):
                 continue
             variants[size_name] = self._generate_variant_formats(
-                vips_image, file_id, size_name, target_size, runtime
+                vips_image, file_id, size_name, target_size
             )
             current_progress += progress_per_variant
             self._update_progress("processing", int(current_progress))
@@ -439,26 +452,15 @@ class VipsImageProcessor:
 
     def _get_avif_quality(self, size_name: str) -> dict[str, int]:
         """Get AVIF-specific quality settings for different sizes."""
-        runtime = get_image_settings()
-        base_quality = runtime.quality_settings.get(size_name, settings.webp_quality)
+        base_quality = self.config.quality_settings.get(
+            size_name, settings.webp_quality
+        )
 
-        # AVIF can achieve better compression, so we can use slightly lower quality,
-        # allow overrides via settings
-        avif_quality_offset = getattr(
-            runtime, "avif_quality_base_offset", settings.avif_quality_base_offset
+        # AVIF can achieve better compression, so we can use slightly lower quality
+        avif_quality = max(
+            base_quality + self.config.avif_quality_base_offset,
+            self.config.avif_quality_floor,
         )
-        avif_quality_floor = getattr(
-            runtime, "avif_quality_floor", settings.avif_quality_floor
-        )
-        try:
-            offset = int(avif_quality_offset)
-        except Exception:
-            offset = -10
-        try:
-            floor = int(avif_quality_floor)
-        except Exception:
-            floor = 50
-        avif_quality = max(base_quality + offset, floor)
 
         # Adjust effort based on size (higher effort for smaller sizes)
         effort_map = {
@@ -469,12 +471,9 @@ class VipsImageProcessor:
             "xlarge": 4,  # Lower effort for large files (speed vs quality)
         }
 
-        avif_effort_default = getattr(
-            runtime, "avif_effort_default", settings.avif_effort_default
-        )
         return {
             "quality": int(avif_quality),
-            "effort": int(effort_map.get(size_name, avif_effort_default)),
+            "effort": int(effort_map.get(size_name, self.config.avif_effort_default)),
         }
 
     async def process(self, file: BinaryIO, filename: str) -> dict:
@@ -563,5 +562,17 @@ class VipsImageProcessor:
         return ", ".join(srcset_parts)
 
 
-# Global instance (will replace the old image_processor)
-vips_image_processor = VipsImageProcessor(settings.upload_dir, settings.compressed_dir)
+def _default_image_variant_config() -> ImageVariantConfig:
+    return ImageVariantConfig(
+        responsive_sizes=dict(settings.responsive_sizes),
+        quality_settings=dict(settings.quality_settings),
+        avif_quality_base_offset=settings.avif_quality_base_offset,
+        avif_quality_floor=settings.avif_quality_floor,
+        avif_effort_default=settings.avif_effort_default,
+    )
+
+
+# Global instance (used as a fallback / for non-request contexts)
+vips_image_processor = VipsImageProcessor(
+    settings.upload_dir, settings.compressed_dir, _default_image_variant_config()
+)

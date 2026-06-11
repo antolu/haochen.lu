@@ -27,7 +27,7 @@ from app.core.file_access import file_access_controller
 from app.core.file_validation import file_validator
 from app.core.rate_limiter import FileAccessRateLimiter
 from app.core.upload_pipeline import run_upload_pipeline
-from app.core.vips_processor import VipsImageProcessor
+from app.core.vips_processor import ImageVariantConfig, VipsImageProcessor
 from app.core.vips_processor import vips_image_processor as image_processor
 from app.crud.photo import (
     bulk_reorder_photos,
@@ -435,10 +435,20 @@ async def _do_upload_photo(
     location_lon: float | None,
     location_name: str | None,
     db: AsyncSession,
+    request: Request,
 ) -> PhotoResponse:
+    config_service = request.app.state.config_service
+    image_config = ImageVariantConfig(
+        responsive_sizes=config_service.responsive_sizes,
+        quality_settings=config_service.quality_settings,
+        avif_quality_base_offset=config_service.avif_quality_base_offset,
+        avif_quality_floor=config_service.avif_quality_floor,
+        avif_effort_default=config_service.avif_effort_default,
+    )
     processor = VipsImageProcessor(
         settings.upload_dir,
         settings.compressed_dir,
+        image_config,
         upload_id=upload_id,
     )
     valid_processed_data = await run_upload_pipeline(file, file_validator, processor)
@@ -511,6 +521,7 @@ async def upload_photo(
             location_lon=location_lon,
             location_name=location_name,
             db=db,
+            request=request,
         )
     except HTTPException:
         raise
