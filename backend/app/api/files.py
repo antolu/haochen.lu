@@ -162,7 +162,9 @@ async def serve_public_file(
         client_ip = forwarded.split(",")[0].strip()
     client_id = f"ip:{client_ip}"
 
-    if not await FileAccessRateLimiter.check_download_limit(client_id):
+    if not await FileAccessRateLimiter.check_download_limit(
+        client_id, request.app.state.config_service
+    ):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Rate limit exceeded",

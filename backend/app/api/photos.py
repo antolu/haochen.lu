@@ -635,7 +635,9 @@ async def serve_photo_original(
     )
 
     # Check rate limits
-    if not await FileAccessRateLimiter.check_download_limit(client_id):
+    if not await FileAccessRateLimiter.check_download_limit(
+        client_id, request.app.state.config_service
+    ):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Download rate limit exceeded",
@@ -789,7 +791,7 @@ async def download_photo_original(
 
     # Check download rate limits (stricter for downloads)
     if not await FileAccessRateLimiter.check_download_limit(
-        client_id, limit=5, period=300
+        client_id, request.app.state.config_service, limit=5, period=300
     ):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -854,7 +856,7 @@ async def download_photo_variant(
 
     # Check download rate limits
     if not await FileAccessRateLimiter.check_download_limit(
-        client_id, limit=10, period=300
+        client_id, request.app.state.config_service, limit=10, period=300
     ):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,

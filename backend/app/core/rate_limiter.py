@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.core.redis import redis_client
-from app.core.runtime_settings import get_image_settings
+from app.core.runtime_settings import SystemConfigService
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
@@ -46,18 +46,18 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         is_auth_endpoint = path.startswith("/api/auth/")
         is_file_endpoint = "/file" in path or "/download" in path
 
-        settings = get_image_settings()
+        config: SystemConfigService = request.app.state.config_service
         if is_auth_endpoint:
-            calls_allowed = settings.rate_limit_auth_calls
-            period = settings.rate_limit_auth_period
+            calls_allowed = config.rate_limit_auth_calls
+            period = config.rate_limit_auth_period
             key_suffix = "auth"
         elif is_file_endpoint:
-            calls_allowed = settings.rate_limit_file_calls
-            period = settings.rate_limit_file_period
+            calls_allowed = config.rate_limit_file_calls
+            period = config.rate_limit_file_period
             key_suffix = "file"
         else:
-            calls_allowed = settings.rate_limit_calls
-            period = settings.rate_limit_period
+            calls_allowed = config.rate_limit_calls
+            period = config.rate_limit_period
             key_suffix = "api"
 
         # Check rate limit
@@ -85,7 +85,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
     def _should_rate_limit(self, request: Request) -> bool:
         """Determine if request should be rate limited."""
-        if not get_image_settings().rate_limit_enabled:
+        config: SystemConfigService = request.app.state.config_service
+        if not config.rate_limit_enabled:
             return False
 
         path = request.url.path
@@ -190,20 +191,22 @@ class FileAccessRateLimiter:
 
     @staticmethod
     async def check_download_limit(
-        client_id: str, limit: int | None = None, period: int | None = None
+        client_id: str,
+        config: SystemConfigService,
+        limit: int | None = None,
+        period: int | None = None,
     ) -> bool:
         """Check if client can download files (stricter limit for downloads)."""
-        settings = get_image_settings()
-        if not settings.rate_limit_enabled:
+        if not config.rate_limit_enabled:
             return True
 
         if not redis_client or not redis_client._redis:  # noqa: SLF001
             return True
 
         if limit is None:
-            limit = settings.rate_limit_file_calls
+            limit = config.rate_limit_file_calls
         if period is None:
-            period = settings.rate_limit_file_period
+            period = config.rate_limit_file_period
 
         key = f"download_limit:{client_id}"
         current_time = int(time.time())

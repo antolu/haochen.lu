@@ -84,6 +84,7 @@ from app import config as app_config  # noqa: E402
 from app.config import Settings  # noqa: E402
 from app.core.oidc import oidc_client, oidc_validator  # noqa: E402
 from app.core.redis import redis_client  # noqa: E402
+from app.core.runtime_settings import SystemConfigService  # noqa: E402
 from app.database import Base, get_session  # noqa: E402
 from app.main import app  # noqa: E402
 from app.models import BlogPost, Photo, Project, User  # noqa: E402
@@ -191,6 +192,7 @@ async def async_client(
 ) -> AsyncGenerator[AsyncClient, None]:
     """Create an async test client compatible with httpx>=0.28."""
     app.dependency_overrides[get_session] = override_get_session
+    app.state.config_service = SystemConfigService()
 
     original_redis = redis_client._redis
     original_connected = redis_client._connection_attempted

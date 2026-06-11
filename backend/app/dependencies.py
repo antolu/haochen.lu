@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import typing
+
 from arcadia_auth import DiscoveryError, JwksError, TokenExpiredError, TokenInvalidError
 from fastapi import Depends, File, Form, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.oidc import oidc_validator
 from app.core.redis import TokenManager
+from app.core.runtime_settings import SystemConfigService
 from app.crud.user import get_user_by_oidc_id
 from app.database import get_session
 from app.models.user import User
@@ -45,6 +48,10 @@ async def get_current_user_optional(
     if not isinstance(oidc_id, str):
         return None
     return await get_user_by_oidc_id(db, oidc_id=oidc_id)
+
+
+def get_config_service(request: Request) -> SystemConfigService:
+    return typing.cast(SystemConfigService, request.app.state.config_service)
 
 
 # Additional module-level singletons for common dependencies
