@@ -74,7 +74,7 @@ test = [
   "photography-portfolio[dev]",
 ]
 security = ["bandit~=1.9.4", "safety>=3.7,<3.9"]
-dev = ["ruff~=0.15.0", "mypy==2.1.0"]
+dev = ["ruff==0.15.15", "mypy==2.1.0"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
