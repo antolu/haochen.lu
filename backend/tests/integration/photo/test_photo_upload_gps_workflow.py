@@ -110,7 +110,7 @@ async def test_complete_gps_upload_workflow(
     """Test complete workflow from upload to database storage."""
 
     # Mock location service
-    with patch("app.core.image_processor.location_service") as mock_location_service:
+    with patch("app.core.exif.location_service") as mock_location_service:
         mock_result = type(
             "obj",
             (object,),
@@ -219,7 +219,7 @@ async def test_location_service_failure_handling(
     """Test handling when location service fails."""
 
     # Mock location service to fail
-    with patch("app.core.image_processor.location_service") as mock_location_service:
+    with patch("app.core.exif.location_service") as mock_location_service:
         mock_location_service.reverse_geocode = AsyncMock(
             side_effect=Exception("Service error")
         )
@@ -244,7 +244,7 @@ async def test_responsive_image_generation_with_gps(
 ):
     """Test that responsive images are generated correctly for GPS photos."""
 
-    with patch("app.core.image_processor.location_service") as mock_location_service:
+    with patch("app.core.exif.location_service") as mock_location_service:
         mock_result = type(
             "obj",
             (object,),
@@ -443,7 +443,7 @@ async def test_malformed_gps_data_handling(test_image_processor):
 async def test_api_upload_with_gps(test_image_with_gps, async_client, admin_token: str):
     """Test photo upload API with GPS data."""
 
-    with patch("app.core.vips_processor.location_service") as mock_location_service:
+    with patch("app.core.exif.location_service") as mock_location_service:
         mock_result = type(
             "obj",
             (object,),
@@ -488,7 +488,7 @@ async def test_api_upload_override_location(
 ):
     """Test that manual location can override EXIF location."""
 
-    with patch("app.core.vips_processor.location_service") as mock_location_service:
+    with patch("app.core.exif.location_service") as mock_location_service:
         mock_result = type(
             "obj",
             (object,),
@@ -524,7 +524,7 @@ async def test_api_upload_override_location(
 async def test_api_batch_upload_performance(async_client, admin_token: str):
     """Test performance with multiple uploads containing GPS data."""
 
-    with patch("app.core.vips_processor.location_service") as mock_location_service:
+    with patch("app.core.exif.location_service") as mock_location_service:
         mock_result = type(
             "obj",
             (object,),
@@ -585,7 +585,7 @@ async def test_end_to_end_workflow_with_database(
 ):
     """Test complete end-to-end workflow from API upload to database query."""
 
-    with patch("app.core.vips_processor.location_service") as mock_location_service:
+    with patch("app.core.exif.location_service") as mock_location_service:
         mock_result = type(
             "obj",
             (object,),

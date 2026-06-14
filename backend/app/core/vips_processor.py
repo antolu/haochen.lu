@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 import uuid
 from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
 from typing import Any, BinaryIO
 
@@ -14,8 +14,10 @@ import piexif  # type: ignore[import-untyped, import-not-found, unused-ignore]
 import pyvips  # type: ignore[import-untyped, import-not-found]
 
 from app.config import settings
-from app.core.location_service import location_service
+from app.core.exif import extract_comprehensive_exif
 from app.core.progress import progress_manager
+
+logger = logging.getLogger(__name__)
 
 # Configure pyvips global cache once at module level
 pyvips.cache_set_max(100)  # Set cache size
@@ -87,7 +89,7 @@ class VipsImageProcessor:
 
         try:
             exif_dict = piexif.load(image_path)
-            comprehensive_data = await self._extract_comprehensive_exif(exif_dict)
+            comprehensive_data = await extract_comprehensive_exif(exif_dict)
             exif_data.update(comprehensive_data)
         except Exception:
             if vips_image.get_typeof("exif") != 0:
@@ -104,166 +106,15 @@ class VipsImageProcessor:
 
         try:
             exif_data = await self._read_exif_with_vips(image_path)
-        except Exception as e:
-            print(f"Error extracting EXIF data: {e}")
+        except Exception:
+            logger.exception("Error extracting EXIF data")
 
         return exif_data
-
-    async def _extract_comprehensive_exif(self, exif_dict: dict) -> dict[str, Any]:
-        """Extract comprehensive EXIF data using piexif."""
-        data: dict[str, Any] = {}
-
-        # Extract from 0th IFD (main image)
-        if "0th" in exif_dict:
-            ifd = exif_dict["0th"]
-
-            # Camera make and model
-            if piexif.ImageIFD.Make in ifd:
-                data["camera_make"] = ifd[piexif.ImageIFD.Make].decode().strip()
-            if piexif.ImageIFD.Model in ifd:
-                data["camera_model"] = ifd[piexif.ImageIFD.Model].decode().strip()
-
-            # Date and time
-            if piexif.ImageIFD.DateTime in ifd:
-                try:
-                    dt_str = ifd[piexif.ImageIFD.DateTime].decode()
-                    data["date_taken"] = datetime.strptime(dt_str, "%Y:%m:%d %H:%M:%S")
-                except (ValueError, AttributeError):
-                    pass
-
-        # Extract from Exif IFD (detailed camera settings)
-        if "Exif" in exif_dict:
-            ifd = exif_dict["Exif"]
-
-            # Original date (often more accurate)
-            if piexif.ExifIFD.DateTimeOriginal in ifd:
-                try:
-                    dt_str = ifd[piexif.ExifIFD.DateTimeOriginal].decode()
-                    data["date_taken"] = datetime.strptime(dt_str, "%Y:%m:%d %H:%M:%S")
-                except (ValueError, AttributeError):
-                    pass
-
-            # Camera settings
-            if piexif.ExifIFD.ISOSpeedRatings in ifd:
-                data["iso"] = ifd[piexif.ExifIFD.ISOSpeedRatings]
-
-            if piexif.ExifIFD.FNumber in ifd:
-                f_num = ifd[piexif.ExifIFD.FNumber]
-                if isinstance(f_num, tuple) and len(f_num) == 2:
-                    data["aperture"] = float(f_num[0] / f_num[1])
-
-            if piexif.ExifIFD.ExposureTime in ifd:
-                exp_time = ifd[piexif.ExifIFD.ExposureTime]
-                if isinstance(exp_time, tuple) and len(exp_time) == 2:
-                    if exp_time[0] == 1:
-                        data["shutter_speed"] = f"1/{exp_time[1]}"
-                    else:
-                        data["shutter_speed"] = f"{exp_time[0]}/{exp_time[1]}"
-
-            if piexif.ExifIFD.FocalLength in ifd:
-                focal = ifd[piexif.ExifIFD.FocalLength]
-                if isinstance(focal, tuple) and len(focal) == 2:
-                    data["focal_length"] = int(focal[0] / focal[1])
-
-            # Lens information
-            if piexif.ExifIFD.LensModel in ifd:
-                data["lens"] = ifd[piexif.ExifIFD.LensModel].decode().strip()
-
-            # Timezone information
-            if piexif.ExifIFD.OffsetTimeOriginal in ifd:
-                try:
-                    timezone_offset = (
-                        ifd[piexif.ExifIFD.OffsetTimeOriginal].decode().strip()
-                    )
-                    data["timezone"] = timezone_offset
-                except (ValueError, AttributeError):
-                    pass
-
-        # Extract GPS data
-        if "GPS" in exif_dict:
-            gps_data = self._extract_enhanced_gps_data(exif_dict["GPS"])
-            data.update(gps_data)
-
-            # Try to get location name if we have coordinates
-            if "location_lat" in gps_data and "location_lon" in gps_data:
-                location_info = await location_service.reverse_geocode(
-                    gps_data["location_lat"], gps_data["location_lon"]
-                )
-                if location_info:
-                    data["location_name"] = location_info.location_name
-                    data["location_address"] = location_info.location_address
-
-        return data
 
     def _extract_vips_exif(self, exif_bytes: bytes) -> dict[str, Any]:
         """Fallback EXIF extraction using vips data."""
         # This is a simplified fallback - in practice, you'd parse the EXIF bytes
         return {}
-
-    @staticmethod
-    def _dms_to_decimal(dms_tuple: tuple | None) -> float | None:
-        if not dms_tuple or len(dms_tuple) != 3:
-            return None
-        degrees = (
-            float(dms_tuple[0][0] / dms_tuple[0][1]) if dms_tuple[0][1] != 0 else 0
-        )
-        minutes = (
-            float(dms_tuple[1][0] / dms_tuple[1][1]) if dms_tuple[1][1] != 0 else 0
-        )
-        seconds = (
-            float(dms_tuple[2][0] / dms_tuple[2][1]) if dms_tuple[2][1] != 0 else 0
-        )
-        return degrees + (minutes / 60.0) + (seconds / 3600.0)
-
-    @staticmethod
-    def _decode_ref(ref: bytes | str) -> str:
-        return ref.decode().strip() if isinstance(ref, bytes) else str(ref).strip()
-
-    def _parse_enhanced_gps(self, gps_info: dict) -> dict:
-        gps_data: dict[str, Any] = {}
-
-        if (
-            piexif.GPSIFD.GPSLatitude in gps_info
-            and piexif.GPSIFD.GPSLatitudeRef in gps_info
-        ):
-            lat_decimal = self._dms_to_decimal(gps_info[piexif.GPSIFD.GPSLatitude])
-            if lat_decimal is not None:
-                lat_ref = self._decode_ref(gps_info[piexif.GPSIFD.GPSLatitudeRef])
-                gps_data["location_lat"] = (
-                    -lat_decimal if lat_ref in ("S", "s") else lat_decimal
-                )
-
-        if (
-            piexif.GPSIFD.GPSLongitude in gps_info
-            and piexif.GPSIFD.GPSLongitudeRef in gps_info
-        ):
-            lon_decimal = self._dms_to_decimal(gps_info[piexif.GPSIFD.GPSLongitude])
-            if lon_decimal is not None:
-                lon_ref = self._decode_ref(gps_info[piexif.GPSIFD.GPSLongitudeRef])
-                gps_data["location_lon"] = (
-                    -lon_decimal if lon_ref in ("W", "w") else lon_decimal
-                )
-
-        if piexif.GPSIFD.GPSAltitude in gps_info:
-            alt_tuple = gps_info[piexif.GPSIFD.GPSAltitude]
-            if alt_tuple and len(alt_tuple) == 2 and alt_tuple[1] != 0:
-                altitude = float(alt_tuple[0] / alt_tuple[1])
-                if (
-                    piexif.GPSIFD.GPSAltitudeRef in gps_info
-                    and gps_info[piexif.GPSIFD.GPSAltitudeRef] == 1
-                ):
-                    altitude = -altitude
-                gps_data["altitude"] = altitude
-
-        return gps_data
-
-    def _extract_enhanced_gps_data(self, gps_info: dict) -> dict:
-        """Extract enhanced GPS coordinates and altitude from EXIF GPS info using piexif."""
-        try:
-            return self._parse_enhanced_gps(gps_info)
-        except Exception as e:
-            print(f"Error extracting enhanced GPS data: {e}")
-            return {}
 
     async def process_image(
         self, file: BinaryIO, filename: str, title: str | None = None
@@ -323,8 +174,8 @@ class VipsImageProcessor:
                 effort=avif_quality["effort"],
                 compression="av1",
             )
-        except Exception as e:
-            print(f"Error generating AVIF for {size_name}: {e}")
+        except Exception:
+            logger.exception("Error generating AVIF for %s", size_name)
             return None
         return {
             "path": f"/compressed/{avif_filename}",
@@ -343,8 +194,8 @@ class VipsImageProcessor:
         webp_path = self.compressed_dir / webp_filename
         try:
             resized_img.webpsave(str(webp_path), Q=webp_quality, effort=6)
-        except Exception as e:
-            print(f"Error generating WebP for {size_name}: {e}")
+        except Exception:
+            logger.exception("Error generating WebP for %s", size_name)
             return None
         return {
             "path": f"/compressed/{webp_filename}",
@@ -365,8 +216,8 @@ class VipsImageProcessor:
             resized_img.jpegsave(
                 str(jpeg_path), Q=jpeg_quality, optimize_coding=True, interlace=True
             )
-        except Exception as e:
-            print(f"Error generating JPEG for {size_name}: {e}")
+        except Exception:
+            logger.exception("Error generating JPEG for %s", size_name)
             return None
         return {
             "path": f"/compressed/{jpeg_filename}",
@@ -435,8 +286,8 @@ class VipsImageProcessor:
                 str(original_path), access="sequential"
             )
             return self._build_vips_variants(vips_image, file_id)
-        except Exception as e:
-            print(f"Error generating responsive variants: {e}")
+        except Exception:
+            logger.exception("Error generating responsive variants")
             raise
 
     def _resize_image_vips(
@@ -499,8 +350,8 @@ class VipsImageProcessor:
             if file_path and os.path.exists(file_path):
                 try:
                     os.remove(file_path)
-                except Exception as e:
-                    print(f"Error deleting file {file_path}: {e}")
+                except Exception:
+                    logger.exception("Error deleting file %s", file_path)
 
     @staticmethod
     def get_image_url(
