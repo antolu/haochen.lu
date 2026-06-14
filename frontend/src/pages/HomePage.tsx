@@ -189,7 +189,7 @@ const HomePage: React.FC = () => {
           </motion.h1>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={homeContent ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
             transition={{ duration: 1, delay: 0.3 }}
             className="text-xl md:text-2xl mb-12"
           >
