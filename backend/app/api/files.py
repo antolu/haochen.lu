@@ -21,7 +21,7 @@ from app.crud.file import (
     list_files,
     rename_file_record,
 )
-from app.dependencies import _current_admin_user_dependency, _session_dependency
+from app.dependencies import _current_superuser_dependency, _session_dependency
 from app.models.file import FileRecord
 from app.models.user import User
 from app.schemas.file import FileListResponse as FileListResponseSchema
@@ -57,7 +57,7 @@ async def upload_file(
         default=False, description="Replace existing file with same name"
     ),
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> FileResponseSchema:
     """Upload a file. Returns 409 if original_name already exists unless replace=true."""
     original_name = file.filename or "upload"
@@ -99,7 +99,7 @@ async def list_files_endpoint(
     ),
     order: str = Query("desc", pattern="^(asc|desc)$"),
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> FileListResponseSchema:
     """List uploaded files (admin only)."""
     records, total = await list_files(
@@ -116,7 +116,7 @@ async def rename_file(
     file_id: UUID,
     body: FileUpdate,
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> FileResponseSchema:
     """Rename a file (updates URL slug)."""
     record = await get_file_by_id(db, file_id)
@@ -138,7 +138,7 @@ async def rename_file(
 async def delete_file(
     file_id: UUID,
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> None:
     """Delete a file record and its disk file."""
     record = await get_file_by_id(db, file_id)
@@ -162,7 +162,9 @@ async def serve_public_file(
         client_ip = forwarded.split(",")[0].strip()
     client_id = f"ip:{client_ip}"
 
-    if not await FileAccessRateLimiter.check_download_limit(client_id):
+    if not await FileAccessRateLimiter.check_download_limit(
+        client_id, request.app.state.config_service
+    ):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Rate limit exceeded",

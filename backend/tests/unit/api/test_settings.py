@@ -6,7 +6,7 @@ import pytest
 from fastapi import status
 
 from app.config import settings as static_settings
-from app.core.runtime_settings import get_image_settings
+from app.main import app
 
 if TYPE_CHECKING:
     from httpx import AsyncClient
@@ -50,10 +50,10 @@ async def test_update_settings_success(authenticated_client: AsyncClient) -> Non
     assert data["rate_limit_calls"] == 150
 
     # Verify that in-memory cache is updated
-    settings = get_image_settings()
-    assert settings.webp_quality == 88
-    assert settings.rate_limit_enabled is False
-    assert settings.rate_limit_calls == 150
+    config = app.state.config_service
+    assert config.webp_quality == 88
+    assert config.rate_limit_enabled is False
+    assert config.rate_limit_calls == 150
 
 
 @pytest.mark.asyncio
@@ -68,8 +68,8 @@ async def test_update_settings_rate_limit_locked(
     monkeypatch.setattr(static_settings, "rate_limit_enabled", True)
 
     # Re-verify that in-memory settings returns locked value
-    settings = get_image_settings()
-    assert settings.rate_limit_enabled is True
+    config = app.state.config_service
+    assert config.rate_limit_enabled is True
 
     # Try to disable it -> should fail
     payload = {

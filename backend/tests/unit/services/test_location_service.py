@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
 import pytest
 
-from app.core.location_service import LocationService, location_service
+from app.services.location_service import LocationService, location_service
 
 
 @pytest.fixture

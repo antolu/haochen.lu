@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 import uuid
 from collections.abc import Callable
 from contextlib import suppress
-from datetime import datetime
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, BinaryIO
 
@@ -13,13 +14,25 @@ import piexif  # type: ignore[import-untyped, import-not-found, unused-ignore]
 import pyvips  # type: ignore[import-untyped, import-not-found]
 
 from app.config import settings
-from app.core.location_service import location_service
+from app.core.exif import extract_comprehensive_exif
 from app.core.progress import progress_manager
-from app.core.runtime_settings import get_image_settings
+
+logger = logging.getLogger(__name__)
 
 # Configure pyvips global cache once at module level
 pyvips.cache_set_max(100)  # Set cache size
 pyvips.cache_set_max_mem(100 * 1024 * 1024)  # 100MB cache
+
+
+@dataclass(slots=True)
+class ImageVariantConfig:
+    """Plain image-processing configuration values, decoupled from SystemConfigService."""
+
+    responsive_sizes: dict[str, int]
+    quality_settings: dict[str, int]
+    avif_quality_base_offset: int
+    avif_quality_floor: int
+    avif_effort_default: int
 
 
 class VipsImageProcessor:
@@ -29,6 +42,7 @@ class VipsImageProcessor:
         self,
         upload_dir: str,
         compressed_dir: str,
+        config: ImageVariantConfig,
         progress_callback: Callable[[str, int], None] | None = None,
         *,
         upload_id: str | None = None,
@@ -37,6 +51,7 @@ class VipsImageProcessor:
         self.compressed_dir = Path(compressed_dir).resolve()
         self.upload_dir.mkdir(exist_ok=True, parents=True)
         self.compressed_dir.mkdir(exist_ok=True, parents=True)
+        self.config = config
         self.progress_callback = progress_callback
         self.upload_id = upload_id
         self._progress_task: asyncio.Task | None = None
@@ -74,7 +89,7 @@ class VipsImageProcessor:
 
         try:
             exif_dict = piexif.load(image_path)
-            comprehensive_data = await self._extract_comprehensive_exif(exif_dict)
+            comprehensive_data = await extract_comprehensive_exif(exif_dict)
             exif_data.update(comprehensive_data)
         except Exception:
             if vips_image.get_typeof("exif") != 0:
@@ -91,166 +106,15 @@ class VipsImageProcessor:
 
         try:
             exif_data = await self._read_exif_with_vips(image_path)
-        except Exception as e:
-            print(f"Error extracting EXIF data: {e}")
+        except Exception:
+            logger.exception("Error extracting EXIF data")
 
         return exif_data
-
-    async def _extract_comprehensive_exif(self, exif_dict: dict) -> dict[str, Any]:
-        """Extract comprehensive EXIF data using piexif."""
-        data: dict[str, Any] = {}
-
-        # Extract from 0th IFD (main image)
-        if "0th" in exif_dict:
-            ifd = exif_dict["0th"]
-
-            # Camera make and model
-            if piexif.ImageIFD.Make in ifd:
-                data["camera_make"] = ifd[piexif.ImageIFD.Make].decode().strip()
-            if piexif.ImageIFD.Model in ifd:
-                data["camera_model"] = ifd[piexif.ImageIFD.Model].decode().strip()
-
-            # Date and time
-            if piexif.ImageIFD.DateTime in ifd:
-                try:
-                    dt_str = ifd[piexif.ImageIFD.DateTime].decode()
-                    data["date_taken"] = datetime.strptime(dt_str, "%Y:%m:%d %H:%M:%S")
-                except (ValueError, AttributeError):
-                    pass
-
-        # Extract from Exif IFD (detailed camera settings)
-        if "Exif" in exif_dict:
-            ifd = exif_dict["Exif"]
-
-            # Original date (often more accurate)
-            if piexif.ExifIFD.DateTimeOriginal in ifd:
-                try:
-                    dt_str = ifd[piexif.ExifIFD.DateTimeOriginal].decode()
-                    data["date_taken"] = datetime.strptime(dt_str, "%Y:%m:%d %H:%M:%S")
-                except (ValueError, AttributeError):
-                    pass
-
-            # Camera settings
-            if piexif.ExifIFD.ISOSpeedRatings in ifd:
-                data["iso"] = ifd[piexif.ExifIFD.ISOSpeedRatings]
-
-            if piexif.ExifIFD.FNumber in ifd:
-                f_num = ifd[piexif.ExifIFD.FNumber]
-                if isinstance(f_num, tuple) and len(f_num) == 2:
-                    data["aperture"] = float(f_num[0] / f_num[1])
-
-            if piexif.ExifIFD.ExposureTime in ifd:
-                exp_time = ifd[piexif.ExifIFD.ExposureTime]
-                if isinstance(exp_time, tuple) and len(exp_time) == 2:
-                    if exp_time[0] == 1:
-                        data["shutter_speed"] = f"1/{exp_time[1]}"
-                    else:
-                        data["shutter_speed"] = f"{exp_time[0]}/{exp_time[1]}"
-
-            if piexif.ExifIFD.FocalLength in ifd:
-                focal = ifd[piexif.ExifIFD.FocalLength]
-                if isinstance(focal, tuple) and len(focal) == 2:
-                    data["focal_length"] = int(focal[0] / focal[1])
-
-            # Lens information
-            if piexif.ExifIFD.LensModel in ifd:
-                data["lens"] = ifd[piexif.ExifIFD.LensModel].decode().strip()
-
-            # Timezone information
-            if piexif.ExifIFD.OffsetTimeOriginal in ifd:
-                try:
-                    timezone_offset = (
-                        ifd[piexif.ExifIFD.OffsetTimeOriginal].decode().strip()
-                    )
-                    data["timezone"] = timezone_offset
-                except (ValueError, AttributeError):
-                    pass
-
-        # Extract GPS data
-        if "GPS" in exif_dict:
-            gps_data = self._extract_enhanced_gps_data(exif_dict["GPS"])
-            data.update(gps_data)
-
-            # Try to get location name if we have coordinates
-            if "location_lat" in gps_data and "location_lon" in gps_data:
-                location_info = await location_service.reverse_geocode(
-                    gps_data["location_lat"], gps_data["location_lon"]
-                )
-                if location_info:
-                    data["location_name"] = location_info.location_name
-                    data["location_address"] = location_info.location_address
-
-        return data
 
     def _extract_vips_exif(self, exif_bytes: bytes) -> dict[str, Any]:
         """Fallback EXIF extraction using vips data."""
         # This is a simplified fallback - in practice, you'd parse the EXIF bytes
         return {}
-
-    @staticmethod
-    def _dms_to_decimal(dms_tuple: tuple | None) -> float | None:
-        if not dms_tuple or len(dms_tuple) != 3:
-            return None
-        degrees = (
-            float(dms_tuple[0][0] / dms_tuple[0][1]) if dms_tuple[0][1] != 0 else 0
-        )
-        minutes = (
-            float(dms_tuple[1][0] / dms_tuple[1][1]) if dms_tuple[1][1] != 0 else 0
-        )
-        seconds = (
-            float(dms_tuple[2][0] / dms_tuple[2][1]) if dms_tuple[2][1] != 0 else 0
-        )
-        return degrees + (minutes / 60.0) + (seconds / 3600.0)
-
-    @staticmethod
-    def _decode_ref(ref: bytes | str) -> str:
-        return ref.decode().strip() if isinstance(ref, bytes) else str(ref).strip()
-
-    def _parse_enhanced_gps(self, gps_info: dict) -> dict:
-        gps_data: dict[str, Any] = {}
-
-        if (
-            piexif.GPSIFD.GPSLatitude in gps_info
-            and piexif.GPSIFD.GPSLatitudeRef in gps_info
-        ):
-            lat_decimal = self._dms_to_decimal(gps_info[piexif.GPSIFD.GPSLatitude])
-            if lat_decimal is not None:
-                lat_ref = self._decode_ref(gps_info[piexif.GPSIFD.GPSLatitudeRef])
-                gps_data["location_lat"] = (
-                    -lat_decimal if lat_ref in ("S", "s") else lat_decimal
-                )
-
-        if (
-            piexif.GPSIFD.GPSLongitude in gps_info
-            and piexif.GPSIFD.GPSLongitudeRef in gps_info
-        ):
-            lon_decimal = self._dms_to_decimal(gps_info[piexif.GPSIFD.GPSLongitude])
-            if lon_decimal is not None:
-                lon_ref = self._decode_ref(gps_info[piexif.GPSIFD.GPSLongitudeRef])
-                gps_data["location_lon"] = (
-                    -lon_decimal if lon_ref in ("W", "w") else lon_decimal
-                )
-
-        if piexif.GPSIFD.GPSAltitude in gps_info:
-            alt_tuple = gps_info[piexif.GPSIFD.GPSAltitude]
-            if alt_tuple and len(alt_tuple) == 2 and alt_tuple[1] != 0:
-                altitude = float(alt_tuple[0] / alt_tuple[1])
-                if (
-                    piexif.GPSIFD.GPSAltitudeRef in gps_info
-                    and gps_info[piexif.GPSIFD.GPSAltitudeRef] == 1
-                ):
-                    altitude = -altitude
-                gps_data["altitude"] = altitude
-
-        return gps_data
-
-    def _extract_enhanced_gps_data(self, gps_info: dict) -> dict:
-        """Extract enhanced GPS coordinates and altitude from EXIF GPS info using piexif."""
-        try:
-            return self._parse_enhanced_gps(gps_info)
-        except Exception as e:
-            print(f"Error extracting enhanced GPS data: {e}")
-            return {}
 
     async def process_image(
         self, file: BinaryIO, filename: str, title: str | None = None
@@ -310,8 +174,8 @@ class VipsImageProcessor:
                 effort=avif_quality["effort"],
                 compression="av1",
             )
-        except Exception as e:
-            print(f"Error generating AVIF for {size_name}: {e}")
+        except Exception:
+            logger.exception("Error generating AVIF for %s", size_name)
             return None
         return {
             "path": f"/compressed/{avif_filename}",
@@ -330,8 +194,8 @@ class VipsImageProcessor:
         webp_path = self.compressed_dir / webp_filename
         try:
             resized_img.webpsave(str(webp_path), Q=webp_quality, effort=6)
-        except Exception as e:
-            print(f"Error generating WebP for {size_name}: {e}")
+        except Exception:
+            logger.exception("Error generating WebP for %s", size_name)
             return None
         return {
             "path": f"/compressed/{webp_filename}",
@@ -352,8 +216,8 @@ class VipsImageProcessor:
             resized_img.jpegsave(
                 str(jpeg_path), Q=jpeg_quality, optimize_coding=True, interlace=True
             )
-        except Exception as e:
-            print(f"Error generating JPEG for {size_name}: {e}")
+        except Exception:
+            logger.exception("Error generating JPEG for %s", size_name)
             return None
         return {
             "path": f"/compressed/{jpeg_filename}",
@@ -371,7 +235,6 @@ class VipsImageProcessor:
         file_id: str,
         size_name: str,
         target_size: int,
-        runtime,
     ) -> dict:
         resized_img = self._resize_image_vips(vips_image, target_size)
         variant_formats = {}
@@ -380,7 +243,9 @@ class VipsImageProcessor:
         if avif is not None:
             variant_formats["avif"] = avif
 
-        webp_quality = runtime.quality_settings.get(size_name, settings.webp_quality)
+        webp_quality = self.config.quality_settings.get(
+            size_name, settings.webp_quality
+        )
         webp = self._save_webp_variant(resized_img, file_id, size_name, webp_quality)
         if webp is not None:
             variant_formats["webp"] = webp
@@ -398,17 +263,16 @@ class VipsImageProcessor:
             vips_image = vips_image.colourspace("srgb")
 
         original_width, original_height = vips_image.width, vips_image.height
-        runtime = get_image_settings()
-        total_variants = len(runtime.responsive_sizes)
+        total_variants = len(self.config.responsive_sizes)
         progress_per_variant: float = 30.0 / total_variants if total_variants else 30.0
         current_progress: float = 60.0
 
         variants = {}
-        for size_name, target_size in runtime.responsive_sizes.items():
+        for size_name, target_size in self.config.responsive_sizes.items():
             if target_size > max(original_width, original_height):
                 continue
             variants[size_name] = self._generate_variant_formats(
-                vips_image, file_id, size_name, target_size, runtime
+                vips_image, file_id, size_name, target_size
             )
             current_progress += progress_per_variant
             self._update_progress("processing", int(current_progress))
@@ -422,8 +286,8 @@ class VipsImageProcessor:
                 str(original_path), access="sequential"
             )
             return self._build_vips_variants(vips_image, file_id)
-        except Exception as e:
-            print(f"Error generating responsive variants: {e}")
+        except Exception:
+            logger.exception("Error generating responsive variants")
             raise
 
     def _resize_image_vips(
@@ -439,26 +303,15 @@ class VipsImageProcessor:
 
     def _get_avif_quality(self, size_name: str) -> dict[str, int]:
         """Get AVIF-specific quality settings for different sizes."""
-        runtime = get_image_settings()
-        base_quality = runtime.quality_settings.get(size_name, settings.webp_quality)
+        base_quality = self.config.quality_settings.get(
+            size_name, settings.webp_quality
+        )
 
-        # AVIF can achieve better compression, so we can use slightly lower quality,
-        # allow overrides via settings
-        avif_quality_offset = getattr(
-            runtime, "avif_quality_base_offset", settings.avif_quality_base_offset
+        # AVIF can achieve better compression, so we can use slightly lower quality
+        avif_quality = max(
+            base_quality + self.config.avif_quality_base_offset,
+            self.config.avif_quality_floor,
         )
-        avif_quality_floor = getattr(
-            runtime, "avif_quality_floor", settings.avif_quality_floor
-        )
-        try:
-            offset = int(avif_quality_offset)
-        except Exception:
-            offset = -10
-        try:
-            floor = int(avif_quality_floor)
-        except Exception:
-            floor = 50
-        avif_quality = max(base_quality + offset, floor)
 
         # Adjust effort based on size (higher effort for smaller sizes)
         effort_map = {
@@ -469,12 +322,9 @@ class VipsImageProcessor:
             "xlarge": 4,  # Lower effort for large files (speed vs quality)
         }
 
-        avif_effort_default = getattr(
-            runtime, "avif_effort_default", settings.avif_effort_default
-        )
         return {
             "quality": int(avif_quality),
-            "effort": int(effort_map.get(size_name, avif_effort_default)),
+            "effort": int(effort_map.get(size_name, self.config.avif_effort_default)),
         }
 
     async def process(self, file: BinaryIO, filename: str) -> dict:
@@ -500,8 +350,8 @@ class VipsImageProcessor:
             if file_path and os.path.exists(file_path):
                 try:
                     os.remove(file_path)
-                except Exception as e:
-                    print(f"Error deleting file {file_path}: {e}")
+                except Exception:
+                    logger.exception("Error deleting file %s", file_path)
 
     @staticmethod
     def get_image_url(
@@ -563,5 +413,17 @@ class VipsImageProcessor:
         return ", ".join(srcset_parts)
 
 
-# Global instance (will replace the old image_processor)
-vips_image_processor = VipsImageProcessor(settings.upload_dir, settings.compressed_dir)
+def _default_image_variant_config() -> ImageVariantConfig:
+    return ImageVariantConfig(
+        responsive_sizes=dict(settings.responsive_sizes),
+        quality_settings=dict(settings.quality_settings),
+        avif_quality_base_offset=settings.avif_quality_base_offset,
+        avif_quality_floor=settings.avif_quality_floor,
+        avif_effort_default=settings.avif_effort_default,
+    )
+
+
+# Global instance (used as a fallback / for non-request contexts)
+vips_image_processor = VipsImageProcessor(
+    settings.upload_dir, settings.compressed_dir, _default_image_variant_config()
+)

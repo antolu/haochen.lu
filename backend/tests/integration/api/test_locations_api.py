@@ -15,7 +15,7 @@ def client():
     return TestClient(app)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def mock_location_service():
     """Mock location service for testing."""
     with patch("app.api.locations.location_service") as mock_service:

@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import piexif  # type: ignore[import-untyped]
 import pytest
 
+from app.core.exif import extract_comprehensive_exif, extract_enhanced_gps_data
 from app.core.image_processor import ImageProcessor
 
 
@@ -92,9 +93,7 @@ async def test_extract_comprehensive_exif_success(
     with (
         patch("PIL.Image.open", return_value=mock_image),
         patch("piexif.load", return_value=comprehensive_exif_dict),
-        patch.object(
-            mock_image_processor, "_extract_comprehensive_exif"
-        ) as mock_extract,
+        patch("app.core.image_processor.extract_comprehensive_exif") as mock_extract,
     ):
         mock_extract.return_value = {
             "camera_make": "Canon",
@@ -133,9 +132,7 @@ async def test_extract_comprehensive_exif_camera_data(
     mock_image_processor, comprehensive_exif_dict
 ):
     """Test extraction of camera make and model."""
-    result = await mock_image_processor._extract_comprehensive_exif(
-        comprehensive_exif_dict
-    )
+    result = await extract_comprehensive_exif(comprehensive_exif_dict)
 
     assert result["camera_make"] == "Canon"
     assert result["camera_model"] == "EOS R5"
@@ -146,9 +143,7 @@ async def test_extract_comprehensive_exif_datetime(
     mock_image_processor, comprehensive_exif_dict
 ):
     """Test extraction and parsing of datetime."""
-    result = await mock_image_processor._extract_comprehensive_exif(
-        comprehensive_exif_dict
-    )
+    result = await extract_comprehensive_exif(comprehensive_exif_dict)
 
     assert isinstance(result["date_taken"], datetime)
     assert result["date_taken"] == datetime(2023, 12, 25, 14, 30, 0)
@@ -159,9 +154,7 @@ async def test_extract_comprehensive_exif_camera_settings(
     mock_image_processor, comprehensive_exif_dict
 ):
     """Test extraction of camera settings."""
-    result = await mock_image_processor._extract_comprehensive_exif(
-        comprehensive_exif_dict
-    )
+    result = await extract_comprehensive_exif(comprehensive_exif_dict)
 
     assert result["iso"] == 400
     assert result["aperture"] == pytest.approx(2.8)  # 280/100
@@ -176,16 +169,14 @@ async def test_extract_comprehensive_exif_gps_coordinates(
     mock_image_processor, comprehensive_exif_dict
 ):
     """Test GPS coordinate extraction and conversion."""
-    with patch.object(mock_image_processor, "_extract_enhanced_gps_data") as mock_gps:
+    with patch("app.core.exif.extract_enhanced_gps_data") as mock_gps:
         mock_gps.return_value = {
             "location_lat": 37.774167,
             "location_lon": -122.419167,
             "altitude": 125.0,
         }
 
-        result = await mock_image_processor._extract_comprehensive_exif(
-            comprehensive_exif_dict
-        )
+        result = await extract_comprehensive_exif(comprehensive_exif_dict)
 
         mock_gps.assert_called_once_with(comprehensive_exif_dict["GPS"])
         assert abs(result["location_lat"] - 37.774167) < 0.001
@@ -202,16 +193,14 @@ async def test_extract_comprehensive_exif_with_location_service(
     mock_location_info.location_name = "San Francisco, California, United States"
     mock_location_info.location_address = "San Francisco, CA 94102, USA"
 
-    # Patch location_service where it's imported in image_processor
-    with patch("app.core.image_processor.location_service") as mock_location_service:
+    # Patch location_service where it's imported in app.core.exif
+    with patch("app.core.exif.location_service") as mock_location_service:
         # Make reverse_geocode an async function
         mock_location_service.reverse_geocode = AsyncMock(
             return_value=mock_location_info
         )
 
-        result = await mock_image_processor._extract_comprehensive_exif(
-            comprehensive_exif_dict
-        )
+        result = await extract_comprehensive_exif(comprehensive_exif_dict)
 
         # Verify location service was called with coordinates from GPS data
         mock_location_service.reverse_geocode.assert_called_once()
@@ -233,7 +222,7 @@ def test_extract_enhanced_gps_data_north_east(mock_image_processor):
         piexif.GPSIFD.GPSAltitudeRef: 0,
     }
 
-    result = mock_image_processor._extract_enhanced_gps_data(gps_info)
+    result = extract_enhanced_gps_data(gps_info)
 
     # Coordinates: 37°46'29.4"N, 139°41'59.4"E (Tokyo approximately)
     assert abs(result["location_lat"] - 37.774167) < 0.001  # N is positive
@@ -252,7 +241,7 @@ def test_extract_enhanced_gps_data_south_west(mock_image_processor):
         piexif.GPSIFD.GPSAltitudeRef: 1,  # Below sea level
     }
 
-    result = mock_image_processor._extract_enhanced_gps_data(gps_info)
+    result = extract_enhanced_gps_data(gps_info)
 
     assert result["location_lat"] < 0  # S is negative
     assert result["location_lon"] < 0  # W is negative
@@ -268,7 +257,7 @@ def test_extract_enhanced_gps_data_no_altitude(mock_image_processor):
         piexif.GPSIFD.GPSLongitudeRef: b"W",
     }
 
-    result = mock_image_processor._extract_enhanced_gps_data(gps_info)
+    result = extract_enhanced_gps_data(gps_info)
 
     assert "location_lat" in result
     assert "location_lon" in result
@@ -287,7 +276,7 @@ def test_extract_enhanced_gps_data_invalid_coordinates(mock_image_processor):
         piexif.GPSIFD.GPSLongitudeRef: b"W",
     }
 
-    result = mock_image_processor._extract_enhanced_gps_data(gps_info)
+    result = extract_enhanced_gps_data(gps_info)
 
     # Latitude should be skipped (invalid tuple length)
     assert "location_lat" not in result
@@ -399,7 +388,7 @@ def test_dms_to_decimal_conversion(mock_image_processor):
         piexif.GPSIFD.GPSLatitudeRef: b"N",
     }
 
-    result = mock_image_processor._extract_enhanced_gps_data(gps_info)
+    result = extract_enhanced_gps_data(gps_info)
 
     # 37 + 46/60 + 29.4/3600 ≈ 37.7748333
     assert abs(result["location_lat"] - 37.774167) < 0.001
@@ -416,7 +405,7 @@ async def test_timezone_extraction_variations(mock_image_processor):
 
     for exif_dict in test_cases:
         full_dict = {"Exif": exif_dict}
-        result = await mock_image_processor._extract_comprehensive_exif(full_dict)
+        result = await extract_comprehensive_exif(full_dict)
 
         if exif_dict[piexif.ExifIFD.OffsetTimeOriginal] == b"Z":
             assert result.get("timezone") == "Z"
@@ -436,7 +425,7 @@ async def test_aperture_calculation_edge_cases(mock_image_processor):
 
     for exif_dict in test_cases:
         full_dict = {"Exif": exif_dict}
-        result = await mock_image_processor._extract_comprehensive_exif(full_dict)
+        result = await extract_comprehensive_exif(full_dict)
 
         if exif_dict[piexif.ExifIFD.FNumber] == (280, 100):
             assert result["aperture"] == pytest.approx(2.8)
@@ -457,7 +446,7 @@ async def test_shutter_speed_formats(mock_image_processor):
 
     for fraction, expected in test_cases:
         exif_dict = {"Exif": {piexif.ExifIFD.ExposureTime: fraction}}
-        result = await mock_image_processor._extract_comprehensive_exif(exif_dict)
+        result = await extract_comprehensive_exif(exif_dict)
         assert result.get("shutter_speed") == expected
 
 
@@ -474,7 +463,7 @@ async def test_byte_string_decoding(mock_image_processor):
         },
     }
 
-    result = await mock_image_processor._extract_comprehensive_exif(exif_dict)
+    result = await extract_comprehensive_exif(exif_dict)
 
     # Byte strings may or may not have null terminators stripped
     assert result["camera_make"] in ["Canon", "Canon\x00"]

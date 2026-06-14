@@ -13,7 +13,6 @@ from app.config import settings
 from app.core.file_access import file_access_controller
 from app.core.file_validation import file_validator
 from app.core.image_processor import image_processor
-from app.core.repository_service import RepositoryInfo, repository_service
 from app.crud.project import (
     bulk_reorder_projects,
     create_project,
@@ -30,7 +29,7 @@ from app.crud.project import (
     update_project_readme,
 )
 from app.dependencies import (
-    _current_admin_user_dependency,
+    _current_superuser_dependency,
     _current_user_optional_dependency,
     _session_dependency,
 )
@@ -50,6 +49,7 @@ from app.schemas.project import (
     ProjectUpdate,
     ReadmeResponse,
 )
+from app.services.repository_service import RepositoryInfo, repository_service
 from app.types.access_control import FileType
 
 router = APIRouter()
@@ -189,7 +189,7 @@ async def list_distinct_technologies(
 @router.get("/stats/summary")
 async def get_project_stats(
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> dict[str, int]:
     """Get project statistics (admin only)."""
     total_projects = await get_project_count(db)
@@ -201,7 +201,7 @@ async def get_project_stats(
 @router.post("/repository/validate")
 async def validate_repository_url(
     request: dict[str, typing.Any],
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> dict[str, typing.Any]:
     """Validate a repository URL and return repository info (admin only)."""
     repository_url = request.get("repository_url")
@@ -230,7 +230,7 @@ async def validate_repository_url(
 @router.post("/preview-readme", response_model=ProjectPreviewResponse)
 async def preview_readme(
     request: dict[str, typing.Any],
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> ProjectPreviewResponse:
     """Fetch README content directly from a repository URL (admin only)."""
     repo_url = request.get("repo_url")
@@ -298,7 +298,7 @@ async def get_project_detail(
 async def reorder_projects(
     payload: ProjectReorderRequest,
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> dict[str, str]:
     """Bulk reorder projects (admin only)."""
     items = [{"id": it.id, "order": it.order} for it in payload.items]
@@ -334,7 +334,7 @@ async def add_project_image(
     project_id: UUID,
     payload: ProjectImageAttach,
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> ProjectImageResponse:
     # Enforce hard limit of images per project
     count_res = await db.execute(
@@ -362,7 +362,7 @@ async def upload_project_image(
     title: str = Form(""),
     alt_text: str = Form(""),
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> ProjectImageResponse:
     """Upload a new image directly to a project (separate from photos)."""
     # Validate file type using magic number detection
@@ -417,7 +417,7 @@ async def upload_project_image(
 async def delete_project_image(
     project_image_id: UUID,
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> dict[str, str]:
     ok = await remove_project_image(db, project_image_id)
     if not ok:
@@ -430,7 +430,7 @@ async def update_project_image_endpoint(
     project_image_id: UUID,
     payload: ProjectImageUpdate,
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> ProjectImageResponse:
     pi = await update_project_image(
         db, project_image_id, payload.title, payload.alt_text
@@ -454,7 +454,7 @@ async def reorder_images(
     project_id: UUID,
     payload: ProjectImageReorderRequest,
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> dict[str, str]:
     items = [{"id": it.id, "order": it.order} for it in payload.items]
     await reorder_project_images(db, project_id, items, normalize=payload.normalize)
@@ -573,7 +573,7 @@ async def serve_project_image_variant(
 async def create_project_endpoint(
     project: ProjectCreate,
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> ProjectResponse:
     """Create a new project (admin only)."""
     try:
@@ -590,7 +590,7 @@ async def update_project_endpoint(
     project_id: UUID,
     project_update: ProjectUpdate,
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> ProjectResponse:
     """Update project (admin only)."""
     project = await update_project(db, project_id, project_update)
@@ -604,7 +604,7 @@ async def update_project_endpoint(
 async def delete_project_endpoint(
     project_id: UUID,
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> dict[str, str]:
     """Delete project (admin only)."""
     success = await delete_project_and_media(db, project_id)

@@ -17,7 +17,7 @@ from app.crud.hero_image import (
     update_hero_image,
     update_hero_image_focal_points,
 )
-from app.dependencies import _current_admin_user_dependency, _session_dependency
+from app.dependencies import _current_superuser_dependency, _session_dependency
 from app.schemas.hero_image import (
     HeroImageActivate,
     HeroImageCreate,
@@ -48,7 +48,7 @@ def populate_hero_image_urls(hero_image_dict: dict, photo_dict: dict) -> dict:
 @router.get("", response_model=list[HeroImageResponse])
 async def list_hero_images(
     db: AsyncSession = _session_dependency,
-    _: None = _current_admin_user_dependency,
+    _: None = _current_superuser_dependency,
 ) -> list[HeroImageResponse]:
     """Get all hero images."""
     hero_images = await get_hero_images(db)
@@ -83,7 +83,7 @@ async def get_active_hero(
 async def get_hero_image_by_id(
     hero_image_id: UUID,
     db: AsyncSession = _session_dependency,
-    _: None = _current_admin_user_dependency,
+    _: None = _current_superuser_dependency,
 ) -> HeroImageResponse:
     """Get a specific hero image by ID."""
     hero_image = await get_hero_image(db, hero_image_id)
@@ -103,7 +103,7 @@ async def get_hero_image_by_id(
 async def create_new_hero_image(
     hero_image_data: HeroImageCreate,
     db: AsyncSession = _session_dependency,
-    _: None = _current_admin_user_dependency,
+    _: None = _current_superuser_dependency,
 ) -> HeroImageResponse:
     """Create a new hero image."""
     try:
@@ -126,7 +126,7 @@ async def update_hero_image_by_id(
     hero_image_id: UUID,
     hero_image_update: HeroImageUpdate,
     db: AsyncSession = _session_dependency,
-    _: None = _current_admin_user_dependency,
+    _: None = _current_superuser_dependency,
 ) -> HeroImageResponse:
     """Update a hero image."""
     hero_image = await update_hero_image(db, hero_image_id, hero_image_update)
@@ -147,7 +147,7 @@ async def update_focal_points(
     hero_image_id: UUID,
     focal_point_update: HeroImageFocalPointUpdate,
     db: AsyncSession = _session_dependency,
-    _: None = _current_admin_user_dependency,
+    _: None = _current_superuser_dependency,
 ) -> HeroImageResponse:
     """Update focal points for a hero image."""
     hero_image = await update_hero_image_focal_points(
@@ -170,7 +170,7 @@ async def activate_hero_image_by_id(
     hero_image_id: UUID,
     _data: HeroImageActivate,
     db: AsyncSession = _session_dependency,
-    _: None = _current_admin_user_dependency,
+    _: None = _current_superuser_dependency,
 ) -> HeroImageResponse:
     """Activate a hero image (deactivates all others)."""
     hero_image = await activate_hero_image(db, hero_image_id)
@@ -190,7 +190,7 @@ async def activate_hero_image_by_id(
 async def delete_hero_image_by_id(
     hero_image_id: UUID,
     db: AsyncSession = _session_dependency,
-    _: None = _current_admin_user_dependency,
+    _: None = _current_superuser_dependency,
 ) -> Response:
     """Delete a hero image."""
     success = await delete_hero_image(db, hero_image_id)

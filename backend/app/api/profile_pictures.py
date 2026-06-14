@@ -29,7 +29,7 @@ from app.crud.profile_picture import (
     update_profile_picture,
 )
 from app.dependencies import (
-    _current_admin_user_dependency,
+    _current_superuser_dependency,
     _current_user_optional_dependency,
     _profile_image_file_dependency,
     _session_dependency,
@@ -89,7 +89,7 @@ async def list_profile_pictures(
     page: int = 1,
     per_page: int = 20,
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> ProfilePictureListResponse:
     """List all profile pictures (admin only)."""
     skip = (page - 1) * per_page
@@ -143,7 +143,7 @@ async def get_active_profile_picture_endpoint(
 async def get_profile_picture_detail(
     profile_picture_id: UUID,
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> ProfilePictureResponse:
     """Get profile picture details (admin only)."""
     profile_picture = await get_profile_picture(db, profile_picture_id)
@@ -209,7 +209,7 @@ async def upload_profile_picture(
     file: UploadFile = _profile_image_file_dependency,
     title: typing.Annotated[str, Form()] = "",
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> ProfilePictureResponse:
     """Upload a new profile picture (admin only). Image should be square and will be processed for optimal display."""
 
@@ -235,7 +235,7 @@ async def upload_profile_picture(
 async def activate_profile_picture_endpoint(
     profile_picture_id: UUID,
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> ProfilePictureResponse:
     """Set a profile picture as active (admin only). This will deactivate all other profile pictures."""
     profile_picture = await activate_profile_picture(db, profile_picture_id)
@@ -258,7 +258,7 @@ async def update_profile_picture_endpoint(
     profile_picture_id: UUID,
     profile_picture_update: ProfilePictureUpdate,
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> ProfilePictureResponse:
     """Update profile picture metadata (admin only)."""
     profile_picture = await update_profile_picture(
@@ -282,7 +282,7 @@ async def update_profile_picture_endpoint(
 async def delete_profile_picture_endpoint(
     profile_picture_id: UUID,
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> dict[str, str]:
     """Delete profile picture (admin only)."""
     profile_picture = await get_profile_picture(db, profile_picture_id)
@@ -371,7 +371,7 @@ async def download_profile_picture_original(
     profile_picture_id: UUID,
     request: Request,
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> FileResponse:
     """Download original profile picture file (admin only)."""
     # Get profile picture

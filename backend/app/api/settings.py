@@ -6,14 +6,17 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
 from app.config import settings as static_settings
-from app.core.runtime_settings import get_image_settings, update_image_settings
-from app.database import get_session
-from app.dependencies import _current_admin_user_dependency
+from app.core.runtime_settings import SystemConfigService
+from app.dependencies import (
+    _current_superuser_dependency,
+    _session_dependency,
+    get_config_service,
+)
 from app.models.system_setting import SystemSetting
 from app.models.user import User
 
 router = APIRouter()
-db_dependency = Depends(get_session)
+config_dependency = Depends(get_config_service)
 
 
 class SystemSettingsResponse(BaseModel):
@@ -51,23 +54,23 @@ class SystemSettingsUpdate(BaseModel):
 
 @router.get("")
 async def get_system_runtime_settings(
-    _current_user: User = _current_admin_user_dependency,
+    _current_user: User = _current_superuser_dependency,
+    config: SystemConfigService = config_dependency,
 ) -> SystemSettingsResponse:
-    s = get_image_settings()
     return SystemSettingsResponse(
-        responsive_sizes=s.responsive_sizes,
-        quality_settings=s.quality_settings,
-        avif_quality_base_offset=s.avif_quality_base_offset,
-        avif_quality_floor=s.avif_quality_floor,
-        avif_effort_default=s.avif_effort_default,
-        webp_quality=s.webp_quality,
-        rate_limit_enabled=s.rate_limit_enabled,
-        rate_limit_calls=s.rate_limit_calls,
-        rate_limit_period=s.rate_limit_period,
-        rate_limit_file_calls=s.rate_limit_file_calls,
-        rate_limit_file_period=s.rate_limit_file_period,
-        rate_limit_auth_calls=s.rate_limit_auth_calls,
-        rate_limit_auth_period=s.rate_limit_auth_period,
+        responsive_sizes=config.responsive_sizes,
+        quality_settings=config.quality_settings,
+        avif_quality_base_offset=config.avif_quality_base_offset,
+        avif_quality_floor=config.avif_quality_floor,
+        avif_effort_default=config.avif_effort_default,
+        webp_quality=config.webp_quality,
+        rate_limit_enabled=config.rate_limit_enabled,
+        rate_limit_calls=config.rate_limit_calls,
+        rate_limit_period=config.rate_limit_period,
+        rate_limit_file_calls=config.rate_limit_file_calls,
+        rate_limit_file_period=config.rate_limit_file_period,
+        rate_limit_auth_calls=config.rate_limit_auth_calls,
+        rate_limit_auth_period=config.rate_limit_auth_period,
         rate_limit_locked=static_settings.is_rate_limit_env_set,
     )
 
@@ -75,8 +78,9 @@ async def get_system_runtime_settings(
 @router.put("")
 async def update_system_runtime_settings(
     payload: SystemSettingsUpdate,
-    db: sqlalchemy.ext.asyncio.AsyncSession = db_dependency,
-    _current_user: User = _current_admin_user_dependency,
+    db: sqlalchemy.ext.asyncio.AsyncSession = _session_dependency,
+    _current_user: User = _current_superuser_dependency,
+    config: SystemConfigService = config_dependency,
 ) -> SystemSettingsResponse:
     if (
         payload.rate_limit_enabled is not None
@@ -132,21 +136,21 @@ async def update_system_runtime_settings(
             detail=f"Database write error: {e!s}",
         ) from e
 
-    s = update_image_settings(update_data)
+    config.apply(update_data)
 
     return SystemSettingsResponse(
-        responsive_sizes=s.responsive_sizes,
-        quality_settings=s.quality_settings,
-        avif_quality_base_offset=s.avif_quality_base_offset,
-        avif_quality_floor=s.avif_quality_floor,
-        avif_effort_default=s.avif_effort_default,
-        webp_quality=s.webp_quality,
-        rate_limit_enabled=s.rate_limit_enabled,
-        rate_limit_calls=s.rate_limit_calls,
-        rate_limit_period=s.rate_limit_period,
-        rate_limit_file_calls=s.rate_limit_file_calls,
-        rate_limit_file_period=s.rate_limit_file_period,
-        rate_limit_auth_calls=s.rate_limit_auth_calls,
-        rate_limit_auth_period=s.rate_limit_auth_period,
+        responsive_sizes=config.responsive_sizes,
+        quality_settings=config.quality_settings,
+        avif_quality_base_offset=config.avif_quality_base_offset,
+        avif_quality_floor=config.avif_quality_floor,
+        avif_effort_default=config.avif_effort_default,
+        webp_quality=config.webp_quality,
+        rate_limit_enabled=config.rate_limit_enabled,
+        rate_limit_calls=config.rate_limit_calls,
+        rate_limit_period=config.rate_limit_period,
+        rate_limit_file_calls=config.rate_limit_file_calls,
+        rate_limit_file_period=config.rate_limit_file_period,
+        rate_limit_auth_calls=config.rate_limit_auth_calls,
+        rate_limit_auth_period=config.rate_limit_auth_period,
         rate_limit_locked=static_settings.is_rate_limit_env_set,
     )
