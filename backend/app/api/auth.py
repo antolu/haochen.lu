@@ -11,7 +11,7 @@ from arcadia_auth import (
     TokenExpiredError,
     TokenInvalidError,
 )
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
+from fastapi import APIRouter, HTTPException, Query, Request, Response, status
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -26,16 +26,12 @@ from app.crud.user import (
     get_user_by_oidc_id,
     update_user,
 )
-from app.database import get_session
 from app.models.user import User
 from app.schemas.user import UserCreate, UserRead, UserUpdate
-from app.users import current_active_user
+from app.users import _current_user_dependency, _session_dependency
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
-
-_session_dependency = Depends(get_session)
-_current_user_dependency = Depends(current_active_user)
 
 LOGIN_STATE_TTL_SECONDS = 600
 

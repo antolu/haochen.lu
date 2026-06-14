@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Query
 
-from app.dependencies import _current_admin_user_dependency
+from app.dependencies import _current_superuser_dependency
 from app.models.location import (
     ForwardGeocodeResult,
     LocationSearchResult,
@@ -119,7 +119,7 @@ async def get_nearby_locations(
 
 @router.get("/cache/stats")
 async def get_cache_stats(
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> dict[str, int | bool]:
     """Get location cache statistics (admin only)."""
     return await location_service.get_cache_stats()
@@ -130,7 +130,7 @@ async def clear_cache(
     operation: str | None = Query(
         None, description="Operation type to clear (reverse, forward, search)"
     ),
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> dict[str, int | str]:
     """Clear location cache (admin only)."""
     deleted_count = await location_service.clear_cache(operation)

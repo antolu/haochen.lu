@@ -7,13 +7,15 @@ from pydantic import BaseModel
 
 from app.config import settings as static_settings
 from app.core.runtime_settings import SystemConfigService
-from app.database import get_session
-from app.dependencies import _current_admin_user_dependency, get_config_service
+from app.dependencies import (
+    _current_superuser_dependency,
+    _session_dependency,
+    get_config_service,
+)
 from app.models.system_setting import SystemSetting
 from app.models.user import User
 
 router = APIRouter()
-db_dependency = Depends(get_session)
 config_dependency = Depends(get_config_service)
 
 
@@ -52,7 +54,7 @@ class SystemSettingsUpdate(BaseModel):
 
 @router.get("")
 async def get_system_runtime_settings(
-    _current_user: User = _current_admin_user_dependency,
+    _current_user: User = _current_superuser_dependency,
     config: SystemConfigService = config_dependency,
 ) -> SystemSettingsResponse:
     return SystemSettingsResponse(
@@ -76,8 +78,8 @@ async def get_system_runtime_settings(
 @router.put("")
 async def update_system_runtime_settings(
     payload: SystemSettingsUpdate,
-    db: sqlalchemy.ext.asyncio.AsyncSession = db_dependency,
-    _current_user: User = _current_admin_user_dependency,
+    db: sqlalchemy.ext.asyncio.AsyncSession = _session_dependency,
+    _current_user: User = _current_superuser_dependency,
     config: SystemConfigService = config_dependency,
 ) -> SystemSettingsResponse:
     if (

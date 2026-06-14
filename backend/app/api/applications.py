@@ -16,7 +16,7 @@ from app.crud.application import (
     update_application,
 )
 from app.dependencies import (
-    _current_admin_user_dependency,
+    _current_superuser_dependency,
     _current_user_dependency,
     _session_dependency,
 )
@@ -72,7 +72,7 @@ async def list_authenticated_applications(
 async def list_all_applications(
     *,
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> ApplicationListResponse:
     """List all applications (admin only)."""
     applications = await get_applications(db, enabled_only=False, admin_only=None)
@@ -106,7 +106,7 @@ async def get_application_detail(
 async def create_application_endpoint(
     application: ApplicationCreate,
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> ApplicationResponse:
     """Create a new application (admin only)."""
     try:
@@ -123,7 +123,7 @@ async def update_application_endpoint(
     application_id: UUID,
     application_update: ApplicationUpdate,
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> ApplicationResponse:
     """Update application (admin only)."""
     application = await update_application(db, application_id, application_update)
@@ -137,7 +137,7 @@ async def update_application_endpoint(
 async def reorder_applications(
     payload: ApplicationReorderRequest,
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> dict[str, str]:
     """Bulk reorder applications (admin only)."""
     items: list[dict[str, str | int]] = [
@@ -151,7 +151,7 @@ async def reorder_applications(
 async def delete_application_endpoint(
     application_id: UUID,
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> dict[str, str]:
     """Delete application (admin only)."""
     success = await delete_application(db, application_id)
@@ -164,7 +164,7 @@ async def delete_application_endpoint(
 @router.get("/stats/summary")
 async def get_application_stats(
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> dict[str, int]:
     """Get application statistics (admin only)."""
     total_applications = await get_application_count(db)

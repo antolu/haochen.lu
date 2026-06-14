@@ -15,7 +15,6 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/refresh")
 
 _token_dependency = Depends(oauth2_scheme)
 _session_dependency = Depends(get_session)
-_current_user_dependency = Depends(lambda: None)  # placeholder; redefined below
 
 
 async def current_active_user(

@@ -3,7 +3,7 @@ from __future__ import annotations
 import typing
 
 from arcadia_auth import DiscoveryError, JwksError, TokenExpiredError, TokenInvalidError
-from fastapi import Depends, File, Form, Request
+from fastapi import Depends, File, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.oidc import oidc_validator
@@ -18,7 +18,6 @@ from app.users import current_active_user, current_superuser
 _session_dependency = Depends(get_session)
 _current_user_dependency = Depends(current_active_user)
 _current_superuser_dependency = Depends(current_superuser)
-_current_admin_user_dependency = Depends(current_superuser)  # Alias for compatibility
 
 
 # Export dependencies
@@ -57,7 +56,6 @@ def get_config_service(request: Request) -> SystemConfigService:
 # Additional module-level singletons for common dependencies
 _current_user_optional_dependency = Depends(get_current_user_optional)
 
-# Common File and Form dependencies
+# Common File dependencies
 _image_file_dependency = File(..., description="Image file to upload")
 _profile_image_file_dependency = File(..., description="Square image file to upload")
-_form_dependency = Form()

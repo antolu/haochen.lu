@@ -41,7 +41,7 @@ from app.crud.photo import (
     validate_photo_access,
 )
 from app.dependencies import (
-    _current_admin_user_dependency,
+    _current_superuser_dependency,
     _current_user_optional_dependency,
     _image_file_dependency,
     _session_dependency,
@@ -502,7 +502,7 @@ async def upload_photo(
     location_lon: typing.Annotated[float | None, Form()] = None,
     location_name: typing.Annotated[str | None, Form(max_length=200)] = None,
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
     request: Request,
 ) -> PhotoResponse:
     """Upload a new photo (admin only)."""
@@ -537,7 +537,7 @@ async def update_photo_endpoint(
     photo_id: UUID,
     photo_update: PhotoUpdate,
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> PhotoResponse:
     """Update photo metadata (admin only)."""
     photo = await update_photo(db, photo_id, photo_update)
@@ -555,7 +555,7 @@ async def update_photo_endpoint(
 async def delete_photo_endpoint(
     photo_id: UUID,
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> dict[str, str]:
     """Delete photo (admin only)."""
     photo = await get_photo(db, photo_id)
@@ -581,7 +581,7 @@ async def delete_photo_endpoint(
 async def reorder_photos(
     payload: PhotoReorderRequest,
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> dict[str, str]:
     """Bulk reorder photos (admin only)."""
     # Convert to simple dicts for the crud layer, converting UUID to str
@@ -596,7 +596,7 @@ async def reorder_photos(
 @router.get("/stats/summary")
 async def get_photo_stats(
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,
+    current_user: User = _current_superuser_dependency,
 ) -> dict[str, typing.Any]:
     """Get photo statistics (admin only)."""
     total_photos = await get_photo_count(db)
@@ -902,7 +902,7 @@ async def generate_temporary_url(
         3600, ge=60, le=86400, description="URL expires in seconds"
     ),
     db: AsyncSession = _session_dependency,
-    current_user: User = _current_admin_user_dependency,  # Only admins can generate temp URLs
+    current_user: User = _current_superuser_dependency,  # Only admins can generate temp URLs
 ) -> dict[str, typing.Any]:
     """Generate temporary signed URL for photo access."""
     # Validate variant
