@@ -4,18 +4,11 @@ Redis integration for token revocation and session management
 
 from __future__ import annotations
 
+import inspect
 import logging
 import typing
 
-try:
-    import redis.asyncio as redis_module
-
-    REDIS_AVAILABLE = True
-except ImportError:
-    REDIS_AVAILABLE = False
-    redis_module = typing.cast(typing.Any, None)
-
-import inspect
+import redis.asyncio as redis_module
 
 from app.config import settings
 
@@ -46,12 +39,6 @@ class RedisClient:
 
     async def connect(self) -> bool:
         """Connect to Redis server"""
-        if not REDIS_AVAILABLE or redis_module is None:
-            logger.warning(
-                "Redis not available - install redis[asyncio] for session management"
-            )
-            return False
-
         if self._connection_attempted:
             return self._redis is not None
 
