@@ -6,12 +6,12 @@ from uuid import UUID
 from sqlalchemy import asc, desc, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.repository_service import repository_service
 from app.core.vips_processor import vips_image_processor
 from app.crud.photo import delete_photo, get_photo
 from app.models.project import Project
 from app.models.project_image import ProjectImage
 from app.schemas.project import ProjectCreate, ProjectUpdate
+from app.services.repository_service import repository_service
 
 
 def generate_slug(title: str) -> str:

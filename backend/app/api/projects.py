@@ -13,7 +13,6 @@ from app.config import settings
 from app.core.file_access import file_access_controller
 from app.core.file_validation import file_validator
 from app.core.image_processor import image_processor
-from app.core.repository_service import RepositoryInfo, repository_service
 from app.crud.project import (
     bulk_reorder_projects,
     create_project,
@@ -50,6 +49,7 @@ from app.schemas.project import (
     ProjectUpdate,
     ReadmeResponse,
 )
+from app.services.repository_service import RepositoryInfo, repository_service
 from app.types.access_control import FileType
 
 router = APIRouter()

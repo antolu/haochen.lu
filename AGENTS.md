@@ -254,6 +254,7 @@ Test configuration in `backend/pyproject.toml` with coverage requirements (40% m
 ## Code Conventions
 
 - **Backend**: Python 3.11+, type hints required, use `from __future__ import annotations`
+- **`app/core` vs `app/services`**: `app/core` holds cross-cutting framework/infrastructure glue with no business meaning on its own (Redis client, security/JWT, OIDC, rate limiting, system config, progress tracking, image encoding). `app/services` holds business-domain services — whether request-scoped (constructed per-request with a DB session, like `AliasService`) or process-lifetime singletons (like `location_service`, `repository_service`) — anything representing "a thing the product does" rather than "infrastructure the product runs on."
 - **Frontend**: TypeScript strict mode, functional components with hooks
 - **Imports**: Prefer absolute imports, avoid wildcard imports
 - **Pre-commit**: All commits must pass pre-commit hooks (ruff, mypy, eslint, prettier, security checks)

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Query
 
-from app.core.location_service import location_service
 from app.dependencies import _current_admin_user_dependency
 from app.models.location import (
     ForwardGeocodeResult,
@@ -11,6 +10,7 @@ from app.models.location import (
     ReverseGeocodeResult,
 )
 from app.models.user import User
+from app.services.location_service import location_service
 
 router = APIRouter()
 

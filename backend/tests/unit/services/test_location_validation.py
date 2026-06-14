@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.core.location_service import LocationService
+from app.services.location_service import LocationService
 
 
 @pytest.fixture

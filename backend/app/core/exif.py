@@ -6,7 +6,7 @@ from typing import Any
 
 import piexif  # type: ignore[import-untyped, import-not-found, unused-ignore]
 
-from app.core.location_service import location_service
+from app.services.location_service import location_service
 
 logger = logging.getLogger(__name__)
 
