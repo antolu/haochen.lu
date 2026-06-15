@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useRef } from "react";
+import React, { useMemo, useCallback, useRef, useState } from "react";
 import { Tag, TagInput } from "emblor-maintained";
 
 interface SharedTag {
@@ -28,6 +28,7 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
   placeholder = "Search or create tags...",
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [activeTagIndex, setActiveTagIndex] = useState<number | null>(null);
 
   const tags = useMemo<Tag[]>(
     () => value.map((tag) => ({ id: tag, text: tag })),
@@ -94,8 +95,8 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
             closeButton: "text-primary hover:text-primary/70 ml-1",
           },
         }}
-        activeTagIndex={null}
-        setActiveTagIndex={() => {}}
+        activeTagIndex={activeTagIndex}
+        setActiveTagIndex={setActiveTagIndex}
         onBlur={onBlur}
         inputProps={{
           name,
