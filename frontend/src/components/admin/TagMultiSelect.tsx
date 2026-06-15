@@ -1,10 +1,6 @@
-import React, { useMemo, useCallback, useRef, useState } from "react";
-import { Tag, TagInput } from "emblor-maintained";
-
-interface SharedTag {
-  id: string;
-  text: string;
-}
+import React, { useMemo, useRef, useState } from "react";
+import { X } from "lucide-react";
+import { cn } from "../../lib/utils";
 
 interface TagMultiSelectProps {
   value: string[];
@@ -26,91 +22,154 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
   placeholder = "Search or create tags...",
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [activeTagIndex, setActiveTagIndex] = useState<number | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [inputValue, setInputValue] = useState("");
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const [isFocused, setIsFocused] = useState(false);
 
-  const tags = useMemo<Tag[]>(
-    () => value.map((tag) => ({ id: tag, text: tag })),
-    [value],
-  );
+  const suggestions = useMemo(() => {
+    const query = inputValue.trim().toLowerCase();
+    return options.filter((option) => {
+      if (value.includes(option)) return false;
+      if (!query) return false;
+      return option.toLowerCase().includes(query);
+    });
+  }, [inputValue, options, value]);
 
-  const autocompleteOptions = useMemo<Tag[]>(
-    () => options.map((o) => ({ id: o, text: o })),
-    [options],
-  );
+  const showSuggestions = isFocused && suggestions.length > 0;
 
-  const handleSetTags = useCallback(
-    (newTags: Tag[] | ((prev: Tag[]) => Tag[])) => {
-      let result: Tag[];
-      if (typeof newTags === "function") {
-        result = newTags(tags);
-      } else {
-        result = newTags;
-      }
+  const addTag = (tag: string) => {
+    const cleaned = tag.trim();
+    if (!cleaned || value.includes(cleaned)) return;
+    onChange([...value, cleaned]);
+    setInputValue("");
+    setHighlightedIndex(0);
+  };
 
-      const tagStrings = (result as SharedTag[])
-        .map((t) => t.text.trim())
-        .filter(Boolean);
-      const uniqueTags = Array.from(new Set(tagStrings));
+  const removeTag = (tag: string) => {
+    onChange(value.filter((v) => v !== tag));
+  };
 
-      if (JSON.stringify(uniqueTags) !== JSON.stringify(value)) {
-        onChange(uniqueTags);
-      }
-    },
-    [onChange, tags, value],
-  );
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+    setHighlightedIndex(0);
+  };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    const input = e.target as HTMLInputElement;
-    if (e.key === "Backspace" && input.value === "" && value.length > 0) {
-      onChange(value.slice(0, -1));
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    switch (e.key) {
+      case "Enter":
+      case ",":
+        if (inputValue.trim()) {
+          e.preventDefault();
+          addTag(inputValue);
+        }
+        break;
+      case "Tab":
+        if (showSuggestions) {
+          e.preventDefault();
+          // eslint-disable-next-line security/detect-object-injection
+          addTag(suggestions[highlightedIndex]);
+        }
+        break;
+      case "ArrowDown":
+        if (showSuggestions) {
+          e.preventDefault();
+          setHighlightedIndex((i) => (i + 1) % suggestions.length);
+        }
+        break;
+      case "ArrowUp":
+        if (showSuggestions) {
+          e.preventDefault();
+          setHighlightedIndex(
+            (i) => (i - 1 + suggestions.length) % suggestions.length,
+          );
+        }
+        break;
+      case "Escape":
+        if (showSuggestions) {
+          e.preventDefault();
+          setIsFocused(false);
+        }
+        break;
+      case "Backspace":
+        if (inputValue === "" && value.length > 0) {
+          removeTag(value[value.length - 1]);
+        }
+        break;
     }
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    const input = containerRef.current?.querySelector("input");
-    if (input && e.target !== input) {
+    if (e.target !== inputRef.current) {
       e.preventDefault();
-      input.focus();
+      inputRef.current?.focus();
     }
   };
 
   return (
     <div
       ref={containerRef}
-      className="cursor-text border border-input rounded-md bg-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 transition-all"
+      className="relative cursor-text border border-input rounded-md bg-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 transition-all"
       onMouseDown={handleMouseDown}
-      onKeyDown={handleKeyDown}
     >
-      <TagInput
-        tags={tags}
-        setTags={handleSetTags}
-        placeholder={placeholder}
-        enableAutocomplete
-        autocompleteOptions={autocompleteOptions}
-        delimiters={[",", "Enter"]}
-        maxTags={50}
-        showCount={false}
-        className="text-sm border-none shadow-none focus-visible:ring-0"
-        styleClasses={{
-          input:
-            "shadow-none focus-visible:ring-0 px-3 py-2 min-w-[120px] bg-transparent",
-          tagList: {
-            container: "flex flex-wrap gap-1.5 p-2",
-          },
-          tag: {
-            body: "bg-primary/10 text-primary border-none text-xs px-2 py-1 whitespace-nowrap rounded-md",
-            closeButton: "text-primary hover:text-primary/70 ml-1",
-          },
-        }}
-        activeTagIndex={activeTagIndex}
-        setActiveTagIndex={setActiveTagIndex}
-        onBlur={onBlur}
-        inputProps={{
-          name,
-          id,
-          autoComplete: "off",
-        }}
-      />
+      <div className="flex flex-wrap items-center gap-1.5 p-2">
+        {value.map((tag) => (
+          <span
+            key={tag}
+            className="inline-flex items-center bg-primary/10 text-primary text-xs px-2 py-1 rounded-md whitespace-nowrap"
+          >
+            {tag}
+            <button
+              type="button"
+              onClick={() => removeTag(tag)}
+              className="text-primary hover:text-primary/70 ml-1"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </span>
+        ))}
+        <input
+          ref={inputRef}
+          name={name}
+          id={id}
+          type="text"
+          autoComplete="off"
+          value={inputValue}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => {
+            setIsFocused(false);
+            onBlur?.();
+          }}
+          placeholder={value.length === 0 ? placeholder : ""}
+          className="flex-1 min-w-[120px] bg-transparent text-sm outline-none px-1 py-1"
+        />
+      </div>
+
+      {showSuggestions && (
+        <ul className="absolute z-50 mt-1 w-full max-h-48 overflow-auto rounded-md border bg-popover text-popover-foreground shadow-md">
+          {suggestions.map((suggestion, index) => (
+            <li key={suggestion}>
+              <button
+                type="button"
+                className={cn(
+                  "w-full text-left px-3 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground",
+                  index === highlightedIndex &&
+                    "bg-accent text-accent-foreground",
+                )}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  addTag(suggestion);
+                }}
+                onMouseEnter={() => setHighlightedIndex(index)}
+              >
+                {suggestion}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };
