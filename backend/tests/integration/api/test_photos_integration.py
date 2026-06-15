@@ -93,6 +93,44 @@ async def test_upload_photo_generates_multiple_sizes(
 
 
 @pytest.mark.integration
+async def test_serve_photo_variants(
+    integration_client: AsyncClient,
+    admin_auth_headers: dict[str, str],
+    sample_image_path: Path,
+):
+    """Test that every generated size variant can be fetched via /file/{variant}."""
+    with open(sample_image_path, "rb") as f:
+        files = {"file": ("test-photo.jpg", f, "image/jpeg")}
+        data = {"title": "Variant Serving Test"}
+
+        response = await integration_client.post(
+            "/api/photos",
+            files=files,
+            data=data,
+            headers=admin_auth_headers,
+        )
+
+    assert response.status_code == 201
+    photo = response.json()
+    photo_id = photo["id"]
+
+    # The source image isn't large enough to generate every responsive size
+    # (no upscaling), so only check the variants that were actually produced.
+    assert "micro" in photo["variants"]
+
+    for variant_name in photo["variants"]:
+        variant_response = await integration_client.get(
+            f"/api/photos/{photo_id}/file/{variant_name}"
+        )
+
+        assert variant_response.status_code == 200, (
+            f"Variant '{variant_name}' returned {variant_response.status_code}: "
+            f"{variant_response.text}"
+        )
+        assert variant_response.headers["content-type"].startswith("image/")
+
+
+@pytest.mark.integration
 async def test_list_photos_with_pagination(
     integration_client: AsyncClient,
 ):

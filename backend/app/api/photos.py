@@ -687,6 +687,7 @@ async def serve_photo_original(
     Returns `X-Fallback-To-Original` header if serving original instead of variant.
 
     **Variants:**
+    - micro (200px)
     - thumbnail (400px)
     - small (800px)
     - medium (1200px)
