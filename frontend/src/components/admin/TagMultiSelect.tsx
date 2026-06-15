@@ -59,6 +59,13 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
     [onChange, tags, value],
   );
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const input = e.target as HTMLInputElement;
+    if (e.key === "Backspace" && input.value === "" && value.length > 0) {
+      onChange(value.slice(0, -1));
+    }
+  };
+
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     const input = containerRef.current?.querySelector("input");
     if (input && e.target !== input) {
@@ -72,6 +79,7 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
       ref={containerRef}
       className="cursor-text border border-input rounded-md bg-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 transition-all"
       onMouseDown={handleMouseDown}
+      onKeyDown={handleKeyDown}
     >
       <TagInput
         tags={tags}
