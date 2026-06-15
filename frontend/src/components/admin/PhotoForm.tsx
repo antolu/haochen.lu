@@ -409,6 +409,8 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
                   </div>
                 </div>
 
+                <div className="mt-4" />
+
                 <PhotoVariantsTable photo={photo} />
               </div>
             </div>

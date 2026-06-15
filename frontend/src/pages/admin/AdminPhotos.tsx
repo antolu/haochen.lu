@@ -68,6 +68,11 @@ const AdminPhotos: React.FC = () => {
     total_size: 0,
   };
 
+  // Keep the editor in sync with refetched photo data (e.g. after variant regeneration)
+  const currentEditingPhoto = editingPhoto
+    ? (photos.find((p) => p.id === editingPhoto.id) ?? editingPhoto)
+    : null;
+
   const handleUploadComplete = () => {
     setShowUpload(false);
   };
@@ -432,7 +437,7 @@ const AdminPhotos: React.FC = () => {
             All Photos ({photos.length})
           </h2>
 
-          {photos.length > 0 && !editingPhoto && (
+          {photos.length > 0 && !currentEditingPhoto && (
             <Button variant="ghost" size="sm" onClick={() => handleSelectAll()}>
               {selectedPhotos.size === photos.length
                 ? "Deselect All"
@@ -442,9 +447,9 @@ const AdminPhotos: React.FC = () => {
         </div>
 
         {viewMode === "grid" ? (
-          editingPhoto ? (
+          currentEditingPhoto ? (
             <PhotoForm
-              photo={editingPhoto}
+              photo={currentEditingPhoto}
               onCancel={() => setEditingPhoto(null)}
               onSuccess={() => setEditingPhoto(null)}
               onDelete={(photo) => {
@@ -492,9 +497,9 @@ const AdminPhotos: React.FC = () => {
               />
             </div>
           )
-        ) : editingPhoto ? (
+        ) : currentEditingPhoto ? (
           <PhotoForm
-            photo={editingPhoto}
+            photo={currentEditingPhoto}
             onCancel={() => setEditingPhoto(null)}
             onSuccess={() => setEditingPhoto(null)}
             onDelete={(photo) => {

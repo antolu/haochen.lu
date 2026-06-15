@@ -35,16 +35,22 @@ const getVariant = (
 };
 
 export default function PhotoVariantsTable({ photo }: PhotoVariantsTableProps) {
-  const [pendingCell, setPendingCell] = useState<string | null>(null);
+  const [pendingCells, setPendingCells] = useState<Set<string>>(new Set());
   const regenerateVariants = useRegenerateVariants();
 
   const handleRegenerate = (size: string, format: string) => {
     const cellKey = `${size}-${format}`;
-    setPendingCell(cellKey);
+    setPendingCells((prev) => new Set(prev).add(cellKey));
     regenerateVariants.mutate(
       { id: photo.id, size, format },
       {
-        onSettled: () => setPendingCell(null),
+        onSettled: () => {
+          setPendingCells((prev) => {
+            const next = new Set(prev);
+            next.delete(cellKey);
+            return next;
+          });
+        },
       },
     );
   };
@@ -75,13 +81,13 @@ export default function PhotoVariantsTable({ photo }: PhotoVariantsTableProps) {
         <table className="w-full text-[11px] border-collapse">
           <thead>
             <tr>
-              <th className="text-left font-semibold text-foreground/70 uppercase tracking-tight text-[10px] py-1 pr-2">
+              <th className="w-[22%] text-left font-semibold text-foreground/70 uppercase tracking-tight text-[10px] py-1 pr-2">
                 Size
               </th>
               {FORMATS.map((format) => (
                 <th
                   key={format}
-                  className="text-center font-semibold text-foreground/70 uppercase tracking-tight text-[10px] py-1 px-1"
+                  className="w-[26%] text-center font-semibold text-foreground/70 uppercase tracking-tight text-[10px] py-1 px-1"
                 >
                   {format}
                 </th>
@@ -89,58 +95,75 @@ export default function PhotoVariantsTable({ photo }: PhotoVariantsTableProps) {
             </tr>
           </thead>
           <tbody>
-            {SIZES.map((size) => (
-              <tr key={size} className="border-t border-border/20">
-                <td className="py-1 pr-2 font-medium capitalize">{size}</td>
-                {FORMATS.map((format) => {
-                  const cellKey = `${size}-${format}`;
-                  const variant = getVariant(photo.variants, size, format);
-                  const isPending =
-                    pendingCell === cellKey && regenerateVariants.isPending;
+            {SIZES.map((size) => {
+              const referenceVariant =
+                getVariant(photo.variants, size, "webp") ??
+                getVariant(photo.variants, size, "jpeg") ??
+                getVariant(photo.variants, size, "avif");
+              const resolutionLabel = referenceVariant
+                ? `${referenceVariant.width} × ${referenceVariant.height}`
+                : undefined;
 
-                  return (
-                    <td key={format} className="py-1 px-1 text-center">
-                      <div
-                        className={cn(
-                          "group relative flex items-center justify-center rounded-md px-1.5 py-1 min-h-[22px]",
-                          variant
-                            ? "bg-emerald-500/10 text-emerald-600"
-                            : "bg-destructive/10 text-destructive",
-                        )}
+              return (
+                <tr key={size} className="border-t border-border/20">
+                  <td
+                    className="py-1 pr-2 font-medium capitalize"
+                    title={resolutionLabel}
+                  >
+                    {size}
+                  </td>
+                  {FORMATS.map((format) => {
+                    const cellKey = `${size}-${format}`;
+                    const variant = getVariant(photo.variants, size, format);
+                    const isPending = pendingCells.has(cellKey);
+
+                    return (
+                      <td
+                        key={format}
+                        className="w-[26%] py-1 px-1 text-center"
                       >
-                        {isPending ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <>
-                            <span className="flex items-center gap-1 group-hover:opacity-0 transition-opacity">
-                              {variant ? (
-                                <>
-                                  <Check className="h-3 w-3" />
-                                  <span>
-                                    {formatFileSize(variant.size_bytes)}
-                                  </span>
-                                </>
-                              ) : (
-                                <X className="h-3 w-3" />
-                              )}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => handleRegenerate(size, format)}
-                              title={`Regenerate ${size} ${format}`}
-                              aria-label={`Regenerate ${size} ${format}`}
-                              className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-md hover:bg-foreground/10"
-                            >
-                              <RefreshCcw className="h-3.5 w-3.5" />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
+                        <div
+                          className={cn(
+                            "group relative flex items-center justify-center rounded-md px-1.5 py-1 min-h-[22px]",
+                            variant
+                              ? "bg-emerald-500/10 text-emerald-600"
+                              : "bg-destructive/10 text-destructive",
+                          )}
+                        >
+                          {isPending ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <>
+                              <span className="absolute inset-0 flex items-center justify-center gap-1 whitespace-nowrap transition-opacity duration-150 group-hover:opacity-0">
+                                {variant ? (
+                                  <>
+                                    <Check className="h-3 w-3 shrink-0" />
+                                    <span>
+                                      {formatFileSize(variant.size_bytes)}
+                                    </span>
+                                  </>
+                                ) : (
+                                  <X className="h-3 w-3" />
+                                )}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleRegenerate(size, format)}
+                                title={`Regenerate ${size} ${format}`}
+                                aria-label={`Regenerate ${size} ${format}`}
+                                className="absolute inset-0 flex items-center justify-center rounded-md opacity-0 transition-opacity duration-150 hover:bg-foreground/10 group-hover:opacity-100"
+                              >
+                                <RefreshCcw className="h-3.5 w-3.5" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
