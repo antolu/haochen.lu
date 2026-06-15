@@ -33,7 +33,26 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     libpango1.0-dev \
     libgif-dev \
     make \
+    cmake \
     && rm -rf /var/lib/apt/lists/*
+
+# Build and install the libheif AOM (AV1) encoder plugin for AVIF support.
+# Debian's libheif packages only ship decoder plugins (dav1d, libde265);
+# there is no packaged AVIF encoder plugin, so heifsave() fails with
+# "Unsupported compression". Build the plugin from source against the
+# system libheif 1.19.8 headers/lib and drop it into libheif's plugin dir.
+# hadolint ignore=DL3003
+RUN git clone --branch v1.19.8 --depth 1 https://github.com/strukturag/libheif.git /tmp/libheif && \
+    cmake -S /tmp/libheif -B /tmp/libheif/build \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DWITH_AOM_ENCODER=ON -DWITH_AOM_ENCODER_PLUGIN=ON \
+          -DWITH_X265=ON -DWITH_X265_PLUGIN=ON \
+          -DENABLE_PLUGIN_LOADING=ON \
+          -DPLUGIN_DIRECTORY=/usr/lib/aarch64-linux-gnu/libheif/plugins \
+          -DBUILD_TESTING=OFF -DWITH_EXAMPLES=OFF && \
+    cmake --build /tmp/libheif/build -j"$(nproc)" && \
+    cmake --install /tmp/libheif/build && \
+    rm -rf /tmp/libheif
 
 # Install Python dependencies (including test deps for dev)
 COPY backend/pyproject.toml /app/backend/
