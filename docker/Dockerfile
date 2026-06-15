@@ -52,7 +52,29 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     libjpeg62-turbo-dev \
     nginx \
     supervisor \
+    cmake \
+    git \
     && rm -rf /var/lib/apt/lists/*
+
+# Build and install the libheif AOM (AV1) encoder plugin for AVIF support.
+# Debian's libheif packages only ship decoder plugins (dav1d, libde265);
+# there is no packaged AVIF encoder plugin, so heifsave() fails with
+# "Unsupported compression". Build the plugin from source against the
+# headers/lib of whatever libheif-dev apt just installed, so the plugin
+# ABI always matches the system libheif.so.1 (not pinned to a fixed tag,
+# since apt may pull a newer libheif-dev on rebuild).
+# hadolint ignore=DL3003
+RUN git clone --branch "v$(pkg-config --modversion libheif)" --depth 1 https://github.com/strukturag/libheif.git /tmp/libheif && \
+    cmake -S /tmp/libheif -B /tmp/libheif/build \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DWITH_AOM_ENCODER=ON -DWITH_AOM_ENCODER_PLUGIN=ON \
+          -DWITH_X265=ON -DWITH_X265_PLUGIN=ON \
+          -DENABLE_PLUGIN_LOADING=ON \
+          -DPLUGIN_DIRECTORY=/usr/lib/"$(gcc -dumpmachine)"/libheif/plugins \
+          -DBUILD_TESTING=OFF -DWITH_EXAMPLES=OFF && \
+    cmake --build /tmp/libheif/build -j"$(nproc)" && \
+    cmake --install /tmp/libheif/build && \
+    rm -rf /tmp/libheif
 
 # Stage 3: final production image
 FROM python-base AS final
