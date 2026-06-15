@@ -1,13 +1,16 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 import math
 import time
 import typing
 import uuid
 from datetime import datetime
+from pathlib import Path
 from uuid import UUID
 
+import pyvips
 from fastapi import (
     APIRouter,
     Form,
@@ -21,6 +24,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy import and_, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm.attributes import flag_modified
 
 from app.config import settings
 from app.core.file_access import file_access_controller
@@ -591,6 +595,115 @@ async def reorder_photos(
         items.append({"id": photo_id, "order": i.order})
     await bulk_reorder_photos(db, items, normalize=payload.normalize)
     return {"message": "Reordered successfully"}
+
+
+@router.post("/{photo_id}/regenerate-variants", response_model=PhotoResponse)
+async def regenerate_photo_variants(
+    photo_id: UUID,
+    request: Request,
+    size: str | None = Query(
+        None, description="Regenerate only this responsive size (e.g. 'thumbnail')"
+    ),
+    format: str | None = Query(  # noqa: A002
+        None, description="Regenerate only this format (e.g. 'webp')"
+    ),
+    db: AsyncSession = _session_dependency,
+    current_user: User = _current_superuser_dependency,
+) -> PhotoResponse:
+    """Regenerate responsive image variants for a photo (admin only).
+
+    With no query params, regenerates every responsive size/format from the
+    stored original. With `size` (and optionally `format`), regenerates only
+    that cell, merging the result into the existing `variants` JSON without
+    discarding other sizes/formats.
+    """
+    photo = await get_photo(db, photo_id)
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found")
+
+    original_path = (
+        Path(settings.upload_dir) / Path(photo.original_path).name
+    ).resolve()
+    if not original_path.is_file():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Original file not found: {photo.original_path}",
+        )
+
+    config_service = request.app.state.config_service
+    image_config = ImageVariantConfig(
+        responsive_sizes=config_service.responsive_sizes,
+        quality_settings=config_service.quality_settings,
+        avif_quality_base_offset=config_service.avif_quality_base_offset,
+        avif_quality_floor=config_service.avif_quality_floor,
+        avif_effort_default=config_service.avif_effort_default,
+    )
+    processor = VipsImageProcessor(
+        settings.upload_dir, settings.compressed_dir, image_config
+    )
+
+    if size is not None:
+        if size not in image_config.responsive_sizes:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unknown size '{size}'",
+            )
+        target_size = image_config.responsive_sizes[size]
+
+        def _regenerate_one() -> dict:
+            vips_image = pyvips.Image.new_from_file(str(original_path), access="random")
+            vips_image = vips_image.autorot()
+            if vips_image.interpretation != "srgb":
+                vips_image = vips_image.colourspace("srgb")
+            if target_size > max(vips_image.width, vips_image.height):
+                return {}
+            return processor.generate_variant_formats(
+                vips_image, str(photo_id), size, target_size
+            )
+
+        new_size_variants = await asyncio.to_thread(_regenerate_one)
+
+        existing_variants = dict(photo.variants or {})
+        existing_size_data = dict(existing_variants.get(size) or {})
+
+        if format is not None:
+            if format not in {"avif", "webp", "jpeg"}:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Unknown format '{format}'",
+                )
+            if format in new_size_variants:
+                existing_size_data[format] = new_size_variants[format]
+            else:
+                existing_size_data.pop(format, None)
+            existing_variants[size] = existing_size_data
+        else:
+            existing_variants[size] = new_size_variants
+
+        photo.variants = existing_variants
+    else:
+        new_variants = await asyncio.to_thread(
+            processor.generate_responsive_variants, original_path, str(photo_id)
+        )
+        existing_variants = dict(photo.variants or {})
+        existing_variants.update(new_variants)
+        photo.variants = existing_variants
+
+    flag_modified(photo, "variants")
+    await db.commit()
+    await db.refresh(photo)
+
+    alias_service = AliasService(db)
+    photo_dict = PhotoResponse.model_validate(photo).model_dump()
+    photo_dict["camera_display_name"] = await alias_service.get_camera_display_name(
+        getattr(photo, "camera_make", None), getattr(photo, "camera_model", None)
+    )
+    photo_dict["lens_display_name"] = await alias_service.get_lens_display_name(
+        getattr(photo, "lens", None)
+    )
+    photo_dict = populate_photo_urls(photo_dict, str(photo.id))
+
+    return PhotoResponse.model_validate(photo_dict)
 
 
 @router.get("/stats/summary")

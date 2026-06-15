@@ -112,6 +112,29 @@ errored).
   `VipsImageProcessor`/`_generate_responsive_variants` against the photo's stored
   original file.
 
+#### Implementation plan
+
+1. **Backend**: `POST /api/photos/{id}/regenerate-variants` (optional `size`/`format`
+   query params), reuses `VipsImageProcessor._generate_responsive_variants` against
+   the photo's original file, merges results into `variants` JSON, returns updated
+   `PhotoResponse`.
+2. **API client**: add `photos.regenerateVariants(id, { size?, format? })`.
+3. **Hook**: `useRegenerateVariants()` mutation in `usePhotos.ts` — on success, merge
+   returned `variants`/`processing_errors` into `photoKeys.detail(id)` and
+   `photoKeys.list("admin-order")` caches, sync to `usePhotoCacheStore`, toast on
+   success/failure.
+4. **New component** `frontend/src/components/admin/PhotoVariantsTable.tsx` — rows =
+   sizes, columns = formats, each cell shows checkmark + `size_bytes` (formatted via
+   `formatFileSize`) or missing/error state; hover swaps to "Regenerate"; shows
+   `photo.file_size` (original) for comparison; shows `processing_errors` as a
+   warning banner.
+5. **Wire into `PhotoForm.tsx`**: render `<PhotoVariantsTable photo={photo} />` inside
+   the left preview panel (`md:col-span-1` sticky card, lines 249-412), placed after
+   the "Equipment Selection" block (after line 409) as its own `pt-2 border-t`
+   section — not as a new section in the main form fields column.
+6. Manual test: open a photo with missing variants, confirm table shows correct
+   status/sizes, regenerate a missing/errored cell, confirm immediate refresh.
+
 ## Root cause #2 (separate, lower priority): AVIF/HEIF encoding structurally broken
 
 File: `backend/app/core/vips_processor.py`, `_save_avif_variant` (heifsave).

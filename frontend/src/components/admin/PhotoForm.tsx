@@ -17,6 +17,7 @@ import { Trash2, Star, X, Check } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { useCameraAliases } from "../../hooks/useCameraAliases";
 import { useLensAliases } from "../../hooks/useLensAliases";
+import PhotoVariantsTable from "./PhotoVariantsTable";
 // Remove direct import of MapPicker and lazy-load it instead
 const LazyMapPicker = lazy(() => import("../MapPicker"));
 
@@ -407,6 +408,8 @@ const PhotoForm: React.FC<PhotoFormProps> = ({
                     </select>
                   </div>
                 </div>
+
+                <PhotoVariantsTable photo={photo} />
               </div>
             </div>
           </div>

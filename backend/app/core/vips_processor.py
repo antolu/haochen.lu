@@ -145,7 +145,7 @@ class VipsImageProcessor:
 
         # Generate all responsive sizes with multiple formats
         variants = await asyncio.to_thread(
-            self._generate_responsive_variants, original_path, file_id
+            self.generate_responsive_variants, original_path, file_id
         )
 
         self._update_progress("complete", 100)
@@ -229,7 +229,7 @@ class VipsImageProcessor:
             "mime_type": "image/jpeg",
         }
 
-    def _generate_variant_formats(
+    def generate_variant_formats(
         self,
         vips_image: pyvips.Image,
         file_id: str,
@@ -271,7 +271,7 @@ class VipsImageProcessor:
         for size_name, target_size in self.config.responsive_sizes.items():
             if target_size > max(original_width, original_height):
                 continue
-            variants[size_name] = self._generate_variant_formats(
+            variants[size_name] = self.generate_variant_formats(
                 vips_image, file_id, size_name, target_size
             )
             current_progress += progress_per_variant
@@ -279,7 +279,7 @@ class VipsImageProcessor:
 
         return variants
 
-    def _generate_responsive_variants(self, original_path: Path, file_id: str) -> dict:
+    def generate_responsive_variants(self, original_path: Path, file_id: str) -> dict:
         """Generate multiple responsive image sizes in AVIF, WebP, and JPEG formats."""
         try:
             # access="random" decodes the source into memory once so each
