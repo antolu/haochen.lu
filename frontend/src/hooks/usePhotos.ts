@@ -566,13 +566,15 @@ export const useRegenerateVariants = () => {
       id: string;
       size?: string;
       format?: string;
+      silent?: boolean;
     }) => photos.regenerateVariants(id, { size, format }),
 
-    onError: () => {
+    onError: (_error, variables) => {
+      if (variables.silent) return;
       toast.error("Failed to regenerate variants. Please try again.");
     },
 
-    onSuccess: (updatedPhoto) => {
+    onSuccess: (updatedPhoto, variables) => {
       void queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
       void queryClient.invalidateQueries({
         queryKey: photoKeys.detail(updatedPhoto.id),
@@ -581,6 +583,7 @@ export const useRegenerateVariants = () => {
 
       usePhotoCacheStore.getState().updatePhoto(updatedPhoto.id, updatedPhoto);
 
+      if (variables.silent) return;
       toast.success("Variants regenerated!");
     },
   });

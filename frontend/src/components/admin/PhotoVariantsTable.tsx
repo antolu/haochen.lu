@@ -4,6 +4,7 @@ import type { Photo, ImageVariant, MultiFormatVariants } from "../../types";
 import { formatFileSize } from "../../utils/photoUtils";
 import { useRegenerateVariants } from "../../hooks/usePhotos";
 import { cn } from "../../lib/utils";
+import toast from "react-hot-toast";
 
 const SIZES = [
   "micro",
@@ -36,6 +37,7 @@ const getVariant = (
 
 export default function PhotoVariantsTable({ photo }: PhotoVariantsTableProps) {
   const [pendingCells, setPendingCells] = useState<Set<string>>(new Set());
+  const [isRegeneratingAll, setIsRegeneratingAll] = useState(false);
   const regenerateVariants = useRegenerateVariants();
 
   const handleRegenerate = (size: string, format: string) => {
@@ -55,15 +57,64 @@ export default function PhotoVariantsTable({ photo }: PhotoVariantsTableProps) {
     );
   };
 
+  const handleRegenerateAll = async () => {
+    setIsRegeneratingAll(true);
+    let failures = 0;
+
+    for (const size of SIZES) {
+      for (const format of FORMATS) {
+        const cellKey = `${size}-${format}`;
+        setPendingCells((prev) => new Set(prev).add(cellKey));
+        try {
+          await regenerateVariants.mutateAsync({
+            id: photo.id,
+            size,
+            format,
+            silent: true,
+          });
+        } catch {
+          failures += 1;
+        } finally {
+          setPendingCells((prev) => {
+            const next = new Set(prev);
+            next.delete(cellKey);
+            return next;
+          });
+        }
+      }
+    }
+
+    setIsRegeneratingAll(false);
+    if (failures > 0) {
+      toast.error(`Regenerated all variants, ${failures} failed.`);
+    } else {
+      toast.success("Regenerated all variants!");
+    }
+  };
+
   return (
     <div className="pt-2 border-t border-border/40 space-y-2">
       <div className="flex justify-between items-center">
         <span className="font-semibold text-foreground/70 uppercase tracking-tight text-[10px]">
           Variants
         </span>
-        <span className="text-xs text-muted-foreground">
-          Original: {formatFileSize(photo.file_size)}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">
+            Original: {formatFileSize(photo.file_size)}
+          </span>
+          <button
+            type="button"
+            onClick={() => void handleRegenerateAll()}
+            disabled={isRegeneratingAll}
+            title="Regenerate all variants"
+            className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-tight text-foreground/70 transition-colors hover:bg-foreground/10 hover:text-foreground disabled:opacity-50"
+          >
+            <RefreshCcw
+              className={cn("h-3 w-3", isRegeneratingAll && "animate-spin")}
+            />
+            All
+          </button>
+        </div>
       </div>
 
       {photo.processing_errors && photo.processing_errors.length > 0 && (
