@@ -82,16 +82,19 @@ export default function AdminFiles() {
   }
 
   return (
-    <>
-      <div
-        className="fixed inset-0 z-0"
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDragging(true);
-        }}
-        onDragLeave={() => setDragging(false)}
-        onDrop={onDrop}
-      />
+    <div
+      className="contents"
+      onDragOver={(e) => {
+        e.preventDefault();
+        setDragging(true);
+      }}
+      onDragLeave={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+          setDragging(false);
+        }
+      }}
+      onDrop={onDrop}
+    >
       {dragging && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-blue-500/20 border-4 border-dashed border-blue-500 pointer-events-none">
           <p className="text-2xl font-semibold text-blue-700">Drop to upload</p>
@@ -143,6 +146,6 @@ export default function AdminFiles() {
           onCancel={() => setCollision(null)}
         />
       )}
-    </>
+    </div>
   );
 }
