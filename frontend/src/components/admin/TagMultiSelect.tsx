@@ -148,15 +148,16 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
       </div>
 
       {showSuggestions && (
-        <ul className="absolute z-50 mt-1 w-full max-h-48 overflow-auto rounded-md border bg-popover text-popover-foreground shadow-md">
-          {suggestions.map((suggestion, index) => (
-            <li key={suggestion}>
+        <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover text-popover-foreground shadow-md p-2">
+          <div className="flex flex-wrap gap-1.5">
+            {suggestions.map((suggestion, index) => (
               <button
+                key={suggestion}
                 type="button"
                 className={cn(
-                  "w-full text-left px-3 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground",
+                  "inline-flex items-center text-xs px-2 py-1 rounded-md border border-primary/30 text-primary whitespace-nowrap transition-colors hover:bg-primary/10",
                   index === highlightedIndex &&
-                    "bg-accent text-accent-foreground",
+                    "bg-primary/10 border-primary/60",
                 )}
                 onMouseDown={(e) => {
                   e.preventDefault();
@@ -166,9 +167,9 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
               >
                 {suggestion}
               </button>
-            </li>
-          ))}
-        </ul>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
