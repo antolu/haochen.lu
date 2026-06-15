@@ -5,6 +5,8 @@
 import {
   selectOptimalImage,
   debugImageSelection,
+  getVariantWidth,
+  getVariantHeight,
   ImageUseCase,
 } from "./imageUtils";
 import type { MultiFormatVariants, Photo } from "../types";
@@ -371,7 +373,9 @@ export const testHighDPIQuality = () => {
       const variant = testPhoto.variants?.[selection.selectedVariant];
 
       if (variant) {
-        const pixelDensity = variant.width / device.viewportWidth;
+        const variantWidth = getVariantWidth(variant);
+        const variantHeight = getVariantHeight(variant);
+        const pixelDensity = variantWidth / device.viewportWidth;
         const qualityScore = Math.min(
           pixelDensity * device.devicePixelRatio,
           3,
@@ -380,7 +384,7 @@ export const testHighDPIQuality = () => {
         // eslint-disable-next-line no-console
         console.log(`${useCase}:`, {
           variant: selection.selectedVariant,
-          resolution: `${variant.width}×${variant.height}`,
+          resolution: `${variantWidth}×${variantHeight}`,
           pixelDensity: `${pixelDensity.toFixed(2)}x`,
           qualityScore: `${qualityScore.toFixed(2)}/3`,
           sharpness:
