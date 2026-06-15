@@ -103,6 +103,16 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
     return index;
   }, [pointFeatures]);
 
+  // Mirrored in refs so the map's event handlers (registered once on "load")
+  // always read the latest cluster index / photo lookup instead of a stale
+  // snapshot from when the map first loaded.
+  const clusterIndexRef = useRef(clusterIndex);
+  const idToPhotoRef = useRef(idToPhoto);
+  useEffect(() => {
+    clusterIndexRef.current = clusterIndex;
+    idToPhotoRef.current = idToPhoto;
+  }, [clusterIndex, idToPhoto]);
+
   const getThumbnailUrl = useCallback((p: Photo): string => {
     const variants = p.variants ?? {};
     const thumb = variants["thumbnail"]?.url ?? variants["small"]?.url;
@@ -118,7 +128,7 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
       outer.style.borderRadius = "9999px";
       outer.style.overflow = "visible"; // allow scaled child to extend
       outer.style.cursor = "pointer";
-      outer.style.position = "relative";
+      outer.style.position = "absolute";
 
       // Inner element scales on hover
       const inner = document.createElement("div");
@@ -156,7 +166,7 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
     container.style.width = "56px";
     container.style.height = "56px";
     container.style.borderRadius = "9999px";
-    container.style.position = "relative";
+    container.style.position = "absolute";
     container.style.overflow = "visible"; // allow scaled child to extend
     container.style.cursor = "pointer";
 
@@ -265,6 +275,15 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
 
     mapRef.current = map;
 
+    // Container size can change after the map initializes (e.g. layout
+    // reflow while the page above is still loading), which leaves MapLibre's
+    // projection matrix stale and throws off marker positions until the map
+    // is interacted with. Keep it in sync with the actual container size.
+    const resizeObserver = new ResizeObserver(() => {
+      map.resize();
+    });
+    resizeObserver.observe(containerRef.current);
+
     // Fallback if style fails to load
     map.on("error", (e) => {
       const maybeErr = (e as { error?: unknown })?.error;
@@ -307,6 +326,8 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
       };
 
       const updateHtmlMarkers = () => {
+        const clusterIndex = clusterIndexRef.current;
+        const idToPhoto = idToPhotoRef.current;
         const b = map.getBounds();
         const clusters: ClusterFeature[] = clusterIndex.getClusters(
           [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()],
@@ -347,7 +368,25 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
               el.addEventListener("click", () => {
                 const nextZoom =
                   clusterIndex.getClusterExpansionZoom(clusterId);
-                if (typeof nextZoom === "number") {
+                const leavesForBounds = clusterIndex.getLeaves(
+                  clusterId,
+                  Infinity,
+                ) as ClusterFeature[];
+                if (leavesForBounds.length > 0) {
+                  const expansionBounds = new maplibregl.LngLatBounds();
+                  for (const leaf of leavesForBounds) {
+                    expansionBounds.extend(
+                      leaf.geometry.coordinates as [number, number],
+                    );
+                  }
+                  map.fitBounds(expansionBounds, {
+                    padding: 80,
+                    maxZoom:
+                      typeof nextZoom === "number" ? nextZoom : undefined,
+                    animate: true,
+                    duration: 600,
+                  });
+                } else if (typeof nextZoom === "number") {
                   map.easeTo({ center: coords, zoom: nextZoom });
                 }
               });
@@ -449,6 +488,7 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
     });
 
     return () => {
+      resizeObserver.disconnect();
       map.remove();
       mapRef.current = null;
       // Cleanup markers - refs handled by map.remove()
