@@ -50,7 +50,7 @@ RUN git clone --branch "v$(pkg-config --modversion libheif)" --depth 1 https://g
           -DWITH_AOM_ENCODER=ON -DWITH_AOM_ENCODER_PLUGIN=ON \
           -DWITH_X265=ON -DWITH_X265_PLUGIN=ON \
           -DENABLE_PLUGIN_LOADING=ON \
-          -DPLUGIN_DIRECTORY=/usr/lib/aarch64-linux-gnu/libheif/plugins \
+          -DPLUGIN_DIRECTORY=/usr/lib/"$(gcc -dumpmachine)"/libheif/plugins \
           -DBUILD_TESTING=OFF -DWITH_EXAMPLES=OFF && \
     cmake --build /tmp/libheif/build -j"$(nproc)" && \
     cmake --install /tmp/libheif/build && \
