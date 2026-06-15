@@ -38,6 +38,8 @@ http {
         add_header X-Content-Type-Options "nosniff" always;
         add_header X-XSS-Protection "1; mode=block" always;
         add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        # Relaxed compared to prod to allow Vite HMR (inline/eval scripts, ws connections)
+        add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src 'self' fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' ws: wss: https://basemaps.cartocdn.com https://tiles.basemaps.cartocdn.com; media-src 'self' blob:; worker-src blob:;" always;
 
         # Proxy API requests to uvicorn
         location /api/ {
