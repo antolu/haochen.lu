@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { AdminPageLayout } from "../../components/admin/AdminPageLayout";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -31,6 +32,7 @@ import {
   useReorderPhotos,
 } from "../../hooks/usePhotos";
 import type { Photo } from "../../types";
+import { formatFileSize } from "../../utils/photoUtils";
 import toast from "react-hot-toast";
 import { cn } from "../../lib/utils";
 import { useLocalState } from "../../hooks/useLocalState";
@@ -42,7 +44,8 @@ const AdminPhotos: React.FC = () => {
     "admin-photos-viewMode",
     "grid",
   );
-  const [editingPhoto, setEditingPhoto] = useState<Photo | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const editingPhotoId = searchParams.get("photo");
   const [reorderEnabled, setReorderEnabled] = useState(false);
   const [showStats, setShowStats] = useState(false);
 
@@ -65,6 +68,28 @@ const AdminPhotos: React.FC = () => {
     total_photos: 0,
     featured_photos: 0,
     total_size: 0,
+  };
+
+  // Driven by the ?photo= URL param so the editor survives a page refresh
+  const currentEditingPhoto = editingPhotoId
+    ? (photos.find((p) => p.id === editingPhotoId) ?? null)
+    : null;
+  const isResolvingEditingPhoto =
+    !!editingPhotoId && !currentEditingPhoto && isLoadingPhotos;
+
+  const setEditingPhoto = (photo: Photo | null) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (photo) {
+          next.set("photo", photo.id);
+        } else {
+          next.delete("photo");
+        }
+        return next;
+      },
+      { replace: !photo },
+    );
   };
 
   const handleUploadComplete = () => {
@@ -126,14 +151,6 @@ const AdminPhotos: React.FC = () => {
         console.error(`Failed to update photo ${photoId}:`, error);
       }
     }
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 B";
-    const k = 1024;
-    const sizes = ["B", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
   };
 
   const buildOrderPayload = (orderedPhotos: Photo[]) =>
@@ -439,7 +456,7 @@ const AdminPhotos: React.FC = () => {
             All Photos ({photos.length})
           </h2>
 
-          {photos.length > 0 && !editingPhoto && (
+          {photos.length > 0 && !currentEditingPhoto && (
             <Button variant="ghost" size="sm" onClick={() => handleSelectAll()}>
               {selectedPhotos.size === photos.length
                 ? "Deselect All"
@@ -448,10 +465,14 @@ const AdminPhotos: React.FC = () => {
           )}
         </div>
 
-        {viewMode === "grid" ? (
-          editingPhoto ? (
+        {isResolvingEditingPhoto ? (
+          <div className="min-h-[600px] flex items-center justify-center text-muted-foreground">
+            Loading photo...
+          </div>
+        ) : viewMode === "grid" ? (
+          currentEditingPhoto ? (
             <PhotoForm
-              photo={editingPhoto}
+              photo={currentEditingPhoto}
               onCancel={() => setEditingPhoto(null)}
               onSuccess={() => setEditingPhoto(null)}
               onDelete={(photo) => {
@@ -499,9 +520,9 @@ const AdminPhotos: React.FC = () => {
               />
             </div>
           )
-        ) : editingPhoto ? (
+        ) : currentEditingPhoto ? (
           <PhotoForm
-            photo={editingPhoto}
+            photo={currentEditingPhoto}
             onCancel={() => setEditingPhoto(null)}
             onSuccess={() => setEditingPhoto(null)}
             onDelete={(photo) => {

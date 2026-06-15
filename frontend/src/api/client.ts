@@ -330,6 +330,18 @@ export const photos = {
     );
     return response.data;
   },
+
+  regenerateVariants: async (
+    id: string,
+    params?: { size?: string; format?: string },
+  ): Promise<Photo> => {
+    const response = await apiClient.post<Photo>(
+      `/photos/${id}/regenerate-variants`,
+      undefined,
+      { params },
+    );
+    return response.data;
+  },
 };
 
 // Projects API

@@ -553,6 +553,42 @@ export const useTogglePhotoFeatured = () => {
   });
 };
 
+// Hook to regenerate responsive image variants for a photo (optionally a single cell)
+export const useRegenerateVariants = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      size,
+      format,
+    }: {
+      id: string;
+      size?: string;
+      format?: string;
+      silent?: boolean;
+    }) => photos.regenerateVariants(id, { size, format }),
+
+    onError: (_error, variables) => {
+      if (variables.silent) return;
+      toast.error("Failed to regenerate variants. Please try again.");
+    },
+
+    onSuccess: (updatedPhoto, variables) => {
+      void queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
+      void queryClient.invalidateQueries({
+        queryKey: photoKeys.detail(updatedPhoto.id),
+      });
+      void queryClient.invalidateQueries({ queryKey: photoKeys.stats() });
+
+      usePhotoCacheStore.getState().updatePhoto(updatedPhoto.id, updatedPhoto);
+
+      if (variables.silent) return;
+      toast.success("Variants regenerated!");
+    },
+  });
+};
+
 // Hook to reorder photos
 export const useReorderPhotos = () => {
   const queryClient = useQueryClient();

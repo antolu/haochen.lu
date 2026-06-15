@@ -1,3 +1,23 @@
+export interface ImageVariant {
+  path: string;
+  filename: string;
+  width: number;
+  height: number;
+  size_bytes: number;
+  format: string;
+  url?: string; // Secure API URL for accessing the variant
+}
+
+export interface MultiFormatVariants {
+  avif?: ImageVariant;
+  webp?: ImageVariant;
+  jpeg?: ImageVariant;
+  // Convenience fields surfaced by populate_photo_urls
+  width?: number;
+  height?: number;
+  url?: string;
+}
+
 export interface Photo {
   id: string;
   title: string;
@@ -13,18 +33,12 @@ export interface Photo {
   webp_path?: string;
 
   // Responsive image variants
-  variants?: Record<
-    string,
-    {
-      path: string;
-      filename: string;
-      width: number;
-      height: number;
-      size_bytes: number;
-      format: string;
-      url?: string; // Secure API URL for accessing the variant
-    }
-  >;
+  // Each size maps to either a legacy flat variant or a nested multi-format
+  // object (avif/webp/jpeg), each carrying their own size_bytes/url/etc.
+  variants?: Record<string, ImageVariant | MultiFormatVariants>;
+
+  // Non-persistent warnings about missing/failed variant formats
+  processing_errors?: string[];
 
   // EXIF data
   location_lat?: number;

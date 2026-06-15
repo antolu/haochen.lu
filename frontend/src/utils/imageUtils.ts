@@ -2,11 +2,21 @@
  * Image optimization utilities for DPI-aware and responsive image selection
  */
 
+import type {
+  ImageVariant as PhotoImageVariant,
+  MultiFormatVariants,
+} from "../types";
+
+// A size entry in a Photo's variants map: either the legacy flat shape
+// (ImageVariant) or the nested multi-format shape (MultiFormatVariants).
+export type VariantEntry = PhotoImageVariant | MultiFormatVariants;
+export type VariantsMap = Record<string, VariantEntry>;
+
 // Accept photo-like objects rather than a strict Photo type
 export type PhotoLike = {
   filename: string;
   original_url?: string;
-  variants?: Record<string, ImageVariant>;
+  variants?: VariantsMap;
 };
 
 export interface DeviceContext {
@@ -16,16 +26,60 @@ export interface DeviceContext {
   connectionSpeed?: "slow" | "fast" | "unknown";
 }
 
-export interface ImageVariant {
-  // Fields are optional except width; callers/tests may not provide everything
-  path?: string;
-  filename?: string;
-  url?: string;
-  width: number;
-  height?: number;
-  size_bytes?: number;
-  format?: string;
-}
+/**
+ * Type guard narrowing a variant entry to its nested multi-format shape,
+ * i.e. one that may carry avif/webp/jpeg sub-objects.
+ */
+const isMultiFormatVariant = (
+  variant: VariantEntry,
+): variant is MultiFormatVariants =>
+  "avif" in variant || "webp" in variant || "jpeg" in variant;
+
+/**
+ * Resolves the pixel width of a variant entry, checking the size-level
+ * field first and falling back to avif/webp/jpeg in precedence order
+ * (matching the backend's populate_photo_urls precedence).
+ */
+export const getVariantWidth = (variant: VariantEntry | undefined): number => {
+  if (!variant) return 0;
+  if (variant.width !== undefined) return variant.width;
+  if (isMultiFormatVariant(variant)) {
+    return (
+      variant.avif?.width ?? variant.webp?.width ?? variant.jpeg?.width ?? 0
+    );
+  }
+  return 0;
+};
+
+/**
+ * Resolves the pixel height of a variant entry, checking the size-level
+ * field first and falling back to avif/webp/jpeg in precedence order.
+ */
+export const getVariantHeight = (variant: VariantEntry | undefined): number => {
+  if (!variant) return 0;
+  if (variant.height !== undefined) return variant.height;
+  if (isMultiFormatVariant(variant)) {
+    return (
+      variant.avif?.height ?? variant.webp?.height ?? variant.jpeg?.height ?? 0
+    );
+  }
+  return 0;
+};
+
+/**
+ * Resolves the URL of a variant entry, checking the size-level field first
+ * and falling back to avif/webp/jpeg in precedence order.
+ */
+export const getVariantUrl = (
+  variant: VariantEntry | undefined,
+): string | undefined => {
+  if (!variant) return undefined;
+  if (variant.url !== undefined) return variant.url;
+  if (isMultiFormatVariant(variant)) {
+    return variant.avif?.url ?? variant.webp?.url ?? variant.jpeg?.url;
+  }
+  return undefined;
+};
 
 export interface OptimalImageSelection {
   selectedVariant: string;
@@ -196,7 +250,7 @@ export const calculateTargetSize = (
  */
 export const selectPlaceholderVariant = (
   useCase: ImageUseCase,
-  variants: Record<string, ImageVariant>,
+  variants: VariantsMap,
 ): { variant: string; url: string } => {
   // For large images, we want a slightly higher res placeholder (e.g. tablet size)
   // For small images, a tiny thumbnail is enough.
@@ -205,23 +259,25 @@ export const selectPlaceholderVariant = (
 
   if (isLarge) {
     // Try medium or small for a reasonably sharp initial impression on hero sections
-    if (variants.medium?.url)
-      return { variant: "medium", url: variants.medium.url };
-    if (variants.small?.url)
-      return { variant: "small", url: variants.small.url };
+    const mediumUrl = getVariantUrl(variants.medium);
+    if (mediumUrl) return { variant: "medium", url: mediumUrl };
+    const smallUrl = getVariantUrl(variants.small);
+    if (smallUrl) return { variant: "small", url: smallUrl };
   } else {
     // Try micro or thumbnail for general grid items
-    if (variants.micro?.url)
-      return { variant: "micro", url: variants.micro.url };
-    if (variants.thumbnail?.url)
-      return { variant: "thumbnail", url: variants.thumbnail.url };
+    const microUrl = getVariantUrl(variants.micro);
+    if (microUrl) return { variant: "micro", url: microUrl };
+    const thumbnailUrl = getVariantUrl(variants.thumbnail);
+    if (thumbnailUrl) return { variant: "thumbnail", url: thumbnailUrl };
   }
 
   // Fallback to whatever is available
   const entries = Object.entries(variants);
   if (entries.length > 0) {
-    const smallest = entries.sort(([, a], [, b]) => a.width - b.width)[0];
-    return { variant: smallest[0], url: smallest[1].url ?? "" };
+    const smallest = entries.sort(
+      ([, a], [, b]) => getVariantWidth(a) - getVariantWidth(b),
+    )[0];
+    return { variant: smallest[0], url: getVariantUrl(smallest[1]) ?? "" };
   }
 
   return { variant: "original", url: "" };
@@ -231,7 +287,7 @@ export const selectPlaceholderVariant = (
  * Finds the best variant for a given target size
  */
 export const findOptimalVariant = (
-  variants: Record<string, ImageVariant>,
+  variants: VariantsMap,
   targetSize: number,
   connectionSpeed: "slow" | "fast" | "unknown" = "unknown",
 ): string => {
@@ -243,7 +299,7 @@ export const findOptimalVariant = (
 
   // Sort variants by width
   const sortedVariants = variantEntries.sort(
-    ([, a], [, b]) => a.width - b.width,
+    ([, a], [, b]) => getVariantWidth(a) - getVariantWidth(b),
   );
 
   // For slow connections, prefer smaller images
@@ -255,7 +311,7 @@ export const findOptimalVariant = (
   let bestVariant = sortedVariants[0][0]; // Start with smallest
 
   for (const [variantName, variant] of sortedVariants) {
-    if (variant.width >= targetSize) {
+    if (getVariantWidth(variant) >= targetSize) {
       bestVariant = variantName;
       break;
     }
@@ -269,14 +325,14 @@ export const findOptimalVariant = (
 /**
  * Generates srcset string for responsive images
  */
-export const generateSrcSet = (
-  variants: Record<string, ImageVariant>,
-): string => {
+export const generateSrcSet = (variants: VariantsMap): string => {
   const variantEntries = Object.entries(variants);
 
   return variantEntries
-    .filter(([, variant]) => variant.url) // Only include variants with URLs
-    .map(([, variant]) => `${variant.url} ${variant.width}w`)
+    .filter(([, variant]) => getVariantUrl(variant)) // Only include variants with URLs
+    .map(
+      ([, variant]) => `${getVariantUrl(variant)} ${getVariantWidth(variant)}w`,
+    )
     .join(", ");
 };
 
@@ -324,9 +380,12 @@ export const selectOptimalImage = (
 
   // Get URLs with proper fallbacks
   const selectedUrl =
-    variants[selectedVariant]?.url ?? photo.original_url ?? "";
+    getVariantUrl(variants[selectedVariant]) ?? photo.original_url ?? "";
   const fallbackUrl =
-    variants.small?.url ?? variants.thumbnail?.url ?? photo.original_url ?? "";
+    getVariantUrl(variants.small) ??
+    getVariantUrl(variants.thumbnail) ??
+    photo.original_url ??
+    "";
 
   // Generate responsive attributes
   const srcset =
