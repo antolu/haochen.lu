@@ -282,9 +282,10 @@ class VipsImageProcessor:
     def _generate_responsive_variants(self, original_path: Path, file_id: str) -> dict:
         """Generate multiple responsive image sizes in AVIF, WebP, and JPEG formats."""
         try:
-            vips_image = pyvips.Image.new_from_file(
-                str(original_path), access="sequential"
-            )
+            # access="random" decodes the source into memory once so each
+            # responsive size can independently re-read pixels; "sequential"
+            # only supports a single pass and breaks on the second resize.
+            vips_image = pyvips.Image.new_from_file(str(original_path), access="random")
             return self._build_vips_variants(vips_image, file_id)
         except Exception:
             logger.exception("Error generating responsive variants")
