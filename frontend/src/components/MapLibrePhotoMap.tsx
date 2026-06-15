@@ -1,22 +1,8 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import maplibregl, { LngLatBoundsLike, Map as MapLibreMap } from "maplibre-gl";
 import Supercluster from "supercluster";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { Photo } from "../types";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "./ui/dialog";
-import { Button } from "./ui/button";
 
 interface MapLibrePhotoMapProps {
   photos: Photo[];
@@ -53,9 +39,6 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
   const mapRef = useRef<MapLibreMap | null>(null);
   const pointMarkersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
   const clusterMarkersRef = useRef<Map<number, maplibregl.Marker>>(new Map());
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalPhotos, setModalPhotos] = useState<Photo[]>([]);
-  const [lastModalZoomKey, setLastModalZoomKey] = useState<string | null>(null);
 
   const photosWithLocation = useMemo(
     () => photos.filter((p) => hasLocation(p)),
@@ -305,25 +288,6 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
       );
       // Add attribution control with compact option
       map.addControl(new maplibregl.AttributionControl({ compact: true }));
-      const haversineMeters = (
-        lat1: number,
-        lon1: number,
-        lat2: number,
-        lon2: number,
-      ) => {
-        const toRad = (v: number) => (v * Math.PI) / 180;
-        const R = 6371000; // meters
-        const dLat = toRad(lat2 - lat1);
-        const dLon = toRad(lon2 - lon1);
-        const a =
-          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-          Math.cos(toRad(lat1)) *
-            Math.cos(toRad(lat2)) *
-            Math.sin(dLon / 2) *
-            Math.sin(dLon / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c;
-      };
 
       const updateHtmlMarkers = () => {
         const clusterIndex = clusterIndexRef.current;
@@ -449,32 +413,6 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
             pointMarkersRef.current.delete(pid);
           }
         }
-
-        // Trigger modal when within ~10km and multiple points visible
-        const centerLat = (b.getNorth() + b.getSouth()) / 2;
-        const widthMeters = haversineMeters(
-          centerLat,
-          b.getWest(),
-          centerLat,
-          b.getEast(),
-        );
-        const widthKm = widthMeters / 1000;
-        if (widthKm <= 10 && visiblePhotoIds.size > 1) {
-          const key = `${Math.round(widthKm * 10) / 10}-${Array.from(
-            visiblePhotoIds,
-          )
-            .sort()
-            .slice(0, 4)
-            .join("")}`;
-          if (!modalOpen && key !== lastModalZoomKey) {
-            setLastModalZoomKey(key);
-            const photosToShow: Photo[] = Array.from(visiblePhotoIds)
-              .map((id) => idToPhoto.get(id))
-              .filter((p): p is Photo => Boolean(p));
-            setModalPhotos(photosToShow);
-            setModalOpen(true);
-          }
-        }
       };
 
       map.on("moveend", updateHtmlMarkers);
@@ -509,8 +447,6 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
     clusterIndex,
     computeBounds,
     createPhotoMarkerElement,
-    lastModalZoomKey,
-    modalOpen,
     getThumbnailUrl,
   ]);
 
@@ -530,43 +466,6 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
   return (
     <div className={className} style={{ height: `${height}px`, width: "100%" }}>
       <div ref={containerRef} style={{ height: "100%", width: "100%" }} />
-      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Photos in this area</DialogTitle>
-            <DialogDescription>
-              Showing {modalPhotos.length} photos within approximately 10 km
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {modalPhotos.map((p) => (
-              <button
-                key={p.id}
-                className="relative group rounded-md overflow-hidden border"
-                onClick={() => {
-                  if (onPhotoClick) onPhotoClick(p);
-                  setModalOpen(false);
-                }}
-              >
-                <img
-                  src={getThumbnailUrl(p)}
-                  alt={p.title ?? "Photo"}
-                  className="w-full h-28 object-cover group-hover:scale-105 transition-transform"
-                  loading="lazy"
-                />
-                <div className="absolute bottom-0 inset-x-0 bg-black/40 text-white text-xs p-1 truncate">
-                  {p.title ?? "Untitled"}
-                </div>
-              </button>
-            ))}
-          </div>
-          <div className="mt-4 flex justify-end">
-            <Button variant="outline" onClick={() => setModalOpen(false)}>
-              Close
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
