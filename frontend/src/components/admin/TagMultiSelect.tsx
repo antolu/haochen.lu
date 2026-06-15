@@ -16,8 +16,6 @@ interface TagMultiSelectProps {
   placeholder?: string;
 }
 
-const DATALIST_ID = "tag-multiselect-options";
-
 const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
   value,
   options,
@@ -33,6 +31,11 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
   const tags = useMemo<Tag[]>(
     () => value.map((tag) => ({ id: tag, text: tag })),
     [value],
+  );
+
+  const autocompleteOptions = useMemo<Tag[]>(
+    () => options.map((o) => ({ id: o, text: o })),
+    [options],
   );
 
   const handleSetTags = useCallback(
@@ -70,16 +73,12 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
       className="cursor-text border border-input rounded-md bg-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 transition-all"
       onMouseDown={handleMouseDown}
     >
-      <datalist id={DATALIST_ID}>
-        {options.map((o) => (
-          <option key={o} value={o} />
-        ))}
-      </datalist>
       <TagInput
         tags={tags}
         setTags={handleSetTags}
         placeholder={placeholder}
-        enableAutocomplete={false}
+        enableAutocomplete
+        autocompleteOptions={autocompleteOptions}
         delimiters={[",", "Enter"]}
         maxTags={50}
         showCount={false}
@@ -102,7 +101,6 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
           name,
           id,
           autoComplete: "off",
-          list: DATALIST_ID,
         }}
       />
     </div>
