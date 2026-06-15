@@ -7,7 +7,7 @@ import {
   debugImageSelection,
   ImageUseCase,
 } from "./imageUtils";
-import type { Photo } from "../types";
+import type { MultiFormatVariants, Photo } from "../types";
 
 // Mock photo for testing
 const testPhoto: Photo = {
@@ -26,52 +26,89 @@ const testPhoto: Photo = {
   updated_at: "2024-01-01T00:00:00Z",
   variants: {
     thumbnail: {
-      path: "/compressed/debug-thumbnail.webp",
-      filename: "debug-thumbnail.webp",
-      url: "/api/photos/debug-photo/file/thumbnail",
+      webp: {
+        path: "/compressed/debug-thumbnail.webp",
+        filename: "debug-thumbnail.webp",
+        url: "/api/photos/debug-photo/file/thumbnail",
+        width: 400,
+        height: 300,
+        size_bytes: 25000,
+        format: "webp",
+      },
       width: 400,
       height: 300,
-      size_bytes: 25000,
-      format: "webp",
+      url: "/api/photos/debug-photo/file/thumbnail",
     },
     small: {
-      path: "/compressed/debug-small.webp",
-      filename: "debug-small.webp",
-      url: "/api/photos/debug-photo/file/small",
+      webp: {
+        path: "/compressed/debug-small.webp",
+        filename: "debug-small.webp",
+        url: "/api/photos/debug-photo/file/small",
+        width: 800,
+        height: 600,
+        size_bytes: 75000,
+        format: "webp",
+      },
       width: 800,
       height: 600,
-      size_bytes: 75000,
-      format: "webp",
+      url: "/api/photos/debug-photo/file/small",
     },
     medium: {
-      path: "/compressed/debug-medium.webp",
-      filename: "debug-medium.webp",
-      url: "/api/photos/debug-photo/file/medium",
+      webp: {
+        path: "/compressed/debug-medium.webp",
+        filename: "debug-medium.webp",
+        url: "/api/photos/debug-photo/file/medium",
+        width: 1200,
+        height: 900,
+        size_bytes: 150000,
+        format: "webp",
+      },
       width: 1200,
       height: 900,
-      size_bytes: 150000,
-      format: "webp",
+      url: "/api/photos/debug-photo/file/medium",
     },
     large: {
-      path: "/compressed/debug-large.webp",
-      filename: "debug-large.webp",
-      url: "/api/photos/debug-photo/file/large",
+      webp: {
+        path: "/compressed/debug-large.webp",
+        filename: "debug-large.webp",
+        url: "/api/photos/debug-photo/file/large",
+        width: 1600,
+        height: 1200,
+        size_bytes: 250000,
+        format: "webp",
+      },
       width: 1600,
       height: 1200,
-      size_bytes: 250000,
-      format: "webp",
+      url: "/api/photos/debug-photo/file/large",
     },
     xlarge: {
-      path: "/compressed/debug-xlarge.webp",
-      filename: "debug-xlarge.webp",
-      url: "/api/photos/debug-photo/file/xlarge",
+      webp: {
+        path: "/compressed/debug-xlarge.webp",
+        filename: "debug-xlarge.webp",
+        url: "/api/photos/debug-photo/file/xlarge",
+        width: 2400,
+        height: 1800,
+        size_bytes: 450000,
+        format: "webp",
+      },
       width: 2400,
       height: 1800,
-      size_bytes: 450000,
-      format: "webp",
+      url: "/api/photos/debug-photo/file/xlarge",
     },
   },
 };
+
+/**
+ * Get the size in bytes of a variant, checking avif/webp/jpeg in precedence order
+ * (matching the backend's populate_photo_urls precedence).
+ */
+const getVariantSizeBytes = (
+  variant: MultiFormatVariants | undefined,
+): number =>
+  variant?.avif?.size_bytes ??
+  variant?.webp?.size_bytes ??
+  variant?.jpeg?.size_bytes ??
+  0;
 
 interface DeviceTest {
   name: string;
@@ -206,7 +243,7 @@ export const testImageSelectionAcrossDevices = () => {
         targetSize: debug.targetSize,
         actualSize:
           testPhoto.variants?.[selection.selectedVariant]?.width ?? "N/A",
-        fileSize: `${Math.round((testPhoto.variants?.[selection.selectedVariant]?.size_bytes ?? 0) / 1024)}KB`,
+        fileSize: `${Math.round(getVariantSizeBytes(testPhoto.variants?.[selection.selectedVariant]) / 1024)}KB`,
         url: selection.url,
       });
 
@@ -218,7 +255,9 @@ export const testImageSelectionAcrossDevices = () => {
         selectedVariant: selection.selectedVariant,
         targetSize: debug.targetSize,
         actualSize: testPhoto.variants?.[selection.selectedVariant]?.width,
-        fileSize: testPhoto.variants?.[selection.selectedVariant]?.size_bytes,
+        fileSize: getVariantSizeBytes(
+          testPhoto.variants?.[selection.selectedVariant],
+        ),
       });
     });
 
@@ -259,11 +298,14 @@ export const testBandwidthEfficiency = () => {
 
     Object.values(ImageUseCase).forEach((useCase) => {
       const staticVariant = staticSelection[useCase];
-      const staticBytes = testPhoto.variants?.[staticVariant]?.size_bytes ?? 0;
+      const staticBytes = getVariantSizeBytes(
+        testPhoto.variants?.[staticVariant],
+      );
 
       const dynamicSelection = selectOptimalImage(testPhoto, useCase);
-      const dynamicBytes =
-        testPhoto.variants?.[dynamicSelection.selectedVariant]?.size_bytes ?? 0;
+      const dynamicBytes = getVariantSizeBytes(
+        testPhoto.variants?.[dynamicSelection.selectedVariant],
+      );
 
       totalStaticBytes += staticBytes;
       totalDynamicBytes += dynamicBytes;
