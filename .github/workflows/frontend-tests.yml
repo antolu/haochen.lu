@@ -29,7 +29,7 @@ jobs:
       fail-fast: false
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v6
@@ -82,7 +82,7 @@ jobs:
   accessibility-tests:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Use Node.js 26
       uses: actions/setup-node@v6
@@ -173,7 +173,7 @@ jobs:
     needs: [test]
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Use Node.js 26
       uses: actions/setup-node@v6
