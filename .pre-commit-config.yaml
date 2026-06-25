@@ -28,7 +28,7 @@ repos:
 
   # Python linting and formatting
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.16
+    rev: v0.15.19
     hooks:
       - id: ruff-check
         args:
@@ -56,20 +56,20 @@ repos:
         args: [--config-file=backend/pyproject.toml]
         additional_dependencies:
           - "pydantic>=2.13.4"
-          - "pydantic-settings>=2.14.1"
-          - "sqlalchemy[mypy]>=2.0.50"
+          - "pydantic-settings>=2.14.2"
+          - "sqlalchemy[mypy]>=2.0.51"
           - "types-PyYAML"
           - "types-redis>=4.6.0.20241004"
           - "httpx>=0.28.1"
-          - "fastapi>=0.136.3"
-          - "starlette>=1.3.0"
+          - "fastapi>=0.138.0"
+          - "starlette>=1.3.1"
           - "bcrypt>=5.0.0"
           - "PyJWT>=2.13.0"
           - "arcadia-auth @ git+https://github.com/antolu/arcadia-auth@v0.1"
 
   # ESLint for TypeScript/JavaScript linting
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v10.4.1
+    rev: v10.5.0
     hooks:
       - id: eslint
         files: ^frontend/.*\.(ts|tsx|js|jsx)$ # Explicitly match TypeScript and JavaScript files
@@ -77,12 +77,12 @@ repos:
         types: [file]
         args: [--fix, --config, frontend/eslint.config.js]
         additional_dependencies:
-          - eslint@10.4.1
+          - eslint@10.5.0
           - "@eslint/js@10.0.1"
-          - "typescript-eslint@8.61.0"
+          - "typescript-eslint@8.62.0"
           - "eslint-plugin-react-hooks@7.1.1"
-          - "eslint-plugin-react-refresh@0.5.2"
-          - "globals@17.6.0"
+          - "eslint-plugin-react-refresh@0.5.3"
+          - "globals@17.7.0"
           - "typescript@6.0.3"
 
   # Prettier for code formatting
