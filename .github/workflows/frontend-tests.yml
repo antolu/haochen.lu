@@ -29,10 +29,10 @@ jobs:
       fail-fast: false
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v6
+      uses: actions/setup-node@v7
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
@@ -82,10 +82,10 @@ jobs:
   accessibility-tests:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Use Node.js 26
-      uses: actions/setup-node@v6
+      uses: actions/setup-node@v7
       with:
         node-version: 26
         cache: 'npm'
@@ -173,10 +173,10 @@ jobs:
     needs: [test]
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Use Node.js 26
-      uses: actions/setup-node@v6
+      uses: actions/setup-node@v7
       with:
         node-version: 26
         cache: 'npm'
