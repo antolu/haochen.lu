@@ -4,17 +4,11 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    groups:
-      actions:
-        patterns: ["*"]
 
   - package-ecosystem: "npm"
     directory: "/frontend"
     schedule:
       interval: "weekly"
-    groups:
-      npm-dependencies:
-        patterns: ["*"]
     ignore:
       - dependency-name: "*"
         versions: ["alpha", "beta", "rc", "dev", "canary", "next", "nightly"]
@@ -23,9 +17,6 @@ updates:
     directory: "/backend"
     schedule:
       interval: "weekly"
-    groups:
-      pip-dependencies:
-        patterns: ["*"]
 
   - package-ecosystem: "docker"
     directory: "/backend"
@@ -41,6 +32,3 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    groups:
-      pre-commit-hooks:
-        patterns: ["*"]
