@@ -69,7 +69,7 @@ repos:
 
   # ESLint for TypeScript/JavaScript linting
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v10.6.0
+    rev: v10.7.0
     hooks:
       - id: eslint
         files: ^frontend/.*\.(ts|tsx|js|jsx)$ # Explicitly match TypeScript and JavaScript files
