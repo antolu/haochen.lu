@@ -5,11 +5,10 @@ import React, {
   useRef,
   useState,
 } from "react";
-import maplibregl, {
-  Map as MapLibreMap,
-  Marker as MapLibreMarker,
-} from "maplibre-gl";
+import * as maplibregl from "maplibre-gl";
+import type { Map as MapLibreMap, Marker as MapLibreMarker } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { ensureMapLibreWorkerUrl } from "../utils/maplibreWorker";
 
 interface MapPickerProps {
   latitude?: number;
@@ -221,6 +220,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
+    ensureMapLibreWorkerUrl();
     const map = new maplibregl.Map({
       container: containerRef.current,
       style: DEFAULT_STYLE_URL,
