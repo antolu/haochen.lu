@@ -35,11 +35,7 @@ vi.mock("maplibre-gl", () => {
     Map: MapConstructor,
     Marker: MarkerConstructor,
     AttributionControl: mockAttributionControl,
-    default: {
-      Map: MapConstructor,
-      Marker: MarkerConstructor,
-      AttributionControl: mockAttributionControl,
-    },
+    setWorkerUrl: vi.fn(),
   };
 });
 

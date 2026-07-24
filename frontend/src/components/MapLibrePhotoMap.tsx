@@ -1,8 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
-import maplibregl, { LngLatBoundsLike, Map as MapLibreMap } from "maplibre-gl";
+import * as maplibregl from "maplibre-gl";
+import type { LngLatBoundsLike, Map as MapLibreMap } from "maplibre-gl";
 import Supercluster from "supercluster";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { Photo } from "../types";
+import { ensureMapLibreWorkerUrl } from "../utils/maplibreWorker";
 
 interface MapLibrePhotoMapProps {
   photos: Photo[];
@@ -247,6 +249,7 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
+    ensureMapLibreWorkerUrl();
     const map = new maplibregl.Map({
       container: containerRef.current,
       style: DEFAULT_STYLE_URL,
@@ -268,7 +271,7 @@ const MapLibrePhotoMap: React.FC<MapLibrePhotoMapProps> = ({
     resizeObserver.observe(containerRef.current);
 
     // Fallback if style fails to load
-    map.on("error", (e) => {
+    map.on("error", (e: maplibregl.ErrorEvent) => {
       const maybeErr = (e as { error?: unknown })?.error;
       const msg = String((maybeErr as { message?: string })?.message ?? "");
       if (msg.includes("404") || msg.includes("Failed to fetch")) {
