@@ -39,7 +39,7 @@ repos:
             --preview,
             --config=backend/pyproject.toml,
           ]
-        files: ^backend/.*\.py$
+        files: ^backend/
         exclude: ^backend/app/_version\.py$
       - id: ruff-format
         args: [--config=backend/pyproject.toml]
