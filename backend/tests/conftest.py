@@ -67,16 +67,25 @@ os.environ.setdefault(
 )
 os.environ.setdefault("ADMIN_PASSWORD", "test_password")
 
-import contextlib  # noqa: E402, I001
+import contextlib  # noqa: E402
 
 import jwt  # noqa: E402
 import pytest  # noqa: E402
 import pytest_asyncio  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 from httpx import ASGITransport, AsyncClient  # noqa: E402
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine  # noqa: E402
+from sqlalchemy.ext.asyncio import (  # noqa: E402
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from sqlalchemy.pool import StaticPool  # noqa: E402
-from tests.factories import BlogPostFactory, PhotoFactory, ProjectFactory, UserFactory  # noqa: E402
+from tests.factories import (  # noqa: E402
+    BlogPostFactory,
+    PhotoFactory,
+    ProjectFactory,
+    UserFactory,
+)
 
 import app.core.file_access as fa_mod  # noqa: E402
 import app.core.image_processor as ip_mod  # noqa: E402
