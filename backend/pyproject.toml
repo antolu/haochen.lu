@@ -23,7 +23,7 @@ classifiers = [
 dependencies = [
   "fastapi>=0.129.0",
   "uvicorn[standard]~=0.54.0",
-  "sqlalchemy~=2.0.43",
+  "sqlalchemy~=2.1.1",
   "alembic~=1.16",
   "asyncpg~=0.31.0",
   "redis>=7.3,<9.0",
@@ -217,7 +217,6 @@ preview = true
 
 [tool.mypy]
 python_version = "3.11"
-plugins = ["sqlalchemy.ext.mypy.plugin"]
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
