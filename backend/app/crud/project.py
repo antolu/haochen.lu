@@ -171,7 +171,7 @@ async def delete_project_and_media(db: AsyncSession, project_id: UUID) -> bool:
     result = await db.execute(
         select(ProjectImage.photo_id).where(ProjectImage.project_id == project_id)
     )
-    photo_ids = [row[0] for row in result.all()]
+    photo_ids = [row[0] for row in result.all() if row[0] is not None]
 
     # Delete the project (CASCADE removes project_images rows)
     deleted = await delete_project(db, project_id)
