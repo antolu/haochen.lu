@@ -75,5 +75,5 @@ jobs:
         npx tsc --noEmit
 
     - name: Pre-commit CI Lite Auto-fix
-      uses: pre-commit-ci/lite-action@v1.1.0
+      uses: pre-commit-ci/lite-action@v1.2.0
       if: always()
