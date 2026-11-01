@@ -57,7 +57,7 @@ repos:
         additional_dependencies:
           - "pydantic>=2.13.4"
           - "pydantic-settings>=2.14.2"
-          - "sqlalchemy~=2.1.1"
+          - "sqlalchemy~=2.1.6"
           - "types-PyYAML"
           - "types-redis>=4.6.0.20241004"
           - "httpx>=0.28.1"
