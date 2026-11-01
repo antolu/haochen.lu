@@ -55,7 +55,7 @@ repos:
         exclude: ^backend/(tests/.*|alembic/.*|app/_version\.py)$
         args: [--config-file=backend/pyproject.toml]
         additional_dependencies:
-          - "pydantic>=2.13.4"
+          - "pydantic>=2.14.1"
           - "pydantic-settings>=2.14.2"
           - "sqlalchemy~=2.1.1"
           - "types-PyYAML"
